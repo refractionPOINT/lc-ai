@@ -18,7 +18,7 @@
     "lc-marketplace": {
       "source": {
         "source": "directory",
-        "path": "plugins/"
+        "path": "marketplace/"
       }
     }
   }
