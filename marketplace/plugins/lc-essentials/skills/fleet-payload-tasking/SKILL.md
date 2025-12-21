@@ -31,11 +31,11 @@ Use this skill when the user needs to:
 
 ### Approach 1: Shell Commands (Simple, Quick)
 
-For simple data collection, use `os_shell` directly in the task - no payload upload needed:
+For simple data collection, use `run --shell-command` directly - no payload upload needed:
 
 ```
 reliable_tasking(
-  task="os_shell echo '{\"hostname\":\"'$(hostname)'\",\"os\":\"'$(uname -s)'\",\"bash\":\"'$(/bin/bash --version | head -1)'\"}'",
+  task="run --shell-command 'hostname'",
   selector="plat == macos",
   context="shell-scan-001",
   ttl=3600
@@ -44,12 +44,12 @@ reliable_tasking(
 
 **Pros:**
 - No payload upload step
-- JSON output comes directly in STDOUT
+- Direct command execution
 - Simpler workflow
 
 **Cons:**
 - Command line length limits
-- Complex logic is harder to express
+- Escaping becomes painful for complex scripts with quotes/JSON
 - Less reusable
 
 ### Approach 2: Payload Scripts (Complex, Reusable)
@@ -79,9 +79,9 @@ For complex operations, upload a payload script first:
 │                                                                         │
 │  OPTION A: Shell Command (Simple)                                       │
 │  ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐     │
-│  │ Build os_shell  │───▶│ Deploy via      │───▶│ D&R rule        │     │
-│  │ command with    │    │ reliable_tasking│    │ captures STDOUT │     │
-│  │ inline JSON     │    │                 │    │ as detection    │     │
+│  │ Build           │───▶│ Deploy via      │───▶│ D&R rule        │     │
+│  │ run --shell-cmd │    │ reliable_tasking│    │ captures STDOUT │     │
+│  │ command         │    │                 │    │ as detection    │     │
 │  └─────────────────┘    └─────────────────┘    └─────────────────┘     │
 │                                                                         │
 │  OPTION B: Payload Script (Complex)                                     │
@@ -122,6 +122,27 @@ For complex operations, upload a payload script first:
 When using sensor selectors, always filter by taskable platforms to avoid errors:
 - `plat == windows` or `plat == linux` or `plat == macos`
 
+## Shell Command Escaping Considerations
+
+When using `run --shell-command`, the command string is passed through multiple layers:
+1. JSON encoding (in the reliable tasking API call)
+2. Shell parsing on the endpoint
+
+**Simple commands work well:**
+```bash
+run --shell-command whoami
+run --shell-command 'ls -la /tmp'
+run --shell-command "cat /etc/hostname"
+```
+
+**Complex operations become difficult:**
+- Nested quotes: `echo '{"key":"value"}'` requires careful escaping
+- Variable expansion: `$(command)` needs consideration
+- Multiple commands: `cmd1 && cmd2 || cmd3` with complex logic
+- JSON generation inline becomes messy quickly
+
+**Rule of thumb:** If your command needs more than 2-3 simple pipes or redirects, or involves JSON/complex quoting, use a payload script instead.
+
 ## Shell Command Workflow (Recommended for Simple Tasks)
 
 ### Step 1: Select Organization
@@ -135,16 +156,20 @@ lc_call_tool(
 
 ### Step 2: Build Shell Command
 
-Create a command that outputs JSON to STDOUT:
+Keep shell commands **simple** to avoid escaping nightmares:
 
 ```bash
-# Example: Collect bash/zsh versions
-os_shell echo '{"scan_id":"scan-001","hostname":"'$(hostname)'","results":[' && \
-  for p in /bin/bash /usr/bin/bash /bin/zsh; do \
-    [ -x "$p" ] && echo '{"path":"'$p'","version":"'$($p --version 2>/dev/null | head -1)'"},' ; \
-  done && \
-  echo ']}'
+# Example: Get hostname from endpoints
+run --shell-command 'hostname'
+
+# Example: Check for specific file
+run --shell-command 'test -f /var/log/auth.log && echo "found" || echo "not found"'
+
+# Example: Get OS information
+run --shell-command 'uname -a'
 ```
+
+> **WARNING**: For scripts with complex quoting, loops, JSON generation, or multiple commands, use the **Payload Script Workflow** instead to avoid escaping issues.
 
 ### Step 3: Deploy and Collect Results (Delegate to sensor-tasking)
 
@@ -159,9 +184,9 @@ Use the `sensor-tasking` skill with your prepared shell command:
 Skill(lc-essentials:sensor-tasking)
 
 Provide to sensor-tasking:
-- Task command: os_shell echo '{"scan_id":"scan-001",...}'
+- Task command: run --shell-command 'hostname'
 - Selector: plat == macos (or your target selector)
-- Context: bash-scan-001 (for response collection)
+- Context: hostname-scan-001 (for response collection)
 - TTL: 3600 (or desired expiration)
 ```
 
