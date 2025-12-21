@@ -1,0 +1,15 @@
+services:
+  lc-claude:
+    build: .
+    image: lc-claude:latest
+    container_name: lc-claude
+    network_mode: host
+    stdin_open: true
+    tty: true
+    volumes:
+      # Persist Claude Code credentials and settings
+      - ~/.claude:/home/lc/.claude
+      # Optional: mount your project directory
+      - ./project:/home/lc/project
+    environment:
+      - TERM=xterm-256color
