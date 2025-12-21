@@ -438,16 +438,17 @@ Returns structured JSON with complete coverage data:
 
 **Model**: Claude Haiku (fast and cost-effective)
 
-**Purpose**: Execute sensor tasks (live response commands) on a **single** sensor and return results. Designed for parallel execution by the `sensor-tasking` skill when tasking multiple sensors.
+**Purpose**: Execute sensor tasks (live response commands) on a single sensor and return results. Designed for parallel execution by the `sensor-tasking` and `fleet-payload-tasking` skills.
 
 **When to Use**:
-This agent is **not invoked directly by users**. Instead, it's spawned in parallel (one per sensor) by the `sensor-tasking` skill when users want to:
-- Execute live response commands across multiple sensors
-- Collect data (processes, connections, files) from many sensors in parallel
+This agent is **not invoked directly by users**. Instead, it's spawned in parallel by parent skills when users want to:
+- Execute commands on specific sensors
+- Collect data from endpoints (OS version, packages, services, etc.)
+- Run live response operations across the fleet
 - Perform YARA scans across a fleet
 
 **Architecture Role**:
-- **Parent Skill**: `sensor-tasking` (orchestrates parallel execution)
+- **Parent Skills**: `sensor-tasking`, `fleet-payload-tasking`
 - **This Agent**: Executes tasks on ONE sensor
 - **Parallelization**: Multiple instances run simultaneously, one per sensor
 
