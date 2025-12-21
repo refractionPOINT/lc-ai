@@ -1,0 +1,25 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/onboarding.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "lc-essentials@lc-marketplace": true
+  },
+  "extraKnownMarketplaces": {
+    "lc-marketplace": {
+      "source": {
+        "source": "directory",
+        "path": "marketplace/"
+      }
+    }
+  }
+}
