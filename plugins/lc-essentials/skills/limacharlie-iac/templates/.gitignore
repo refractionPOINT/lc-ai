@@ -1,0 +1,27 @@
+# LimaCharlie IaC .gitignore
+
+# Never commit secrets
+*.pem
+*.key
+*secret*
+*credential*
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.sublime-*
+
+# Python
+__pycache__/
+*.pyc
+.env
+venv/

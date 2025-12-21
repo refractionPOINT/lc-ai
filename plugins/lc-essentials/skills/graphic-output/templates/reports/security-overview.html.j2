@@ -1,0 +1,518 @@
+{#
+  Security Overview Report Template
+
+  Comprehensive single-org security report with:
+  - Active threat alerts
+  - Executive summary cards
+  - Platform breakdown with detection counts
+  - Detection timeline charts
+  - MITRE ATT&CK coverage
+  - Detection rules inventory
+  - Attack analysis details
+  - Top detections table
+
+  DATA ACCURACY GUARDRAILS:
+  - This template ONLY displays data provided in the context
+  - Missing data shows "N/A" or "Data unavailable"
+  - All warnings are displayed in a dedicated section
+  - No data is fabricated, estimated, or interpolated
+#}
+{% extends 'base.html.j2' %}
+
+{% block title %}{{ data.org_name | default('Organization') }} - Security Overview{% endblock %}
+
+{% block report_title %}Comprehensive Security Report{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+    {# ================================================================
+       ACTIVE THREAT ALERT BANNER (if threats detected)
+       GUARDRAIL: Only shown if data.active_threats exists
+       ================================================================ #}
+    {% if data.active_threats and data.active_threats | length > 0 %}
+    {% for threat in data.active_threats %}
+    <div class="alert-banner alert-banner-danger">
+        <div class="alert-banner-title">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
+            {{ threat.title | default('Active Threat Detected') }}
+        </div>
+        <div class="alert-banner-content">
+            {% if threat.attacker_ip %}
+            <div class="alert-banner-item">
+                <span class="alert-banner-item-label">Attacker IP</span>
+                <div class="ip-box">{{ threat.attacker_ip }}</div>
+            </div>
+            {% endif %}
+            {% if threat.target_host %}
+            <div class="alert-banner-item">
+                <span class="alert-banner-item-label">Target</span>
+                <div class="ip-box">{{ threat.target_host }}{% if threat.target_ip %} ({{ threat.target_ip }}){% endif %}</div>
+            </div>
+            {% endif %}
+            {% if threat.attack_type %}
+            <div class="alert-banner-item">
+                <span class="alert-banner-item-label">Attack Type</span>
+                <span class="status-badge status-failed">{{ threat.attack_type }}</span>
+            </div>
+            {% endif %}
+            {% if threat.target_account %}
+            <div class="alert-banner-item">
+                <span class="alert-banner-item-label">Target Account</span>
+                <span class="status-badge status-partial">{{ threat.target_account }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {# ================================================================
+       EXECUTIVE SUMMARY CARDS
+       GUARDRAIL: All values come directly from data.summary
+       ================================================================ #}
+    <section class="dashboard-section" aria-labelledby="summary-heading">
+        <h2 id="summary-heading">Executive Summary</h2>
+
+        <div class="summary-grid">
+            {# Total Sensors Card #}
+            <div class="summary-card">
+                <div class="card-icon blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <path d="M8 21h8M12 17v4"/>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <span class="card-value">
+                        {% if data.summary.sensors_total is defined %}
+                            {{ data.summary.sensors_total | format_number }}
+                        {% else %}
+                            <span class="na">N/A</span>
+                        {% endif %}
+                    </span>
+                    <span class="card-label">Total Sensors</span>
+                    {% if data.summary.sensors_online is defined %}
+                    <span class="card-subvalue">{{ data.summary.sensors_online | format_number }} online</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Detection Rules Card #}
+            <div class="summary-card">
+                <div class="card-icon green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <span class="card-value">
+                        {% if data.summary.rules_total is defined %}
+                            {{ data.summary.rules_total | format_number }}
+                        {% else %}
+                            <span class="na">N/A</span>
+                        {% endif %}
+                    </span>
+                    <span class="card-label">Detection Rules</span>
+                    <span class="card-subvalue">Active D&R rules</span>
+                </div>
+            </div>
+
+            {# Detections Today Card #}
+            <div class="summary-card">
+                <div class="card-icon red">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <span class="card-value">
+                        {% if data.summary.detections_total is defined %}
+                            {{ data.summary.detections_total | format_number }}
+                        {% else %}
+                            <span class="na">N/A</span>
+                        {% endif %}
+                    </span>
+                    <span class="card-label">Detections</span>
+                    {% if data.summary.detections_timeframe %}
+                    <span class="card-subvalue">{{ data.summary.detections_timeframe }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# MITRE Techniques Card #}
+            <div class="summary-card">
+                <div class="card-icon amber">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <span class="card-value">
+                        {% if data.summary.mitre_techniques is defined %}
+                            {{ data.summary.mitre_techniques | format_number }}
+                        {% else %}
+                            <span class="na">N/A</span>
+                        {% endif %}
+                    </span>
+                    <span class="card-label">MITRE Techniques</span>
+                    <span class="card-subvalue">Coverage mapped</span>
+                </div>
+            </div>
+
+            {# Active Threats Card #}
+            <div class="summary-card">
+                <div class="card-icon purple">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <span class="card-value">
+                        {% if data.active_threats is defined %}
+                            {{ data.active_threats | length }}
+                        {% else %}
+                            0
+                        {% endif %}
+                    </span>
+                    <span class="card-label">Active Threats</span>
+                    {% if data.active_threats and data.active_threats | length > 0 %}
+                    <span class="card-subvalue">{{ data.active_threats[0].attack_type | default('Requires attention') }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ================================================================
+       PLATFORM DISTRIBUTION WITH DETECTIONS
+       GUARDRAIL: Only shows data if platforms exists
+       ================================================================ #}
+    <section class="dashboard-section" aria-labelledby="platform-heading">
+        <h2 id="platform-heading">Fleet Overview</h2>
+
+        <div class="chart-grid two-column">
+            {# Platform Distribution Chart #}
+            <div class="chart-container">
+                <h3 class="chart-title">Platform Distribution</h3>
+                <p class="chart-subtitle">{{ data.summary.sensors_total | default('N/A') }} sensors across platforms</p>
+                {% if data.platforms and data.platforms | length > 0 %}
+                <div class="chart-wrapper">
+                    <canvas id="platform-chart"></canvas>
+                </div>
+                <script>
+                    (function() {
+                        const platformData = [
+                            {% for platform in data.platforms %}
+                            { label: "{{ platform.name }}", value: {{ platform.sensors | default(0) }} }{% if not loop.last %},{% endif %}
+                            {% endfor %}
+                        ];
+                        LC.charts.pie(platformData, { id: 'platform-chart', donut: true });
+                    })();
+                </script>
+                {% else %}
+                <div class="chart-unavailable">
+                    <span class="icon">📊</span>
+                    <p>Platform data not available</p>
+                </div>
+                {% endif %}
+            </div>
+
+            {# Platform Breakdown Table with Detections #}
+            <div class="chart-container">
+                <h3 class="chart-title">Platform Breakdown</h3>
+                <p class="chart-subtitle">Sensors and detections by operating system</p>
+                {% if data.platforms and data.platforms | length > 0 %}
+                <div class="table-container">
+                    <table class="platform-table">
+                        <thead>
+                            <tr>
+                                <th>Platform</th>
+                                <th class="number">Sensors</th>
+                                <th class="number">%</th>
+                                <th class="number">Detections</th>
+                                <th class="number">Det %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set total_sensors = data.summary.sensors_total | default(1) %}
+                            {% set total_detections = data.summary.detections_total | default(1) %}
+                            {% for platform in data.platforms %}
+                            <tr>
+                                <td>
+                                    <span class="status-badge status-{{ platform.badge_class | default('primary') }}">
+                                        {{ platform.name }}
+                                    </span>
+                                </td>
+                                <td class="number">{{ platform.sensors | default(0) | format_number }}</td>
+                                <td class="number" style="color: var(--color-text-muted);">
+                                    {{ ((platform.sensors | default(0) / total_sensors) * 100) | round(1) }}%
+                                </td>
+                                <td class="number {% if platform.detections | default(0) > (total_detections * 0.5) %}detection-highlight{% endif %}">
+                                    {{ platform.detections | default(0) | format_number }}
+                                </td>
+                                <td class="number" style="color: var(--color-text-muted);">
+                                    {{ ((platform.detections | default(0) / total_detections) * 100) | round(1) }}%
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td>Total</td>
+                                <td class="number">{{ total_sensors | format_number }}</td>
+                                <td class="number">100%</td>
+                                <td class="number">{{ total_detections | format_number }}</td>
+                                <td class="number">100%</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                {% if data.platform_note %}
+                <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.75rem;">
+                    * {{ data.platform_note }}
+                </p>
+                {% endif %}
+                {% else %}
+                <div class="chart-unavailable">
+                    <span class="icon">📋</span>
+                    <p>Platform breakdown not available</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    {# ================================================================
+       DETECTION TIMELINE
+       GUARDRAIL: Only shows if hourly_detections exists
+       ================================================================ #}
+    {% if data.hourly_detections and data.hourly_detections | length > 1 %}
+    <section class="dashboard-section" aria-labelledby="timeline-heading">
+        <h2 id="timeline-heading">Detection Timeline</h2>
+
+        <div class="chart-container">
+            <h3 class="chart-title">Detections Over Time (Hourly)</h3>
+            <p class="chart-subtitle">{{ metadata.time_window.start_display | default('N/A') }} to {{ metadata.time_window.end_display | default('N/A') }}</p>
+            <div class="chart-wrapper" style="height: 350px;">
+                <canvas id="timeline-chart"></canvas>
+            </div>
+        </div>
+        <script>
+            (function() {
+                const timelineData = [
+                    {% for point in data.hourly_detections %}
+                    { date: "{{ point.hour }}", value: {{ point.count | default(0) }} }{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ];
+                LC.charts.line(timelineData, { id: 'timeline-chart', showArea: true });
+            })();
+        </script>
+    </section>
+    {% endif %}
+
+    {# ================================================================
+       MITRE ATT&CK COVERAGE
+       GUARDRAIL: Only shows if mitre_techniques exists
+       ================================================================ #}
+    {% if data.mitre_techniques and data.mitre_techniques | length > 0 %}
+    <section class="dashboard-section" aria-labelledby="mitre-heading">
+        <h2 id="mitre-heading">MITRE ATT&CK Coverage</h2>
+        <p style="color: var(--color-text-secondary); margin-bottom: 1rem;">
+            Detection rules mapped to MITRE ATT&CK framework techniques
+        </p>
+        <div class="mitre-grid">
+            {% for technique in data.mitre_techniques %}
+            <div class="mitre-tag">{{ technique.id }} - {{ technique.name }}</div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    {# ================================================================
+       DETECTION RULES INVENTORY
+       GUARDRAIL: Only shows if rules data exists
+       ================================================================ #}
+    {% if data.rules %}
+    <section class="dashboard-section" aria-labelledby="rules-heading">
+        <h2 id="rules-heading">Detection Rules Inventory</h2>
+
+        <div class="summary-grid" style="margin-bottom: 1.5rem;">
+            <div class="summary-card">
+                <div class="card-content" style="text-align: center;">
+                    <span class="card-value" style="color: var(--color-success);">{{ data.rules.total | default('N/A') | format_number }}</span>
+                    <span class="card-label">Total Rules</span>
+                </div>
+            </div>
+            {% for category in data.rules.categories[:4] %}
+            <div class="summary-card">
+                <div class="card-content" style="text-align: center;">
+                    <span class="card-value">{{ category.count | default('N/A') | format_number }}</span>
+                    <span class="card-label">{{ category.name }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if data.rules.category_badges and data.rules.category_badges | length > 0 %}
+        <h4 style="font-size: 0.9rem; color: var(--color-text-secondary); margin-bottom: 0.75rem;">Rule Categories</h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            {% for badge in data.rules.category_badges %}
+            <span class="status-badge status-{{ badge.class | default('primary') }}">{{ badge.name }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    {# ================================================================
+       ATTACK ANALYSIS DETAILS
+       GUARDRAIL: Only shows if attack_analysis exists
+       ================================================================ #}
+    {% if data.attack_analysis %}
+    <section class="dashboard-section" aria-labelledby="attack-heading">
+        <h2 id="attack-heading">Attack Analysis: {{ data.attack_analysis.title | default('Threat Details') }}</h2>
+
+        {% if data.attack_analysis.summary %}
+        <div class="alert-banner alert-banner-info" style="margin-bottom: 1.5rem;">
+            <p><strong>Summary:</strong> {{ data.attack_analysis.summary }}</p>
+        </div>
+        {% endif %}
+
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Attribute</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attr in data.attack_analysis.attributes %}
+                    <tr>
+                        <td><strong>{{ attr.name }}</strong></td>
+                        <td>
+                            {% if attr.type == 'ip' %}
+                            <code style="background: #fee2e2; padding: 0.25rem 0.5rem; border-radius: 4px; font-family: var(--font-mono);">{{ attr.value }}</code>
+                            {% elif attr.type == 'code' %}
+                            <code style="font-family: var(--font-mono);">{{ attr.value }}</code>
+                            {% elif attr.type == 'badge' %}
+                            <span class="status-badge status-{{ attr.badge_class | default('partial') }}">{{ attr.value }}</span>
+                            {% else %}
+                            {{ attr.value }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ================================================================
+       TOP DETECTIONS TABLE
+       GUARDRAIL: Only shows if top_detections exists
+       ================================================================ #}
+    {% if data.top_detections and data.top_detections | length > 0 %}
+    <section class="dashboard-section" aria-labelledby="top-detections-heading">
+        <h2 id="top-detections-heading">Top Detections by Volume</h2>
+
+        <div class="table-container">
+            <table class="data-table" data-sortable="true">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th data-sort-key="category">Category</th>
+                        <th data-sort-key="host">Source Host</th>
+                        <th data-sort-key="event_type">Event Type</th>
+                        <th data-sort-key="count" data-sort-type="number" class="number">Count</th>
+                        <th class="number">%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set total = data.summary.detections_total | default(1) %}
+                    {% for detection in data.top_detections %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            <span class="status-badge status-{{ detection.badge_class | default('primary') }}">
+                                {{ detection.category }}
+                            </span>
+                        </td>
+                        <td style="font-family: var(--font-mono); font-size: 0.8rem;">{{ detection.host | default('N/A') }}</td>
+                        <td>{{ detection.event_type | default('N/A') }}</td>
+                        <td class="number" style="font-weight: 600;">{{ detection.count | format_number }}</td>
+                        <td class="number" style="color: var(--color-text-muted);">
+                            {{ ((detection.count / total) * 100) | round(1) }}%
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4"><strong>Total (Top {{ data.top_detections | length }})</strong></td>
+                        <td class="number">
+                            {% set sum = data.top_detections | sum(attribute='count') %}
+                            {{ sum | format_number }}
+                        </td>
+                        <td class="number">{{ ((sum / total) * 100) | round(1) }}%</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </section>
+    {% endif %}
+
+    {# ================================================================
+       WARNINGS AND ERRORS
+       GUARDRAIL: ALL warnings from source data MUST be displayed
+       ================================================================ #}
+    {% if warnings or errors %}
+    <section class="dashboard-section warnings-section" aria-labelledby="warnings-heading">
+        <h2 id="warnings-heading">Data Limitations & Warnings</h2>
+
+        {% if warnings and warnings | length > 0 %}
+        <div class="warning-list">
+            {% for warning in warnings %}
+            <div class="warning-item">
+                <span class="warning-icon">⚠️</span>
+                <span>{{ warning }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if errors and errors | length > 0 %}
+        <div class="error-list">
+            {% for error in errors %}
+            <div class="error-item">
+                <strong>{{ error.component | default('Error') }}</strong>
+                {% if error.code %}<span class="error-code">{{ error.code }}</span>{% endif %}
+                <p>{{ error.message | default('Unknown error') }}</p>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        LC.tables.init();
+    });
+</script>
+{% endblock %}

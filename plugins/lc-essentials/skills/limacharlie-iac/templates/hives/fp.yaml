@@ -1,0 +1,22 @@
+# Global False Positive Rules
+# Suppress false positives across ALL tenants
+
+version: 3
+hives:
+  fp: {}
+    # Example:
+    # ignore-windows-defender-scans:
+    #   data:
+    #     detect:
+    #       op: and
+    #       rules:
+    #         - op: is
+    #           path: cat
+    #           value: suspicious-process
+    #         - op: is
+    #           path: detect/event/FILE_PATH
+    #           value: '*\\MsMpEng.exe'
+    #   usr_mtd:
+    #     enabled: true
+    #     expiry: 0
+    #     tags: []

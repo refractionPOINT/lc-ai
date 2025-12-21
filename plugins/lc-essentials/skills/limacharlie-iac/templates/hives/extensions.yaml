@@ -1,0 +1,11 @@
+# Global Extensions
+# Extensions enabled for ALL tenants
+
+version: 3
+extensions: []
+  # Common extensions:
+  # - ext-infrastructure
+  # - ext-velociraptor
+  # - ext-reliable-tasking
+  # - ext-sensor-cull
+  # - ext-git-sync

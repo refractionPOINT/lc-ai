@@ -1,0 +1,11 @@
+# Global Resources
+# Payloads and scripts available to ALL tenants
+
+version: 3
+resources: {}
+  # Example:
+  # my-collection-script:
+  #   data: |
+  #     #!/bin/bash
+  #     echo "Collecting data..."
+  #   is_payload: true

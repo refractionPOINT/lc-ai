@@ -1,0 +1,179 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Security Overview Report Data",
+  "description": "Schema for data input to the security-overview template. Single-tenant comprehensive security report. All values must come from actual API responses - no fabrication allowed.",
+  "type": "object",
+  "required": ["metadata", "data"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "description": "Report metadata - when and how data was collected",
+      "required": ["generated_at", "time_window", "org_name", "oid"],
+      "properties": {
+        "generated_at": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when data was collected",
+          "format": "date-time"
+        },
+        "time_window": {
+          "type": "object",
+          "required": ["start", "end", "start_display", "end_display"],
+          "properties": {
+            "start": { "type": "integer" },
+            "end": { "type": "integer" },
+            "start_display": { "type": "string" },
+            "end_display": { "type": "string" },
+            "days": { "type": "integer" }
+          }
+        },
+        "org_name": {
+          "type": "string",
+          "description": "Organization name"
+        },
+        "oid": {
+          "type": "string",
+          "description": "Organization ID (UUID)",
+          "format": "uuid"
+        }
+      }
+    },
+    "data": {
+      "type": "object",
+      "description": "Report data - all values from actual API responses",
+      "required": ["summary"],
+      "properties": {
+        "summary": {
+          "type": "object",
+          "description": "Executive summary metrics",
+          "required": ["sensors_total", "detections_total", "rules_total"],
+          "properties": {
+            "sensors_total": { "type": "integer" },
+            "sensors_online": { "type": "integer" },
+            "detections_total": { "type": "integer" },
+            "detections_24h": { "type": "integer" },
+            "rules_total": { "type": "integer" },
+            "rules_enabled": { "type": "integer" },
+            "mitre_coverage": { "type": "number", "minimum": 0, "maximum": 100 }
+          }
+        },
+        "active_threats": {
+          "type": "array",
+          "description": "Active threat alerts (optional)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "attacker_ip": { "type": "string" },
+              "start_time": { "type": "string" },
+              "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] }
+            }
+          }
+        },
+        "platforms": {
+          "type": "array",
+          "description": "Platform breakdown with sensors and detections",
+          "items": {
+            "type": "object",
+            "required": ["name", "sensors"],
+            "properties": {
+              "name": { "type": "string" },
+              "sensors": { "type": "integer" },
+              "sensors_percent": { "type": "number" },
+              "detections": { "type": "integer" },
+              "detections_percent": { "type": "number" },
+              "badge_class": { "type": "string" }
+            }
+          }
+        },
+        "hourly_detections": {
+          "type": "array",
+          "description": "Detection timeline data (optional)",
+          "items": {
+            "type": "object",
+            "required": ["hour", "count"],
+            "properties": {
+              "hour": { "type": "string" },
+              "count": { "type": "integer" }
+            }
+          }
+        },
+        "top_detections": {
+          "type": "array",
+          "description": "Top detection categories",
+          "items": {
+            "type": "object",
+            "required": ["category", "count"],
+            "properties": {
+              "category": { "type": "string" },
+              "count": { "type": "integer" },
+              "trend": { "type": "string", "enum": ["up", "down", "stable"] }
+            }
+          }
+        },
+        "mitre_techniques": {
+          "type": "array",
+          "description": "MITRE ATT&CK technique coverage (optional)",
+          "items": {
+            "type": "object",
+            "required": ["id", "name"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^T[0-9]{4}(\\.[0-9]{3})?$" },
+              "name": { "type": "string" },
+              "tactic": { "type": "string" },
+              "detection_count": { "type": "integer" }
+            }
+          }
+        },
+        "rules": {
+          "type": "object",
+          "description": "D&R rule inventory",
+          "properties": {
+            "general": { "type": "integer" },
+            "managed": { "type": "integer" },
+            "service": { "type": "integer" },
+            "enabled": { "type": "integer" },
+            "disabled": { "type": "integer" }
+          }
+        },
+        "attack_analysis": {
+          "type": "object",
+          "description": "Attack pattern analysis (optional)",
+          "properties": {
+            "primary_vector": { "type": "string" },
+            "top_attacker_ips": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "targeted_assets": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "description": "Warnings from data collection - ALL must be displayed",
+      "items": { "type": "string" }
+    },
+    "errors": {
+      "type": "array",
+      "description": "Errors from data collection",
+      "items": {
+        "type": "object",
+        "properties": {
+          "error_code": { "type": ["integer", "string"] },
+          "error_message": { "type": "string" },
+          "remediation": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "data_accuracy_note": {
+      "description": "DATA ACCURACY GUARDRAILS: All values must come from actual API responses. Missing fields show as 'N/A'."
+    }
+  }
+}

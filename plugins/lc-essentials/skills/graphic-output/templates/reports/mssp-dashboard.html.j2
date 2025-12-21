@@ -1,0 +1,506 @@
+{#
+  MSSP Dashboard Template
+
+  Multi-tenant overview with aggregate metrics, charts, and organization table.
+
+  DATA ACCURACY GUARDRAILS:
+  - This template ONLY displays data provided in the context
+  - Missing data shows "N/A" or "Data unavailable"
+  - All warnings are displayed in a dedicated section
+  - No data is fabricated, estimated, or interpolated
+#}
+{% extends 'base.html.j2' %}
+
+{% block title %}MSSP Security Dashboard{% endblock %}
+
+{% block report_title %}MSSP Security Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+    {# ================================================================
+       EXECUTIVE SUMMARY CARDS
+       GUARDRAIL: All values come directly from data.aggregate
+       ================================================================ #}
+    <section class="dashboard-section" aria-labelledby="summary-heading">
+        <h2 id="summary-heading">Executive Summary</h2>
+
+        <div class="summary-grid">
+            {# Sensors Card #}
+            <div class="summary-card">
+                <div class="card-icon blue">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                        <path d="M8 21h8M12 17v4"/>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <span class="card-value">
+                        {% if data.aggregate.sensors.total is defined %}
+                            {{ data.aggregate.sensors.total | format_number }}
+                        {% else %}
+                            <span class="na">N/A</span>
+                        {% endif %}
+                    </span>
+                    <span class="card-label">Total Sensors</span>
+                    {% if data.aggregate.sensors.online is defined and data.aggregate.sensors.total is defined %}
+                    <span class="card-subvalue">
+                        {{ data.aggregate.sensors.online | format_number }} online
+                        ({{ ((data.aggregate.sensors.online / data.aggregate.sensors.total) * 100) | round(1) }}%)
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Detections Card #}
+            <div class="summary-card">
+                <div class="card-icon amber">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <span class="card-value">
+                        {% if data.aggregate.detections.retrieved is defined %}
+                            {{ data.aggregate.detections.retrieved | format_number }}
+                        {% else %}
+                            <span class="na">N/A</span>
+                        {% endif %}
+                    </span>
+                    <span class="card-label">Detections Retrieved</span>
+                    {% if data.aggregate.detections.limit_reached %}
+                    <div class="card-warning">
+                        Limit reached on {{ data.aggregate.detections.orgs_at_limit | default('some') }} orgs - actual count higher
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Rules Card #}
+            <div class="summary-card">
+                <div class="card-icon green">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <span class="card-value">
+                        {% if data.aggregate.rules.total is defined %}
+                            {{ data.aggregate.rules.total | format_number }}
+                        {% else %}
+                            <span class="na">N/A</span>
+                        {% endif %}
+                    </span>
+                    <span class="card-label">D&R Rules</span>
+                    {% if data.aggregate.rules.enabled is defined %}
+                    <span class="card-subvalue">
+                        {{ data.aggregate.rules.enabled | format_number }} enabled
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {# Organizations Card #}
+            <div class="summary-card">
+                <div class="card-icon purple">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                    </svg>
+                </div>
+                <div class="card-content">
+                    <span class="card-value">
+                        {% if metadata.organizations.successful is defined %}
+                            {{ metadata.organizations.successful }}
+                        {% else %}
+                            <span class="na">N/A</span>
+                        {% endif %}
+                    </span>
+                    <span class="card-label">Organizations</span>
+                    {% if metadata.organizations.total is defined %}
+                    <span class="card-subvalue">
+                        of {{ metadata.organizations.total }}
+                        {% if metadata.organizations.success_rate is defined %}
+                        ({{ metadata.organizations.success_rate }}% success)
+                        {% endif %}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {# ================================================================
+       FLEET HEALTH CHARTS
+       GUARDRAIL: Charts only render if data exists
+       ================================================================ #}
+    <section class="dashboard-section" aria-labelledby="health-heading">
+        <h2 id="health-heading">Fleet Overview</h2>
+
+        <div class="chart-grid two-column">
+            {# Platform Distribution Pie Chart #}
+            <div class="chart-container">
+                <h3 class="chart-title">Platform Distribution</h3>
+                {% if data.aggregate.sensors.platforms and data.aggregate.sensors.platforms | length > 0 %}
+                <div class="chart-wrapper">
+                    <svg id="platform-chart" class="pie-chart" role="img" aria-label="Platform distribution chart"></svg>
+                    <div id="platform-chart-legend" class="chart-legend"></div>
+                </div>
+                <script>
+                    (function() {
+                        const platformData = {{ data.aggregate.sensors.platforms | dict_to_chart_data | tojson }};
+                        if (platformData && platformData.length > 0) {
+                            LC.charts.pie(platformData, {
+                                id: 'platform-chart',
+                                donut: true,
+                                showLegend: true,
+                                showLabels: true
+                            });
+                        }
+                    })();
+                </script>
+                {% else %}
+                <div class="chart-unavailable">
+                    <span class="icon">📊</span>
+                    <p>Platform data not available</p>
+                </div>
+                {% endif %}
+            </div>
+
+            {# Organization Health Bar Chart #}
+            <div class="chart-container">
+                <h3 class="chart-title">Organization Health</h3>
+                {% if data.organizations and data.organizations | length > 0 %}
+                <div class="chart-wrapper">
+                    <svg id="org-health-chart" class="bar-chart" role="img" aria-label="Organization health chart"></svg>
+                </div>
+                <script>
+                    (function() {
+                        const orgData = [
+                            {% for org in data.organizations[:10] %}
+                            {
+                                label: "{{ org.name | truncate(20) }}",
+                                value: {{ org.health | default(0) }}
+                            }{% if not loop.last %},{% endif %}
+                            {% endfor %}
+                        ];
+                        if (orgData.length > 0) {
+                            LC.charts.bar(orgData, {
+                                id: 'org-health-chart',
+                                horizontal: true,
+                                showValues: true,
+                                barColor: '#22c55e'
+                            });
+                        }
+                    })();
+                </script>
+                {% if data.organizations | length > 10 %}
+                <p class="chart-note" style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.5rem;">
+                    Showing top 10 of {{ data.organizations | length }} organizations
+                </p>
+                {% endif %}
+                {% else %}
+                <div class="chart-unavailable">
+                    <span class="icon">📊</span>
+                    <p>Organization health data not available</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    {# ================================================================
+       DETECTION ANALYTICS
+       GUARDRAIL: Shows "unavailable" message if data missing
+       ================================================================ #}
+    <section class="dashboard-section" aria-labelledby="detections-heading">
+        <h2 id="detections-heading">Detection Analytics</h2>
+
+        {% if data.aggregate.detections.limit_reached %}
+        <div class="warning-item" style="margin-bottom: 1rem;">
+            <span class="warning-icon">⚠️</span>
+            <span>Detection limit reached on {{ data.aggregate.detections.orgs_at_limit | default('some') }} organizations.
+                  Actual detection counts are higher than shown.</span>
+        </div>
+        {% endif %}
+
+        <div class="chart-grid two-column">
+            {# Top Detection Categories Bar Chart #}
+            <div class="chart-container">
+                <h3 class="chart-title">Top Detection Categories</h3>
+                {% if data.aggregate.detections.top_categories and data.aggregate.detections.top_categories | length > 0 %}
+                <div class="chart-wrapper">
+                    <svg id="detection-categories-chart" class="bar-chart" role="img" aria-label="Detection categories chart"></svg>
+                </div>
+                <script>
+                    (function() {
+                        const categoryData = [
+                            {% for cat in data.aggregate.detections.top_categories[:8] %}
+                            {
+                                label: "{{ cat.label | default(cat.category) | default('unknown') }}",
+                                value: {{ cat.value | default(cat.count) | default(0) }}
+                            }{% if not loop.last %},{% endif %}
+                            {% endfor %}
+                        ];
+                        if (categoryData.length > 0) {
+                            LC.charts.bar(categoryData, {
+                                id: 'detection-categories-chart',
+                                horizontal: false,
+                                showValues: true,
+                                barColor: '#f59e0b'
+                            });
+                        }
+                    })();
+                </script>
+                {% else %}
+                <div class="chart-unavailable">
+                    <span class="icon">📊</span>
+                    <p>Detection category data not available</p>
+                </div>
+                {% endif %}
+            </div>
+
+            {# Detection Trend Line Chart #}
+            <div class="chart-container">
+                <h3 class="chart-title">Detection Volume Trend</h3>
+                {% if data.aggregate.detections.daily_trend and data.aggregate.detections.daily_trend | length > 1 %}
+                <div class="chart-wrapper">
+                    <svg id="detection-trend-chart" class="line-chart" role="img" aria-label="Detection trend chart"></svg>
+                    <div id="detection-trend-chart-tooltip" class="chart-tooltip" style="display: none;"></div>
+                </div>
+                <script>
+                    (function() {
+                        const trendData = [
+                            {% for point in data.aggregate.detections.daily_trend %}
+                            {
+                                date: "{{ point.date }}",
+                                value: {{ point.value | default(0) }}
+                            }{% if not loop.last %},{% endif %}
+                            {% endfor %}
+                        ];
+                        if (trendData.length > 1) {
+                            LC.charts.line(trendData, {
+                                id: 'detection-trend-chart',
+                                showArea: true,
+                                showPoints: true,
+                                showGrid: true
+                            });
+                        }
+                    })();
+                </script>
+                {% elif data.aggregate.detections.daily_trend and data.aggregate.detections.daily_trend | length == 1 %}
+                <div class="chart-unavailable">
+                    <span class="icon">📊</span>
+                    <p>Insufficient data for trend visualization</p>
+                    <p style="font-size: 0.75rem; margin-top: 0.5rem;">
+                        Single data point: {{ data.aggregate.detections.daily_trend[0].date }} =
+                        {{ data.aggregate.detections.daily_trend[0].value | format_number }}
+                    </p>
+                </div>
+                {% else %}
+                <div class="chart-unavailable">
+                    <span class="icon">📊</span>
+                    <p>Trend data not available</p>
+                    <p style="font-size: 0.75rem; margin-top: 0.5rem;">
+                        Daily detection counts were not provided in the source data.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    {# ================================================================
+       ORGANIZATION DETAILS TABLE
+       GUARDRAIL: Shows N/A for missing cell values
+       ================================================================ #}
+    <section class="dashboard-section" aria-labelledby="org-details-heading">
+        <h2 id="org-details-heading">Organization Details</h2>
+
+        {% if data.organizations and data.organizations | length > 0 %}
+        <div class="table-container">
+            <table class="data-table" data-sortable="true">
+                <caption class="sr-only">Organization summary table</caption>
+                <thead>
+                    <tr>
+                        <th data-sort-key="name" data-sort-type="string">Organization</th>
+                        <th data-sort-key="sensors_total" data-sort-type="number" class="number">Sensors</th>
+                        <th data-sort-key="sensors_online" data-sort-type="number" class="number">Online</th>
+                        <th data-sort-key="health" data-sort-type="number" class="number">Health</th>
+                        <th data-sort-key="detections" data-sort-type="number" class="number">Detections</th>
+                        <th data-sort-key="status" data-sort-type="string">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for org in data.organizations %}
+                    <tr>
+                        <td>{{ org.name | default('N/A') }}</td>
+                        <td class="number" data-value="{{ org.sensors_total | default(0) }}">
+                            {{ org.sensors_total | format_number if org.sensors_total is defined else 'N/A' }}
+                        </td>
+                        <td class="number" data-value="{{ org.sensors_online | default(0) }}">
+                            {{ org.sensors_online | format_number if org.sensors_online is defined else 'N/A' }}
+                        </td>
+                        <td class="number" data-value="{{ org.health | default(0) }}">
+                            {% if org.health is defined %}
+                            <div class="inline-bar" style="--bar-width: {{ org.health }}%">
+                                <span class="bar-value">{{ org.health | round(1) }}%</span>
+                            </div>
+                            {% else %}
+                            <span class="na">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td class="number" data-value="{{ org.detections | default(0) }}">
+                            {{ org.detections | format_number if org.detections is defined else 'N/A' }}
+                            {% if org.detection_limit_reached %}<span title="Limit reached">⚠️</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if org.status == 'success' %}
+                            <span class="status-badge status-success">Success</span>
+                            {% elif org.status == 'partial' %}
+                            <span class="status-badge status-partial">Partial</span>
+                            {% elif org.status == 'failed' %}
+                            <span class="status-badge status-failed">Failed</span>
+                            {% else %}
+                            <span class="na">{{ org.status | default('N/A') }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td><strong>Total ({{ data.organizations | length }} orgs)</strong></td>
+                        <td class="number">
+                            {{ data.aggregate.sensors.total | format_number if data.aggregate.sensors.total is defined else 'N/A' }}
+                        </td>
+                        <td class="number">
+                            {{ data.aggregate.sensors.online | format_number if data.aggregate.sensors.online is defined else 'N/A' }}
+                        </td>
+                        <td class="number">
+                            {% if data.aggregate.sensors.health_percent is defined %}
+                            {{ data.aggregate.sensors.health_percent | round(1) }}%
+                            {% elif data.aggregate.sensors.online is defined and data.aggregate.sensors.total is defined and data.aggregate.sensors.total > 0 %}
+                            {{ ((data.aggregate.sensors.online / data.aggregate.sensors.total) * 100) | round(1) }}%
+                            {% else %}
+                            N/A
+                            {% endif %}
+                        </td>
+                        <td class="number">
+                            {{ data.aggregate.detections.retrieved | format_number if data.aggregate.detections.retrieved is defined else 'N/A' }}
+                        </td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        {% else %}
+        <div class="chart-unavailable">
+            <span class="icon">📋</span>
+            <p>No organization data available</p>
+        </div>
+        {% endif %}
+    </section>
+
+    {# ================================================================
+       WARNINGS AND ERRORS SECTION
+       GUARDRAIL: ALL warnings from source data MUST be displayed here
+       ================================================================ #}
+    {% if warnings or errors %}
+    <section class="dashboard-section warnings-section" aria-labelledby="warnings-heading">
+        <h2 id="warnings-heading">⚠️ Data Limitations & Warnings</h2>
+
+        {% if warnings and warnings | length > 0 %}
+        <div class="warning-list">
+            <h3>Warnings</h3>
+            {% for warning in warnings %}
+            <div class="warning-item">
+                <span class="warning-icon">⚠️</span>
+                <span class="warning-text">{{ warning }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if errors and errors | length > 0 %}
+        <div class="error-list">
+            <h3>Failed Organizations ({{ errors | length }})</h3>
+            {% for error in errors %}
+            <div class="error-item">
+                <strong>{{ error.org_name | default(error.org | default('Unknown')) }}</strong>
+                {% if error.error_code %}
+                <span class="error-code">{{ error.error_code }}</span>
+                {% endif %}
+                <p>{{ error.error_message | default(error.error | default('Unknown error')) }}</p>
+                {% if error.remediation %}
+                <p class="remediation"><strong>Action:</strong> {{ error.remediation }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+    {% endif %}
+
+    {# ================================================================
+       USAGE METRICS (if available)
+       GUARDRAIL: Only shown if data exists, no fabrication
+       ================================================================ #}
+    {% if data.aggregate.usage %}
+    <section class="dashboard-section" aria-labelledby="usage-heading">
+        <h2 id="usage-heading">Usage Metrics</h2>
+
+        <div class="summary-grid">
+            {% if data.aggregate.usage.total_events is defined %}
+            <div class="summary-card">
+                <div class="card-content">
+                    <span class="card-value">{{ data.aggregate.usage.total_events | format_number }}</span>
+                    <span class="card-label">Total Events</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if data.aggregate.usage.total_output_bytes is defined %}
+            <div class="summary-card">
+                <div class="card-content">
+                    <span class="card-value">{{ data.aggregate.usage.total_output_bytes | format_bytes }}</span>
+                    <span class="card-label">Data Output</span>
+                    <span class="card-subvalue">({{ data.aggregate.usage.total_output_bytes | format_number }} bytes)</span>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if data.aggregate.usage.total_evaluations is defined %}
+            <div class="summary-card">
+                <div class="card-content">
+                    <span class="card-value">{{ data.aggregate.usage.total_evaluations | format_number }}</span>
+                    <span class="card-label">D&R Evaluations</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <p style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 1rem;">
+            <strong>Note:</strong> Usage metrics are from LimaCharlie APIs. No cost calculations are performed.
+            For billing details, refer to individual organization invoices.
+        </p>
+    </section>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize table sorting
+    document.addEventListener('DOMContentLoaded', function() {
+        LC.tables.init();
+    });
+</script>
+{% endblock %}

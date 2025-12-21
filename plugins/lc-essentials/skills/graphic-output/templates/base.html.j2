@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ theme | default('light') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="LimaCharlie Graphic Output Skill">
+    <meta name="generated-at" content="{{ metadata.generated_at }}">
+    <meta name="data-accuracy" content="All values from source data - no fabrication">
+    <title>{% block title %}LimaCharlie Report{% endblock %}</title>
+
+    {# ============================================================
+       EMBEDDED CSS - No External Dependencies
+       ============================================================ #}
+    <style>
+        {% block base_styles %}
+        {# CSS Custom Properties (Theme) #}
+        :root {
+            --color-bg: #ffffff;
+            --color-bg-secondary: #f8fafc;
+            --color-bg-tertiary: #f1f5f9;
+            --color-text: #1e293b;
+            --color-text-secondary: #64748b;
+            --color-text-muted: #94a3b8;
+            --color-border: #e2e8f0;
+            --color-border-light: #f1f5f9;
+
+            --color-primary: #0ea5e9;
+            --color-primary-dark: #0284c7;
+            --color-success: #22c55e;
+            --color-warning: #f59e0b;
+            --color-danger: #ef4444;
+            --color-purple: #8b5cf6;
+            --color-pink: #ec4899;
+
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+
+            --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        [data-theme="dark"] {
+            --color-bg: #0f172a;
+            --color-bg-secondary: #1e293b;
+            --color-bg-tertiary: #334155;
+            --color-text: #f1f5f9;
+            --color-text-secondary: #94a3b8;
+            --color-text-muted: #64748b;
+            --color-border: #334155;
+            --color-border-light: #1e293b;
+        }
+
+        {# Reset & Base #}
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 16px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            min-height: 100vh;
+        }
+
+        {# Typography #}
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+            line-height: 1.25;
+            color: var(--color-text);
+        }
+
+        h1 { font-size: 1.875rem; }
+        h2 { font-size: 1.5rem; margin-top: 2rem; margin-bottom: 1rem; }
+        h3 { font-size: 1.25rem; margin-top: 1.5rem; margin-bottom: 0.75rem; }
+
+        p { margin-bottom: 1rem; }
+
+        a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+        a:hover { text-decoration: underline; }
+
+        code {
+            font-family: var(--font-mono);
+            font-size: 0.875em;
+            background: var(--color-bg-tertiary);
+            padding: 0.125rem 0.375rem;
+            border-radius: var(--radius-sm);
+        }
+
+        {# Accessibility #}
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--color-primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            z-index: 100;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+
+        {# Layout #}
+        .report-wrapper {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .report-content {
+            padding: 1rem 0;
+        }
+
+        .dashboard-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+        }
+
+        {# Grid Layouts #}
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .chart-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .chart-grid.two-column {
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        }
+
+        .chart-grid.three-column {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        {# Summary Cards #}
+        .summary-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--radius-md);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            flex-shrink: 0;
+        }
+        .card-icon.blue { background: #dbeafe; color: #1d4ed8; }
+        .card-icon.green { background: #dcfce7; color: #15803d; }
+        .card-icon.amber { background: #fef3c7; color: #b45309; }
+        .card-icon.red { background: #fee2e2; color: #b91c1c; }
+        .card-icon.purple { background: #ede9fe; color: #6d28d9; }
+
+        .card-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .card-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .card-value {
+            display: block;
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.2;
+            color: var(--color-text);
+        }
+
+        .card-label {
+            display: block;
+            font-size: 0.875rem;
+            color: var(--color-text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .card-subvalue {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .card-warning {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: #fef3c7;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            color: #92400e;
+        }
+
+        {# N/A Indicator #}
+        .na, .data-unavailable {
+            color: var(--color-text-muted);
+            font-style: italic;
+        }
+
+        {# Charts #}
+        .chart-container {
+            padding: 1.5rem;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--radius-lg);
+            min-height: 380px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.2s ease;
+        }
+
+        .chart-container:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--color-text);
+        }
+
+        .chart-subtitle {
+            font-size: 0.8rem;
+            color: var(--color-text-muted);
+            margin-bottom: 1.25rem;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+
+        .chart-wrapper canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .chart-wrapper.gauge {
+            height: 220px;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        .chart-unavailable {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 280px;
+            color: var(--color-text-muted);
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .chart-unavailable .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.4;
+        }
+
+        .chart-stat {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .chart-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .chart-stat-label {
+            font-size: 0.875rem;
+            color: var(--color-text-secondary);
+        }
+
+        .chart-stat-change {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            font-weight: 500;
+        }
+
+        .chart-stat-change.up { background: #dcfce7; color: #15803d; }
+        .chart-stat-change.down { background: #fee2e2; color: #b91c1c; }
+        .chart-stat-change.neutral { background: #f3f4f6; color: #6b7280; }
+
+        {# Tables #}
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--color-border-light);
+        }
+
+        .data-table th {
+            background: var(--color-bg-secondary);
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            white-space: nowrap;
+        }
+
+        .data-table th[data-sortable] {
+            cursor: pointer;
+            user-select: none;
+        }
+        .data-table th[data-sortable]:hover {
+            background: var(--color-bg-tertiary);
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--color-bg-secondary);
+        }
+
+        .data-table .number {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .data-table tfoot td {
+            font-weight: 600;
+            background: var(--color-bg-secondary);
+        }
+
+        {# Inline Bar #}
+        .inline-bar {
+            width: 100%;
+            height: 20px;
+            background: var(--color-bg-tertiary);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .inline-bar::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: var(--bar-width, 0%);
+            background: var(--color-primary);
+            border-radius: var(--radius-sm);
+            transition: width 0.3s ease;
+        }
+
+        .inline-bar .bar-value {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        {# Status Badges #}
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-success { background: #dcfce7; color: #15803d; }
+        .status-partial { background: #fef3c7; color: #b45309; }
+        .status-failed { background: #fee2e2; color: #b91c1c; }
+        .status-primary { background: #dbeafe; color: #1d4ed8; }
+        .status-purple { background: #ede9fe; color: #6d28d9; }
+
+        {# Alert Banners #}
+        .alert-banner {
+            padding: 1.25rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 1.5rem;
+        }
+
+        .alert-banner-danger {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border: 1px solid #fecaca;
+        }
+
+        .alert-banner-warning {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border: 1px solid #fde68a;
+        }
+
+        .alert-banner-info {
+            background: linear-gradient(135deg, #eff6ff, #dbeafe);
+            border: 1px solid #bfdbfe;
+        }
+
+        .alert-banner-title {
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-banner-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .alert-banner-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .alert-banner-item-label {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+        }
+
+        {# IP Box #}
+        .ip-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #1e293b;
+            color: #f1f5f9;
+            border-radius: var(--radius-md);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+        }
+
+        {# MITRE Tags #}
+        .mitre-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .mitre-tag {
+            padding: 0.4rem 0.75rem;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #92400e;
+            border-radius: var(--radius-md);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        {# Platform Breakdown Table with Detection Column #}
+        .platform-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .platform-table th,
+        .platform-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--color-border-light);
+        }
+
+        .platform-table th {
+            background: var(--color-bg-secondary);
+            font-weight: 600;
+            text-align: left;
+        }
+
+        .platform-table th.number,
+        .platform-table td.number {
+            text-align: right;
+        }
+
+        .platform-table tbody tr:hover {
+            background: var(--color-bg-secondary);
+        }
+
+        .platform-table tfoot {
+            background: var(--color-bg-tertiary);
+            font-weight: 600;
+        }
+
+        .detection-highlight {
+            font-weight: 700;
+            color: var(--color-danger);
+        }
+
+        {# Warnings Section #}
+        .warnings-section {
+            background: #fffbeb;
+            border-color: #fbbf24;
+        }
+
+        .warning-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .warning-item {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: #fef3c7;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+        }
+
+        .warning-icon {
+            flex-shrink: 0;
+        }
+
+        .error-list {
+            margin-top: 1rem;
+        }
+
+        .error-item {
+            padding: 1rem;
+            background: #fee2e2;
+            border-radius: var(--radius-sm);
+            margin-bottom: 0.5rem;
+        }
+
+        .error-item .error-code {
+            display: inline-block;
+            margin-left: 0.5rem;
+            padding: 0.125rem 0.375rem;
+            background: #fecaca;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+        }
+
+        .remediation {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: white;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
+        }
+
+        {# Data Provenance Footer #}
+        .data-provenance {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+        }
+
+        .provenance-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .provenance-list dt {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .provenance-list dd {
+            font-weight: 500;
+            margin-top: 0.25rem;
+        }
+
+        .accuracy-statement {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+        }
+
+        .accuracy-statement p:last-child {
+            margin-bottom: 0;
+        }
+
+        {# Buttons #}
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: var(--color-primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--color-bg);
+            border-color: var(--color-border);
+            color: var(--color-text);
+        }
+        .btn-secondary:hover {
+            background: var(--color-bg-secondary);
+        }
+
+        {# Header #}
+        .report-header {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-lg);
+            margin-bottom: 1rem;
+        }
+
+        .header-branding {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .lc-logo {
+            width: 32px;
+            height: 32px;
+        }
+
+        .header-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--color-text);
+        }
+
+        .header-meta h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .meta-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+        }
+
+        .meta-item dt {
+            color: var(--color-text-muted);
+            font-size: 0.75rem;
+        }
+
+        .meta-item dd {
+            font-weight: 500;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        {% endblock %}
+    </style>
+
+    {# Print Styles #}
+    <style media="print">
+        {% block print_styles %}
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+
+        body {
+            font-size: 11pt;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+
+        .report-header,
+        .dashboard-section,
+        .data-provenance {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .chart-container {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .data-table {
+            font-size: 9pt;
+        }
+
+        .warnings-section {
+            background: #fffbeb !important;
+        }
+
+        .accuracy-statement {
+            background: #ecfdf5 !important;
+        }
+        {% endblock %}
+    </style>
+
+    {% block extra_styles %}{% endblock %}
+
+    {# Chart.js - Modern, beautiful charts #}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        const LC = window.LC || {};
+        LC.colors = {
+            primary: '#0ea5e9',
+            success: '#22c55e',
+            warning: '#f59e0b',
+            danger: '#ef4444',
+            purple: '#8b5cf6',
+            pink: '#ec4899',
+            teal: '#14b8a6',
+            indigo: '#6366f1',
+            palette: ['#0ea5e9', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#6366f1'],
+            gradients: {
+                blue: ['rgba(14, 165, 233, 0.8)', 'rgba(14, 165, 233, 0.1)'],
+                green: ['rgba(34, 197, 94, 0.8)', 'rgba(34, 197, 94, 0.1)'],
+                red: ['rgba(239, 68, 68, 0.8)', 'rgba(239, 68, 68, 0.1)']
+            }
+        };
+        LC.utils = {
+            formatNumber: (n) => (n === null || n === undefined) ? 'N/A' : Number(n).toLocaleString(),
+            createGradient: (ctx, color1, color2) => {
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, color1);
+                gradient.addColorStop(1, color2);
+                return gradient;
+            }
+        };
+        LC.chartInstances = {};
+        LC.charts = {
+            pie: function(data, cfg) {
+                const canvas = document.getElementById(cfg.id);
+                if (!canvas || !data || !data.length) return;
+                const valid = data.filter(d => d && d.value > 0);
+                if (!valid.length) return;
+
+                // Destroy existing chart if any
+                if (LC.chartInstances[cfg.id]) {
+                    LC.chartInstances[cfg.id].destroy();
+                }
+
+                const ctx = canvas.getContext('2d');
+                const total = valid.reduce((sum, d) => sum + d.value, 0);
+
+                LC.chartInstances[cfg.id] = new Chart(ctx, {
+                    type: cfg.donut ? 'doughnut' : 'pie',
+                    data: {
+                        labels: valid.map(d => d.label),
+                        datasets: [{
+                            data: valid.map(d => d.value),
+                            backgroundColor: LC.colors.palette.slice(0, valid.length),
+                            borderColor: '#ffffff',
+                            borderWidth: 3,
+                            hoverBorderWidth: 4,
+                            hoverOffset: 8
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: cfg.donut ? '55%' : 0,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true,
+                                    pointStyle: 'rectRounded',
+                                    font: { size: 12, weight: '500' }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                titleFont: { size: 14, weight: '600' },
+                                bodyFont: { size: 13 },
+                                padding: 14,
+                                cornerRadius: 8,
+                                displayColors: true,
+                                callbacks: {
+                                    label: (ctx) => {
+                                        const pct = ((ctx.raw / total) * 100).toFixed(1);
+                                        return ` ${ctx.label}: ${LC.utils.formatNumber(ctx.raw)} (${pct}%)`;
+                                    }
+                                }
+                            }
+                        },
+                        animation: {
+                            animateRotate: true,
+                            animateScale: true,
+                            duration: 800,
+                            easing: 'easeOutQuart'
+                        }
+                    }
+                });
+            },
+            bar: function(data, cfg) {
+                const canvas = document.getElementById(cfg.id);
+                if (!canvas || !data || !data.length) return;
+                const valid = data.filter(d => d && d.value !== null && d.value !== undefined);
+                if (!valid.length) return;
+
+                if (LC.chartInstances[cfg.id]) {
+                    LC.chartInstances[cfg.id].destroy();
+                }
+
+                const ctx = canvas.getContext('2d');
+                const gradient = LC.utils.createGradient(ctx,
+                    cfg.gradientStart || 'rgba(14, 165, 233, 0.9)',
+                    cfg.gradientEnd || 'rgba(14, 165, 233, 0.4)');
+
+                LC.chartInstances[cfg.id] = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: valid.map(d => d.label),
+                        datasets: [{
+                            data: valid.map(d => d.value),
+                            backgroundColor: cfg.multiColor ? LC.colors.palette.slice(0, valid.length) : gradient,
+                            borderRadius: 6,
+                            borderSkipped: false,
+                            barPercentage: 0.7,
+                            categoryPercentage: 0.8
+                        }]
+                    },
+                    options: {
+                        indexAxis: cfg.horizontal ? 'y' : 'x',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                titleFont: { size: 14, weight: '600' },
+                                bodyFont: { size: 13 },
+                                padding: 14,
+                                cornerRadius: 8,
+                                callbacks: {
+                                    label: (ctx) => ` Count: ${LC.utils.formatNumber(ctx.raw)}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { display: !cfg.horizontal, color: 'rgba(148, 163, 184, 0.1)' },
+                                ticks: {
+                                    font: { size: 11 },
+                                    maxRotation: cfg.horizontal ? 0 : 45,
+                                    minRotation: cfg.horizontal ? 0 : 45
+                                }
+                            },
+                            y: {
+                                grid: { display: cfg.horizontal, color: 'rgba(148, 163, 184, 0.1)' },
+                                ticks: {
+                                    font: { size: 11 },
+                                    callback: (v) => v >= 1000 ? (v/1000).toFixed(1) + 'k' : v
+                                },
+                                beginAtZero: true
+                            }
+                        },
+                        animation: {
+                            duration: 1000,
+                            easing: 'easeOutQuart'
+                        }
+                    }
+                });
+            },
+            line: function(data, cfg) {
+                const canvas = document.getElementById(cfg.id);
+                if (!canvas || !data || data.length < 1) return;
+                const valid = data.filter(d => d && d.date && d.value != null);
+                if (!valid.length) return;
+
+                if (LC.chartInstances[cfg.id]) {
+                    LC.chartInstances[cfg.id].destroy();
+                }
+
+                const ctx = canvas.getContext('2d');
+                const gradient = LC.utils.createGradient(ctx,
+                    'rgba(14, 165, 233, 0.4)',
+                    'rgba(14, 165, 233, 0.02)');
+
+                LC.chartInstances[cfg.id] = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: valid.map(d => d.date),
+                        datasets: [{
+                            data: valid.map(d => d.value),
+                            borderColor: LC.colors.primary,
+                            backgroundColor: cfg.showArea ? gradient : 'transparent',
+                            fill: cfg.showArea,
+                            tension: 0.4,
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            pointBackgroundColor: LC.colors.primary,
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointHoverRadius: 8,
+                            pointHoverBorderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                titleFont: { size: 14, weight: '600' },
+                                bodyFont: { size: 13 },
+                                padding: 14,
+                                cornerRadius: 8,
+                                intersect: false,
+                                mode: 'index'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                                ticks: { font: { size: 11 }, maxRotation: 45, minRotation: 45 }
+                            },
+                            y: {
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                                ticks: {
+                                    font: { size: 11 },
+                                    callback: (v) => v >= 1000 ? (v/1000).toFixed(1) + 'k' : v
+                                },
+                                beginAtZero: true
+                            }
+                        },
+                        interaction: { intersect: false, mode: 'index' },
+                        animation: {
+                            duration: 1200,
+                            easing: 'easeOutQuart'
+                        }
+                    }
+                });
+            },
+            gauge: function(value, cfg) {
+                const canvas = document.getElementById(cfg.id);
+                if (!canvas || value === null || value === undefined) return;
+
+                if (LC.chartInstances[cfg.id]) {
+                    LC.chartInstances[cfg.id].destroy();
+                }
+
+                const ctx = canvas.getContext('2d');
+                const max = cfg.max || 100;
+                const pct = Math.min(100, (value / max) * 100);
+                const color = pct >= 70 ? LC.colors.success : pct >= 40 ? LC.colors.warning : LC.colors.danger;
+
+                LC.chartInstances[cfg.id] = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: [pct, 100 - pct],
+                            backgroundColor: [color, 'rgba(148, 163, 184, 0.15)'],
+                            borderWidth: 0,
+                            circumference: 270,
+                            rotation: 225
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '75%',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: false }
+                        },
+                        animation: {
+                            animateRotate: true,
+                            duration: 1500,
+                            easing: 'easeOutQuart'
+                        }
+                    },
+                    plugins: [{
+                        id: 'gaugeText',
+                        afterDraw: (chart) => {
+                            const { ctx, width, height } = chart;
+                            ctx.save();
+                            ctx.font = 'bold 32px system-ui';
+                            ctx.fillStyle = color;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(pct.toFixed(1) + '%', width / 2, height / 2 + 10);
+                            if (cfg.label) {
+                                ctx.font = '13px system-ui';
+                                ctx.fillStyle = '#64748b';
+                                ctx.fillText(cfg.label, width / 2, height / 2 + 38);
+                            }
+                            ctx.restore();
+                        }
+                    }]
+                });
+            }
+        };
+        LC.tables = {
+            init: function() {
+                document.querySelectorAll('.data-table[data-sortable="true"]').forEach(t => {
+                    t.querySelectorAll('th[data-sort-key]').forEach(th => {
+                        th.style.cursor = 'pointer';
+                        th.onclick = () => LC.tables.sort(t, th.dataset.sortKey, th.dataset.sortType || 'string');
+                    });
+                });
+            },
+            sort: function(t, key, type) {
+                const tb = t.querySelector('tbody'), rows = Array.from(tb.querySelectorAll('tr'));
+                const th = t.querySelector(`th[data-sort-key="${key}"]`);
+                const ord = th.dataset.sortOrder === 'asc' ? 'desc' : 'asc';
+                t.querySelectorAll('th').forEach(h => h.dataset.sortOrder = '');
+                th.dataset.sortOrder = ord;
+                rows.sort((a, b) => {
+                    const ac = a.querySelector(`td:nth-child(${th.cellIndex + 1})`);
+                    const bc = b.querySelector(`td:nth-child(${th.cellIndex + 1})`);
+                    let av = ac?.dataset?.value || ac?.textContent?.trim() || '';
+                    let bv = bc?.dataset?.value || bc?.textContent?.trim() || '';
+                    if (type === 'number') { av = parseFloat(av) || 0; bv = parseFloat(bv) || 0; }
+                    return av < bv ? (ord === 'asc' ? -1 : 1) : av > bv ? (ord === 'asc' ? 1 : -1) : 0;
+                });
+                rows.forEach(r => tb.appendChild(r));
+            }
+        };
+        LC.exportData = function() {
+            const d = LC.data || {};
+            const b = new Blob([JSON.stringify(d, null, 2)], {type: 'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'report-data.json'; a.click();
+        };
+        window.LC = LC;
+        document.addEventListener('DOMContentLoaded', () => LC.tables.init());
+    </script>
+</head>
+<body>
+    {# Skip Link for Accessibility #}
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <div class="report-wrapper">
+        {# Report Header #}
+        {% block header %}
+        <header class="report-header">
+            <div class="header-branding">
+                <svg class="lc-logo" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="32" height="32" rx="6" fill="#0ea5e9"/>
+                    <path d="M8 12h4v12H8V12zm6-4h4v16h-4V8zm6 8h4v8h-4v-8z" fill="white"/>
+                </svg>
+                <span class="header-title">LimaCharlie</span>
+            </div>
+
+            <div class="header-meta">
+                <h1>{% block report_title %}{{ report.title | default('Security Report') }}{% endblock %}</h1>
+
+                <dl class="meta-list">
+                    <div class="meta-item">
+                        <dt>Generated</dt>
+                        <dd>{{ metadata.generated_at | default('N/A') }}</dd>
+                    </div>
+                    {% if metadata.time_window %}
+                    <div class="meta-item">
+                        <dt>Time Window</dt>
+                        <dd>{{ metadata.time_window.start_display | default('N/A') }} to {{ metadata.time_window.end_display | default('N/A') }}</dd>
+                    </div>
+                    {% endif %}
+                    {% if metadata.organizations %}
+                    <div class="meta-item">
+                        <dt>Organizations</dt>
+                        <dd>{{ metadata.organizations.successful | default('N/A') }} of {{ metadata.organizations.total | default('N/A') }}
+                            {% if metadata.organizations.success_rate is defined %}
+                            ({{ metadata.organizations.success_rate }}%)
+                            {% endif %}
+                        </dd>
+                    </div>
+                    {% endif %}
+                </dl>
+            </div>
+
+            <div class="header-actions no-print">
+                <button onclick="window.print()" class="btn btn-secondary">
+                    Print Report
+                </button>
+                <button onclick="LC.exportData()" class="btn btn-secondary">
+                    Export Data
+                </button>
+            </div>
+        </header>
+        {% endblock %}
+
+        {# Main Content Area #}
+        <main id="main-content" class="report-content">
+            {% block content %}
+            <p class="data-unavailable">No content template specified.</p>
+            {% endblock %}
+        </main>
+
+        {# Data Provenance Footer - ALWAYS REQUIRED #}
+        {% block footer %}
+        <footer class="data-provenance">
+            <h3>Data Provenance</h3>
+
+            <dl class="provenance-list">
+                <div>
+                    <dt>Generated</dt>
+                    <dd>{{ metadata.generated_at | default('N/A') }}</dd>
+                </div>
+                {% if metadata.time_window %}
+                <div>
+                    <dt>Time Window</dt>
+                    <dd>{{ metadata.time_window.start_display | default('N/A') }} to {{ metadata.time_window.end_display | default('N/A') }}
+                        {% if metadata.time_window.days is defined %}({{ metadata.time_window.days }} days){% endif %}
+                    </dd>
+                </div>
+                {% endif %}
+                {% if metadata.organizations %}
+                <div>
+                    <dt>Organizations</dt>
+                    <dd>{{ metadata.organizations.successful | default('N/A') }} of {{ metadata.organizations.total | default('N/A') }}
+                        {% if metadata.organizations.success_rate is defined %}
+                        ({{ metadata.organizations.success_rate }}% success rate)
+                        {% endif %}
+                    </dd>
+                </div>
+                {% endif %}
+                <div>
+                    <dt>Data Source</dt>
+                    <dd>LimaCharlie API via {{ report.source_skill | default('reporting') }} skill</dd>
+                </div>
+            </dl>
+
+            <div class="accuracy-statement">
+                <p><strong>Data Accuracy Statement</strong></p>
+                <p>All values shown in this report are from actual API responses.
+                   No data has been estimated, interpolated, or fabricated.
+                   Missing data is marked as "N/A".</p>
+                {% if missing_fields and missing_fields | length > 0 %}
+                <p><strong>Unavailable Data:</strong> {{ missing_fields | join(', ') }}</p>
+                {% endif %}
+            </div>
+        </footer>
+        {% endblock %}
+    </div>
+
+    {# Report Data as JSON #}
+    <script id="report-data" type="application/json">{{ data | tojson | safe if data else '{}' }}</script>
+    <script>LC.data = JSON.parse(document.getElementById('report-data').textContent || '{}');</script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,311 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MSSP Dashboard Report Data",
+  "description": "Schema for data input to the mssp-dashboard template. All values must come from actual API responses - no fabrication allowed.",
+  "type": "object",
+  "required": ["metadata", "data"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "description": "Report metadata - when and how data was collected",
+      "required": ["generated_at", "time_window", "organizations"],
+      "properties": {
+        "generated_at": {
+          "type": "string",
+          "description": "ISO 8601 timestamp when data was collected",
+          "format": "date-time",
+          "examples": ["2025-11-27T14:32:45Z"]
+        },
+        "time_window": {
+          "type": "object",
+          "description": "Time range covered by the report",
+          "required": ["start", "end", "start_display", "end_display"],
+          "properties": {
+            "start": {
+              "type": "integer",
+              "description": "Start timestamp in Unix epoch seconds"
+            },
+            "end": {
+              "type": "integer",
+              "description": "End timestamp in Unix epoch seconds"
+            },
+            "start_display": {
+              "type": "string",
+              "description": "Human-readable start time",
+              "examples": ["2025-11-01 00:00:00 UTC"]
+            },
+            "end_display": {
+              "type": "string",
+              "description": "Human-readable end time",
+              "examples": ["2025-11-30 23:59:59 UTC"]
+            },
+            "days": {
+              "type": "integer",
+              "description": "Number of days in the time window"
+            }
+          }
+        },
+        "organizations": {
+          "type": "object",
+          "description": "Summary of organizations processed",
+          "required": ["total", "successful"],
+          "properties": {
+            "total": {
+              "type": "integer",
+              "description": "Total number of organizations attempted"
+            },
+            "successful": {
+              "type": "integer",
+              "description": "Number of organizations successfully processed"
+            },
+            "failed": {
+              "type": "integer",
+              "description": "Number of organizations that failed"
+            },
+            "success_rate": {
+              "type": "number",
+              "description": "Percentage of successful organizations",
+              "minimum": 0,
+              "maximum": 100
+            }
+          }
+        }
+      }
+    },
+    "data": {
+      "type": "object",
+      "description": "Report data - all values from actual API responses",
+      "required": ["aggregate", "organizations"],
+      "properties": {
+        "aggregate": {
+          "type": "object",
+          "description": "Aggregated metrics across all successful organizations",
+          "required": ["sensors", "detections", "rules"],
+          "properties": {
+            "sensors": {
+              "type": "object",
+              "description": "Sensor metrics",
+              "required": ["total", "online"],
+              "properties": {
+                "total": {
+                  "type": "integer",
+                  "description": "Total number of sensors"
+                },
+                "online": {
+                  "type": "integer",
+                  "description": "Number of online sensors"
+                },
+                "offline": {
+                  "type": "integer",
+                  "description": "Number of offline sensors"
+                },
+                "health_percent": {
+                  "type": "number",
+                  "description": "Percentage of sensors online"
+                },
+                "platforms": {
+                  "type": "object",
+                  "description": "Sensor count by platform",
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "examples": [{"windows": 1823, "linux": 712, "macos": 247}]
+                }
+              }
+            },
+            "detections": {
+              "type": "object",
+              "description": "Detection metrics",
+              "required": ["retrieved", "top_categories"],
+              "properties": {
+                "retrieved": {
+                  "type": "integer",
+                  "description": "Total detections retrieved (may be limited)"
+                },
+                "limit_reached": {
+                  "type": "boolean",
+                  "description": "Whether any organization hit the detection limit"
+                },
+                "orgs_at_limit": {
+                  "type": "integer",
+                  "description": "Number of organizations that hit detection limit"
+                },
+                "top_categories": {
+                  "type": "array",
+                  "description": "Top detection categories with counts",
+                  "items": {
+                    "type": "object",
+                    "required": ["label", "value"],
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "description": "Category name"
+                      },
+                      "value": {
+                        "type": "integer",
+                        "description": "Detection count"
+                      }
+                    }
+                  }
+                },
+                "daily_trend": {
+                  "type": "array",
+                  "description": "Daily detection counts (optional)",
+                  "items": {
+                    "type": "object",
+                    "required": ["date", "value"],
+                    "properties": {
+                      "date": {
+                        "type": "string",
+                        "description": "Date in YYYY-MM-DD format"
+                      },
+                      "value": {
+                        "type": "integer",
+                        "description": "Detection count for that day"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "rules": {
+              "type": "object",
+              "description": "D&R rule metrics",
+              "required": ["total", "enabled"],
+              "properties": {
+                "total": {
+                  "type": "integer",
+                  "description": "Total number of D&R rules"
+                },
+                "enabled": {
+                  "type": "integer",
+                  "description": "Number of enabled rules"
+                }
+              }
+            },
+            "usage": {
+              "type": "object",
+              "description": "Usage metrics (optional)",
+              "properties": {
+                "total_events": {
+                  "type": "integer",
+                  "description": "Total sensor events"
+                },
+                "total_output_bytes": {
+                  "type": "integer",
+                  "description": "Total bytes output"
+                },
+                "total_output_gb": {
+                  "type": "number",
+                  "description": "Total GB output"
+                },
+                "total_evaluations": {
+                  "type": "integer",
+                  "description": "Total D&R evaluations"
+                }
+              }
+            }
+          }
+        },
+        "organizations": {
+          "type": "array",
+          "description": "Per-organization data",
+          "items": {
+            "type": "object",
+            "required": ["name", "oid", "status"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Organization name"
+              },
+              "oid": {
+                "type": "string",
+                "description": "Organization ID (UUID)",
+                "format": "uuid"
+              },
+              "status": {
+                "type": "string",
+                "description": "Data collection status",
+                "enum": ["success", "partial", "failed"]
+              },
+              "sensors_total": {
+                "type": "integer",
+                "description": "Total sensors in this org"
+              },
+              "sensors_online": {
+                "type": "integer",
+                "description": "Online sensors in this org"
+              },
+              "health": {
+                "type": "number",
+                "description": "Health percentage (0-100)"
+              },
+              "detections": {
+                "type": "integer",
+                "description": "Detection count for this org"
+              },
+              "detection_limit_reached": {
+                "type": "boolean",
+                "description": "Whether this org hit the detection limit"
+              },
+              "rules_total": {
+                "type": "integer",
+                "description": "Total rules in this org"
+              },
+              "rules_enabled": {
+                "type": "integer",
+                "description": "Enabled rules in this org"
+              }
+            }
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "description": "Warnings from data collection - ALL must be displayed",
+      "items": {
+        "type": "string"
+      }
+    },
+    "errors": {
+      "type": "array",
+      "description": "Errors from data collection - ALL must be displayed",
+      "items": {
+        "type": "object",
+        "properties": {
+          "org_name": {
+            "type": "string",
+            "description": "Organization name"
+          },
+          "oid": {
+            "type": "string",
+            "description": "Organization ID"
+          },
+          "error_code": {
+            "type": ["integer", "string"],
+            "description": "Error code"
+          },
+          "error_message": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "remediation": {
+            "type": "string",
+            "description": "Suggested remediation action"
+          }
+        }
+      }
+    },
+    "source_skill": {
+      "type": "string",
+      "description": "Skill that generated the data",
+      "default": "reporting"
+    }
+  },
+  "$defs": {
+    "data_accuracy_note": {
+      "description": "DATA ACCURACY GUARDRAILS: All values in this schema must come from actual API responses. The graphic-output skill will NEVER fabricate, estimate, or interpolate data. Missing fields will show as 'N/A' in the output."
+    }
+  }
+}

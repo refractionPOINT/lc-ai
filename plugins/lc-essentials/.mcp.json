@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "limacharlie": {
+      "type": "http",
+      "url": "https://mcp.limacharlie.io/mcp",
+      "headers": {
+        "X-MCP-Tools": "lc_call_tool"
+      }
+    }
+  }
+}

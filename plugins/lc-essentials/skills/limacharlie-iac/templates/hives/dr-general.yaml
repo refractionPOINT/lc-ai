@@ -1,0 +1,38 @@
+# Global Detection & Response Rules
+# These rules apply to ALL tenants via index.yaml includes
+#
+# Structure:
+#   hives:
+#     dr-general:
+#       <rule-name>:
+#         data:
+#           detect: <detection logic>
+#           respond: <response actions>
+#         usr_mtd:
+#           enabled: true/false
+#           expiry: 0
+#           tags: []
+
+version: 3
+hives:
+  dr-general: {}
+    # Example rule:
+    # encoded-powershell-execution:
+    #   data:
+    #     detect:
+    #       event: NEW_PROCESS
+    #       op: and
+    #       rules:
+    #         - op: is
+    #           path: event/FILE_PATH
+    #           value: '*\\powershell.exe'
+    #         - op: contains
+    #           path: event/COMMAND_LINE
+    #           value: '-enc'
+    #     respond:
+    #       - action: report
+    #         name: encoded-powershell-execution
+    #   usr_mtd:
+    #     enabled: true
+    #     expiry: 0
+    #     tags: []

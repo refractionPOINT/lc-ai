@@ -1,0 +1,15 @@
+# Global Exfil Watch Rules
+# Monitor for data exfiltration across ALL tenants
+
+version: 3
+exfil: {}
+  # Example:
+  # watch-sensitive-dirs:
+  #   patterns:
+  #     - /etc/passwd
+  #     - /etc/shadow
+  #     - c:\windows\system32\config\sam
+  #   platforms:
+  #     - linux
+  #     - windows
+  #   tags: []

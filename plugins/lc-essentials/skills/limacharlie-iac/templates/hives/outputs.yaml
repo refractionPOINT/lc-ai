@@ -1,0 +1,20 @@
+# Global Output Configurations
+# Send events/detections to external systems for ALL tenants
+
+version: 3
+outputs: {}
+  # Example Slack output:
+  # slack-alerts:
+  #   for: detect
+  #   module: slack
+  #   slack_api_token: hive://secret/slack-token
+  #   slack_channel: "#security-alerts"
+  #
+  # Example S3 output:
+  # s3-archive:
+  #   for: event
+  #   module: s3
+  #   bucket: my-lc-events
+  #   key_id: hive://secret/aws-key-id
+  #   secret_key: hive://secret/aws-secret-key
+  #   region: us-east-1

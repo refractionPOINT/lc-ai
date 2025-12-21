@@ -1,0 +1,22 @@
+# Global Artifact Collection Rules
+# Collect logs and artifacts from ALL tenants
+
+version: 3
+artifact: {}
+  # Example:
+  # linux-auth-logs:
+  #   patterns:
+  #     - /var/log/auth.log
+  #     - /var/log/secure
+  #   platforms:
+  #     - linux
+  #   tags: []
+  #   retention: 30
+  #
+  # windows-event-logs:
+  #   log_type: wel
+  #   log_name: Security
+  #   platforms:
+  #     - windows
+  #   tags: []
+  #   retention: 30

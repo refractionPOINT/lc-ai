@@ -1,0 +1,19 @@
+# Global Installation Keys
+# Sensor deployment keys for ALL tenants
+
+version: 3
+installation_keys:
+  windows:
+    desc: "Windows endpoints"
+    tags:
+      - windows
+
+  linux:
+    desc: "Linux servers"
+    tags:
+      - linux
+
+  macos:
+    desc: "macOS devices"
+    tags:
+      - macos

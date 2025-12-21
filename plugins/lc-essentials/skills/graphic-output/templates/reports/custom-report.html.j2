@@ -1,0 +1,394 @@
+{#
+  Custom Report Template - Component-Based Composition
+
+  Allows users to build flexible reports by specifying which components to include.
+  Each component in the `components` array is rendered in order.
+
+  DATA ACCURACY GUARDRAILS:
+  - This template ONLY displays data provided in the context
+  - Missing data shows "N/A" or "Data unavailable"
+  - No data is fabricated, estimated, or interpolated
+
+  SUPPORTED COMPONENTS:
+  - summary_cards: Grid of metric cards
+  - chart: Pie, bar, line, doughnut charts
+  - table: Data tables with optional sorting
+  - alert_banner: Warning/info/success banners
+  - text_section: Markdown-style text content
+  - divider: Visual separator
+  - two_column: Side-by-side layout for charts/content
+#}
+{% extends 'base.html.j2' %}
+
+{% block title %}{{ metadata.title | default('Custom Report') }}{% endblock %}
+
+{% block report_title %}{{ metadata.title | default('Custom Report') }}{% endblock %}
+
+{% block report_subtitle %}
+{% if metadata.subtitle %}{{ metadata.subtitle }}{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+    {# Render each component in order #}
+    {% for component in components %}
+
+        {# ================================================================
+           SUMMARY CARDS - Grid of metric cards
+           ================================================================ #}
+        {% if component.type == 'summary_cards' %}
+        <section class="dashboard-section">
+            {% if component.title %}<h2>{{ component.title }}</h2>{% endif %}
+            <div class="summary-grid">
+                {% for card in component.cards %}
+                <div class="summary-card">
+                    {% if card.icon %}
+                    <div class="card-icon {{ card.icon_color | default('blue') }}">
+                        {% if card.icon == 'sensors' %}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                        </svg>
+                        {% elif card.icon == 'alerts' %}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        {% elif card.icon == 'rules' %}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                        </svg>
+                        {% elif card.icon == 'users' %}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                        </svg>
+                        {% elif card.icon == 'money' %}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                        </svg>
+                        {% elif card.icon == 'check' %}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                        {% elif card.icon == 'shield' %}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                        {% elif card.icon == 'activity' %}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        </svg>
+                        {% else %}
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                        </svg>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                    <div class="card-content">
+                        <span class="card-value" {% if card.value_color %}style="color: {{ card.value_color }};"{% endif %}>
+                            {% if card.value is defined %}
+                                {% if card.format == 'currency' %}${% endif %}{{ card.value | format_number }}{% if card.format == 'percent' %}%{% endif %}
+                            {% else %}
+                                <span class="na">N/A</span>
+                            {% endif %}
+                        </span>
+                        <span class="card-label">{{ card.label | default('Metric') }}</span>
+                        {% if card.subvalue %}<span class="card-subvalue">{{ card.subvalue }}</span>{% endif %}
+                        {% if card.warning %}<div class="card-warning">{{ card.warning }}</div>{% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        {# ================================================================
+           CHART - Various chart types
+           ================================================================ #}
+        {% elif component.type == 'chart' %}
+        <section class="dashboard-section">
+            {% if component.title %}<h2>{{ component.title }}</h2>{% endif %}
+            <div class="chart-container" style="{% if component.height %}height: {{ component.height }}px;{% endif %}">
+                {% if component.subtitle %}<p style="color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 1rem;">{{ component.subtitle }}</p>{% endif %}
+                {% if component.data and component.data | length > 0 %}
+                <canvas id="chart-{{ loop.index }}"></canvas>
+                <script>
+                    new Chart(document.getElementById('chart-{{ loop.index }}'), {
+                        type: '{{ component.chart_type | default("bar") }}',
+                        data: {
+                            labels: [{% for item in component.data %}'{{ item.label }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+                            datasets: [{
+                                {% if component.dataset_label %}label: '{{ component.dataset_label }}',{% endif %}
+                                data: [{% for item in component.data %}{{ item.value }}{% if not loop.last %}, {% endif %}{% endfor %}],
+                                backgroundColor: {{ component.colors | default(['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6', '#f97316', '#06b6d4']) | tojson }},
+                                borderWidth: 0,
+                                {% if component.chart_type in ['line'] %}
+                                borderColor: '{{ component.line_color | default("#3b82f6") }}',
+                                borderWidth: 2,
+                                fill: {{ component.fill | default(false) | tojson }},
+                                tension: 0.3,
+                                {% endif %}
+                                borderRadius: {% if component.chart_type == 'bar' %}6{% else %}0{% endif %}
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: {% if component.height %}false{% else %}true{% endif %},
+                            {% if component.chart_type in ['doughnut', 'pie'] %}
+                            cutout: '{% if component.chart_type == "doughnut" %}55%{% else %}0{% endif %}',
+                            {% endif %}
+                            {% if component.horizontal %}indexAxis: 'y',{% endif %}
+                            plugins: {
+                                legend: {
+                                    display: {{ component.show_legend | default(true) | tojson }},
+                                    position: '{{ component.legend_position | default("bottom") }}'
+                                },
+                                tooltip: {
+                                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                                    padding: 12,
+                                    cornerRadius: 8
+                                }
+                            },
+                            scales: {% if component.chart_type not in ['doughnut', 'pie'] %}{
+                                y: { beginAtZero: true, grid: { color: 'rgba(148, 163, 184, 0.1)' } },
+                                x: { grid: { display: false } }
+                            }{% else %}{}{% endif %}
+                        }
+                    });
+                </script>
+                {% else %}
+                <div class="chart-unavailable">
+                    <span class="icon">📊</span>
+                    <p>{{ component.empty_message | default('No data available for this chart') }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        {# ================================================================
+           TWO COLUMN - Side-by-side charts
+           ================================================================ #}
+        {% elif component.type == 'two_column' %}
+        <section class="dashboard-section">
+            {% if component.title %}<h2>{{ component.title }}</h2>{% endif %}
+            <div class="chart-grid two-column">
+                {% for col in component.columns %}
+                <div class="chart-container">
+                    {% if col.title %}<h3 class="chart-title">{{ col.title }}</h3>{% endif %}
+                    {% if col.data and col.data | length > 0 %}
+                    <canvas id="twocol-chart-{{ loop.parent.loop.index }}-{{ loop.index }}"></canvas>
+                    <script>
+                        new Chart(document.getElementById('twocol-chart-{{ loop.parent.loop.index }}-{{ loop.index }}'), {
+                            type: '{{ col.chart_type | default("doughnut") }}',
+                            data: {
+                                labels: [{% for item in col.data %}'{{ item.label }}'{% if not loop.last %}, {% endif %}{% endfor %}],
+                                datasets: [{
+                                    data: [{% for item in col.data %}{{ item.value }}{% if not loop.last %}, {% endif %}{% endfor %}],
+                                    backgroundColor: {{ col.colors | default(['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#14b8a6']) | tojson }},
+                                    borderWidth: 0
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                cutout: '{% if col.chart_type == "doughnut" %}55%{% else %}0{% endif %}',
+                                plugins: { legend: { position: 'bottom' } }
+                            }
+                        });
+                    </script>
+                    {% else %}
+                    <div class="chart-unavailable">
+                        <span class="icon">📊</span>
+                        <p>No data available</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        {# ================================================================
+           TABLE - Data tables
+           ================================================================ #}
+        {% elif component.type == 'table' %}
+        <section class="dashboard-section">
+            {% if component.title %}<h2>{{ component.title }}</h2>{% endif %}
+            {% if component.rows and component.rows | length > 0 %}
+            <div class="table-container">
+                <table class="data-table" {% if component.sortable %}data-sortable="true"{% endif %}>
+                    {% if component.columns %}
+                    <thead>
+                        <tr>
+                            {% for col in component.columns %}
+                            <th {% if col.align == 'right' %}class="number"{% endif %}>{{ col.label }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    {% endif %}
+                    <tbody>
+                        {% for row in component.rows %}
+                        <tr>
+                            {% for cell in row %}
+                            <td {% if cell.align == 'right' or cell.type == 'number' %}class="number"{% endif %}
+                                {% if cell.color %}style="color: {{ cell.color }};"{% endif %}>
+                                {% if cell.badge %}
+                                <span class="status-badge status-{{ cell.badge }}">{{ cell.value }}</span>
+                                {% elif cell.value is defined %}
+                                {{ cell.value }}
+                                {% else %}
+                                {{ cell }}
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    {% if component.footer %}
+                    <tfoot>
+                        <tr>
+                            {% for cell in component.footer %}
+                            <td {% if cell.align == 'right' %}class="number"{% endif %}>
+                                <strong>{{ cell.value | default(cell) }}</strong>
+                            </td>
+                            {% endfor %}
+                        </tr>
+                    </tfoot>
+                    {% endif %}
+                </table>
+            </div>
+            {% else %}
+            <div class="chart-unavailable">
+                <span class="icon">📋</span>
+                <p>{{ component.empty_message | default('No data available') }}</p>
+            </div>
+            {% endif %}
+        </section>
+
+        {# ================================================================
+           ALERT BANNER - Warning/info/success banners
+           ================================================================ #}
+        {% elif component.type == 'alert_banner' %}
+        <div class="alert-banner alert-banner-{{ component.severity | default('info') }}" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                <span style="font-size: 1.25rem;">
+                    {% if component.severity == 'danger' %}🚨
+                    {% elif component.severity == 'warning' %}⚠️
+                    {% elif component.severity == 'success' %}✅
+                    {% else %}ℹ️{% endif %}
+                </span>
+                <div>
+                    {% if component.title %}<strong style="display: block; margin-bottom: 0.25rem;">{{ component.title }}</strong>{% endif %}
+                    <span>{{ component.message }}</span>
+                </div>
+            </div>
+        </div>
+
+        {# ================================================================
+           TEXT SECTION - Markdown-style content
+           ================================================================ #}
+        {% elif component.type == 'text_section' %}
+        <section class="dashboard-section">
+            {% if component.title %}<h2>{{ component.title }}</h2>{% endif %}
+            <div style="line-height: 1.7; color: var(--color-text);">
+                {{ component.content | safe }}
+            </div>
+        </section>
+
+        {# ================================================================
+           DIVIDER - Visual separator
+           ================================================================ #}
+        {% elif component.type == 'divider' %}
+        <hr style="border: none; border-top: 1px solid var(--color-border); margin: 2rem 0;">
+
+        {# ================================================================
+           METRIC GRID - Compact metrics grid
+           ================================================================ #}
+        {% elif component.type == 'metric_grid' %}
+        <section class="dashboard-section">
+            {% if component.title %}<h2>{{ component.title }}</h2>{% endif %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                {% for metric in component.metrics %}
+                <div style="padding: 1rem; background: var(--color-bg); border-radius: var(--radius-md); text-align: center;">
+                    <div style="font-size: 1.5rem; font-weight: 700; {% if metric.color %}color: {{ metric.color }};{% endif %}">
+                        {{ metric.value | default('N/A') }}
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--color-text-muted); margin-top: 0.25rem;">
+                        {{ metric.label }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        {# ================================================================
+           PLATFORM TABLE - Special platform breakdown table
+           ================================================================ #}
+        {% elif component.type == 'platform_table' %}
+        <section class="dashboard-section">
+            {% if component.title %}<h2>{{ component.title }}</h2>{% endif %}
+            {% if component.platforms and component.platforms | length > 0 %}
+            <table class="platform-table">
+                <thead>
+                    <tr>
+                        <th>Platform</th>
+                        <th class="number">Sensors</th>
+                        <th class="number">%</th>
+                        {% if component.show_detections %}<th class="number">Detections</th><th class="number">Det %</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in component.platforms %}
+                    <tr>
+                        <td><span class="platform-badge platform-{{ p.name | lower | replace(' ', '-') }}">{{ p.name }}</span></td>
+                        <td class="number">{{ p.sensors | format_number }}</td>
+                        <td class="number">{{ p.sensors_percent | default(0) | round(1) }}%</td>
+                        {% if component.show_detections %}
+                        <td class="number {% if p.detections and p.detections > 0 %}detection-highlight{% endif %}">{{ p.detections | default(0) | format_number }}</td>
+                        <td class="number">{{ p.detections_percent | default(0) | round(1) }}%</td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="chart-unavailable">
+                <span class="icon">📊</span>
+                <p>No platform data available</p>
+            </div>
+            {% endif %}
+        </section>
+
+        {% endif %}
+    {% endfor %}
+
+    {# ================================================================
+       WARNINGS (if any)
+       ================================================================ #}
+    {% if warnings and warnings | length > 0 %}
+    <section class="dashboard-section warnings-section">
+        <h2>⚠️ Data Notes & Warnings</h2>
+        <div class="warning-list">
+            {% for warning in warnings %}
+            <div class="warning-item">
+                <span class="warning-icon">⚠️</span>
+                <span>{{ warning }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Initialize sortable tables
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof LC !== 'undefined' && LC.tables) {
+            LC.tables.init();
+        }
+    });
+</script>
+{% endblock %}

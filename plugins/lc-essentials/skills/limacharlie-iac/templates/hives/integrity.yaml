@@ -1,0 +1,20 @@
+# Global File Integrity Monitoring (FIM) Rules
+# Monitor file changes across ALL tenants
+
+version: 3
+integrity: {}
+  # Example:
+  # linux-ssh-keys:
+  #   patterns:
+  #     - /root/.ssh/authorized_keys
+  #     - /home/*/.ssh/authorized_keys
+  #   platforms:
+  #     - linux
+  #   tags: []
+  #
+  # windows-hosts-file:
+  #   patterns:
+  #     - c:\windows\system32\drivers\etc\hosts
+  #   platforms:
+  #     - windows
+  #   tags: []

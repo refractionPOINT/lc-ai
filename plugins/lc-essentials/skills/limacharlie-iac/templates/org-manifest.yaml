@@ -1,0 +1,21 @@
+# LimaCharlie IaC Organization Manifest
+# Maps friendly names to organization IDs (OIDs)
+#
+# Usage:
+#   Refer to orgs by friendly name in commands:
+#   "Add rule to acme-corp" → skill looks up OID automatically
+#
+# Structure:
+#   orgs:
+#     <friendly-name>:
+#       oid: <uuid>
+#       description: <optional description>
+#       added: <date added to IaC>
+
+version: 1
+orgs: {}
+  # Example:
+  # acme-corp:
+  #   oid: 7e41e07b-c44c-43a3-b78d-41f34204789d
+  #   description: "Acme Corporation - Production"
+  #   added: "2025-11-30"

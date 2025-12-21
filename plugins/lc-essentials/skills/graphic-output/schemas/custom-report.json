@@ -1,0 +1,256 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Custom Report Data",
+  "description": "Schema for component-based custom reports. Build flexible reports by specifying which components to include.",
+  "type": "object",
+  "required": ["metadata", "components"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Report title" },
+        "subtitle": { "type": "string", "description": "Report subtitle" },
+        "generated_at": { "type": "string", "description": "Generation timestamp" }
+      }
+    },
+    "components": {
+      "type": "array",
+      "description": "Array of components to render in order",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/summary_cards" },
+          { "$ref": "#/$defs/chart" },
+          { "$ref": "#/$defs/table" },
+          { "$ref": "#/$defs/alert_banner" },
+          { "$ref": "#/$defs/text_section" },
+          { "$ref": "#/$defs/two_column" },
+          { "$ref": "#/$defs/metric_grid" },
+          { "$ref": "#/$defs/platform_table" },
+          { "$ref": "#/$defs/divider" }
+        ]
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "summary_cards": {
+      "type": "object",
+      "required": ["type", "cards"],
+      "properties": {
+        "type": { "const": "summary_cards" },
+        "title": { "type": "string" },
+        "cards": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label"],
+            "properties": {
+              "label": { "type": "string" },
+              "value": { "type": ["string", "number"] },
+              "subvalue": { "type": "string" },
+              "warning": { "type": "string" },
+              "icon": {
+                "type": "string",
+                "enum": ["sensors", "alerts", "rules", "users", "money", "check", "shield", "activity"]
+              },
+              "icon_color": {
+                "type": "string",
+                "enum": ["blue", "green", "amber", "purple", "red"]
+              },
+              "value_color": { "type": "string" },
+              "format": {
+                "type": "string",
+                "enum": ["currency", "percent", "number"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "chart": {
+      "type": "object",
+      "required": ["type", "chart_type", "data"],
+      "properties": {
+        "type": { "const": "chart" },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "chart_type": {
+          "type": "string",
+          "enum": ["bar", "pie", "doughnut", "line"]
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label", "value"],
+            "properties": {
+              "label": { "type": "string" },
+              "value": { "type": "number" }
+            }
+          }
+        },
+        "colors": { "type": "array", "items": { "type": "string" } },
+        "horizontal": { "type": "boolean", "default": false },
+        "show_legend": { "type": "boolean", "default": true },
+        "legend_position": { "type": "string", "enum": ["top", "bottom", "left", "right"] },
+        "height": { "type": "integer" },
+        "dataset_label": { "type": "string" },
+        "line_color": { "type": "string" },
+        "fill": { "type": "boolean" },
+        "empty_message": { "type": "string" }
+      }
+    },
+    "table": {
+      "type": "object",
+      "required": ["type", "rows"],
+      "properties": {
+        "type": { "const": "table" },
+        "title": { "type": "string" },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label"],
+            "properties": {
+              "label": { "type": "string" },
+              "align": { "type": "string", "enum": ["left", "right", "center"] }
+            }
+          }
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                { "type": "string" },
+                { "type": "number" },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": { "type": ["string", "number"] },
+                    "align": { "type": "string" },
+                    "color": { "type": "string" },
+                    "badge": { "type": "string", "enum": ["success", "partial", "failed"] },
+                    "type": { "type": "string" }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "footer": { "type": "array" },
+        "sortable": { "type": "boolean", "default": false },
+        "empty_message": { "type": "string" }
+      }
+    },
+    "alert_banner": {
+      "type": "object",
+      "required": ["type", "message"],
+      "properties": {
+        "type": { "const": "alert_banner" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "severity": {
+          "type": "string",
+          "enum": ["info", "warning", "danger", "success"],
+          "default": "info"
+        }
+      }
+    },
+    "text_section": {
+      "type": "object",
+      "required": ["type", "content"],
+      "properties": {
+        "type": { "const": "text_section" },
+        "title": { "type": "string" },
+        "content": { "type": "string", "description": "HTML content" }
+      }
+    },
+    "two_column": {
+      "type": "object",
+      "required": ["type", "columns"],
+      "properties": {
+        "type": { "const": "two_column" },
+        "title": { "type": "string" },
+        "columns": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "chart_type": { "type": "string", "enum": ["pie", "doughnut", "bar"] },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["label", "value"],
+                  "properties": {
+                    "label": { "type": "string" },
+                    "value": { "type": "number" }
+                  }
+                }
+              },
+              "colors": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "metric_grid": {
+      "type": "object",
+      "required": ["type", "metrics"],
+      "properties": {
+        "type": { "const": "metric_grid" },
+        "title": { "type": "string" },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label", "value"],
+            "properties": {
+              "label": { "type": "string" },
+              "value": { "type": ["string", "number"] },
+              "color": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "platform_table": {
+      "type": "object",
+      "required": ["type", "platforms"],
+      "properties": {
+        "type": { "const": "platform_table" },
+        "title": { "type": "string" },
+        "show_detections": { "type": "boolean", "default": false },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "sensors"],
+            "properties": {
+              "name": { "type": "string" },
+              "sensors": { "type": "integer" },
+              "sensors_percent": { "type": "number" },
+              "detections": { "type": "integer" },
+              "detections_percent": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "divider": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "divider" }
+      }
+    }
+  }
+}
