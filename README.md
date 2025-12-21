@@ -50,7 +50,7 @@ cd your-project
 Use the pre-configured Docker container with everything ready to go:
 
 ```bash
-docker compose run --rm lc-claude
+cd docker && docker compose run --rm lc-claude
 ```
 
 See the [Docker section](#docker-container) below for more details.
@@ -89,9 +89,10 @@ See `plugins/lc-essentials/SKILLS_SUMMARY.md` for a complete list of available s
 │       ├── commands/        # Slash commands
 │       ├── scripts/         # Helper scripts
 │       └── skills/          # Skill definitions
-├── Dockerfile               # Docker container definition
-├── docker-compose.yml       # Docker Compose configuration
-├── entrypoint.sh            # Container entrypoint script
+├── docker/                  # Docker container files
+│   ├── Dockerfile           # Container definition
+│   ├── docker-compose.yml   # Docker Compose configuration
+│   └── entrypoint.sh        # Container entrypoint script
 └── LICENSE                  # Apache 2.0 License
 ```
 
@@ -112,13 +113,13 @@ Pre-configured Claude Code environment with the lc-essentials plugin for LimaCha
 ### Quick Start
 
 ```bash
-docker compose run --rm lc-claude
+cd docker && docker compose run --rm lc-claude
 ```
 
 ### Build Only
 
 ```bash
-docker compose build
+cd docker && docker compose build
 ```
 
 ### First Run
@@ -136,10 +137,10 @@ This opens your browser for OAuth authentication. Once approved, you're ready to
 To work on a specific project directory:
 
 ```bash
-docker compose run --rm -v /path/to/your/project:/home/lc/project lc-claude
+cd docker && docker compose run --rm -v /path/to/your/project:/home/lc/project lc-claude
 ```
 
-Or create a `project/` directory next to the docker-compose.yml file - it's automatically mounted.
+Or create a `project/` directory inside the `docker/` directory - it's automatically mounted.
 
 ### Persistent Credentials
 
