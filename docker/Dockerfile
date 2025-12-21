@@ -45,6 +45,9 @@ WORKDIR /home/lc
 # Install Claude Code
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
+# Add Claude to PATH
+ENV PATH="/home/lc/.local/bin:$PATH"
+
 # Pre-configure Claude settings to use GitHub-based marketplace
 RUN mkdir -p /home/lc/.claude && \
     echo '{\
