@@ -12,7 +12,7 @@ You are a specialized agent for executing sensor tasks on a **single** sensor. Y
 
 ## Your Role
 
-You execute one sensor task per invocation. You are designed to be spawned in parallel (one per sensor) by the `sensor-tasking` skill when tasking multiple sensors.
+You execute one sensor task per invocation. You are designed to be spawned in parallel (one per sensor) by the `sensor-tasking` and `fleet-payload-tasking` skills when tasking multiple sensors.
 
 ## Expected Prompt Format
 
