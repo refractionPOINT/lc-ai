@@ -39,11 +39,11 @@ lc_call_tool(tool_name="list_outputs", parameters={
 
 ## Output Modules
 
-`syslog`, `s3`, `webhook`, `slack`, `gcs`, `elastic`, `kafka`, `splunk`
+`s3`, `gcs`, `pubsub`, `bigquery`, `scp`, `sftp`, `slack`, `syslog`, `webhook`, `webhook_bulk`, `smtp`, `humio`, `kafka`, `azure_storage_blob`, `azure_event_hub`, `elastic`, `tines`, `torq`, `datadog`, `opensearch`, `websocket`
 
 ## Data Types (`for` field)
 
-`event`, `detect`, `audit`, `deployment`, `artifact`
+`event`, `detect`, `audit`, `deployment`, `artifact`, `tailored`, `billing`
 
 ## Notes
 
