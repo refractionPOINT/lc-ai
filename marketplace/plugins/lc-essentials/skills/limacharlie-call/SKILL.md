@@ -100,7 +100,7 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 - `list_lookups` / `set_lookup` / `query_lookup` - Lookups
 - `list_payloads` / `create_payload` / `get_payload` / `delete_payload` - Payloads
 
-## Available Functions (142)
+## Available Functions (143)
 
 ### Organization Management (9)
 - `list_user_orgs` → `./functions/list-user-orgs.md`
@@ -223,13 +223,14 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 - `set_playbook` → `./functions/set-playbook.md`
 - `delete_playbook` → `./functions/delete-playbook.md`
 
-### Extensions (6)
+### Extensions (7)
 - `list_extension_configs` → `./functions/list-extension-configs.md`
 - `get_extension_config` → `./functions/get-extension-config.md`
 - `set_extension_config` → `./functions/set-extension-config.md`
 - `delete_extension_config` → `./functions/delete-extension-config.md`
 - `subscribe_to_extension` → `./functions/subscribe-to-extension.md`
 - `unsubscribe_from_extension` → `./functions/unsubscribe-from-extension.md`
+- `list_extension_subscriptions` → `./functions/list-extension-subscriptions.md`
 
 ### Velociraptor DFIR (3)
 - `list_velociraptor_artifacts` → `./functions/list-velociraptor-artifacts.md`

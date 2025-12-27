@@ -146,3 +146,6 @@ plat == linux and hostname contains "web" # Linux with "web" in hostname
 plat == windows and not isolated          # Non-isolated Windows
 ext_plat == windows                       # Carbon Black/Crowdstrike reporting Windows endpoints
 ```
+
+### Extensions
+Not all extensions have a configuration, to determine if an extension is subscribed to, use `list-extension-subscriptions`.
