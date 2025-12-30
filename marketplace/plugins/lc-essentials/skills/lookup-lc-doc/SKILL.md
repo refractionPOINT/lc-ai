@@ -1,6 +1,6 @@
 ---
 name: lookup-lc-doc
-description: Search and retrieve LimaCharlie documentation from the local docs/ folder. Use when users ask about LimaCharlie platform features, SDKs, APIs, D&R rules, LCQL, sensors, outputs, extensions, integrations, or any LimaCharlie-related topics. Covers platform documentation, Python SDK, and Go SDK.
+description: Search and retrieve LimaCharlie documentation from GitHub repositories. Use when users ask about LimaCharlie platform features, SDKs, APIs, D&R rules, LCQL, sensors, outputs, extensions, integrations, AI skills, agents, or any LimaCharlie-related topics.
 ---
 
 # Looking Up LimaCharlie Documentation
@@ -16,96 +16,86 @@ Invoke this skill when users ask about:
 - **SDKs**: Python SDK or Go SDK usage, examples, methods
 - **Configuration**: Setting up integrations, adapters, outputs
 - **Getting started**: Tutorials, quick start guides, installation
+- **AI capabilities**: Skills, agents, commands available in LimaCharlie AI
 - **Any LimaCharlie topic**: General questions about capabilities or how to use features
 
-## What This Skill Does
+## Documentation Sources
 
-This is a thorough documentation lookup tool that:
+Documentation is fetched from two GitHub repositories using WebFetch:
 
-1. Searches comprehensively for relevant keywords across the `docs/` folder
-2. Identifies ALL relevant documentation files (not just one)
-3. Reads multiple files to gather complete information
-4. Returns comprehensive content to fully answer the user's question
+| Repository | Base URL |
+|------------|----------|
+| Platform docs | `https://raw.githubusercontent.com/refractionPOINT/documentation/master/` |
+| AI skills/agents | `https://raw.githubusercontent.com/refractionPOINT/lc-ai/master/` |
 
-## How to Use - BE THOROUGH
+## How to Use - DYNAMIC DISCOVERY
 
-When a user asks about LimaCharlie, gather information from MULTIPLE sources:
+### Step 1: Discover Available Content
 
-### 1. Search Comprehensively
+**ALWAYS start by fetching index/navigation files to discover the current structure:**
 
-Use Grep with multiple searches to find ALL relevant files:
+```
+# For platform documentation - fetch the main index
+WebFetch: https://raw.githubusercontent.com/refractionPOINT/documentation/master/docs/index.md
 
-- **Try multiple keywords**: Search for variations and related terms
-  - Example: For D&R rules, search for "D&R", "detection", "response", "rules"
-- **Search multiple locations**:
-  - `docs/limacharlie/` for platform documentation
-  - `docs/python-sdk/` for Python SDK docs
-  - `docs/go-sdk/` for Go SDK docs
-- **Use different patterns**: Try both specific terms and broader searches
-- **Check file paths**: Look at Grep results to identify promising files from their paths
+# For AI skills/agents - fetch the summary files
+WebFetch: https://raw.githubusercontent.com/refractionPOINT/lc-ai/master/marketplace/plugins/lc-essentials/README.md
+WebFetch: https://raw.githubusercontent.com/refractionPOINT/lc-ai/master/marketplace/plugins/lc-essentials/SKILLS_SUMMARY.md
+```
 
-### 2. Read Multiple Files
+These index files contain links to all available documentation. Parse the links to discover:
+- Available categories and sections
+- File paths for specific topics
+- Related documentation that may be relevant
 
-**IMPORTANT**: Don't stop at the first file. Read ALL relevant files found:
+### Step 2: Follow Links from Index Files
 
-- Read the top 3-5 most relevant files (or more if needed)
-- Read files with different perspectives (overview, examples, API reference, tutorials)
-- If files reference related topics, read those too
-- Combine information from multiple sources for a complete answer
+After fetching index files, extract the file paths from links in the markdown content:
+- Links appear as `[text](path/to/file.md)` or `[:icon: text](path/to/file.md)`
+- Construct full URLs by combining base URL + path
+- Identify which links are relevant to the user's question
 
-### 3. Provide Comprehensive Response
+### Step 3: Fetch Relevant Documentation
 
-- Include information from all files read
-- Organize content logically (overview → details → examples)
-- Mention which files the information came from
+Based on what you discovered in the index files, fetch the specific documentation:
+
+```
+# Construct URLs dynamically from discovered paths
+WebFetch: {base_url}/{discovered_path}
+```
+
+**Fetch multiple relevant files in parallel** - don't stop at one file.
+
+### Step 4: Provide Comprehensive Response
+
+- Include information from all files fetched
+- Organize content logically (overview -> details -> examples)
+- Mention which documentation sources the information came from
 - If the answer spans multiple topics, include all relevant documentation
 
-## Search Strategy
-
-For thorough results, follow this pattern:
-
-**Step 1**: Initial broad search
-```
-Grep for main keyword in docs/limacharlie/
-Grep for main keyword in docs/python-sdk/ (if SDK-related)
-```
-
-**Step 2**: Review results and search for related terms
-```
-Look at file paths to identify relevant sections
-Search for synonyms or related concepts
-```
-
-**Step 3**: Read multiple files in parallel
-```
-Read top 3-5 relevant files using multiple Read calls
-Don't just read one file - gather comprehensive information
-```
-
-## Example Workflow (Thorough)
+## Example Workflow
 
 ```
-User: "How do I write LCQL queries?"
+User: "How do I write D&R rules?"
 
-1. Search:
-   - Grep for "LCQL" in docs/limacharlie/
-   - Grep for "query" in docs/limacharlie/
-   - Review results: find syntax docs, examples, reference guides
+1. Discover structure:
+   WebFetch: https://raw.githubusercontent.com/refractionPOINT/documentation/master/docs/index.md
+   -> Parse the markdown to find links related to "Detection", "Response", "D&R", "rules"
+   -> Discover paths like: limacharlie/doc/Detection_and_Response/detection-and-response-rules.md
 
-2. Read multiple files:
-   - Read LCQL syntax documentation
-   - Read LCQL examples file
-   - Read getting started with LCQL
-   - Read any query-related tutorials
+2. Fetch discovered docs (in parallel):
+   WebFetch: https://raw.githubusercontent.com/refractionPOINT/documentation/master/docs/{discovered_path_1}
+   WebFetch: https://raw.githubusercontent.com/refractionPOINT/documentation/master/docs/{discovered_path_2}
+   (paths extracted from index file links)
 
 3. Respond with comprehensive answer combining all sources
 ```
 
-## Key Principle: COMPLETENESS
+## Key Principles
 
-- **Don't stop at one file**: Read multiple relevant files
-- **Don't skip examples**: If there are example files, read them
-- **Don't ignore SDK docs**: If question involves SDKs, check SDK folders too
-- **Don't assume**: If unsure, search for related terms and read more files
-
-Be thorough - it's better to provide complete information from multiple files than incomplete information from just one.
+- **Dynamic discovery**: NEVER hardcode file paths - always discover them from index files
+- **Use WebFetch**: All documentation is fetched via raw.githubusercontent.com URLs
+- **Parse links**: Extract file paths from markdown links in index/summary files
+- **Be thorough**: Fetch multiple relevant files, not just one
+- **Parallel fetches**: Use multiple WebFetch calls in parallel for efficiency
+- **Combine sources**: Information may span both repositories
