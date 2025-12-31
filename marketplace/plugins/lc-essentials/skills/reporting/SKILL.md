@@ -55,6 +55,38 @@ Use this skill when you need to:
 - **"Detection volume trends this month"** - Security activity patterns
 - **"Which customers need attention?"** - Issue identification and prioritization
 
+## Report Templates
+
+This skill supports structured JSON templates that define input schemas, output schemas, and data sources for each report type. Templates are located in `skills/reporting/templates/`.
+
+| Template | Description | Scope |
+|----------|-------------|-------|
+| `billing-report.json` | Invoice-focused billing data with SKU breakdown | single / all |
+| `mssp-executive-report.json` | High-level fleet health for MSSP leadership | single / all |
+| `customer-health-report.json` | Comprehensive customer success tracking | single / all |
+| `detection-analytics-report.json` | Detection volume, categories, and trends | single / all |
+
+### Template Structure
+
+Each template defines:
+- **Input schema**: Required and optional parameters with types and validation
+- **Output schema**: Expected JSON structure for structured data consumers
+- **Data sources**: Which API calls populate each field
+
+### Using Templates
+
+1. **Read the template** to understand required inputs
+2. **Validate user input** against the input schema
+3. **Use the orchestration layer** (parallel subagents) for data collection
+4. **Format output** to match the output schema
+5. **Return structured JSON or markdown** based on user preference
+
+Templates ensure consistency across reports and enable:
+- Programmatic consumption of report data
+- Validation of inputs and outputs
+- Clear documentation of data sources
+- Reproducible report generation
+
 ## Critical Prerequisites
 
 ### Authentication
@@ -757,6 +789,8 @@ This skill uses a **parallel subagent architecture** for efficient multi-tenant 
 
 ### Pattern 1: Multi-Tenant MSSP Comprehensive Report
 
+**Template Reference**: `templates/mssp-executive-report.json`
+
 **User Request Examples:**
 - "Generate monthly MSSP report for all my customers"
 - "Show me comprehensive overview across all organizations"
@@ -1043,6 +1077,8 @@ Progress Reporting During Execution:
 
 ### Pattern 2: Billing-Focused Summary Report
 
+**Template Reference**: `templates/billing-report.json`
+
 **User Request Examples:**
 - "Billing summary for all customers this month"
 - "Show me subscription status across organizations"
@@ -1050,16 +1086,28 @@ Progress Reporting During Execution:
 
 **Workflow:**
 ```
-1. Use limacharlie-call skill: list-user-orgs
+1. Read billing-report.json template for input/output schemas
 
-2. Spawn org-reporter agents in parallel (same as Pattern 1)
+2. Validate inputs against template:
+   - Required: year (integer), month (1-12)
+   - Optional: scope (single/all), oid (UUID), format (json/markdown)
+
+3. Use limacharlie-call skill: list-user-orgs
+
+4. Spawn org-reporter agents in parallel (same as Pattern 1)
    - Agents collect ALL data (billing focus is in report generation)
 
-3. Aggregate results focusing on billing data:
+5. Aggregate results focusing on billing data:
    - Extract only: usage, billing, invoice_url from each agent result
    - Skip: detections, rules, detailed sensor data
 
-4. Generate Billing-Focused Report:
+6. Format output per template schema:
+   - metadata: generated_at, period, scope, tenant_count
+   - data.tenants: per-tenant billing with SKUs
+   - data.rollup: aggregate totals (when scope=all)
+   - warnings/errors arrays
+
+7. Generate Billing-Focused Report:
    - Usage metrics per org (NO cost calculations)
    - Subscription status
    - Invoice links
@@ -1068,6 +1116,8 @@ Progress Reporting During Execution:
 
 ### Pattern 3: Single Organization Deep Dive
 
+**Template Reference**: `templates/customer-health-report.json` (with scope=single)
+
 **User Request Examples:**
 - "Detailed report for Client ABC"
 - "Complete security analysis for organization XYZ"
@@ -1075,10 +1125,12 @@ Progress Reporting During Execution:
 
 **Workflow:**
 ```
-1. Use limacharlie-call skill: list-user-orgs
+1. Read customer-health-report.json template for structure
+
+2. Use limacharlie-call skill: list-user-orgs
    - Filter to find OID for the specified org name
 
-2. Spawn ONE org-reporter agent for that organization:
+3. Spawn ONE org-reporter agent for that organization:
    Task(
      subagent_type="lc-essentials:org-reporter",
      model="haiku",
@@ -1087,13 +1139,49 @@ Progress Reporting During Execution:
        Detection Limit: 5000"
    )
 
-3. Generate Detailed Single-Org Report:
+4. Generate Detailed Single-Org Report per template:
    - Full usage breakdown
    - Complete sensor inventory with platforms
    - Detection breakdown by category
    - All D&R rules listed
    - Output configurations
    - Any errors or warnings from collection
+   - Attention items requiring follow-up
+```
+
+### Pattern 4: Detection Analytics Report
+
+**Template Reference**: `templates/detection-analytics-report.json`
+
+**User Request Examples:**
+- "Detection trends across all customers"
+- "Which rules are firing most?"
+- "Show detection categories breakdown for last 7 days"
+
+**Workflow:**
+```
+1. Read detection-analytics-report.json template for schemas
+
+2. Ask user for time range (7/14/30 days)
+
+3. Use limacharlie-call skill: list-user-orgs
+
+4. Spawn org-reporter agents in parallel:
+   - Each agent collects detection data for its org
+
+5. Aggregate detection data:
+   - Extract: detection_count, categories, severities, top_hosts
+   - Build: top_categories, top_tenants rankings
+   - Track: limit_reached flags
+
+6. Format output per template:
+   - metadata: time_window with calculated timestamps
+   - data.tenants: per-tenant detection breakdown
+   - data.rollup: aggregate totals
+   - data.top_categories: cross-tenant category ranking
+   - data.top_tenants: volume ranking with limit flags
+
+7. Prominently display limit warnings for affected orgs
 ```
 
 ## Validation Checkpoints

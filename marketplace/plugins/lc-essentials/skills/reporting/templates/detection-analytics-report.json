@@ -1,0 +1,319 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "name": "detection-analytics-report",
+  "description": "Detection volume, categories, trends, and rule performance across tenants",
+  "version": "1.0",
+  "input": {
+    "required": {
+      "days": {
+        "type": "integer",
+        "description": "Number of days to analyze",
+        "enum": [7, 14, 30],
+        "default": 7
+      }
+    },
+    "optional": {
+      "scope": {
+        "type": "string",
+        "enum": ["single", "all"],
+        "default": "all",
+        "description": "single = one org (requires oid), all = all accessible orgs"
+      },
+      "oid": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Organization ID (required when scope=single)"
+      },
+      "format": {
+        "type": "string",
+        "enum": ["json", "markdown"],
+        "default": "markdown",
+        "description": "Output format"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["metadata", "data"],
+    "properties": {
+      "metadata": {
+        "type": "object",
+        "required": ["generated_at", "time_window", "scope"],
+        "properties": {
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when report was generated"
+          },
+          "time_window": {
+            "type": "object",
+            "required": ["start", "end", "start_display", "end_display", "days"],
+            "properties": {
+              "start": {
+                "type": "integer",
+                "description": "Start timestamp in Unix epoch seconds"
+              },
+              "end": {
+                "type": "integer",
+                "description": "End timestamp in Unix epoch seconds"
+              },
+              "start_display": {
+                "type": "string",
+                "description": "Human-readable start time"
+              },
+              "end_display": {
+                "type": "string",
+                "description": "Human-readable end time"
+              },
+              "days": {
+                "type": "integer",
+                "description": "Number of days in the time window"
+              }
+            }
+          },
+          "scope": {
+            "type": "string",
+            "enum": ["single", "all"],
+            "description": "Report scope"
+          },
+          "tenant_count": {
+            "type": "integer",
+            "description": "Number of tenants in report (when scope=all)"
+          }
+        }
+      },
+      "data": {
+        "type": "object",
+        "required": ["tenants"],
+        "properties": {
+          "tenants": {
+            "type": "array",
+            "description": "Per-tenant detection data",
+            "items": {
+              "type": "object",
+              "required": ["name", "oid", "status"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Organization name"
+                },
+                "oid": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Organization ID"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["success", "error", "no_detections"],
+                  "description": "Data collection status"
+                },
+                "detection_count": {
+                  "type": "integer",
+                  "description": "Total detections in time window"
+                },
+                "limit_reached": {
+                  "type": "boolean",
+                  "description": "Whether the 5000 detection limit was hit"
+                },
+                "categories": {
+                  "type": "array",
+                  "description": "Detection breakdown by category/rule",
+                  "items": {
+                    "type": "object",
+                    "required": ["name", "count"],
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "description": "Category or rule name (from source_rule or cat field)"
+                      },
+                      "count": {
+                        "type": "integer",
+                        "description": "Number of detections in this category"
+                      },
+                      "percent": {
+                        "type": "number",
+                        "description": "Percentage of tenant's total detections"
+                      }
+                    }
+                  }
+                },
+                "severities": {
+                  "type": "object",
+                  "description": "Detection breakdown by severity",
+                  "properties": {
+                    "critical": {
+                      "type": "integer",
+                      "description": "Critical severity count"
+                    },
+                    "high": {
+                      "type": "integer",
+                      "description": "High severity count"
+                    },
+                    "medium": {
+                      "type": "integer",
+                      "description": "Medium severity count"
+                    },
+                    "low": {
+                      "type": "integer",
+                      "description": "Low severity count"
+                    },
+                    "info": {
+                      "type": "integer",
+                      "description": "Informational severity count"
+                    }
+                  }
+                },
+                "top_hosts": {
+                  "type": "array",
+                  "description": "Hosts with most detections",
+                  "items": {
+                    "type": "object",
+                    "required": ["hostname", "count"],
+                    "properties": {
+                      "hostname": {
+                        "type": "string",
+                        "description": "Host name"
+                      },
+                      "sid": {
+                        "type": "string",
+                        "description": "Sensor ID"
+                      },
+                      "count": {
+                        "type": "integer",
+                        "description": "Detection count for this host"
+                      }
+                    }
+                  }
+                },
+                "error_message": {
+                  "type": "string",
+                  "description": "Error details if status=error"
+                }
+              }
+            }
+          },
+          "rollup": {
+            "type": "object",
+            "description": "Aggregate totals across all tenants",
+            "properties": {
+              "total_detections": {
+                "type": "integer",
+                "description": "Sum of all detections across tenants"
+              },
+              "total_tenants": {
+                "type": "integer",
+                "description": "Total number of tenants processed"
+              },
+              "tenants_with_detections": {
+                "type": "integer",
+                "description": "Tenants that had at least one detection"
+              },
+              "tenants_at_limit": {
+                "type": "integer",
+                "description": "Tenants that hit the 5000 detection limit"
+              },
+              "successful_count": {
+                "type": "integer",
+                "description": "Tenants with successful data retrieval"
+              },
+              "failed_count": {
+                "type": "integer",
+                "description": "Tenants that failed data retrieval"
+              }
+            }
+          },
+          "top_categories": {
+            "type": "array",
+            "description": "Top detection categories across all tenants",
+            "items": {
+              "type": "object",
+              "required": ["name", "count"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Category or rule name"
+                },
+                "count": {
+                  "type": "integer",
+                  "description": "Total count across all tenants"
+                },
+                "tenant_count": {
+                  "type": "integer",
+                  "description": "Number of tenants with this detection type"
+                }
+              }
+            }
+          },
+          "top_tenants": {
+            "type": "array",
+            "description": "Tenants ranked by detection volume",
+            "items": {
+              "type": "object",
+              "required": ["name", "count"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Tenant name"
+                },
+                "oid": {
+                  "type": "string",
+                  "description": "Organization ID"
+                },
+                "count": {
+                  "type": "integer",
+                  "description": "Detection count"
+                },
+                "limit_reached": {
+                  "type": "boolean",
+                  "description": "Whether limit was hit"
+                }
+              }
+            }
+          }
+        }
+      },
+      "warnings": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Warning messages"
+      },
+      "errors": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "org_name": {
+              "type": "string"
+            },
+            "oid": {
+              "type": "string"
+            },
+            "error_message": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Detailed error information per failed org"
+      }
+    }
+  },
+  "data_sources": {
+    "description": "API calls used to populate this template (documentation only)",
+    "primary": {
+      "function": "get_historic_detections",
+      "parameters": {
+        "oid": "from input or list_user_orgs",
+        "start": "calculated: now - (days * 86400)",
+        "end": "calculated: now"
+      },
+      "notes": "Returns up to 5000 detections per org. Extract source_rule or cat for categories, severity from detect field, hostname from routing."
+    },
+    "supporting": {
+      "function": "list_user_orgs",
+      "parameters": {},
+      "notes": "Used to get OID list when scope=all"
+    }
+  }
+}
