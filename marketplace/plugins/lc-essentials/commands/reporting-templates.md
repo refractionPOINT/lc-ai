@@ -26,6 +26,36 @@ AskUserQuestion(
 )
 ```
 
+## Data Processing Guidelines
+
+### Currency Conversion (CRITICAL)
+
+**The Stripe API returns all monetary amounts in CENTS, not dollars.**
+
+When processing billing data from `get_billing_details`:
+- `amount`, `amount_due`, `balance`, `unit_amount` → **divide by 100** for USD display
+- Example: `amount_due: 10684` = **$106.84** (NOT $10,684)
+- Example: `balance: -2048` = **-$20.48** credit (NOT -$2,048)
+
+**Validation**: Always verify that line item amounts sum to the total. If they don't match expectations, you likely have a unit conversion error.
+
+```
+# Correct conversion
+amount_cents = 10684
+amount_usd = amount_cents / 100  # $106.84
+
+# Display format
+f"${amount_usd:,.2f}"  # "$106.84"
+```
+
+### Bytes Conversion
+
+When displaying data volumes:
+- Raw bytes → divide by `1024^3` for GB
+- Always specify units explicitly (GB, TB, MB)
+
+---
+
 ## Template Definitions
 
 ### Template 1: MSSP Executive Summary
@@ -75,11 +105,18 @@ AskUserQuestion(
 - Per-org: billing details, usage stats (events, outputs, storage)
 - Aggregate: total usage, month-over-month comparison if available
 
+**CRITICAL: Currency Handling**
+- All Stripe API amounts are in **CENTS** - divide by 100 for USD
+- `amount_due: 10684` → `$106.84`
+- `balance: -2048` → `-$20.48` (credit)
+- Always validate: sum of line items should equal total
+
 **Console Output** (default):
 - Summary section: Total events, Total output bytes (GB), Active sensors
 - Top consumers table (sorted by usage)
 - Full org breakdown table with usage columns
 - Usage distribution by tier
+- All monetary values displayed in USD with proper conversion
 
 **Time Range**: Prompt user for billing period (default: previous calendar month).
 
@@ -325,6 +362,24 @@ Organizations: 26
 │ Active Organizations       │ 26                   │
 └────────────────────────────┴──────────────────────┘
 
+## Subscription & Billing Summary
+
+**IMPORTANT: All amounts converted from Stripe API (cents ÷ 100 = USD)**
+
+┌──────────────────────────────┬─────────┬────────────────┬──────────────┐
+│ Service                      │ Qty     │ Unit (USD)     │ Total (USD)  │
+├──────────────────────────────┼─────────┼────────────────┼──────────────┤
+│ LC-INSIGHT (Licensed)        │ 42      │ $0.50/unit     │ $21.00       │
+│ LCIO-EXP1-GENERAL-V1         │ 42      │ $2.00/unit     │ $84.00       │
+│ SOTERIA-RULES                │ 5       │ $0.50/unit     │ $2.50        │
+├──────────────────────────────┼─────────┼────────────────┼──────────────┤
+│ SUBTOTAL (Licensed)          │         │                │ $107.50      │
+└──────────────────────────────┴─────────┴────────────────┴──────────────┘
+
+Raw API values for verification:
+- amount_due: 10750 cents → $107.50
+- balance: -2048 cents → -$20.48 (credit)
+
 ## Top 10 Consumers by Event Volume
 
 ┌────┬──────────────────────────────┬─────────────────┬────────────┬─────────────┐
@@ -376,10 +431,10 @@ Organizations: 26
 ┌──────────────────────────────┬───────────┬────────────┬─────────────────┐
 │ Organization                 │ Plan      │ Status     │ Next Billing    │
 ├──────────────────────────────┼───────────┼────────────┼─────────────────┤
-│ lc-infrastructure            │ Enterprise│ Active     │ 2026-01-01      │
-│ refractionPOINT              │ Enterprise│ Active     │ 2026-01-01      │
-│ lc_demo                      │ Growth    │ Active     │ 2026-01-15      │
-│ Acme Inc. Test               │ Growth    │ Active     │ 2026-01-01      │
+│ lc-infrastructure            │ Licensed  │ Active     │ 2026-01-01      │
+│ refractionPOINT              │ Licensed  │ Active     │ 2026-01-01      │
+│ lc_demo                      │ Licensed  │ Active     │ 2026-01-15      │
+│ Acme Inc. Test               │ Licensed  │ Active     │ 2026-01-01      │
 │ ... (22 more)                │           │            │                 │
 └──────────────────────────────┴───────────┴────────────┴─────────────────┘
 
