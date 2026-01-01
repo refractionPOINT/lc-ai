@@ -182,6 +182,11 @@ mcp__limacharlie__lc_call_tool(
 ## Additional Notes
 
 - **Extension Required**: The organization must have the `ext-reliable-tasking` extension subscribed
+- **EDR Sensors Only**: Tasks can only be executed by **EDR agents**. Sensors must have:
+  - **Platform**: `windows`, `linux`, `macos`, or `chrome`
+  - **Architecture**: NOT `usp_adapter` (code 9)
+  - USP adapters (even if running on Linux) will fail with `UNSUPPORTED_FOR_PLATFORM`
+  - Use combined selector: `(plat==windows or plat==linux or plat==macos) and arch!=usp_adapter`
 - **Selector Syntax**: Uses sensor selector expressions (e.g., `plat==windows`, `production in tags`, `sid=='abc'`)
 - **Context for D&R**: The `context` parameter appears in the `investigation_id` of response events, enabling D&R rule matching
 - **Default TTL**: 604800 seconds (1 week) if not specified

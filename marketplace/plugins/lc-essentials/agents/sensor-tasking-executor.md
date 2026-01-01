@@ -77,13 +77,17 @@ mcp__plugin_lc-essentials_limacharlie__lc_call_tool(
 
 If offline, return immediately with status indicating sensor is offline.
 
-### Step 2.5: Validate Platform is Taskable
+### Step 2.5: Validate Sensor is Taskable EDR
 
-**Only EDR agents support tasking.** Before executing any task, verify the sensor platform:
+**Only EDR agents support tasking.** Before executing any task, verify the sensor is a real EDR agent:
 
-**Taskable platforms:** `windows`, `linux`, `macos`, `chrome`
+**Taskable sensors require BOTH:**
+- **Platform**: `windows`, `linux`, `macos`, or `chrome`
+- **Architecture**: NOT `usp_adapter` (code 9)
 
-If the platform was provided in your prompt, check it directly. Otherwise, get sensor info:
+A sensor running on Linux but with `arch=9` (usp_adapter) is an **adapter**, not an EDR.
+
+If the platform/architecture were provided in your prompt, check them directly. Otherwise, get sensor info:
 
 ```
 mcp__plugin_lc-essentials_limacharlie__lc_call_tool(
@@ -95,7 +99,9 @@ mcp__plugin_lc-essentials_limacharlie__lc_call_tool(
 )
 ```
 
-Check the `info.platform` field. If not in the taskable list, return immediately:
+Check **both** `info.platform` AND `info.arch` fields:
+
+**If platform not in taskable list**, return:
 
 ```json
 {
@@ -110,6 +116,24 @@ Check the `info.platform` field. If not in the taskable list, return immediately
     "message": "This sensor platform does not support tasking"
   },
   "recommendation": "Only Windows, Linux, macOS, and Chrome EDR sensors support tasking. Cloud sensors, adapters, and log sources cannot be tasked."
+}
+```
+
+**If architecture is `9` / `usp_adapter`**, return:
+
+```json
+{
+  "success": false,
+  "sid": "[sensor-id]",
+  "hostname": "[hostname]",
+  "task": "[task-name]",
+  "online": true,
+  "error": {
+    "type": "architecture_not_taskable",
+    "architecture": "usp_adapter",
+    "message": "This sensor is a USP adapter (arch=usp_adapter), not an EDR agent"
+  },
+  "recommendation": "Only EDR agents can be tasked. This sensor is an adapter that forwards logs but cannot execute commands."
 }
 ```
 
@@ -326,6 +350,7 @@ Execute sensor task:
 - **OID is UUID**: Not org name
 - **Online Check First**: Always verify online status before tasking
 - **Platform Validation**: Only task Windows, Linux, macOS, Chrome sensors
+- **Architecture Validation**: Only task EDR agents (arch != usp_adapter / code 9)
 - **Timeout Awareness**: Some tasks (YARA scans) may take longer
 
 ## Skills Used
@@ -334,13 +359,15 @@ Execute sensor task:
 
 ## Your Workflow Summary
 
-1. **Parse prompt** → Extract OID, SID, task, parameters, platform (if provided)
+1. **Parse prompt** → Extract OID, SID, task, parameters, platform/arch (if provided)
 2. **Check online** → Call is_online
 3. **If offline** → Return offline status immediately
 4. **Validate platform** → Check platform is taskable (windows/linux/macos/chrome)
-5. **If not taskable** → Return platform_not_taskable error immediately
-6. **If taskable** → Execute task via MCP tool
-7. **Format output** → Return structured JSON with results/errors
-8. **Return to parent** → Provide data matching caller's specifications
+5. **If platform not taskable** → Return platform_not_taskable error
+6. **Validate architecture** → Check arch is not `9` / `usp_adapter`
+7. **If architecture is USP** → Return architecture_not_taskable error
+8. **If EDR sensor** → Execute task via MCP tool
+9. **Format output** → Return structured JSON with results/errors
+10. **Return to parent** → Provide data matching caller's specifications
 
-Remember: You're optimized for speed. Check status, validate platform, execute, return. The parent skill handles orchestration and aggregation.
+Remember: You're optimized for speed. Check status, validate platform AND architecture, execute, return. The parent skill handles orchestration and aggregation.

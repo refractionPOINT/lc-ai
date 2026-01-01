@@ -115,14 +115,18 @@ Task(
 )
 ```
 
-> **CRITICAL: Filter to Taskable Platforms**
+> **CRITICAL: Filter to Taskable EDR Sensors**
 >
-> Before spawning executor agents or tasking sensors, you MUST filter to taskable platforms only.
-> Non-EDR sensors (cloud sensors, adapters, log sources) will fail with `UNSUPPORTED_FOR_PLATFORM`.
+> Before spawning executor agents or tasking sensors, you MUST verify sensors are **EDR agents** (not adapters or cloud sensors).
+> Non-EDR sensors will fail with `UNSUPPORTED_FOR_PLATFORM`.
 >
-> **Taskable platforms:** `windows`, `linux`, `macos`, `chrome`
+> **Taskable sensors require BOTH:**
+> - **Platform**: `windows`, `linux`, `macos`, or `chrome`
+> - **Architecture**: NOT `usp_adapter` (code 9)
 >
-> **Use platform selector when listing sensors:**
+> A sensor running on Linux platform but with `arch=usp_adapter` is an **adapter** (USP), not an EDR agent. These adapters forward logs but cannot execute commands.
+>
+> **Use combined selector when listing sensors:**
 > ```
 > Task(
 >   subagent_type="lc-essentials:limacharlie-api-executor",
@@ -131,15 +135,14 @@ Task(
 >     - Function: list_sensors
 >     - Parameters: {
 >         \"oid\": \"[oid]\",
->         \"selector\": \"plat==windows or plat==linux or plat==macos\",
+>         \"selector\": \"(plat==windows or plat==linux or plat==macos) and arch!=usp_adapter\",
 >         \"online_only\": true
 >       }
 >     - Return: List of SIDs with hostnames and platforms"
 > )
 > ```
 >
-> **Or filter returned sensors by platform field** before spawning executor agents.
-> Only spawn executors for sensors where `platform` is in `["windows", "linux", "macos", "chrome"]`.
+> **Or check sensor info** before tasking - verify both `platform` is in `["windows", "linux", "macos", "chrome"]` AND `arch` is not `9` / `usp_adapter`.
 
 ### Step 3A: Direct Tasking (≤5 Online Sensors)
 
@@ -506,9 +509,13 @@ Task(subagent_type="lc-essentials:limacharlie-api-executor", prompt="get_os_vers
 
 ## Important Notes
 
-### Taskable Platforms
+### Taskable Sensors (EDR Only)
 
-> **WARNING**: Sensor tasking only works for EDR agents running on supported platforms. Cloud sensors, adapters, and USP log sources cannot receive tasks.
+> **WARNING**: Sensor tasking only works for **EDR agents** (real endpoint agents). Cloud sensors, adapters, and USP log sources cannot receive tasks.
+
+**Taskable sensors require BOTH conditions:**
+1. **Platform** is Windows, Linux, macOS, or Chrome
+2. **Architecture** is NOT `usp_adapter` (code 9)
 
 **Platforms that support tasking:**
 
@@ -517,18 +524,19 @@ Task(subagent_type="lc-essentials:limacharlie-api-executor", prompt="get_os_vers
 | Windows | `0x10000000` | 268435456 | `plat==windows` |
 | Linux | `0x20000000` | 536870912 | `plat==linux` |
 | macOS | `0x30000000` | 805306368 | `plat==macos` |
-| Chrome | Architecture `0x00000006` | 6 | `arch==6` |
+| Chrome | Architecture `0x00000006` | 6 | `arch==chromium` |
 
 **Non-taskable sensors include:**
 - Cloud sensors (Office365, Okta, AWS, GCP, Azure, etc.)
 - External adapters (`ext-*` sensors like ext-zeek, ext-strelka)
 - USP log sources (Syslog, S3 buckets, webhooks)
+- **Any sensor with `arch=usp_adapter`** (architecture code 9) - even if platform is Linux/macOS
 
 These sensors will return `UNSUPPORTED_FOR_PLATFORM` errors when tasked.
 
-**Recommendation**: When tasking a fleet, filter by platform to avoid errors:
-- Use selectors like `plat==windows` or `plat==linux`
-- Or check sensor platform before direct tasking
+**Recommendation**: When tasking a fleet, filter by **both platform AND architecture**:
+- Use combined selector: `(plat==windows or plat==linux or plat==macos) and arch!=usp_adapter`
+- Or check sensor info for both `platform` and `arch` fields before direct tasking
 
 ### Extension Requirement
 

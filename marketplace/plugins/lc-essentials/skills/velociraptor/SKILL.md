@@ -322,7 +322,10 @@ date -d '7 days ago' +%s        # 7 days ago
 
 - **Async operation**: `collect_velociraptor_artifact` returns immediately with a `job_id`; results are ingested asynchronously
 - **Offline sensors**: Uses reliable-tasking for persistent delivery; collection attempts continue until `collection_ttl` expires
-- **Platform support**: Windows (x86/x64), Linux (386/amd64/arm64), macOS (amd64/arm64)
+- **EDR sensors only**: Velociraptor collections can only run on **EDR agents**:
+  - **Platform**: Windows (x86/x64), Linux (386/amd64/arm64), macOS (amd64/arm64)
+  - **Architecture**: Must NOT be `usp_adapter` (code 9) - adapters cannot run collections
+  - Use combined selector: `(plat==windows or plat==linux or plat==macos) and arch!=usp_adapter`
 - **External artifacts**: Automatically downloaded from triage.velocidex.com if needed
 - **Batch limit**: Up to 100 sensors can be tasked in parallel
 - **Max artifact size**: Results larger than 100 MB (configurable) are skipped

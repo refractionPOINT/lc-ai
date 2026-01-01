@@ -118,7 +118,7 @@ Parse the `alive` field ("YYYY-MM-DD HH:MM:SS") and calculate hours offline.
 
 Use `classify_offline_duration(hours_offline)` function.
 
-#### 3.3 Platform Identification
+#### 3.3 Platform and EDR Identification
 
 Map platform codes to names using `get_platform_name(platform_code)`:
 - `268435456` → windows
@@ -126,6 +126,10 @@ Map platform codes to names using `get_platform_name(platform_code)`:
 - `805306368` → macos
 - `2147483648` → adapter
 - `2415919104` → extension
+
+Determine if sensor is an EDR (can be tasked) using `is_edr_platform(platform_code, architecture)`:
+- EDR = Platform is Windows/Linux/macOS AND architecture is NOT `9` (usp_adapter)
+- A Linux sensor with `arch=9` is a USP adapter, NOT an EDR
 
 #### 3.4 New Sensor Detection (Shadow IT)
 
