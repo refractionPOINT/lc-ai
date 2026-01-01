@@ -1016,7 +1016,7 @@ parameters:
 - `lookup-lc-doc` - For LCQL syntax and event schema reference
 - `detection-engineering` - For creating D&R rules based on investigation findings
 - `threat-report-evaluation` - For evaluating threat reports and searching for IOCs
-- `sensor-tasking` - For live response and data collection from sensors during investigation
+- `sensor-tasking` - For live response and data collection from sensors during investigation (**EDR sensors only**: requires platform=windows/linux/macos AND arch!=usp_adapter)
 
 ## Reference
 

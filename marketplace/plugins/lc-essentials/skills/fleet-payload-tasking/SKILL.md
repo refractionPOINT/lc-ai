@@ -113,14 +113,17 @@ For complex operations, upload a payload script first:
 
 ## Platform Requirements
 
-> **WARNING**: Only EDR platforms support tasking.
+> **WARNING**: Only **EDR agents** support tasking (not adapters or cloud sensors).
 >
-> **Taskable platforms:** `windows`, `linux`, `macos`, `chrome`
+> **Taskable sensors require BOTH:**
+> - **Platform**: `windows`, `linux`, `macos`, or `chrome`
+> - **Architecture**: NOT `usp_adapter` (code 9)
 >
+> A sensor running on Linux but with `arch=usp_adapter` is an **adapter** (USP), not an EDR.
 > Cloud sensors, adapters, and USP log sources will fail with `UNSUPPORTED_FOR_PLATFORM`.
 
-When using sensor selectors, always filter by taskable platforms to avoid errors:
-- `plat == windows` or `plat == linux` or `plat == macos`
+When using sensor selectors, always filter by **both platform AND architecture**:
+- `(plat == windows or plat == linux or plat == macos) and arch != usp_adapter`
 
 ## Shell Command Escaping Considerations
 

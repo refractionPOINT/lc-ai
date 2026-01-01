@@ -86,16 +86,29 @@ def get_platform_name(platform_code: int) -> str:
     return PLATFORM_CODES.get(platform_code, f'unknown-{platform_code}')
 
 
-def is_edr_platform(platform_code: int) -> bool:
+def is_edr_platform(platform_code: int, architecture: int = None) -> bool:
     """
-    Check if platform is an EDR endpoint (vs adapter/extension/cloud).
+    Check if sensor is an EDR endpoint (vs adapter/extension/cloud).
+
+    An EDR sensor must have:
+    - Platform that is NOT in the non-EDR platforms list
+    - Architecture that is NOT 9 (usp_adapter)
+
+    A sensor on Linux/Windows/macOS platform but with architecture 9 is an
+    adapter (USP), not an EDR agent, and cannot be tasked.
 
     Args:
         platform_code: Numeric platform identifier
+        architecture: Numeric architecture identifier (optional). If 9 (usp_adapter),
+                     the sensor is NOT an EDR regardless of platform.
 
     Returns:
-        True if EDR endpoint
+        True if EDR endpoint that can be tasked
     """
+    # Architecture 9 = usp_adapter (USP adapter), never an EDR
+    if architecture == 9:
+        return False
+
     non_edr_platforms = {
         2147483648,   # adapter
         2415919104,   # extension
@@ -251,10 +264,12 @@ def classify_sensor(sensor: Dict,
         hours_offline = (now_timestamp - alive_ts) / 3600 if alive_ts > 0 else 9999
         offline_category = classify_offline_duration(hours_offline)
 
-    # Get platform info
+    # Get platform and architecture info
     platform_code = sensor.get('plat', sensor.get('platform', 0))
+    architecture = sensor.get('arch', sensor.get('architecture'))
     platform_name = get_platform_name(platform_code)
-    is_edr = is_edr_platform(platform_code)
+    # Check both platform AND architecture - arch=9 (usp_adapter) means NOT an EDR
+    is_edr = is_edr_platform(platform_code, architecture)
 
     # Get user tags
     user_tags = get_user_tags(sensor.get('tags', []))
@@ -271,6 +286,7 @@ def classify_sensor(sensor: Dict,
         'hours_offline': hours_offline if not is_online else 0,
         'offline_category': offline_category,
         'platform_code': platform_code,
+        'architecture': architecture,
         'platform_name': platform_name,
         'is_edr': is_edr,
         'tags': sensor.get('tags', []),
