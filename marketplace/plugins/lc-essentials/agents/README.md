@@ -613,6 +613,86 @@ Rather than following a rigid checklist, adapts investigation based on findings:
 
 ---
 
+### cloud-discoverer
+
+**Model**: Claude Haiku (fast and cost-effective)
+
+**Purpose**: Survey a **single** cloud platform (GCP, AWS, Azure, DigitalOcean) to discover projects, VMs, and security-relevant log sources. Designed to be spawned in parallel (one instance per platform) by the `onboard-new-org` skill.
+
+**When to Use**:
+This agent is **not invoked directly by users**. Instead, it's spawned in parallel by the `onboard-new-org` skill when users want to:
+- Discover cloud infrastructure across multiple platforms
+- Identify VMs suitable for EDR deployment
+- Find security-relevant log sources for ingestion
+
+**Architecture Role**:
+- **Parent Skill**: `onboard-new-org` (orchestrates parallel execution)
+- **This Agent**: Surveys ONE cloud platform
+- **Parallelization**: Multiple instances run simultaneously, one per platform
+
+**Expected Input**:
+- Platform to survey (gcp, aws, azure, digitalocean)
+- Scope (optional - specific projects/accounts)
+
+**Output Format**:
+Returns structured JSON with:
+- Projects/accounts discovered
+- VMs with OS info, status, and recommended deployment method
+- Security-relevant services enabled
+- Recommended log sources with priority ratings
+
+**Key Features**:
+- **Multi-Project Discovery**: Lists all accessible projects/subscriptions
+- **OS Detection**: Determines VM operating system for EDR compatibility
+- **Deployment Method Recommendation**: Suggests OS Config, SSM, or Run Command
+- **Permission Awareness**: Notes which operations failed due to permissions
+
+**Skills Used**:
+- `Bash` - For executing cloud CLI commands
+
+---
+
+### vm-edr-installer
+
+**Model**: Claude Haiku (fast and cost-effective)
+
+**Purpose**: Deploy LimaCharlie EDR to VMs on a **single** cloud platform using native deployment methods (OS Config for GCP, SSM for AWS, Run Command for Azure). Designed to be spawned in parallel (one instance per platform) by the `onboard-new-org` skill.
+
+**When to Use**:
+This agent is **not invoked directly by users**. Instead, it's spawned in parallel by the `onboard-new-org` skill when users want to:
+- Deploy EDR agents to cloud VMs fleet-wide
+- Use cloud-native deployment methods for reliability
+- Track deployment status and sensor registration
+
+**Architecture Role**:
+- **Parent Skill**: `onboard-new-org` (orchestrates parallel execution)
+- **This Agent**: Deploys EDR to VMs on ONE cloud platform
+- **Parallelization**: Multiple instances run simultaneously, one per platform
+
+**Expected Input**:
+- Platform (gcp, aws, azure, digitalocean)
+- List of VMs with IDs, zones/regions, and OS types
+- LimaCharlie organization ID and installation key
+
+**Output Format**:
+Returns structured JSON with:
+- Deployment status for each VM
+- Sensor registration confirmation
+- Policy assignments created (for OS Config)
+- Errors with remediation steps
+
+**Key Features**:
+- **Native Deployment Methods**: Uses OS Config (GCP), SSM (AWS), Run Command (Azure)
+- **Sensor Verification**: Confirms sensors appear in LimaCharlie within 2 minutes
+- **Error Recovery**: Provides remediation steps for common failures
+- **Parallel VM Deployment**: Deploys to multiple VMs in a single command
+
+**Skills Used**:
+- `lc-essentials:limacharlie-call` - For sensor verification
+- `Bash` - For executing cloud CLI deployment commands
+
+---
+
 ## Agent Architecture
 
 All agents follow Claude Code best practices:
