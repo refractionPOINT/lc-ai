@@ -79,7 +79,7 @@ Each template defines:
 2. **Validate user input** against the input schema
 3. **Use the orchestration layer** (parallel subagents) for data collection
 4. **Format output** to match the output schema
-5. **Return structured JSON or markdown** based on user preference
+5. **Display results in the console** as formatted markdown/tables (default) - HTML output only when user explicitly requests it
 
 Templates ensure consistency across reports and enable:
 - Programmatic consumption of report data
@@ -787,6 +787,40 @@ This skill uses a **parallel subagent architecture** for efficient multi-tenant 
 - Reduced context usage in main skill
 - Scalable to 50+ organizations
 
+### Output Format Requirements
+
+**Default Output: Console (Formatted Markdown)**
+
+By default, ALL report data MUST be displayed directly in the console as formatted markdown tables and text. This includes:
+- Executive summary with key metrics
+- Per-organization breakdowns
+- Aggregate statistics and rollups
+- All warnings, errors, and data limitations
+- Methodology and data provenance sections
+
+**Console Output Characteristics:**
+- Formatted tables using markdown pipe syntax
+- Status indicators as text badges: `[GREEN]`, `[YELLOW]`, `[RED]`
+- Numeric formatting with thousand separators
+- All data visible without requiring external files
+
+**HTML Output: Only When Explicitly Requested**
+
+HTML visualization should ONLY be generated when the user explicitly requests it using phrases like:
+- "generate as HTML"
+- "create HTML dashboard"
+- "export to HTML"
+- "visual report"
+- "interactive dashboard"
+
+If user requests HTML output:
+1. First collect and display data in console (so user sees results immediately)
+2. Then spawn `html-renderer` agent to create the HTML file
+3. Save to `/tmp/{report-name}-{date}.html`
+4. Open in browser
+
+**NEVER automatically generate HTML** - console output is always the default.
+
 ### Pattern 1: Multi-Tenant MSSP Comprehensive Report
 
 **Template Reference**: `templates/mssp-executive-report.json`
@@ -918,8 +952,11 @@ This skill uses a **parallel subagent architecture** for efficient multi-tenant 
 │     - Time range covered                          │
 └────────────────────────────────────────────────────┘
 
-┌─ PHASE 5: REPORT GENERATION ──────────────────────┐
-│ 17. Report Structure:                             │
+┌─ PHASE 5: REPORT GENERATION (CONSOLE OUTPUT) ─────┐
+│ ⚠️ DEFAULT: Display ALL data in console as        │
+│    formatted markdown. HTML only if requested.    │
+│                                                    │
+│ 17. Console Report Structure:                     │
 │                                                    │
 │     A. HEADER (mandatory metadata)                │
 │        ═══════════════════════════════════════    │
@@ -1074,6 +1111,15 @@ Progress Reporting During Execution:
 
    Generating report structure..."
 ```
+
+**IMPORTANT: Console Output is Complete**
+
+The above console output displays ALL collected data. Do NOT automatically proceed to HTML generation.
+
+**Only generate HTML if user explicitly requests it** (e.g., "export as HTML", "create dashboard"). When HTML is requested:
+1. The console output above should already be displayed
+2. Then spawn `html-renderer` to create the visual dashboard
+3. This is an ADDITIONAL output, not a replacement
 
 ### Pattern 2: Billing-Focused Summary Report
 
