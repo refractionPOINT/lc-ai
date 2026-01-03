@@ -456,8 +456,8 @@ Task(
 | s3 | varies | Cloud Sensor/On-prem | bucket_name, access_key, secret_key, prefix |
 | azure_event_hub | varies | Cloud Sensor/On-prem | connection_string |
 | office365 | json | Cloud Sensor | tenant_id, client_id, client_secret |
-| crowdstrike / falconcloud | json | Cloud Sensor/On-prem | client_id, client_secret |
-| google_cloud_pubsub | varies | Cloud Sensor/On-prem | project_id, subscription_id |
+| falconcloud | json | Cloud Sensor/On-prem | client_id, client_secret |
+| pubsub | varies | Cloud Sensor/On-prem | project_id, subscription_id |
 | file | varies | On-prem | file_path, backfill |
 
 ## Example Usage
