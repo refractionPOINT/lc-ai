@@ -18,6 +18,17 @@ Run `/init-lc` to load LimaCharlie guidelines into your CLAUDE.md. This covers:
 
 ## How to Use
 
+### Step 1: Check Function Documentation
+
+Before calling any function, **read its documentation** to get correct parameter names:
+```
+Read ./functions/{function-name}.md
+```
+
+**Why this matters:** Parameter names are often prefixed (e.g., `secret_name` not `name`). Using wrong names causes silent failures. Function docs have warnings for commonly confused parameters.
+
+### Step 2: Spawn the Executor
+
 All API operations go through the `limacharlie-api-executor` sub-agent:
 
 ```
