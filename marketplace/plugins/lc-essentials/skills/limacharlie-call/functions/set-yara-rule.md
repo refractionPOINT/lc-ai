@@ -2,6 +2,8 @@
 
 Create or update a YARA rule for malware detection and file scanning.
 
+**⚠️ PARAMETER NAMES**: Use `rule_name` and `rule_content`, NOT `name` and `content`.
+
 ## Recommended Workflow
 
 1. `validate_yara_rule` - Validate syntax first

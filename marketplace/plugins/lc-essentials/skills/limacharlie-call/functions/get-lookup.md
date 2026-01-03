@@ -2,6 +2,8 @@
 
 Retrieve a specific lookup table with all its data and metadata.
 
+**⚠️ PARAMETER NAME**: Use `lookup_name`, NOT `name`.
+
 ## Parameters
 
 | Name | Type | Required | Description |

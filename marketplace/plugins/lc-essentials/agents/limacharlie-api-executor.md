@@ -74,16 +74,40 @@ Extract from your prompt:
 - Parameters dictionary
 - Return specification (required - either `RAW` or extraction/summarization instructions)
 
-### Step 2: Validate Function Exists
+### Step 2: Read Function Documentation (MANDATORY)
 
-The `limacharlie-call` skill you have access to provides 124 functions. The function documentation is in:
+**⚠️ CRITICAL: You MUST read the function documentation BEFORE making any API call.**
+
+The function documentation is in:
 ```
 ./functions/{function-name}.md
 ```
 
-If you need to understand the function better, refer to its documentation file. However, for most straightforward calls, you can proceed directly to execution.
+Use the Read tool to load the function's `.md` file. This step is **mandatory** because:
+1. Parameter names are often prefixed (e.g., `secret_name` not `name`, `rule_content` not `content`)
+2. LLMs consistently guess wrong parameter names, causing silent failures
+3. The MCP tool will fail or behave unexpectedly with incorrect parameter names
 
-### Step 3: Call MCP Tool
+**Example**: For `set_secret`, you MUST read `./functions/set-secret.md` first.
+
+### Step 3: Validate Parameters Match Documentation
+
+After reading the function doc, verify that the parameters in your prompt **exactly match** the documented parameter names.
+
+**Common mistakes to catch:**
+| Wrong (LLM guess) | Correct (from docs) |
+|-------------------|---------------------|
+| `name` | `secret_name`, `rule_name`, `lookup_name` |
+| `value` | `secret_value` |
+| `data` | `lookup_data` |
+| `content` | `rule_content` |
+
+**If parameters don't match:**
+1. Report an error explaining the parameter mismatch
+2. Show what was provided vs. what's expected
+3. Do NOT attempt the API call with wrong parameters
+
+### Step 4: Call MCP Tool
 
 Execute the API operation using the unified MCP tool:
 
@@ -115,7 +139,7 @@ mcp__plugin_lc-essentials_limacharlie__lc_call_tool(
 )
 ```
 
-### Step 4: Handle Response
+### Step 5: Handle Response
 
 **Case A: Small Results** (< 100KB, inline data)
 
@@ -226,7 +250,7 @@ rm /tmp/lc-result-{timestamp}.json
 
 Replace `{timestamp}` with the actual timestamp from the file path.
 
-### Step 5: Format Output
+### Step 6: Format Output
 
 Return structured JSON to the parent thread:
 
@@ -565,11 +589,13 @@ But the `amount` field is in cents:
 ## Your Workflow Summary
 
 1. **Parse prompt** → Extract function name, parameters, and Return specification
-2. **Call MCP tool** → `mcp__plugin_lc-essentials_limacharlie__lc_call_tool`
-3. **Check response type** → Inline data vs. resource_link
-4. **Process per Return spec** → If RAW: return as-is. If extraction: apply jq processing
-5. **Handle large results** → Download, analyze schema, extract with jq, clean up
-6. **Format output** → Return structured JSON with success/error status
-7. **Return to parent** → Provide data matching what the caller requested
+2. **Read function docs** → Load `./functions/{function-name}.md` (MANDATORY)
+3. **Validate parameters** → Ensure provided params match documented names exactly
+4. **Call MCP tool** → `mcp__plugin_lc-essentials_limacharlie__lc_call_tool`
+5. **Check response type** → Inline data vs. resource_link
+6. **Process per Return spec** → If RAW: return as-is. If extraction: apply jq processing
+7. **Handle large results** → Download, analyze schema, extract with jq, clean up
+8. **Format output** → Return structured JSON with success/error status
+9. **Return to parent** → Provide data matching what the caller requested
 
 Remember: You're optimized for speed and cost efficiency. Execute, process, return. The parent thread handles orchestration and aggregation.

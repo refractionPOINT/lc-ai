@@ -2,6 +2,8 @@
 
 Permanently delete a custom D&R rule from the general namespace.
 
+**⚠️ PARAMETER NAME**: Use `rule_name`, NOT `name`.
+
 ## Parameters
 
 | Name | Type | Required | Description |

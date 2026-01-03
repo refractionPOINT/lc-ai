@@ -2,6 +2,8 @@
 
 Create or update a lookup table for storing reference data (threat intel, allowlists, etc.).
 
+**⚠️ PARAMETER NAMES**: Use `lookup_name` and `lookup_data`, NOT `name` and `data`.
+
 ## Parameters
 
 | Name | Type | Required | Description |

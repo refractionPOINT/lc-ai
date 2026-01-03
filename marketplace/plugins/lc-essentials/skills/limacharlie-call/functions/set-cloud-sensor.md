@@ -175,15 +175,26 @@ The sensor will begin collecting CloudTrail logs from your S3 bucket.
 Check back in a few minutes to verify data is flowing.
 ```
 
-### Example 2: Update Office 365 sensor with new credentials
+### Example 2: Create Office 365 sensor with secret reference
 
-User request: "Update the office365-audit sensor with the new client secret after rotation"
+User request: "Set up an Office 365 audit log sensor"
 
 Steps:
-1. Get existing sensor configuration (use get-cloud-sensor skill)
-2. Update only the client_secret field
-3. Call tool with updated configuration:
+1. First, store the client secret in LimaCharlie's secret manager
+2. Create the sensor config referencing the secret
+3. Call tool with configuration:
 ```
+# Step 1: Store the secret first
+mcp__limacharlie__lc_call_tool(
+  tool_name="set_secret",
+  parameters={
+    "oid": "c7e8f940-1234-5678-abcd-1234567890ab",
+    "secret_name": "o365-client-secret",
+    "secret_value": "actual-secret-value-here"
+  }
+)
+
+# Step 2: Create sensor referencing the secret
 mcp__limacharlie__lc_call_tool(
   tool_name="set_cloud_sensor",
   parameters={
@@ -193,7 +204,7 @@ mcp__limacharlie__lc_call_tool(
       "sensor_type": "office365",
       "tenant_id": "abc-123-def",
       "client_id": "client-id-456",
-      "client_secret": "new-secret-789",
+      "client_secret": "hive://secret/o365-client-secret",
       "content_types": ["Audit.General", "Audit.Exchange"]
     }
   }
@@ -210,14 +221,14 @@ Expected response:
 
 Present to user:
 ```
-Successfully updated Office 365 cloud sensor!
+Successfully created Office 365 cloud sensor!
 
 Sensor Name: office365-audit
 Status: Enabled
-Changes: Updated client secret
+Credentials: Using secret 'o365-client-secret'
 
-The sensor should now authenticate successfully and resume data collection.
-Monitor the sensor for the next few minutes to confirm no authentication errors.
+The sensor will begin collecting Office 365 audit logs.
+Monitor the sensor for the next few minutes to confirm data is flowing.
 ```
 
 ### Example 3: Enable a disabled cloud sensor
@@ -236,13 +247,54 @@ Successfully enabled cloud sensor 'azure-activity-logs'.
 The sensor is now active and will resume collecting Azure Activity Logs.
 ```
 
+## Credential Handling
+
+**IMPORTANT**: Never hardcode credentials directly in sensor configurations. Use LimaCharlie's secret manager with the `hive://secret/<secret-name>` pattern:
+
+1. **First, store the secret**:
+```
+set_secret(oid, secret_name="gcp-sa-key", secret_value="<json-credentials>")
+```
+
+2. **Then reference it in the sensor config**:
+```json
+{
+  "sensor_type": "pubsub",
+  "service_account_creds": "hive://secret/gcp-sa-key",
+  "project_name": "my-project",
+  "sub_name": "my-subscription"
+}
+```
+
+**Common credential fields that support `hive://secret/`**:
+- `service_account_creds` / `service_account_json` (GCP)
+- `client_secret` (Azure, Office 365)
+- `api_token` / `apikey` (Okta, various APIs)
+- `secret_key` (AWS)
+
+**Wrong** - Do NOT use a `secret_name` field:
+```json
+{
+  "sensor_type": "pubsub",
+  "secret_name": "my-secret"  // ERROR: unknown field
+}
+```
+
+**Right** - Reference secret in the credential field itself:
+```json
+{
+  "sensor_type": "pubsub",
+  "service_account_creds": "hive://secret/my-secret"
+}
+```
+
 ## Additional Notes
 
 - Cloud sensors use the Hive storage system under `cloud_sensor` hive with `global` partition
 - Sensor names must be unique within the organization
 - The config structure is specific to each cloud platform or SaaS service
 - Required fields vary by sensor type - consult platform-specific documentation
-- Credentials in sensor configurations are sensitive - handle securely
+- **Always use `hive://secret/<name>` for credentials** - never hardcode secrets in configs
 - The sensor is automatically enabled unless explicitly disabled in usr_mtd
 - Tags are useful for organizing sensors by environment, platform, or team
 - Use meaningful sensor names that indicate the platform and purpose

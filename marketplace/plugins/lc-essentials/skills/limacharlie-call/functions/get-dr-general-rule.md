@@ -2,6 +2,8 @@
 
 Retrieve a specific custom D&R rule by name from the general namespace.
 
+**⚠️ PARAMETER NAME**: Use `rule_name`, NOT `name`.
+
 ## Parameters
 
 | Name | Type | Required | Description |

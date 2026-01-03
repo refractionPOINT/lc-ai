@@ -2,6 +2,8 @@
 
 Permanently delete a YARA rule source from the organization.
 
+**⚠️ PARAMETER NAME**: Use `rule_name`, NOT `name`.
+
 ## Parameters
 
 | Name | Type | Required | Description |
