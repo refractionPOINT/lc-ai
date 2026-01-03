@@ -34,13 +34,36 @@ Before calling this skill, gather:
 - **sensor_name**: Name for the cloud sensor (required, alphanumeric with hyphens/underscores)
 - **sensor_config**: Complete configuration object (required, structure varies by sensor type)
 
-The config structure depends on the cloud platform or service:
-- **AWS CloudTrail**: aws_region, s3_bucket, role_arn, external_id
-- **Azure Activity Logs**: subscription_id, tenant_id, client_id, client_secret
-- **GCP Audit Logs**: project_id, service_account_json
-- **Office 365**: tenant_id, client_id, client_secret, content_types
-- **Okta**: domain, api_token
-- Other platforms have their own specific requirements
+**CRITICAL - Config Structure**: All cloud sensor configs MUST follow this nested structure:
+```json
+{
+  "sensor_type": "<adapter-type>",
+  "<adapter-type>": {
+    "client_options": {
+      "identity": { "oid": "<org-id>", "installation_key": "<iid>" },
+      "platform": "json",
+      "sensor_seed_key": "<unique-key>"
+    },
+    // adapter-specific fields here
+  }
+}
+```
+
+**IMPORTANT - Finding Adapter Fields**: The authoritative source for each adapter's configuration fields is the **usp-adapters GitHub repository**:
+- URL: `https://github.com/refractionPOINT/usp-adapters`
+- Each adapter has a `client.go` file with a `*Config` struct defining all valid fields
+- Example: For `okta`, check `usp-adapters/okta/client.go` → `OktaConfig` struct
+
+Common sensor types (always verify in usp-adapters for complete field list):
+- **s3**: AWS S3 buckets (including CloudTrail logs)
+- **azure_event_hub**: Azure Event Hub
+- **gcs**: Google Cloud Storage
+- **pubsub**: GCP Pub/Sub
+- **office365**: Microsoft 365 audit logs
+- **okta**: Okta system logs
+- **webhook**: Generic webhook receiver
+- **falconcloud**: CrowdStrike Falcon
+- And 30+ more adapters...
 
 ## How to Use
 
@@ -64,11 +87,19 @@ mcp__limacharlie__lc_call_tool(
     "oid": "[organization-id]",
     "sensor_name": "[sensor-name]",
     "sensor_config": {
-      "sensor_type": "aws_cloudtrail",
-      "aws_region": "us-east-1",
-      "s3_bucket": "my-cloudtrail-logs",
-      "role_arn": "arn:aws:iam::123456789012:role/LCCloudTrail",
-      "external_id": "lc-ext-id-12345"
+      "sensor_type": "okta",
+      "okta": {
+        "client_options": {
+          "identity": {
+            "oid": "[organization-id]",
+            "installation_key": "[installation-key]"
+          },
+          "platform": "json",
+          "sensor_seed_key": "okta-system-logs"
+        },
+        "apikey": "hive://secret/okta-api-key",
+        "url": "https://company.okta.com"
+      }
     }
   }
 )
@@ -120,15 +151,17 @@ Present the result to the user:
 
 ## Example Usage
 
-### Example 1: Create AWS CloudTrail cloud sensor
+### Example 1: Create S3 cloud sensor for AWS CloudTrail logs
 
 User request: "Set up a cloud sensor for our AWS CloudTrail logs in the production environment"
 
+**Note**: For AWS CloudTrail logs stored in S3, use the `s3` sensor type (not `aws_cloudtrail` which doesn't exist).
+
 Steps:
-1. Extract organization ID from context
+1. Extract organization ID and installation key from context
 2. Prepare sensor name: "prod-aws-cloudtrail"
-3. Gather AWS configuration: region, S3 bucket, role ARN, external ID
-4. Call tool:
+3. Store AWS credentials as secrets first
+4. Call tool with properly nested config:
 ```
 mcp__limacharlie__lc_call_tool(
   tool_name="set_cloud_sensor",
@@ -136,11 +169,22 @@ mcp__limacharlie__lc_call_tool(
     "oid": "c7e8f940-1234-5678-abcd-1234567890ab",
     "sensor_name": "prod-aws-cloudtrail",
     "sensor_config": {
-      "sensor_type": "aws_cloudtrail",
-      "aws_region": "us-east-1",
-      "s3_bucket": "my-cloudtrail-logs",
-      "role_arn": "arn:aws:iam::123456789012:role/LCCloudTrail",
-      "external_id": "lc-ext-id-12345"
+      "sensor_type": "s3",
+      "s3": {
+        "client_options": {
+          "identity": {
+            "oid": "c7e8f940-1234-5678-abcd-1234567890ab",
+            "installation_key": "your-installation-key"
+          },
+          "platform": "json",
+          "sensor_seed_key": "prod-cloudtrail-logs"
+        },
+        "bucket_name": "my-cloudtrail-logs",
+        "access_key": "hive://secret/aws-access-key",
+        "secret_key": "hive://secret/aws-secret-key",
+        "region": "us-east-1",
+        "prefix": "AWSLogs/"
+      }
     }
   }
 )
@@ -160,16 +204,16 @@ Expected response:
 
 Present to user:
 ```
-Successfully created AWS CloudTrail cloud sensor!
+Successfully created S3 cloud sensor for AWS CloudTrail logs!
 
 Sensor Name: prod-aws-cloudtrail
-Type: AWS CloudTrail
+Type: S3
 Status: Enabled
 
 Configuration:
-- AWS Region: us-east-1
 - S3 Bucket: my-cloudtrail-logs
-- Role ARN: arn:aws:iam::123456789012:role/LCCloudTrail
+- Region: us-east-1
+- Prefix: AWSLogs/
 
 The sensor will begin collecting CloudTrail logs from your S3 bucket.
 Check back in a few minutes to verify data is flowing.
@@ -181,7 +225,7 @@ User request: "Set up an Office 365 audit log sensor"
 
 Steps:
 1. First, store the client secret in LimaCharlie's secret manager
-2. Create the sensor config referencing the secret
+2. Create the sensor config referencing the secret with proper nested structure
 3. Call tool with configuration:
 ```
 # Step 1: Store the secret first
@@ -194,7 +238,7 @@ mcp__limacharlie__lc_call_tool(
   }
 )
 
-# Step 2: Create sensor referencing the secret
+# Step 2: Create sensor with properly nested config
 mcp__limacharlie__lc_call_tool(
   tool_name="set_cloud_sensor",
   parameters={
@@ -202,10 +246,23 @@ mcp__limacharlie__lc_call_tool(
     "sensor_name": "office365-audit",
     "sensor_config": {
       "sensor_type": "office365",
-      "tenant_id": "abc-123-def",
-      "client_id": "client-id-456",
-      "client_secret": "hive://secret/o365-client-secret",
-      "content_types": ["Audit.General", "Audit.Exchange"]
+      "office365": {
+        "client_options": {
+          "identity": {
+            "oid": "c7e8f940-1234-5678-abcd-1234567890ab",
+            "installation_key": "your-installation-key"
+          },
+          "platform": "json",
+          "sensor_seed_key": "o365-audit-logs"
+        },
+        "domain": "company.onmicrosoft.com",
+        "tenant_id": "abc-123-def",
+        "publisher_id": "abc-123-def",
+        "client_id": "client-id-456",
+        "client_secret": "hive://secret/o365-client-secret",
+        "endpoint": "enterprise",
+        "content_types": "Audit.AzureActiveDirectory,Audit.Exchange,Audit.SharePoint,Audit.General"
+      }
     }
   }
 )
@@ -256,35 +313,48 @@ The sensor is now active and will resume collecting Azure Activity Logs.
 set_secret(oid, secret_name="gcp-sa-key", secret_value="<json-credentials>")
 ```
 
-2. **Then reference it in the sensor config**:
+2. **Then reference it in the sensor config** (note the nested structure):
 ```json
 {
   "sensor_type": "pubsub",
-  "service_account_creds": "hive://secret/gcp-sa-key",
-  "project_name": "my-project",
-  "sub_name": "my-subscription"
+  "pubsub": {
+    "client_options": {
+      "identity": { "oid": "<org-id>", "installation_key": "<iid>" },
+      "platform": "json",
+      "sensor_seed_key": "my-pubsub-sensor"
+    },
+    "service_account_creds": "hive://secret/gcp-sa-key",
+    "project_id": "my-project",
+    "subscription_id": "my-subscription"
+  }
 }
 ```
 
 **Common credential fields that support `hive://secret/`**:
-- `service_account_creds` / `service_account_json` (GCP)
+- `service_account_creds` (GCP Pub/Sub, GCS)
 - `client_secret` (Azure, Office 365)
-- `api_token` / `apikey` (Okta, various APIs)
-- `secret_key` (AWS)
+- `apikey` (Okta)
+- `secret_key` (AWS S3, SQS)
 
-**Wrong** - Do NOT use a `secret_name` field:
+**Wrong** - Flat structure without nesting:
 ```json
 {
   "sensor_type": "pubsub",
-  "secret_name": "my-secret"  // ERROR: unknown field
+  "service_account_creds": "hive://secret/my-secret",
+  "project_id": "my-project"
 }
 ```
 
-**Right** - Reference secret in the credential field itself:
+**Right** - Properly nested with matching type key:
 ```json
 {
   "sensor_type": "pubsub",
-  "service_account_creds": "hive://secret/my-secret"
+  "pubsub": {
+    "client_options": { ... },
+    "service_account_creds": "hive://secret/my-secret",
+    "project_id": "my-project",
+    "subscription_id": "my-subscription"
+  }
 }
 ```
 
@@ -303,13 +373,7 @@ set_secret(oid, secret_name="gcp-sa-key", secret_value="<json-credentials>")
 - The `etag` field can be used for concurrent update protection
 - After creating or updating, allow a few minutes for data collection to begin
 - Check the sensor's last_error field if data isn't appearing (use get-cloud-sensor)
-- Common sensor types and their key configuration fields:
-  - **AWS CloudTrail**: sensor_type, aws_region, s3_bucket, role_arn, external_id
-  - **AWS GuardDuty**: sensor_type, aws_region, role_arn, external_id
-  - **Azure Activity Logs**: sensor_type, subscription_id, tenant_id, client_id, client_secret
-  - **GCP Audit Logs**: sensor_type, project_id, service_account_json
-  - **Office 365**: sensor_type, tenant_id, client_id, client_secret, content_types
-  - **Okta**: sensor_type, domain, api_token
+- **Always consult the usp-adapters repo** (`https://github.com/refractionPOINT/usp-adapters`) for the authoritative list of fields for each adapter type. Look for the `*Config` struct in each adapter's `client.go` file.
 - Use list-cloud-sensors to verify the sensor was created
 - Use get-cloud-sensor to inspect the configuration after creation
 - Use delete-cloud-sensor to remove sensors that are no longer needed

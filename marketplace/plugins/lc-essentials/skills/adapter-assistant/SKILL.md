@@ -455,10 +455,15 @@ Task(
 | okta | json | Cloud Sensor | apikey, url |
 | s3 | varies | Cloud Sensor/On-prem | bucket_name, access_key, secret_key, prefix |
 | azure_event_hub | varies | Cloud Sensor/On-prem | connection_string |
-| office365 | json | Cloud Sensor | tenant_id, client_id, client_secret |
+| office365 | json | Cloud Sensor | domain, tenant_id, publisher_id, client_id, client_secret, endpoint |
 | falconcloud | json | Cloud Sensor/On-prem | client_id, client_secret |
-| pubsub | varies | Cloud Sensor/On-prem | project_id, subscription_id |
+| pubsub | varies | Cloud Sensor/On-prem | project_id, subscription_id, service_account_creds |
 | file | varies | On-prem | file_path, backfill |
+
+**IMPORTANT**: Always check the **usp-adapters repo** for authoritative field definitions:
+- URL: `https://github.com/refractionPOINT/usp-adapters`
+- Each adapter has a `client.go` with a `*Config` struct defining all valid fields
+- All Cloud Sensors require a nested structure with `client_options` containing `identity`, `platform`, and `sensor_seed_key`
 
 ## Example Usage
 
