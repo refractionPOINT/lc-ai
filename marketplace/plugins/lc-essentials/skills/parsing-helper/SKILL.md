@@ -386,6 +386,23 @@ Task(
 )
 ```
 
+**Step 5: Verify no adapter errors**
+
+After applying the configuration for External Adapters or Cloud Sensors, check for any errors:
+
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: get_org_errors
+    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\"}
+    - Return: Look for errors related to the adapter"
+)
+```
+
+If errors appear, review the adapter configuration and address the issues.
+
 **For One-off/USP Adapters:**
 
 Provide the configuration for the user to apply locally:

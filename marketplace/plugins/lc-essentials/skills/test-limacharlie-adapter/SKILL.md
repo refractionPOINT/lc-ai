@@ -233,6 +233,19 @@ cat "$TEMP_DIR/adapter.log"
 
 Look for `usp-client connected` to confirm successful connection.
 
+Also check for any adapter errors:
+
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: get_org_errors
+    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\"}
+    - Return: Look for errors related to the test adapter"
+)
+```
+
 ### Phase 5: Viewing Ingested Data
 
 After the adapter has been running for a few minutes, query the ingested logs.

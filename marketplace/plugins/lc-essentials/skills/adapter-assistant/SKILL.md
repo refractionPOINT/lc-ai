@@ -404,9 +404,22 @@ Task(
 )
 ```
 
-2. Verify sensor exists in sensor list
+2. Check organization errors for adapter issues:
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: get_org_errors
+    - Parameters: {\"oid\": \"<org-id>\"}
+    - Return: RAW"
+)
+```
+Look for errors with component names containing the adapter name.
 
-3. Query for recent events:
+3. Verify sensor exists in sensor list
+
+4. Query for recent events:
 ```
 # First calculate timestamps dynamically
 start=$(date -d '1 hour ago' +%s) && end=$(date +%s)
@@ -421,7 +434,7 @@ Task(
 )
 ```
 
-4. Check for unparsed events (`event_type: "unknown_event"` with only `text` field)
+5. Check for unparsed events (`event_type: "unknown_event"` with only `text` field)
 
 **Offer D&R rule creation:**
 ```
