@@ -1,0 +1,300 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "name": "mssp-executive-report",
+  "description": "High-level fleet health overview for MSSP leadership - sensor status, detections, and per-org health",
+  "version": "1.0",
+  "input": {
+    "required": {},
+    "optional": {
+      "days": {
+        "type": "integer",
+        "description": "Number of days for detection time window",
+        "enum": [7, 14, 30],
+        "default": 7
+      },
+      "scope": {
+        "type": "string",
+        "enum": ["single", "all"],
+        "default": "all",
+        "description": "single = one org (requires oid), all = all accessible orgs"
+      },
+      "oid": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Organization ID (required when scope=single)"
+      },
+      "format": {
+        "type": "string",
+        "enum": ["json", "markdown"],
+        "default": "markdown",
+        "description": "Output format"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["metadata", "data"],
+    "properties": {
+      "metadata": {
+        "type": "object",
+        "required": ["generated_at", "time_window", "organizations"],
+        "properties": {
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when report was generated"
+          },
+          "time_window": {
+            "type": "object",
+            "required": ["start", "end", "start_display", "end_display", "days"],
+            "properties": {
+              "start": {
+                "type": "integer",
+                "description": "Start timestamp in Unix epoch seconds"
+              },
+              "end": {
+                "type": "integer",
+                "description": "End timestamp in Unix epoch seconds"
+              },
+              "start_display": {
+                "type": "string",
+                "description": "Human-readable start time"
+              },
+              "end_display": {
+                "type": "string",
+                "description": "Human-readable end time"
+              },
+              "days": {
+                "type": "integer",
+                "description": "Number of days in the time window"
+              }
+            }
+          },
+          "organizations": {
+            "type": "object",
+            "required": ["total", "successful"],
+            "properties": {
+              "total": {
+                "type": "integer",
+                "description": "Total number of organizations attempted"
+              },
+              "successful": {
+                "type": "integer",
+                "description": "Number of organizations successfully processed"
+              },
+              "failed": {
+                "type": "integer",
+                "description": "Number of organizations that failed data collection"
+              },
+              "success_rate": {
+                "type": "number",
+                "description": "Percentage of organizations successfully processed"
+              }
+            }
+          }
+        }
+      },
+      "data": {
+        "type": "object",
+        "required": ["rollup", "organizations"],
+        "properties": {
+          "rollup": {
+            "type": "object",
+            "required": ["total_sensors", "online_sensors"],
+            "properties": {
+              "total_sensors": {
+                "type": "integer",
+                "description": "Total sensor count across all organizations"
+              },
+              "online_sensors": {
+                "type": "integer",
+                "description": "Number of sensors currently online"
+              },
+              "offline_sensors": {
+                "type": "integer",
+                "description": "Number of sensors currently offline (total - online)"
+              },
+              "health_percent": {
+                "type": "number",
+                "description": "Fleet-wide health percentage (online/total * 100)"
+              },
+              "total_detections": {
+                "type": "integer",
+                "description": "Total detections across all organizations in time window"
+              },
+              "detection_limit_reached": {
+                "type": "boolean",
+                "description": "Whether any organization hit the 5000 detection limit"
+              },
+              "orgs_at_limit": {
+                "type": "integer",
+                "description": "Number of organizations that hit the detection limit"
+              }
+            }
+          },
+          "platforms": {
+            "type": "array",
+            "description": "Sensor count breakdown by platform",
+            "items": {
+              "type": "object",
+              "required": ["name", "count"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Platform name (Windows, Linux, macOS, Chrome, USP Adapter, etc.)"
+                },
+                "count": {
+                  "type": "integer",
+                  "description": "Number of sensors on this platform"
+                },
+                "percent": {
+                  "type": "number",
+                  "description": "Percentage of total sensors"
+                }
+              }
+            }
+          },
+          "organizations": {
+            "type": "array",
+            "description": "Per-organization health details",
+            "items": {
+              "type": "object",
+              "required": ["name", "oid", "status"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Organization display name"
+                },
+                "oid": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Organization ID"
+                },
+                "sensors_total": {
+                  "type": "integer",
+                  "description": "Total sensor count for this organization"
+                },
+                "sensors_online": {
+                  "type": "integer",
+                  "description": "Online sensor count"
+                },
+                "sensors_offline": {
+                  "type": "integer",
+                  "description": "Offline sensor count"
+                },
+                "health": {
+                  "type": "number",
+                  "description": "Health percentage (0-100)"
+                },
+                "detections": {
+                  "type": ["integer", "null"],
+                  "description": "Detection count in time window (null if data unavailable)"
+                },
+                "detection_limit_reached": {
+                  "type": "boolean",
+                  "description": "Whether this org hit the 5000 detection limit"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": ["healthy", "warning", "critical", "error"],
+                  "description": "Health status: healthy (>=90%), warning (70-89%), critical (<70%), error (no data)"
+                }
+              }
+            }
+          },
+          "top_categories": {
+            "type": "array",
+            "description": "Top detection categories across all organizations",
+            "items": {
+              "type": "object",
+              "required": ["label", "value"],
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "description": "Detection category name (from source_rule or cat field)"
+                },
+                "value": {
+                  "type": "integer",
+                  "description": "Total detection count for this category"
+                }
+              }
+            }
+          },
+          "top_orgs_by_detections": {
+            "type": "array",
+            "description": "Top organizations by detection volume",
+            "items": {
+              "type": "object",
+              "required": ["name", "value"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Organization name"
+                },
+                "value": {
+                  "type": "integer",
+                  "description": "Detection count"
+                },
+                "limit_reached": {
+                  "type": "boolean",
+                  "description": "Whether this org hit the detection limit"
+                }
+              }
+            }
+          }
+        }
+      },
+      "warnings": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Warning messages"
+      },
+      "errors": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "org_name": {
+              "type": "string"
+            },
+            "oid": {
+              "type": "string"
+            },
+            "error_message": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Detailed error information per failed org"
+      }
+    }
+  },
+  "data_sources": {
+    "description": "API calls used to populate this template (documentation only)",
+    "primary": [
+      {
+        "function": "list_sensors",
+        "parameters": {
+          "oid": "from input or list_user_orgs"
+        },
+        "notes": "Returns sensor list with hostname, plat, last_seen. Online status determined by last_seen timestamp."
+      },
+      {
+        "function": "get_historic_detections",
+        "parameters": {
+          "oid": "from input or list_user_orgs",
+          "start": "calculated from days input",
+          "end": "current time in seconds"
+        },
+        "notes": "Returns detections in time window. Limit of 5000 per org. Requires insight.det.get permission."
+      }
+    ],
+    "supporting": {
+      "function": "list_user_orgs",
+      "parameters": {},
+      "notes": "Used to get OID list when scope=all"
+    }
+  }
+}

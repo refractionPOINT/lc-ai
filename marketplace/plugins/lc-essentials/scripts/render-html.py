@@ -73,7 +73,8 @@ def validate_no_fabrication(data: dict, template: str) -> list:
         ],
         'billing-summary': [
             'metadata.generated_at',
-            'data.usage',
+            'data.rollup',
+            'data.tenants',
         ],
     }
 

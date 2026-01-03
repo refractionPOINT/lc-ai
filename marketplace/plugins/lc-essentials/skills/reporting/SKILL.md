@@ -55,6 +55,38 @@ Use this skill when you need to:
 - **"Detection volume trends this month"** - Security activity patterns
 - **"Which customers need attention?"** - Issue identification and prioritization
 
+## Report Templates
+
+This skill supports structured JSON templates that define input schemas, output schemas, and data sources for each report type. Templates are located in `skills/reporting/templates/`.
+
+| Template | Description | Scope |
+|----------|-------------|-------|
+| `billing-report.json` | Invoice-focused billing data with SKU breakdown | single / all |
+| `mssp-executive-report.json` | High-level fleet health for MSSP leadership | single / all |
+| `customer-health-report.json` | Comprehensive customer success tracking | single / all |
+| `detection-analytics-report.json` | Detection volume, categories, and trends | single / all |
+
+### Template Structure
+
+Each template defines:
+- **Input schema**: Required and optional parameters with types and validation
+- **Output schema**: Expected JSON structure for structured data consumers
+- **Data sources**: Which API calls populate each field
+
+### Using Templates
+
+1. **Read the template** to understand required inputs
+2. **Validate user input** against the input schema
+3. **Use the orchestration layer** (parallel subagents) for data collection
+4. **Format output** to match the output schema
+5. **Display results in the console** as formatted markdown/tables (default) - HTML output only when user explicitly requests it
+
+Templates ensure consistency across reports and enable:
+- Programmatic consumption of report data
+- Validation of inputs and outputs
+- Clear documentation of data sources
+- Reproducible report generation
+
 ## Critical Prerequisites
 
 ### Authentication
@@ -755,7 +787,43 @@ This skill uses a **parallel subagent architecture** for efficient multi-tenant 
 - Reduced context usage in main skill
 - Scalable to 50+ organizations
 
+### Output Format Requirements
+
+**Default Output: Console (Formatted Markdown)**
+
+By default, ALL report data MUST be displayed directly in the console as formatted markdown tables and text. This includes:
+- Executive summary with key metrics
+- Per-organization breakdowns
+- Aggregate statistics and rollups
+- All warnings, errors, and data limitations
+- Methodology and data provenance sections
+
+**Console Output Characteristics:**
+- Formatted tables using markdown pipe syntax
+- Status indicators as text badges: `[GREEN]`, `[YELLOW]`, `[RED]`
+- Numeric formatting with thousand separators
+- All data visible without requiring external files
+
+**HTML Output: Only When Explicitly Requested**
+
+HTML visualization should ONLY be generated when the user explicitly requests it using phrases like:
+- "generate as HTML"
+- "create HTML dashboard"
+- "export to HTML"
+- "visual report"
+- "interactive dashboard"
+
+If user requests HTML output:
+1. First collect and display data in console (so user sees results immediately)
+2. Then spawn `html-renderer` agent to create the HTML file
+3. Save to `/tmp/{report-name}-{date}.html`
+4. Open in browser
+
+**NEVER automatically generate HTML** - console output is always the default.
+
 ### Pattern 1: Multi-Tenant MSSP Comprehensive Report
+
+**Template Reference**: `templates/mssp-executive-report.json`
 
 **User Request Examples:**
 - "Generate monthly MSSP report for all my customers"
@@ -884,8 +952,11 @@ This skill uses a **parallel subagent architecture** for efficient multi-tenant 
 │     - Time range covered                          │
 └────────────────────────────────────────────────────┘
 
-┌─ PHASE 5: REPORT GENERATION ──────────────────────┐
-│ 17. Report Structure:                             │
+┌─ PHASE 5: REPORT GENERATION (CONSOLE OUTPUT) ─────┐
+│ ⚠️ DEFAULT: Display ALL data in console as        │
+│    formatted markdown. HTML only if requested.    │
+│                                                    │
+│ 17. Console Report Structure:                     │
 │                                                    │
 │     A. HEADER (mandatory metadata)                │
 │        ═══════════════════════════════════════    │
@@ -1041,7 +1112,18 @@ Progress Reporting During Execution:
    Generating report structure..."
 ```
 
+**IMPORTANT: Console Output is Complete**
+
+The above console output displays ALL collected data. Do NOT automatically proceed to HTML generation.
+
+**Only generate HTML if user explicitly requests it** (e.g., "export as HTML", "create dashboard"). When HTML is requested:
+1. The console output above should already be displayed
+2. Then spawn `html-renderer` to create the visual dashboard
+3. This is an ADDITIONAL output, not a replacement
+
 ### Pattern 2: Billing-Focused Summary Report
+
+**Template Reference**: `templates/billing-report.json`
 
 **User Request Examples:**
 - "Billing summary for all customers this month"
@@ -1050,16 +1132,28 @@ Progress Reporting During Execution:
 
 **Workflow:**
 ```
-1. Use limacharlie-call skill: list-user-orgs
+1. Read billing-report.json template for input/output schemas
 
-2. Spawn org-reporter agents in parallel (same as Pattern 1)
+2. Validate inputs against template:
+   - Required: year (integer), month (1-12)
+   - Optional: scope (single/all), oid (UUID), format (json/markdown)
+
+3. Use limacharlie-call skill: list-user-orgs
+
+4. Spawn org-reporter agents in parallel (same as Pattern 1)
    - Agents collect ALL data (billing focus is in report generation)
 
-3. Aggregate results focusing on billing data:
+5. Aggregate results focusing on billing data:
    - Extract only: usage, billing, invoice_url from each agent result
    - Skip: detections, rules, detailed sensor data
 
-4. Generate Billing-Focused Report:
+6. Format output per template schema:
+   - metadata: generated_at, period, scope, tenant_count
+   - data.tenants: per-tenant billing with SKUs
+   - data.rollup: aggregate totals (when scope=all)
+   - warnings/errors arrays
+
+7. Generate Billing-Focused Report:
    - Usage metrics per org (NO cost calculations)
    - Subscription status
    - Invoice links
@@ -1068,6 +1162,8 @@ Progress Reporting During Execution:
 
 ### Pattern 3: Single Organization Deep Dive
 
+**Template Reference**: `templates/customer-health-report.json` (with scope=single)
+
 **User Request Examples:**
 - "Detailed report for Client ABC"
 - "Complete security analysis for organization XYZ"
@@ -1075,10 +1171,12 @@ Progress Reporting During Execution:
 
 **Workflow:**
 ```
-1. Use limacharlie-call skill: list-user-orgs
+1. Read customer-health-report.json template for structure
+
+2. Use limacharlie-call skill: list-user-orgs
    - Filter to find OID for the specified org name
 
-2. Spawn ONE org-reporter agent for that organization:
+3. Spawn ONE org-reporter agent for that organization:
    Task(
      subagent_type="lc-essentials:org-reporter",
      model="haiku",
@@ -1087,13 +1185,49 @@ Progress Reporting During Execution:
        Detection Limit: 5000"
    )
 
-3. Generate Detailed Single-Org Report:
+4. Generate Detailed Single-Org Report per template:
    - Full usage breakdown
    - Complete sensor inventory with platforms
    - Detection breakdown by category
    - All D&R rules listed
    - Output configurations
    - Any errors or warnings from collection
+   - Attention items requiring follow-up
+```
+
+### Pattern 4: Detection Analytics Report
+
+**Template Reference**: `templates/detection-analytics-report.json`
+
+**User Request Examples:**
+- "Detection trends across all customers"
+- "Which rules are firing most?"
+- "Show detection categories breakdown for last 7 days"
+
+**Workflow:**
+```
+1. Read detection-analytics-report.json template for schemas
+
+2. Ask user for time range (7/14/30 days)
+
+3. Use limacharlie-call skill: list-user-orgs
+
+4. Spawn org-reporter agents in parallel:
+   - Each agent collects detection data for its org
+
+5. Aggregate detection data:
+   - Extract: detection_count, categories, severities, top_hosts
+   - Build: top_categories, top_tenants rankings
+   - Track: limit_reached flags
+
+6. Format output per template:
+   - metadata: time_window with calculated timestamps
+   - data.tenants: per-tenant detection breakdown
+   - data.rollup: aggregate totals
+   - data.top_categories: cross-tenant category ranking
+   - data.top_tenants: volume ranking with limit flags
+
+7. Prominently display limit warnings for affected orgs
 ```
 
 ## Validation Checkpoints

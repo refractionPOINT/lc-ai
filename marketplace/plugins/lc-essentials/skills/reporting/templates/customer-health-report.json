@@ -1,0 +1,459 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "name": "customer-health-report",
+  "description": "Comprehensive customer health report combining sensor coverage, detection activity, and health metrics for customer success tracking",
+  "version": "1.0",
+  "input": {
+    "required": {},
+    "optional": {
+      "days": {
+        "type": "integer",
+        "description": "Number of days for detection and activity time window",
+        "enum": [7, 14, 30],
+        "default": 30
+      },
+      "scope": {
+        "type": "string",
+        "enum": ["single", "all"],
+        "default": "all",
+        "description": "single = one org (requires oid), all = all accessible orgs"
+      },
+      "oid": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Organization ID (required when scope=single)"
+      },
+      "format": {
+        "type": "string",
+        "enum": ["json", "markdown"],
+        "default": "markdown",
+        "description": "Output format"
+      }
+    }
+  },
+  "output": {
+    "type": "object",
+    "required": ["metadata", "data"],
+    "properties": {
+      "metadata": {
+        "type": "object",
+        "required": ["generated_at", "time_window", "organizations"],
+        "properties": {
+          "generated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when report was generated"
+          },
+          "time_window": {
+            "type": "object",
+            "required": ["start", "end", "start_display", "end_display", "days"],
+            "properties": {
+              "start": {
+                "type": "integer",
+                "description": "Start timestamp in Unix epoch seconds"
+              },
+              "end": {
+                "type": "integer",
+                "description": "End timestamp in Unix epoch seconds"
+              },
+              "start_display": {
+                "type": "string",
+                "description": "Human-readable start time"
+              },
+              "end_display": {
+                "type": "string",
+                "description": "Human-readable end time"
+              },
+              "days": {
+                "type": "integer",
+                "description": "Number of days in the time window"
+              }
+            }
+          },
+          "organizations": {
+            "type": "object",
+            "required": ["total", "successful"],
+            "properties": {
+              "total": {
+                "type": "integer",
+                "description": "Total number of organizations attempted"
+              },
+              "successful": {
+                "type": "integer",
+                "description": "Number of organizations successfully processed"
+              },
+              "failed": {
+                "type": "integer",
+                "description": "Number of organizations that failed data collection"
+              },
+              "success_rate": {
+                "type": "number",
+                "description": "Percentage of organizations successfully processed"
+              }
+            }
+          }
+        }
+      },
+      "data": {
+        "type": "object",
+        "required": ["rollup", "customers"],
+        "properties": {
+          "rollup": {
+            "type": "object",
+            "description": "Fleet-wide summary metrics",
+            "required": ["total_customers", "total_sensors"],
+            "properties": {
+              "total_customers": {
+                "type": "integer",
+                "description": "Total number of customer organizations"
+              },
+              "total_sensors": {
+                "type": "integer",
+                "description": "Total sensor count across all customers"
+              },
+              "online_sensors": {
+                "type": "integer",
+                "description": "Number of sensors currently online"
+              },
+              "offline_sensors": {
+                "type": "integer",
+                "description": "Number of sensors currently offline"
+              },
+              "fleet_health_percent": {
+                "type": "number",
+                "description": "Fleet-wide health percentage (online/total * 100)"
+              },
+              "total_detections": {
+                "type": "integer",
+                "description": "Total detections across all customers in time window"
+              },
+              "customers_healthy": {
+                "type": "integer",
+                "description": "Number of customers with healthy status (>=90% sensors online)"
+              },
+              "customers_warning": {
+                "type": "integer",
+                "description": "Number of customers with warning status (70-89% online)"
+              },
+              "customers_critical": {
+                "type": "integer",
+                "description": "Number of customers with critical status (<70% online)"
+              },
+              "customers_inactive": {
+                "type": "integer",
+                "description": "Number of customers with no sensors or no activity"
+              }
+            }
+          },
+          "health_distribution": {
+            "type": "object",
+            "description": "Distribution of customer health statuses",
+            "properties": {
+              "healthy": {
+                "type": "number",
+                "description": "Percentage of customers with healthy status"
+              },
+              "warning": {
+                "type": "number",
+                "description": "Percentage of customers with warning status"
+              },
+              "critical": {
+                "type": "number",
+                "description": "Percentage of customers with critical status"
+              },
+              "inactive": {
+                "type": "number",
+                "description": "Percentage of customers with inactive status"
+              }
+            }
+          },
+          "platforms": {
+            "type": "array",
+            "description": "Sensor count breakdown by platform across all customers",
+            "items": {
+              "type": "object",
+              "required": ["name", "count"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Platform name (Windows, Linux, macOS, Chrome, USP Adapter, etc.)"
+                },
+                "count": {
+                  "type": "integer",
+                  "description": "Number of sensors on this platform"
+                },
+                "percent": {
+                  "type": "number",
+                  "description": "Percentage of total sensors"
+                }
+              }
+            }
+          },
+          "customers": {
+            "type": "array",
+            "description": "Per-customer health details",
+            "items": {
+              "type": "object",
+              "required": ["name", "oid", "health_status"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Customer organization name"
+                },
+                "oid": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Organization ID"
+                },
+                "health_status": {
+                  "type": "string",
+                  "enum": ["healthy", "warning", "critical", "inactive", "error"],
+                  "description": "Overall health status: healthy (>=90%), warning (70-89%), critical (<70%), inactive (no sensors), error (data unavailable)"
+                },
+                "health_score": {
+                  "type": "number",
+                  "description": "Numeric health score (0-100) based on sensor uptime"
+                },
+                "sensors": {
+                  "type": "object",
+                  "description": "Sensor metrics for this customer",
+                  "properties": {
+                    "total": {
+                      "type": "integer",
+                      "description": "Total sensor count"
+                    },
+                    "online": {
+                      "type": "integer",
+                      "description": "Online sensor count"
+                    },
+                    "offline": {
+                      "type": "integer",
+                      "description": "Offline sensor count"
+                    },
+                    "offline_24h": {
+                      "type": "integer",
+                      "description": "Sensors offline for less than 24 hours"
+                    },
+                    "offline_7d": {
+                      "type": "integer",
+                      "description": "Sensors offline for 1-7 days"
+                    },
+                    "offline_30d": {
+                      "type": "integer",
+                      "description": "Sensors offline for more than 7 days"
+                    }
+                  }
+                },
+                "detections": {
+                  "type": "object",
+                  "description": "Detection metrics for this customer",
+                  "properties": {
+                    "total": {
+                      "type": ["integer", "null"],
+                      "description": "Total detections in time window (null if unavailable)"
+                    },
+                    "limit_reached": {
+                      "type": "boolean",
+                      "description": "Whether the 5000 detection limit was hit"
+                    },
+                    "severities": {
+                      "type": "object",
+                      "description": "Breakdown by severity level",
+                      "properties": {
+                        "critical": {
+                          "type": "integer"
+                        },
+                        "high": {
+                          "type": "integer"
+                        },
+                        "medium": {
+                          "type": "integer"
+                        },
+                        "low": {
+                          "type": "integer"
+                        },
+                        "info": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "top_categories": {
+                      "type": "array",
+                      "description": "Top 5 detection categories for this customer",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "platforms": {
+                  "type": "array",
+                  "description": "Sensor breakdown by platform for this customer",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "count": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "last_activity": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Timestamp of most recent sensor activity"
+                },
+                "attention_items": {
+                  "type": "array",
+                  "description": "Items requiring attention for this customer",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
+                        "enum": ["offline_sensors", "high_severity_detections", "stale_sensors", "no_recent_detections", "detection_limit"],
+                        "description": "Type of attention item"
+                      },
+                      "severity": {
+                        "type": "string",
+                        "enum": ["info", "warning", "critical"],
+                        "description": "Severity of the attention item"
+                      },
+                      "message": {
+                        "type": "string",
+                        "description": "Human-readable description"
+                      },
+                      "count": {
+                        "type": "integer",
+                        "description": "Count associated with this item (e.g., number of offline sensors)"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "attention_summary": {
+            "type": "object",
+            "description": "Summary of items requiring attention across all customers",
+            "properties": {
+              "critical_items": {
+                "type": "integer",
+                "description": "Total critical attention items"
+              },
+              "warning_items": {
+                "type": "integer",
+                "description": "Total warning attention items"
+              },
+              "customers_needing_attention": {
+                "type": "array",
+                "description": "List of customers with critical issues",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "oid": {
+                      "type": "string"
+                    },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "top_detection_categories": {
+            "type": "array",
+            "description": "Top detection categories across all customers",
+            "items": {
+              "type": "object",
+              "required": ["name", "count"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Detection category name"
+                },
+                "count": {
+                  "type": "integer",
+                  "description": "Total count across all customers"
+                },
+                "customer_count": {
+                  "type": "integer",
+                  "description": "Number of customers with this detection type"
+                }
+              }
+            }
+          }
+        }
+      },
+      "warnings": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Warning messages"
+      },
+      "errors": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "org_name": {
+              "type": "string"
+            },
+            "oid": {
+              "type": "string"
+            },
+            "error_message": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Detailed error information per failed customer"
+      }
+    }
+  },
+  "data_sources": {
+    "description": "API calls used to populate this template (documentation only)",
+    "primary": [
+      {
+        "function": "list_sensors",
+        "parameters": {
+          "oid": "from input or list_user_orgs"
+        },
+        "notes": "Returns sensor list with hostname, plat, last_seen. Online status determined by last_seen timestamp. Used for sensor health metrics."
+      },
+      {
+        "function": "get_historic_detections",
+        "parameters": {
+          "oid": "from input or list_user_orgs",
+          "start": "calculated from days input",
+          "end": "current time in seconds"
+        },
+        "notes": "Returns detections in time window. Limit of 5000 per org. Extract severity, categories for breakdown. Requires insight.det.get permission."
+      }
+    ],
+    "supporting": {
+      "function": "list_user_orgs",
+      "parameters": {},
+      "notes": "Used to get OID list when scope=all"
+    }
+  }
+}
