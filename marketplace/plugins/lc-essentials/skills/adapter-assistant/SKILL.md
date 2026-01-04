@@ -5,22 +5,50 @@ allowed-tools:
   - Task
   - Read
   - Bash
+  - Skill
+  - AskUserQuestion
   - WebFetch
   - WebSearch
   - Glob
   - Grep
-  - AskUserQuestion
-  - Skill
 ---
 
 # Adapter Assistant
 
-> **IMPORTANT**: Never call `mcp__plugin_lc-essentials_limacharlie__lc_call_tool` directly.
-> Always use the Task tool with `subagent_type="lc-essentials:limacharlie-api-executor"`.
-
-> **CRITICAL - LCQL Queries**: NEVER write LCQL queries manually. ALWAYS use `generate_lcql_query` first, then `run_lcql_query`. See [Critical Requirements](../limacharlie-call/SKILL.md#critical-requirements) for all mandatory workflows.
-
 A comprehensive, dynamic assistant for LimaCharlie adapter lifecycle management. This skill researches adapter configurations from multiple sources and helps you create, validate, deploy, and troubleshoot adapters for any data source.
+
+---
+
+## LimaCharlie Integration
+
+> **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
+
+### API Access Pattern
+
+All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: <function-name>
+    - Parameters: {<params>}
+    - Return: RAW | <extraction instructions>
+    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
+)
+```
+
+### Critical Rules
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
+| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
+| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+
+---
 
 ## When to Use
 
@@ -83,12 +111,7 @@ WebFetch(
 
 #### Step 2: Read LimaCharlie Adapter Documentation
 
-If a native adapter exists:
-```
-Read("./docs/limacharlie/doc/Sensors/Adapters/Adapter_Types/adapter-types-{name}.md")
-```
-
-For advanced configuration options, first list files in the adapter directory, then fetch the main source:
+If a native adapter exists, first list files in the adapter directory, then fetch the main source:
 ```
 # Step 1: List files to find the main config file
 WebFetch(
@@ -404,9 +427,22 @@ Task(
 )
 ```
 
-2. Verify sensor exists in sensor list
+2. Check organization errors for adapter issues:
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: get_org_errors
+    - Parameters: {\"oid\": \"<org-id>\"}
+    - Return: RAW"
+)
+```
+Look for errors with component names containing the adapter name.
 
-3. Query for recent events:
+3. Verify sensor exists in sensor list
+
+4. Query for recent events:
 ```
 # First calculate timestamps dynamically
 start=$(date -d '1 hour ago' +%s) && end=$(date +%s)
@@ -421,7 +457,7 @@ Task(
 )
 ```
 
-4. Check for unparsed events (`event_type: "unknown_event"` with only `text` field)
+5. Check for unparsed events (`event_type: "unknown_event"` with only `text` field)
 
 **Offer D&R rule creation:**
 ```
@@ -455,10 +491,15 @@ Task(
 | okta | json | Cloud Sensor | apikey, url |
 | s3 | varies | Cloud Sensor/On-prem | bucket_name, access_key, secret_key, prefix |
 | azure_event_hub | varies | Cloud Sensor/On-prem | connection_string |
-| office365 | json | Cloud Sensor | tenant_id, client_id, client_secret |
-| crowdstrike / falconcloud | json | Cloud Sensor/On-prem | client_id, client_secret |
-| google_cloud_pubsub | varies | Cloud Sensor/On-prem | project_id, subscription_id |
+| office365 | json | Cloud Sensor | domain, tenant_id, publisher_id, client_id, client_secret, endpoint |
+| falconcloud | json | Cloud Sensor/On-prem | client_id, client_secret |
+| pubsub | varies | Cloud Sensor/On-prem | project_id, subscription_id, service_account_creds |
 | file | varies | On-prem | file_path, backfill |
+
+**IMPORTANT**: Always check the **usp-adapters repo** for authoritative field definitions:
+- URL: `https://github.com/refractionPOINT/usp-adapters`
+- Each adapter has a `client.go` with a `*Config` struct defining all valid fields
+- All Cloud Sensors require a nested structure with `client_options` containing `identity`, `platform`, and `sensor_seed_key`
 
 ## Example Usage
 

@@ -2,6 +2,8 @@
 
 Retrieve a specific YARA rule's source content and signatures.
 
+**⚠️ PARAMETER NAME**: Use `rule_name`, NOT `name`.
+
 ## Parameters
 
 | Name | Type | Required | Description |

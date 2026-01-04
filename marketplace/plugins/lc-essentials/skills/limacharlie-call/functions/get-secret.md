@@ -2,6 +2,8 @@
 
 Retrieve a secret value from secure storage. Use cautiously as this exposes sensitive data.
 
+**⚠️ PARAMETER NAME**: Use `secret_name`, NOT `name`.
+
 ## Parameters
 
 | Name | Type | Required | Description |
@@ -13,15 +15,18 @@ Retrieve a secret value from secure storage. Use cautiously as this exposes sens
 
 ```json
 {
-  "data": {
-    "value": "sk_live_abc123def456ghi789"
-  },
-  "sys_mtd": {
-    "created_at": 1640000000,
-    "created_by": "admin@example.com",
-    "last_mod": 1640000000
-  },
-  "usr_mtd": {"enabled": true}
+  "secret": {
+    "metadata": {
+      "created_at": 1640000000,
+      "created_by": "admin@example.com",
+      "last_author": "admin@example.com",
+      "last_mod": 1640000000
+    },
+    "name": "webhook-api-key",
+    "value": {
+      "secret": "sk_live_abc123def456ghi789"
+    }
+  }
 }
 ```
 

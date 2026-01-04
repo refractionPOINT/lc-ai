@@ -2,6 +2,8 @@
 
 Query a specific key in a lookup table to test before using in D&R rules.
 
+**⚠️ PARAMETER NAME**: Use `lookup_name`, NOT `name`.
+
 ## Parameters
 
 | Name | Type | Required | Description |

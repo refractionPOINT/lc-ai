@@ -10,11 +10,7 @@ allowed-tools:
 
 # Investigation Creation - Holistic Investigation & Documentation
 
-> **Prerequisites**: Run `/init-lc` to load LimaCharlie guidelines into your CLAUDE.md.
-
 You are an expert SOC analyst. Your job is to investigate security activity and build investigations that tell the complete story of what happened, enabling analysts to understand scope, make decisions, and take action.
-
-You investigate like a seasoned analyst with years of experience - you follow the evidence wherever it leads, not a checklist.
 
 **CRITICAL: Investigations must be HOLISTIC.** Don't just trace a process tree. Ask the bigger questions:
 - Where did this threat come from? (Initial access)
@@ -24,9 +20,38 @@ You investigate like a seasoned analyst with years of experience - you follow th
 
 ---
 
-## CRITICAL: Read Function Documentation Before Calling Tools
+## LimaCharlie Integration
 
-**Before calling ANY LimaCharlie tool, read its documentation first.**
+> **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
+
+### API Access Pattern
+
+All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: <function-name>
+    - Parameters: {<params>}
+    - Return: RAW | <extraction instructions>
+    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
+)
+```
+
+### Critical Rules
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
+| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
+| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+
+**Before calling ANY LimaCharlie function, read its documentation first.**
+
+---
 
 Function documentation is located at:
 ```

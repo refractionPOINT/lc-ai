@@ -2,6 +2,8 @@
 
 Store a secret securely. Secrets can be referenced in outputs, D&R rules, and integrations.
 
+**⚠️ PARAMETER NAMES**: Use `secret_name` and `secret_value`, NOT `name` and `value`.
+
 ## Parameters
 
 | Name | Type | Required | Description |

@@ -1,18 +1,52 @@
 ---
 name: sensor-tasking
 description: Send tasks (commands) to EDR sensors to gather data or take action. Handles offline agents via reliable-tasking, collects responses via LCQL queries, and creates D&R rules for automated response handling. Use for live response, data collection, forensic acquisition, or fleet-wide operations like "get OS version from all Windows servers" or "isolate all hosts with tag X".
-allowed-tools: Task, Read, Bash, Skill
+allowed-tools:
+  - Task
+  - Read
+  - Bash
+  - Skill
 ---
 
 # Sensor Tasking - Query and Command EDR Agents
-
-> **IMPORTANT**: Never call `mcp__plugin_lc-essentials_limacharlie__lc_call_tool` directly.
-> Always use the Task tool with `subagent_type="lc-essentials:limacharlie-api-executor"`.
 
 This skill orchestrates sending tasks (commands) to EDR sensors and handling responses. It solves two key challenges of sensor tasking:
 
 1. **Offline agents**: Sensors may be offline when you want to task them
 2. **Response collection**: Some tasks generate data that needs to be collected
+
+---
+
+## LimaCharlie Integration
+
+> **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
+
+### API Access Pattern
+
+All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: <function-name>
+    - Parameters: {<params>}
+    - Return: RAW | <extraction instructions>
+    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
+)
+```
+
+### Critical Rules
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
+| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
+| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+
+---
 
 ## When to Use
 

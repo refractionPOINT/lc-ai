@@ -2,6 +2,8 @@
 
 Permanently delete a lookup table. Deletion is immediate and cannot be undone.
 
+**⚠️ PARAMETER NAME**: Use `lookup_name`, NOT `name`.
+
 ## Parameters
 
 | Name | Type | Required | Description |

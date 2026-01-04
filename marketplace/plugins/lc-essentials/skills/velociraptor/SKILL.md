@@ -1,12 +1,48 @@
 ---
 name: velociraptor
 description: "Velociraptor DFIR integration for LimaCharlie. List available VQL artifacts, view artifact definitions, launch forensic collections on endpoints. Find raw collection data in Artifacts (type:velociraptor, source:SID). Query processed JSON events from the 'velociraptor' sensor (tag:ext:ext-velociraptor). Build D&R rules for velociraptor_collection events. Use for: forensic triage, incident response, threat hunting, VQL artifact collection."
-allowed-tools: Task, Read, Bash
+allowed-tools:
+  - Task
+  - Read
+  - Bash
 ---
 
 # Velociraptor DFIR Integration
 
 Launch Velociraptor forensic collections and work with collection results in LimaCharlie.
+
+---
+
+## LimaCharlie Integration
+
+> **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
+
+### API Access Pattern
+
+All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: <function-name>
+    - Parameters: {<params>}
+    - Return: RAW | <extraction instructions>
+    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
+)
+```
+
+### Critical Rules
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
+| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
+| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+
+---
 
 ## Background
 
@@ -40,6 +76,7 @@ Use this skill when the user wants to:
 ## Prerequisites
 
 The organization must have the `ext-velociraptor` extension subscribed.
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 ## How to Use
 

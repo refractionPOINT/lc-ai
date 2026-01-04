@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Sub-Agents**: 8 specialized agents for parallel operations:
+**Sub-Agents**: 10 specialized agents for parallel operations:
 - `limacharlie-api-executor`: Execute single API operations
 - `sensor-health-reporter`: Check sensor health for a single org
 - `dr-replay-tester`: Test D&R rules via replay for a single org
@@ -10,6 +10,8 @@
 - `adapter-doc-researcher`: Research adapter documentation from multiple sources
 - `multi-org-adapter-auditor`: Audit adapters for a single org (parallel execution)
 - `sensor-tasking-executor`: Execute sensor tasks on a single sensor (parallel execution)
+- `cloud-discoverer`: Survey a single cloud platform for VMs and security-relevant services
+- `vm-edr-installer`: Deploy LimaCharlie EDR to VMs on a single cloud platform
 
 ## What Was Created
 
@@ -106,6 +108,9 @@
 
 #### Adapter Management (1 skill)
 - **adapter-assistant**: Complete adapter lifecycle assistant for LimaCharlie. Dynamically researches adapter configurations from local docs, GitHub usp-adapters repo, and external product API documentation. Creates, validates, deploys, and troubleshoots External Adapters (cloud-managed), Cloud Sensors (SaaS integrations), and On-prem USP adapters. Handles parsing rules (Grok, regex), field mappings, credential setup, and multi-org auditing. Orchestrates `adapter-doc-researcher` and `multi-org-adapter-auditor` sub-agents for parallel operations.
+
+#### Organization Onboarding (1 skill)
+- **onboard-new-org**: Complete organization onboarding wizard for LimaCharlie. Discovers local cloud CLIs (GCP, AWS, Azure, DigitalOcean), surveys cloud projects, identifies VMs for EDR installation and security-relevant log sources (IAM, audit logs, network logs). Guides EDR deployment via OS Config (GCP), SSM (AWS), VM Run Command (Azure). Creates cloud adapters for log ingestion. Confirms sensor connectivity and data flow. Orchestrates `cloud-discoverer` and `vm-edr-installer` sub-agents for parallel operations across cloud platforms.
 
 #### Detection & Response Rules (19 skills)
 - get-detection-rules

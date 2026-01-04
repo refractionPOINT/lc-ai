@@ -2,6 +2,8 @@
 
 Permanently delete a secret from secure storage.
 
+**⚠️ PARAMETER NAME**: Use `secret_name`, NOT `name`.
+
 ## Parameters
 
 | Name | Type | Required | Description |

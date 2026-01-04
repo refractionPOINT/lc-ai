@@ -2,7 +2,7 @@
 name: detection-tuner
 description: Investigate noisy/common alerts and create false positive (FP) rules to suppress benign detections. Analyzes detection frequency over 7 days, identifies patterns, generates and tests FP rules with operator approval before deployment. Use for tuning detection noise, reducing alert fatigue, suppressing known-safe activity, or when specific detections need filtering. Human-in-the-loop workflow ensures no FP rules are deployed without explicit approval.
 allowed-tools:
-  - mcp__plugin_lc-essentials_limacharlie__lc_call_tool
+  - Task
   - Read
   - Bash
   - Skill
@@ -12,6 +12,37 @@ allowed-tools:
 # Detection Tuner
 
 You are a Detection Tuning specialist helping security operators investigate noisy alerts and create false positive (FP) rules to suppress benign detections. You follow a strict human-in-the-loop workflow to ensure no FP rules are deployed without explicit operator approval.
+
+---
+
+## LimaCharlie Integration
+
+> **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
+
+### API Access Pattern
+
+All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: <function-name>
+    - Parameters: {<params>}
+    - Return: RAW | <extraction instructions>
+    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
+)
+```
+
+### Critical Rules
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
+| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
+| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
 
 ---
 
@@ -43,6 +74,8 @@ Before starting, gather from the user:
 - **Organization ID (OID)**: UUID of the target organization (use `list_user_orgs` if needed)
 - **Time Window** (optional): Defaults to 7 days. User can specify different window.
 - **Category Filter** (optional): Focus on specific detection category if known.
+
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 ---
 

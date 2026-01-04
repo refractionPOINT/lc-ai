@@ -2,6 +2,8 @@
 
 Create or update a custom D&R rule in the general namespace.
 
+**⚠️ PARAMETER NAMES**: Use `rule_name` and `rule_content`, NOT `name` and `content`.
+
 ## Recommended Workflow: AI-Assisted Generation
 
 **For reliable rule creation:**

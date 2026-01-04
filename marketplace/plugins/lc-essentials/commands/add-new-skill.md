@@ -1,7 +1,17 @@
 ---
 name: add-new-skill
 description: Create a new skill for the lc-essentials plugin following best practices and framework conventions. Use when adding LimaCharlie API operations, orchestration workflows, or specialized capabilities to the plugin.
-allowed-tools: Task, Read, Write, Edit, Bash, Glob, Grep, WebFetch, WebSearch, TodoWrite
+allowed-tools:
+  - Task
+  - Read
+  - Write
+  - Edit
+  - Bash
+  - Glob
+  - Grep
+  - WebFetch
+  - WebSearch
+  - TodoWrite
 argument-hint: "description of what the skill should do"
 ---
 
@@ -25,8 +35,9 @@ First, use the Task tool with `subagent_type="claude-code-guide"` to look up:
 ## Step 2: Review Plugin Framework Documentation
 
 Read these files to understand the lc-essentials framework (paths relative to plugin root):
+- `ARCHITECTURE.md` - Plugin hierarchy and design rules
+- `skills/_shared/SKILL_TEMPLATE.md` - Canonical skill template (USE THIS)
 - `CALLING_API.md` - API execution architecture
-- `SKILL_TEMPLATE.md` - Template structure
 - `agents/README.md` - Sub-agent patterns
 - `skills/limacharlie-call/SKILL.md` - Core API skill reference
 
@@ -39,6 +50,7 @@ Plugin root: `plugins/lc-essentials/`
 Run `/init-lc` to load the complete guidelines into your CLAUDE.md. Key rules:
 
 1. **Never call MCP tools directly** - Use Task with `limacharlie-api-executor`
+2. **Always load the `limacharlie-call` skill** - prior to using LimaCharlie.
 2. **Never write LCQL queries manually** - Use `generate_lcql_query` first
 3. **Never generate D&R rules manually** - Use AI generation tools
 4. **Never calculate timestamps manually** - Use bash `date` commands
@@ -53,16 +65,72 @@ See `AUTOINIT.md` in the plugin root for complete details.
 
 Create the skill in: `skills/{skill-name}/SKILL.md` (relative to plugin root)
 
-Required YAML frontmatter:
+### Frontmatter (YAML List Format Required)
+
 ```yaml
 ---
 name: skill-name-in-kebab-case
 description: Clear description with keywords, use cases, and trigger words. Include action verbs (list, get, create, delete) and domain keywords (sensor, rule, detection). Maximum 1024 characters.
-allowed-tools: Task, Read, Bash
+allowed-tools:
+  - Task
+  - Read
+  - Bash
+  - AskUserQuestion   # Only if needed
+  - Skill             # Only if invoking other skills
 ---
 ```
 
-**Model Selection** (specified at agent level, not skill level):
+**IMPORTANT**:
+- Use YAML list format for `allowed-tools` (not comma-separated)
+- NEVER include `mcp__*` tools - skills don't call MCP directly
+
+### Required Preamble (for LimaCharlie-using skills)
+
+After the title and brief description, include this standardized section:
+
+```markdown
+---
+
+## LimaCharlie Integration
+
+> **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
+
+### API Access Pattern
+
+All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+
+\`\`\`
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: <function-name>
+    - Parameters: {<params>}
+    - Return: RAW | <extraction instructions>
+    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
+)
+\`\`\`
+
+### Critical Rules
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
+| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
+| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+
+---
+```
+
+Add skill-specific rows to Critical Rules table:
+- D&R skills: Add row for `generate_dr_rule_*()` requirement
+- Parsing skills: Add row for `parsing-helper` skill requirement
+
+**Reference**: See `skills/_shared/SKILL_TEMPLATE.md` for the complete template.
+
+### Model Selection (at agent level)
+
 - **Haiku**: Fast, cost-effective for straightforward operations (data gathering, API calls, simple analysis)
 - **Sonnet**: Complex analysis, entity extraction, multi-step reasoning
 - **Opus**: Rarely needed (only for extremely complex tasks)
@@ -131,3 +199,19 @@ Based on the user's description above, create a skill that fulfills their requir
 8. Report what was created with a summary of the skill's capabilities
 
 **Remember:** Every rule in Step 3 is CRITICAL. If the skill violates any of these rules, it WILL break the plugin or produce incorrect results.
+
+## Validation Checklist
+
+Before completing, verify:
+
+- [ ] Frontmatter uses YAML list format for `allowed-tools`
+- [ ] No `mcp__*` tools in `allowed-tools`
+- [ ] Has "LimaCharlie Integration" section with Critical Rules table (if LC-using skill)
+- [ ] All Task spawns use `subagent_type=` (not `subagent=`)
+- [ ] All Task spawns include `model="haiku"` (or appropriate model)
+- [ ] Timestamps use bash `date +%s` commands (never LLM calculations)
+- [ ] OID is always UUID, never org name
+- [ ] LCQL queries use `generate_lcql_query()` first
+- [ ] D&R rules use `generate_dr_rule_*()` functions
+- [ ] Updated SKILLS_SUMMARY.md
+- [ ] Updated agents/README.md (if new agent created)

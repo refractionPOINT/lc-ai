@@ -1,14 +1,48 @@
 ---
 name: sensor-health
 description: Generate comprehensive sensor health and status reports across all LimaCharlie organizations. Use when users ask about sensor connectivity, data availability, offline sensors, sensors not reporting events, or fleet-wide health queries (e.g., "show me sensors online but not sending data", "list sensors offline for 7 days across all orgs").
-allowed-tools: Task, Read, Bash
+allowed-tools:
+  - Task
+  - Read
+  - Bash
 ---
 
 # Sensor Health Reporting Skill
 
-> **Prerequisites**: Run `/init-lc` to load LimaCharlie guidelines into your CLAUDE.md.
-
 This skill orchestrates parallel sensor health checks across multiple LimaCharlie organizations for fast, comprehensive fleet reporting.
+
+---
+
+## LimaCharlie Integration
+
+> **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
+
+### API Access Pattern
+
+All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: <function-name>
+    - Parameters: {<params>}
+    - Return: RAW | <extraction instructions>
+    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
+)
+```
+
+### Critical Rules
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
+| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
+| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+
+---
 
 ## When to Use
 
@@ -122,9 +156,9 @@ Task(
 **Step 3**: Spawn parallel agents (example with 3 orgs)
 ```
 # Single message with 3 Task calls
-Task(subagent="lc-essentials:sensor-health-reporter", prompt="Check org1...")
-Task(subagent="lc-essentials:sensor-health-reporter", prompt="Check org2...")
-Task(subagent="lc-essentials:sensor-health-reporter", prompt="Check org3...")
+Task(subagent_type="lc-essentials:sensor-health-reporter", model="haiku", prompt="Check org1...")
+Task(subagent_type="lc-essentials:sensor-health-reporter", model="haiku", prompt="Check org2...")
+Task(subagent_type="lc-essentials:sensor-health-reporter", model="haiku", prompt="Check org3...")
 ```
 
 **Step 4**: Aggregate
