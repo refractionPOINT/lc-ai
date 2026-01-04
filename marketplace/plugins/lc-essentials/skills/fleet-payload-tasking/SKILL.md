@@ -17,6 +17,8 @@ Deploy payloads (scripts) or shell commands to all endpoints in an organization 
 
 > **Architecture Note**: This skill focuses on payload preparation and upload. It delegates the reliable tasking workflow (D&R rules, task deployment, response collection) to the `sensor-tasking` skill to avoid duplication and ensure correct order of operations.
 
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
+
 ## When to Use
 
 Use this skill when the user needs to:

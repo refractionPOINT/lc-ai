@@ -7,6 +7,7 @@ allowed-tools: Task, Read, Bash, Skill, AskUserQuestion, WebFetch
 # Threat Report Evaluation & IOC Analysis
 
 > **Prerequisites**: Run `/init-lc` to load LimaCharlie guidelines into your CLAUDE.md.
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 Systematically evaluate threat reports to determine organizational impact and create comprehensive defense-in-depth detections.
 

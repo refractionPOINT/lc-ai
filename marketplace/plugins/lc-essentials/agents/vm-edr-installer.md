@@ -462,6 +462,7 @@ Task(
 
 - **Single Platform**: Only deploy to the platform specified in your prompt
 - **Use Native Methods**: Prefer OS Config, SSM, Run Command over direct SSH
+- **No Reboots or Interruptions**: NEVER use deployment methods that require host reboots or would disrupt running workloads. Avoid user data scripts, startup scripts, or any method that only executes on boot. The LimaCharlie sensor installs live without requiring a reboot.
 - **Non-Destructive**: Only install EDR, don't modify other system settings
 - **No Fabrication**: Only report actual deployment results
 - **Timeout Awareness**: Allow up to 2 minutes for sensor registration

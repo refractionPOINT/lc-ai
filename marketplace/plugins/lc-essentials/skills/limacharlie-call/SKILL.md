@@ -18,6 +18,8 @@ Run `/init-lc` to load LimaCharlie guidelines into your CLAUDE.md. This covers:
 
 ## How to Use
 
+!!! Critical !!! _always_ load the relevant function file _before_ calling it, _never_ assume you know how just from the name and description.
+
 ### Step 1: Check Function Documentation
 
 Before calling any function, **read its documentation** to get correct parameter names:

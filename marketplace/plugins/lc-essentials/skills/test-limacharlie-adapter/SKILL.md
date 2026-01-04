@@ -8,6 +8,7 @@ allowed-tools: Task, Bash, Read, AskUserQuestion, Skill
 
 > **IMPORTANT**: Never call `mcp__plugin_lc-essentials_limacharlie__lc_call_tool` directly.
 > Always use the Task tool with `subagent_type="lc-essentials:limacharlie-api-executor"`.
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 > **CRITICAL - LCQL Queries**: NEVER write LCQL queries manually. ALWAYS use `generate_lcql_query` first, then `run_lcql_query`. See [Critical Requirements](../limacharlie-call/SKILL.md#critical-requirements) for all mandatory workflows.
 

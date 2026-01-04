@@ -7,6 +7,7 @@ allowed-tools: Task, Read, Bash
 # Sensor Health Reporting Skill
 
 > **Prerequisites**: Run `/init-lc` to load LimaCharlie guidelines into your CLAUDE.md.
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 This skill orchestrates parallel sensor health checks across multiple LimaCharlie organizations for fast, comprehensive fleet reporting.
 

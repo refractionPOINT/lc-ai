@@ -39,6 +39,7 @@ Plugin root: `plugins/lc-essentials/`
 Run `/init-lc` to load the complete guidelines into your CLAUDE.md. Key rules:
 
 1. **Never call MCP tools directly** - Use Task with `limacharlie-api-executor`
+2. **Always load the `limacharlie-call` skill** - prior to using LimaCharlie.
 2. **Never write LCQL queries manually** - Use `generate_lcql_query` first
 3. **Never generate D&R rules manually** - Use AI generation tools
 4. **Never calculate timestamps manually** - Use bash `date` commands

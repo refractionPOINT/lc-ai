@@ -23,6 +23,7 @@ allowed-tools:
 
 > **IMPORTANT**: Never call `mcp__plugin_lc-essentials_limacharlie__lc_call_tool` directly.
 > Always use the Task tool with `subagent_type="lc-essentials:limacharlie-api-executor"`.
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 Manage multi-tenant LimaCharlie configurations using git-based Infrastructure as Code, compatible with the `ext-git-sync` extension.
 

@@ -8,6 +8,7 @@ allowed-tools: Task, AskUserQuestion, Skill, Read, Bash
 
 > **IMPORTANT**: Never call `mcp__plugin_lc-essentials_limacharlie__lc_call_tool` directly.
 > Always use the Task tool with `subagent_type="lc-essentials:limacharlie-api-executor"`.
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 A guided workflow for creating, testing, and deploying Grok parsing configurations for LimaCharlie adapters. This skill helps you customize how log data is parsed and normalized as it's ingested into LimaCharlie.
 

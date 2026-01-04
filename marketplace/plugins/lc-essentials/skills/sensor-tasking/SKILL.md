@@ -8,6 +8,7 @@ allowed-tools: Task, Read, Bash, Skill
 
 > **IMPORTANT**: Never call `mcp__plugin_lc-essentials_limacharlie__lc_call_tool` directly.
 > Always use the Task tool with `subagent_type="lc-essentials:limacharlie-api-executor"`.
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 This skill orchestrates sending tasks (commands) to EDR sensors and handling responses. It solves two key challenges of sensor tasking:
 

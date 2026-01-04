@@ -40,6 +40,7 @@ Use this skill when the user wants to:
 ## Prerequisites
 
 The organization must have the `ext-velociraptor` extension subscribed.
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 ## How to Use
 

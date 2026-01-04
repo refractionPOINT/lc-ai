@@ -262,17 +262,22 @@ az vm show --name VM_NAME --resource-group RG --query '{
 
 ## Deployment Method Recommendation
 
-For each VM, recommend the best EDR deployment method:
+For each VM, recommend the best EDR deployment method.
 
-| Platform | Method | Requirements |
-|----------|--------|--------------|
-| GCP | OS Config | Guest policies enabled |
-| GCP (fallback) | Startup script | Metadata API access |
-| AWS | SSM Run Command | SSM agent installed |
-| AWS (fallback) | User data | Requires restart |
-| Azure | Run Command | VM Agent installed |
-| Azure (fallback) | Custom Script Extension | - |
-| DigitalOcean | SSH | Root access |
+> **CRITICAL**: Only recommend methods that execute immediately on running systems. NEVER recommend methods that require reboots or would disrupt running workloads.
+
+| Platform | Method | Requirements | Reboot Required |
+|----------|--------|--------------|-----------------|
+| GCP | OS Config | Guest policies enabled | No (Recommended) |
+| GCP (fallback) | gcloud compute ssh | SSH access | No (Recommended) |
+| AWS | SSM Run Command | SSM agent installed | No (Recommended) |
+| Azure | Run Command | VM Agent installed | No (Recommended) |
+| DigitalOcean | SSH | Root access | No (Recommended) |
+
+**DO NOT recommend these methods** (require reboot/interruption):
+- Startup scripts (only run on boot)
+- User data scripts (only run on first boot)
+- Any method that schedules changes for next reboot
 
 Check if deployment prerequisites are met:
 

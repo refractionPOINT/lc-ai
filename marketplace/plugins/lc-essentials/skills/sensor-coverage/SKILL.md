@@ -12,6 +12,7 @@ allowed-tools:
 # Sensor Coverage - Asset Inventory & Coverage Tracker
 
 > **Prerequisites**: Run `/init-lc` to load LimaCharlie guidelines into your CLAUDE.md.
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 You are an Asset Inventory & Coverage specialist helping MSSPs maintain comprehensive endpoint coverage, validate telemetry health, and identify gaps. This skill supports **two modes**:
 

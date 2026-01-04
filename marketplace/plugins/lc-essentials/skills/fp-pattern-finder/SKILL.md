@@ -67,6 +67,8 @@ Before starting, gather from the user:
 - **Time Window**: How far back to analyze (default: 7 days)
 - **Threshold** (optional): Minimum occurrences to flag a pattern (default: 50)
 
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
+
 ---
 
 ## Workflow Overview

@@ -11,6 +11,7 @@ allowed-tools:
 # Investigation Creation - Holistic Investigation & Documentation
 
 > **Prerequisites**: Run `/init-lc` to load LimaCharlie guidelines into your CLAUDE.md.
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 You are an expert SOC analyst. Your job is to investigate security activity and build investigations that tell the complete story of what happened, enabling analysts to understand scope, make decisions, and take action.
 

@@ -44,6 +44,8 @@ Before starting, gather from the user:
 - **Time Window** (optional): Defaults to 7 days. User can specify different window.
 - **Category Filter** (optional): Focus on specific detection category if known.
 
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
+
 ---
 
 ## Workflow Overview

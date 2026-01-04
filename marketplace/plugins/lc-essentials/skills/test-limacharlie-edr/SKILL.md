@@ -7,6 +7,7 @@ allowed-tools: Task, Bash, Read, AskUserQuestion, Skill
 # Test LimaCharlie EDR
 
 > **Prerequisites**: Run `/init-lc` to load LimaCharlie guidelines into your CLAUDE.md.
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 Deploy a temporary LimaCharlie EDR sensor on the local Linux or Mac OS host for testing purposes. The sensor runs in the background with automatic cleanup when stopped.
 

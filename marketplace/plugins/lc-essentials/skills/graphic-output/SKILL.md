@@ -19,6 +19,8 @@ Generate interactive HTML dashboards and visualizations from structured LimaChar
 
 ### CRITICAL: These Rules Are Absolute
 
+> Always load the `limacharlie-call` skill prior to using LimaCharlie.
+
 #### Principle 1: NEVER Fabricate Data
 
 **Absolute Rules:**
