@@ -11,7 +11,9 @@
       }
     ]
   },
-  "enabledPlugins": {},
+  "enabledPlugins": {
+    "lc-essentials@lc-marketplace": true
+  },
   "extraKnownMarketplaces": {
     "lc-marketplace": {
       "source": {
