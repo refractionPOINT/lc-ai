@@ -1,24 +1,37 @@
 ---
 name: limacharlie-call
-description: "**REQUIRED for ALL LimaCharlie operations** - list orgs, sensors, rules, detections, queries, and 120+ functions. NEVER call LimaCharlie MCP tools directly. Use cases: 'what orgs do I have', 'list sensors', 'search IOCs', 'run LCQL query', 'create detection rule'. This skill loads function docs and delegates to sub-agent."
-allowed-tools: Task, Read, Bash
+description: "**REQUIRED for ALL LimaCharlie operations** - list orgs, sensors, rules, detections, queries, and 143 functions. NEVER call LimaCharlie MCP tools directly. Use cases: 'what orgs do I have', 'list sensors', 'search IOCs', 'run LCQL query', 'create detection rule'. This skill loads function docs and delegates to sub-agent."
+allowed-tools:
+  - Task
+  - Read
+  - Bash
 ---
 
 # LimaCharlie API Operations
 
 Perform any LimaCharlie operation by dynamically loading function references.
 
-## Prerequisites
+---
 
-Run `/init-lc` to load LimaCharlie guidelines into your CLAUDE.md. This covers:
-- Never call MCP tools directly (use Task with limacharlie-api-executor)
-- Never write LCQL queries manually (use generate_lcql_query first)
-- Never calculate timestamps manually (use bash date commands)
-- OID is a UUID, not the org name
+## LimaCharlie Integration
+
+> **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
+
+### Critical Rules
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
+| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **D&R Rules** | Write YAML manually | Use `generate_dr_rule_*()` + `validate_dr_rule_components()` |
+| **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
+| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+
+---
 
 ## How to Use
 
-!!! Critical !!! _always_ load the relevant function file _before_ calling it, _never_ assume you know how just from the name and description.
+**Critical**: Always load the relevant function file BEFORE calling it. Never assume you know how just from the name and description.
 
 ### Step 1: Check Function Documentation
 
@@ -310,8 +323,11 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 - `validate_dr_rule_components` → `./functions/validate-dr-rule-components.md`
 - `validate_yara_rule` → `./functions/validate-yara-rule.md`
 
+---
+
 ## Additional Resources
 
-For detailed API usage, see [CALLING_API.md](../../CALLING_API.md).
+- **Detailed API usage**: [CALLING_API.md](../../CALLING_API.md)
+- **Plugin architecture**: [ARCHITECTURE.md](../../ARCHITECTURE.md)
 
 The `limacharlie-api-executor` agent handles large results (>100KB) automatically by downloading resource links and processing data according to your Return specification.

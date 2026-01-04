@@ -21,11 +21,39 @@ allowed-tools:
 
 # LimaCharlie Infrastructure as Code Manager
 
-> **IMPORTANT**: Never call `mcp__plugin_lc-essentials_limacharlie__lc_call_tool` directly.
-> Always use the Task tool with `subagent_type="lc-essentials:limacharlie-api-executor"`.
-> Always load the `limacharlie-call` skill prior to using LimaCharlie.
-
 Manage multi-tenant LimaCharlie configurations using git-based Infrastructure as Code, compatible with the `ext-git-sync` extension.
+
+---
+
+## LimaCharlie Integration
+
+> **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
+
+### API Access Pattern
+
+All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: <function-name>
+    - Parameters: {<params>}
+    - Return: RAW | <extraction instructions>
+    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
+)
+```
+
+### Critical Rules
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
+| **D&R Rules** | Write YAML manually | Use `generate_dr_rule_*()` + `validate_dr_rule_components()` |
+| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+
+---
 
 ## Overview
 

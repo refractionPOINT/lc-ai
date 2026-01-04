@@ -2,7 +2,7 @@
 name: threat-report-parser
 description: Parse threat reports (PDF, HTML, text files) and extract ALL IOCs and behaviors. Returns structured JSON with categorized indicators. Designed to be spawned by the threat-report-evaluation skill to offload report parsing from main context. Expects reports to already be downloaded to local files.
 model: sonnet
-allowed-tools: Read, Bash
+skills: []
 ---
 
 # Threat Report Parser

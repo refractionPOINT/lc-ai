@@ -1,6 +1,9 @@
 ---
 name: lookup-lc-doc
 description: Search and retrieve LimaCharlie documentation from GitHub repositories. Use when users ask about LimaCharlie platform features, SDKs, APIs, D&R rules, LCQL, sensors, outputs, extensions, integrations, AI skills, agents, or any LimaCharlie-related topics.
+allowed-tools:
+  - WebFetch
+  - Read
 ---
 
 # Looking Up LimaCharlie Documentation

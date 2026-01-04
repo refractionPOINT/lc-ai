@@ -15,11 +15,25 @@ Generate interactive HTML dashboards and visualizations from structured LimaChar
 
 **Core Philosophy**: Visualize ONLY what exists. This skill has strict guardrails that make data fabrication impossible. Every chart, number, and label must come directly from the input data.
 
+---
+
+## LimaCharlie Integration
+
+> **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
+
+### Critical Rules
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| **Data Fabrication** | Generate, estimate, or infer missing data | Show "N/A" or "Data unavailable" |
+| **Data Modification** | Round, truncate, or rename values | Display values exactly as provided |
+| **Missing Fields** | Show zero for missing values | Show empty state with clear messaging |
+
+---
+
 ## Data Accuracy Guardrails
 
 ### CRITICAL: These Rules Are Absolute
-
-> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 #### Principle 1: NEVER Fabricate Data
 

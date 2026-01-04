@@ -8,16 +8,46 @@ allowed-tools:
   - Write
   - Skill
   - AskUserQuestion
-  - mcp__plugin_lc-essentials_limacharlie__lc_call_tool
 ---
 
 # Fleet Payload Tasking Skill
 
 Deploy payloads (scripts) or shell commands to all endpoints in an organization using reliable tasking. Handles offline sensors automatically - tasks queue and execute when sensors come online.
 
-> **Architecture Note**: This skill focuses on payload preparation and upload. It delegates the reliable tasking workflow (D&R rules, task deployment, response collection) to the `sensor-tasking` skill to avoid duplication and ensure correct order of operations.
+---
 
-> Always load the `limacharlie-call` skill prior to using LimaCharlie.
+## LimaCharlie Integration
+
+> **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
+
+### API Access Pattern
+
+All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: <function-name>
+    - Parameters: {<params>}
+    - Return: RAW | <extraction instructions>
+    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
+)
+```
+
+### Critical Rules
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
+| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
+| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+
+> **Architecture Note**: This skill focuses on payload preparation and upload. It delegates the reliable tasking workflow (D&R rules, task deployment, response collection) to the `sensor-tasking` skill to avoid duplication.
+
+---
 
 ## When to Use
 

@@ -1,20 +1,51 @@
 ---
 name: test-limacharlie-adapter
 description: Deploy a temporary LimaCharlie Adapter on the local Linux or Mac OS host for testing log ingestion. Downloads the adapter, auto-detects log sources, and streams them to your LimaCharlie organization.
-allowed-tools: Task, Bash, Read, AskUserQuestion, Skill
+allowed-tools:
+  - Task
+  - Bash
+  - Read
+  - AskUserQuestion
+  - Skill
 ---
 
 # Test LimaCharlie Adapter
 
-> **IMPORTANT**: Never call `mcp__plugin_lc-essentials_limacharlie__lc_call_tool` directly.
-> Always use the Task tool with `subagent_type="lc-essentials:limacharlie-api-executor"`.
-> Always load the `limacharlie-call` skill prior to using LimaCharlie.
-
-> **CRITICAL - LCQL Queries**: NEVER write LCQL queries manually. ALWAYS use `generate_lcql_query` first, then `run_lcql_query`. See [Critical Requirements](../limacharlie-call/SKILL.md#critical-requirements) for all mandatory workflows.
-
-> **CRITICAL - Parsing Configuration**: You MUST ALWAYS invoke the `parsing-helper` skill in Phase 2. NEVER skip this step or write Grok patterns manually. The parsing-helper ensures correct field extraction AND identifies when `event_time_timezone` is required (e.g., for timestamps like `SYSLOGTIMESTAMP` that lack timezone info). Skipping this step will result in incorrect event timestamps.
-
 Deploy a temporary LimaCharlie Adapter on the local Linux or Mac OS host for testing log ingestion. The adapter streams local logs to your LimaCharlie organization in real-time.
+
+---
+
+## LimaCharlie Integration
+
+> **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
+
+### API Access Pattern
+
+All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: <function-name>
+    - Parameters: {<params>}
+    - Return: RAW | <extraction instructions>
+    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
+)
+```
+
+### Critical Rules
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
+| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
+| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **Parsing** | Write Grok patterns manually | Use `parsing-helper` skill (identifies timezone requirements) |
+
+---
 
 This skill includes a **helper script** (`lc-adapter-helper.sh`) that handles all platform detection, downloading, and process management automatically.
 

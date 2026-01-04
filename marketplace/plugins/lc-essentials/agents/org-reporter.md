@@ -2,8 +2,8 @@
 name: org-reporter
 description: Collect comprehensive reporting data for a SINGLE LimaCharlie organization. Designed to be spawned in parallel (one instance per org) by the reporting skill. Gathers usage stats, billing, sensors, detections, and rules. Returns structured data for aggregation.
 model: haiku
-tools:
-  - Task
+skills:
+  - lc-essentials:limacharlie-call
 ---
 
 # Single-Organization Reporter
@@ -14,9 +14,9 @@ You are a specialized agent for collecting comprehensive reporting data within a
 
 Collect all reporting data for one organization and return a structured report. You are typically invoked by the `reporting` skill which spawns multiple instances of you in parallel for multi-tenant reports.
 
-## Tools Available
+## Skills Available
 
-You have access to the `Task` tool to spawn `lc-essentials:limacharlie-api-executor` agents for ALL API operations. **NEVER use direct MCP tool calls** - always spawn executor agents.
+You have access to the `lc-essentials:limacharlie-call` skill which provides 120+ LimaCharlie API functions. Use this skill for ALL API operations.
 
 ## Expected Prompt Format
 

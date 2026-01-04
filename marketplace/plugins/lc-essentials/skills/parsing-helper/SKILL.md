@@ -1,16 +1,50 @@
 ---
 name: parsing-helper
 description: Customize and test Grok parsing for USP, Cloud Sensor, and External adapters. Helps generate parsing rules from sample logs, validate against test data, and deploy configurations. Use when setting up new log sources, troubleshooting parsing issues, or modifying field extraction for adapters.
-allowed-tools: Task, AskUserQuestion, Skill, Read, Bash
+allowed-tools:
+  - Task
+  - Read
+  - Bash
+  - Skill
+  - AskUserQuestion
 ---
 
 # Parsing Helper
 
-> **IMPORTANT**: Never call `mcp__plugin_lc-essentials_limacharlie__lc_call_tool` directly.
-> Always use the Task tool with `subagent_type="lc-essentials:limacharlie-api-executor"`.
-> Always load the `limacharlie-call` skill prior to using LimaCharlie.
-
 A guided workflow for creating, testing, and deploying Grok parsing configurations for LimaCharlie adapters. This skill helps you customize how log data is parsed and normalized as it's ingested into LimaCharlie.
+
+---
+
+## LimaCharlie Integration
+
+> **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
+
+### API Access Pattern
+
+All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: <function-name>
+    - Parameters: {<params>}
+    - Return: RAW | <extraction instructions>
+    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
+)
+```
+
+### Critical Rules
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
+| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
+| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+
+---
 
 > ⚠️ **TIMEZONE NOTE**: Patterns like `SYSLOGTIMESTAMP` (`Dec 16 17:50:04`) lack timezone info. LimaCharlie assumes UTC. This skill automatically detects timezone mismatches by comparing parsed times to current UTC.
 

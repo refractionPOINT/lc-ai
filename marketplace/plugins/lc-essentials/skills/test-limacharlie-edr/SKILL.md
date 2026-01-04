@@ -1,15 +1,50 @@
 ---
 name: test-limacharlie-edr
 description: Deploy a temporary LimaCharlie EDR agent on the local Linux or Mac OS host for testing. Downloads and runs the LC sensor in a temp directory with automatic cleanup. Use for testing detection rules, investigating sensor behavior, or development. Requires selecting or creating a LimaCharlie organization first.
-allowed-tools: Task, Bash, Read, AskUserQuestion, Skill
+allowed-tools:
+  - Task
+  - Bash
+  - Read
+  - AskUserQuestion
+  - Skill
 ---
 
 # Test LimaCharlie EDR
 
-> **Prerequisites**: Run `/init-lc` to load LimaCharlie guidelines into your CLAUDE.md.
-> Always load the `limacharlie-call` skill prior to using LimaCharlie.
-
 Deploy a temporary LimaCharlie EDR sensor on the local Linux or Mac OS host for testing purposes. The sensor runs in the background with automatic cleanup when stopped.
+
+---
+
+## LimaCharlie Integration
+
+> **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
+
+### API Access Pattern
+
+All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+
+```
+Task(
+  subagent_type="lc-essentials:limacharlie-api-executor",
+  model="haiku",
+  prompt="Execute LimaCharlie API call:
+    - Function: <function-name>
+    - Parameters: {<params>}
+    - Return: RAW | <extraction instructions>
+    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
+)
+```
+
+### Critical Rules
+
+| Rule | Wrong | Right |
+|------|-------|-------|
+| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
+| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
+| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+
+---
 
 ## When to Use
 
