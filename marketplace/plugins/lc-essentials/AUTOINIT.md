@@ -6,6 +6,8 @@
 
 ## Critical Rules
 
+**ALWAYS require the user to specify the organization or organizations they intend to operate on**, NEVER assume.
+
 ### 1. Never Call MCP Tools Directly
 
 - **WRONG**: `mcp__plugin_lc-essentials_limacharlie__lc_call_tool(...)`
