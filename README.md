@@ -57,7 +57,7 @@ See the [Docker section](#docker-container) below for more details.
 
 ### Configuration
 
-The plugin requires a LimaCharlie API key configured as an MCP server. See the [LimaCharlie MCP documentation](https://github.com/refractionPOINT/lc-mcp) for setup instructions.
+The plugin requires a LimaCharlie API key configured as an MCP server. See the [LimaCharlie MCP documentation](https://github.com/refractionPOINT/lc-mcp-server) for setup instructions.
 
 ### Usage
 

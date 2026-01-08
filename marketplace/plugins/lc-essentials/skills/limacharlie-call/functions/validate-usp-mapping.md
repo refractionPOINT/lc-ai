@@ -567,4 +567,4 @@ For the Go SDK implementation, check: `https://github.com/refractionPOINT/go-lim
 
 For the API implementation, check: `https://github.com/refractionPOINT/lc_api-go/blob/master/service/endpoint_usp_validation.go`
 
-For the MCP tool implementation, check: `https://github.com/refractionPOINT/lc-mcp/blob/master/internal/tools/rules/usp_validation.go`
+For the MCP tool implementation, check: `https://github.com/refractionPOINT/lc-mcp-server/blob/master/internal/tools/rules/usp_validation.go`
