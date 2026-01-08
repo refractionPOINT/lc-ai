@@ -70,34 +70,22 @@ When processing multiple organizations or items:
 
 Organizations can define SOPs (Standard Operating Procedures) in LimaCharlie that guide how tasks are performed. SOPs can be large documents, so they are loaded lazily (similar to Claude Code Skills).
 
-### On Conversation Start (Load Index Only)
+### On Conversation Start
 
-At the beginning of every conversation involving LimaCharlie operations:
+Before running LimaCharlie operations:
 
-1. **List all SOPs** using `list_sops` for each organization in scope
-2. **Store ONLY the name and description** of each SOP (ignore the `text` field - it may be truncated or large)
-3. Use this index to identify when an SOP might apply to current work
-
-**Important:** Do NOT read or use the full SOP content at this stage. The `list_sops` response may include a `text` field, but ignore it - always call `get_sop` when you need the actual procedure.
-
-### When Performing Tasks (Load Full Content)
-
-Before executing any significant operation:
-
-1. **Check SOP relevance**: Compare the current task against stored SOP descriptions
-2. **If a match is found**:
-   - Announce: "Following SOP: [sop-name] - [description]"
-   - **MUST call `get_sop`** to retrieve the full SOP content (do not skip this step)
-   - Follow the procedure defined in the SOP
-3. **If multiple SOPs match**: Announce all matching SOPs, call `get_sop` for each, and follow all applicable procedures
+**List all SOPs** using `list_sops` for each organization in scope, extracting only the name of the SOP and the `description` field.
+**During operations** if an SOP description sounds like it applies to the current operation, call `get_sop` to get the actual procedude.
+**Take into account** the contents of the fetched SOP, if a match is found, announce: "Following SOP: [sop-name] - [description]"
 
 ### Example Workflow
 
-1. User asks to investigate a malware alert
-2. LLM checks stored SOP index: "malware-response" matches (description: "Standard procedure for malware incidents")
-3. LLM announces: "Following SOP: malware-response - Standard procedure for malware incidents"
-4. LLM calls `get_sop(name="malware-response")` to load the full procedure
-5. LLM follows the documented steps from the loaded SOP content
+1. User signals intent to work on org 123
+2. LLM lists SOPs on org 123: "malware-response" => description: "Standard procedure for malware incidents"
+3. User asks to investigate a malware alert on org 123
+4. LLM announces: "Following SOP: malware-response - Standard procedure for malware incidents"
+5. LLM recognizes the "malware-response" SOP relates to this and calls `get_sop(name="malware-response")` to load the full procedure
+7. LLM follows the documented steps from the loaded SOP content
 
 ## Sensor Selector Reference
 
