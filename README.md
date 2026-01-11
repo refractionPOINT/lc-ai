@@ -74,26 +74,27 @@ Then use natural language to interact with LimaCharlie:
 - "Investigate this detection and create an investigation record"
 - "Get a health report for all my organizations"
 
-See `plugins/lc-essentials/SKILLS_SUMMARY.md` for a complete list of available skills.
+See `marketplace/plugins/lc-essentials/SKILLS_SUMMARY.md` for a complete list of available skills.
 
 ## Repository Structure
 
 ```
 .
-├── .claude-plugin/          # Marketplace configuration
-│   └── marketplace.json     # Marketplace definition
-├── plugins/                 # Claude Code plugins
-│   └── lc-essentials/       # Main LimaCharlie plugin
-│       ├── .claude-plugin/  # Plugin configuration
-│       ├── agents/          # Sub-agent definitions
-│       ├── commands/        # Slash commands
-│       ├── scripts/         # Helper scripts
-│       └── skills/          # Skill definitions
-├── docker/                  # Docker container files
-│   ├── Dockerfile           # Container definition
-│   ├── docker-compose.yml   # Docker Compose configuration
-│   └── entrypoint.sh        # Container entrypoint script
-└── LICENSE                  # Apache 2.0 License
+├── .claude-plugin/              # Marketplace configuration
+│   └── marketplace.json         # Marketplace definition
+├── marketplace/                 # Claude Code marketplace
+│   └── plugins/
+│       └── lc-essentials/       # Main LimaCharlie plugin
+│           ├── .claude-plugin/  # Plugin configuration
+│           ├── agents/          # Sub-agent definitions
+│           ├── commands/        # Slash commands
+│           ├── scripts/         # Helper scripts
+│           └── skills/          # Skill definitions
+├── docker/                      # Docker container files
+│   ├── Dockerfile               # Container definition
+│   ├── docker-compose.yml       # Docker Compose configuration
+│   └── entrypoint.sh            # Container entrypoint script
+└── LICENSE                      # Apache 2.0 License
 ```
 
 ## Docker Container
@@ -156,7 +157,7 @@ This container uses **host networking** (`network_mode: host`) which is required
 
 ### Available Skills
 
-Once authenticated, you have access to 121+ LimaCharlie skills including:
+Once authenticated, you have access to 20+ LimaCharlie skills and 120+ API functions including:
 
 - Sensor management and live investigation
 - Detection & Response rule creation

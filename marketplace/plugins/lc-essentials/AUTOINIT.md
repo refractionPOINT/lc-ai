@@ -75,7 +75,7 @@ Organizations can define SOPs (Standard Operating Procedures) in LimaCharlie tha
 Before running LimaCharlie operations:
 
 **List all SOPs** using `list_sops` for each organization in scope, extracting only the name of the SOP and the `description` field.
-**During operations** if an SOP description sounds like it applies to the current operation, call `get_sop` to get the actual procedude.
+**During operations** if an SOP description sounds like it applies to the current operation, call `get_sop` to get the actual procedure.
 **Take into account** the contents of the fetched SOP, if a match is found, announce: "Following SOP: [sop-name] - [description]"
 
 ### Example Workflow
@@ -85,7 +85,7 @@ Before running LimaCharlie operations:
 3. User asks to investigate a malware alert on org 123
 4. LLM announces: "Following SOP: malware-response - Standard procedure for malware incidents"
 5. LLM recognizes the "malware-response" SOP relates to this and calls `get_sop(name="malware-response")` to load the full procedure
-7. LLM follows the documented steps from the loaded SOP content
+6. LLM follows the documented steps from the loaded SOP content
 
 ## Sensor Selector Reference
 
