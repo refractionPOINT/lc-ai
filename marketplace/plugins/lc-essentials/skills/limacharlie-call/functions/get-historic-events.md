@@ -82,6 +82,7 @@ lc_call_tool(tool_name="get_historic_events", parameters={
 
 ## Notes
 
+- **Indexing delay**: Events are persisted in blocks on the backend. Newly ingested events may not appear in search results for up to **5 minutes** after ingestion. If querying for very recent activity and results seem incomplete, wait and retry - the events exist but haven't been persisted to searchable storage yet.
 - Use `get_time_when_sensor_has_data` to verify data availability first
 - Very large time ranges may timeout - narrow the window
 - For cross-sensor queries, use `run_lcql_query` instead
