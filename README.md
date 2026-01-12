@@ -20,7 +20,31 @@ The `lc-essentials` plugin provides comprehensive LimaCharlie integration for Cl
 - **Multi-tenant Reporting**: Generate reports across multiple organizations
 - **Adapter Management**: Configure and troubleshoot log adapters
 
-### Installation
+### Getting Started
+
+Before using the lc-essentials plugin, you need access to Claude Code through one of these options:
+
+#### Option A: Local Installation
+
+Install Claude Code on your local machine:
+
+```bash
+curl -fsSL https://claude.ai/install.sh | bash
+```
+
+For detailed setup instructions, see the [Claude Code Quickstart Guide](https://code.claude.com/docs/en/quickstart).
+
+Then continue to the [Plugin Installation](#plugin-installation) section below.
+
+#### Option B: Web-Based (No Installation)
+
+Use Claude Code directly through the LimaCharlie web interface at [app.limacharlie.io](https://app.limacharlie.io). The lc-essentials plugin is already pre-configured - **you're ready to go with no additional setup required**.
+
+---
+
+### Plugin Installation
+
+*Only required for [Option A](#option-a-local-installation) (local installation)*
 
 #### Option 1: Add as a Marketplace (Recommended)
 
@@ -55,9 +79,17 @@ cd docker && docker compose run --rm lc-claude
 
 See the [Docker section](#docker-container) below for more details.
 
+### Authentication
+
+After installing the plugin:
+
+1. Restart the `claude` tool
+2. Run `/mcp` and select the LimaCharlie MCP server
+3. Authenticate using OAuth when prompted
+
 ### Configuration
 
-The plugin requires a LimaCharlie API key configured as an MCP server. See the [LimaCharlie MCP documentation](https://github.com/refractionPOINT/lc-mcp-server) for setup instructions.
+For advanced configuration options, see the [LimaCharlie MCP documentation](https://github.com/refractionPOINT/lc-mcp-server).
 
 ### Usage
 
