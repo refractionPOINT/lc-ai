@@ -56,6 +56,7 @@ lc_call_tool(tool_name="run_lcql_query", parameters={
 
 ## Notes
 
+- **Automatic validation**: Query is validated before execution - invalid queries fail fast with syntax error
 - Queries beyond 30 days may incur costs - confirm with user
-- Invalid syntax → use `generate_lcql_query` first
-- Related: `generate_lcql_query`, `list_saved_queries`, `run_saved_query`
+- Use `validate_lcql_query` or `analyze_lcql_query` for pre-flight validation
+- Related: `generate_lcql_query`, `validate_lcql_query`, `analyze_lcql_query`, `list_saved_queries`, `run_saved_query`
