@@ -23,7 +23,7 @@ All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: <function-name>
     - Parameters: {<params>}
@@ -160,7 +160,7 @@ If the user provided an organization **name** instead of OID, or if no organizat
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_user_orgs
     - Parameters: {}
@@ -180,7 +180,7 @@ If the user requested a sensor-specific URL but provided a **hostname** instead 
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_sensors
     - Parameters: {\"oid\": \"[oid]\"}

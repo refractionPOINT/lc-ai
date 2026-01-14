@@ -24,7 +24,7 @@ All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: <function-name>
     - Parameters: {<params>}
@@ -80,7 +80,7 @@ Use the LimaCharlie API to get the user's organizations:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_user_orgs
     - Parameters: {}
@@ -145,7 +145,7 @@ one_hour_ago=$(date -d '1 hour ago' +%s)
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_user_orgs
     - Parameters: {}

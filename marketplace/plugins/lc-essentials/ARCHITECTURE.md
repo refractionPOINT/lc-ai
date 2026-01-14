@@ -27,7 +27,7 @@ User Request
     │ spawns via Task tool
     ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  limacharlie-api-executor agent (Haiku model)              │
+│  limacharlie-api-executor agent (Sonnet model)              │
 │  - Executes single API operations                          │
 │  - Handles large result downloads autonomously             │
 │  - Returns structured JSON to parent                       │
@@ -63,7 +63,7 @@ mcp__plugin_lc-essentials_limacharlie__lc_call_tool(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_sensors
     - Parameters: {...}
@@ -75,8 +75,8 @@ Task(
 ### 2. Only limacharlie-api-executor Calls MCP Tools
 
 The executor agent is the only component that directly calls the MCP tool. This provides:
-- **Cost optimization**: Haiku model for simple API calls
-- **Speed**: Fast execution for straightforward operations
+- **Reliability**: Sonnet model for accurate API operations
+- **Consistency**: Better handling of complex parameters and responses
 - **Parallel execution**: Multiple executors can run simultaneously
 - **Large result handling**: Executor handles downloads autonomously
 
@@ -129,7 +129,7 @@ Sub-agents spawned by skills for specific tasks:
 
 | Agent | Purpose | Model |
 |-------|---------|-------|
-| limacharlie-api-executor | Execute single API operations | haiku |
+| limacharlie-api-executor | Execute single API operations | sonnet |
 | sensor-health-reporter | Check sensors for one org | haiku |
 | org-reporter | Collect reporting data for one org | haiku |
 | ioc-hunter | Search IOCs in one org | haiku |

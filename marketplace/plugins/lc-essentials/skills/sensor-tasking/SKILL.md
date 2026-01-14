@@ -28,7 +28,7 @@ All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: <function-name>
     - Parameters: {<params>}
@@ -128,7 +128,7 @@ If you don't have the OID, get it first:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_user_orgs
     - Parameters: {}
@@ -141,7 +141,7 @@ Check sensor status if targeting specific sensors:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: is_online
     - Parameters: {\"oid\": \"[oid]\", \"sid\": \"[sid]\"}
@@ -208,7 +208,7 @@ For immediate data collection from a small number of online sensors (up to 5), u
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: get_processes
     - Parameters: {\"oid\": \"[oid]\", \"sid\": \"[sid]\"}
@@ -236,7 +236,7 @@ Read: plugins/lc-essentials/skills/limacharlie-call/functions/reliable-tasking.m
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: reliable_tasking
     - Parameters: {
@@ -284,7 +284,7 @@ After reliable tasking, wait at least 2 minutes for responses to arrive, then qu
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: generate_lcql_query
     - Parameters: {
@@ -300,7 +300,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: run_lcql_query
     - Parameters: {
@@ -323,7 +323,7 @@ For automated response handling, create a D&R rule that matches the investigatio
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: generate_dr_rule_detection
     - Parameters: {
@@ -339,7 +339,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: generate_dr_rule_respond
     - Parameters: {
@@ -355,7 +355,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: validate_dr_rule_components
     - Parameters: {
@@ -377,7 +377,7 @@ date -d '+7 days' +%s
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: set_dr_general_rule
     - Parameters: {
@@ -403,7 +403,7 @@ Only after the D&R rule is deployed, create the reliable task (see Step 3B above
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_reliable_tasks
     - Parameters: {\"oid\": \"[oid]\"}
@@ -416,7 +416,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: delete_reliable_task
     - Parameters: {
@@ -437,7 +437,7 @@ User: "Get running processes from sensor abc-123"
 # Check if online
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: is_online
     - Parameters: {\"oid\": \"c7e8f940-...\", \"sid\": \"abc-123\"}
@@ -447,7 +447,7 @@ Task(
 # If online, get processes directly
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: get_processes
     - Parameters: {\"oid\": \"c7e8f940-...\", \"sid\": \"abc-123\"}
@@ -463,7 +463,7 @@ User: "Get OS version from all Windows servers when they come online"
 # Create reliable task with context for later collection
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: reliable_tasking
     - Parameters: {
@@ -495,7 +495,7 @@ User: "Run memory collection on all hosts tagged 'incident-response', I need the
 
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: set_dr_general_rule
     - Parameters: {
@@ -512,7 +512,7 @@ Task(
 # Step 2: THEN create reliable task (rule is now in place to catch responses)
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: reliable_tasking
     - Parameters: {

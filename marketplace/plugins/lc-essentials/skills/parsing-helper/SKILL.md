@@ -26,7 +26,7 @@ All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: <function-name>
     - Parameters: {<params>}
@@ -101,7 +101,7 @@ Get the list of available organizations:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_user_orgs
     - Parameters: {}
@@ -121,7 +121,7 @@ Ask the user which adapter type they're working with using `AskUserQuestion`:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_external_adapters
     - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\"}
@@ -133,7 +133,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: get_external_adapter
     - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"name\": \"<ADAPTER_NAME>\"}
@@ -147,7 +147,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_cloud_sensors
     - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\"}
@@ -159,7 +159,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: get_cloud_sensor
     - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"name\": \"<SENSOR_NAME>\"}
@@ -181,7 +181,7 @@ If the adapter is already ingesting data, you can fetch sample events:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_sensors
     - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"selector\": \"iid == `<IID>`\"}
@@ -203,7 +203,7 @@ Then use the actual output values (e.g., `start=1764805928 end=1764809528`) dire
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: get_historic_events
     - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"sid\": \"<SENSOR_ID>\", \"start\": 1764805928, \"end\": 1764809528, \"limit\": 10}
@@ -331,7 +331,7 @@ Use `validate_usp_mapping` to test the Grok pattern against sample data:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: validate_usp_mapping
     - Parameters: {
@@ -380,7 +380,7 @@ If validation fails or fields are missing, adjust the Grok pattern and re-valida
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: set_external_adapter
     - Parameters: {
@@ -407,7 +407,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: set_cloud_sensor
     - Parameters: {
@@ -428,7 +428,7 @@ After applying the configuration for External Adapters or Cloud Sensors, check f
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: get_org_errors
     - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\"}
