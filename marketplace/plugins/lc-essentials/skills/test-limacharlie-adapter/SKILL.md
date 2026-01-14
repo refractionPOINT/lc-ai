@@ -26,7 +26,7 @@ All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: <function-name>
     - Parameters: {<params>}
@@ -94,7 +94,7 @@ First, get the list of available organizations:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_user_orgs
     - Parameters: {}
@@ -111,7 +111,7 @@ Check for existing "Test Adapter" installation key:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_installation_keys
     - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\"}
@@ -126,7 +126,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: create_installation_key
     - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"description\": \"Test Adapter\", \"tags\": [\"test-adapter\", \"temporary\"]}
@@ -249,7 +249,7 @@ After starting, the adapter should appear in your LimaCharlie organization withi
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_sensors
     - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"selector\": \"iid == `<IID>`\"}
@@ -270,7 +270,7 @@ Also check for any adapter errors:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: get_org_errors
     - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\"}
@@ -287,7 +287,7 @@ After the adapter has been running for a few minutes, query the ingested logs.
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: generate_lcql_query
     - Parameters: {\"oid\": \"<OID>\", \"query\": \"all events from sensor <SID> in the last 10 minutes\"}
@@ -300,7 +300,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: run_lcql_query
     - Parameters: {\"oid\": \"<OID>\", \"query\": \"<GENERATED_QUERY_FROM_STEP_1>\", \"limit\": 50}
@@ -346,7 +346,7 @@ Use `;` instead of `&&` since pkill returns non-zero exit codes even on success.
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_user_orgs
     - Parameters: {}
@@ -362,7 +362,7 @@ Response shows: `[{"name": "My Test Org", "oid": "abc123-def456-..."}]`
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_installation_keys
     - Parameters: {\"oid\": \"abc123-def456-...\"}
@@ -374,7 +374,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: create_installation_key
     - Parameters: {\"oid\": \"abc123-def456-...\", \"description\": \"Test Adapter\", \"tags\": [\"test-adapter\", \"temporary\"]}
@@ -435,7 +435,7 @@ Output shows platform detection, download progress, and configuration saved.
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_sensors
     - Parameters: {\"oid\": \"abc123-def456-...\", \"selector\": \"iid == `729b2770-9ae6-4e14-beea-5e42b854adf5`\"}
@@ -465,7 +465,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: delete_sensor
     - Parameters: {\"oid\": \"abc123-def456-...\", \"sid\": \"<SENSOR_ID>\"}

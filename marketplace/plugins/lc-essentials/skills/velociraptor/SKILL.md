@@ -24,7 +24,7 @@ All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: <function-name>
     - Parameters: {<params>}
@@ -87,7 +87,7 @@ If not already known, get the OID:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_user_orgs
     - Parameters: {}
@@ -102,7 +102,7 @@ List all VQL artifacts available for collection (built-in and external from tria
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_velociraptor_artifacts
     - Parameters: {
@@ -119,7 +119,7 @@ Before collecting, view an artifact's YAML to understand its parameters:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: show_velociraptor_artifact
     - Parameters: {
@@ -137,7 +137,7 @@ Collect from a single sensor:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: collect_velociraptor_artifact
     - Parameters: {
@@ -154,7 +154,7 @@ Collect from multiple sensors using a selector:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: collect_velociraptor_artifact
     - Parameters: {
@@ -176,7 +176,7 @@ List raw Velociraptor artifacts stored in the Artifact system:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_artifacts
     - Parameters: {
@@ -193,7 +193,7 @@ Download an artifact:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: get_artifact
     - Parameters: {
@@ -214,7 +214,7 @@ For small collections, data is also available as events. Use LCQL to query them.
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: generate_lcql_query
     - Parameters: {
@@ -230,7 +230,7 @@ Then execute:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: run_lcql_query
     - Parameters: {
@@ -249,7 +249,7 @@ To find the virtual sensor that receives processed Velociraptor data:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_sensors
     - Parameters: {

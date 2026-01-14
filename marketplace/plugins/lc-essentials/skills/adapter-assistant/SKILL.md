@@ -30,7 +30,7 @@ All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: <function-name>
     - Parameters: {<params>}
@@ -180,7 +180,7 @@ Execute the dynamic research strategy above to gather all relevant information a
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_user_orgs
     - Parameters: {}
@@ -192,7 +192,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_external_adapters
     - Parameters: {\"oid\": \"<org-id>\"}
@@ -204,7 +204,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_cloud_sensors
     - Parameters: {\"oid\": \"<org-id>\"}
@@ -216,7 +216,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: get_external_adapter  # or get_cloud_sensor
     - Parameters: {\"oid\": \"<org-id>\", \"adapter_name\": \"<adapter-name>\"}  # use sensor_name for get_cloud_sensor
@@ -258,7 +258,7 @@ Check existing secrets:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_secrets
     - Parameters: {\"oid\": \"<org-id>\"}
@@ -287,7 +287,7 @@ Supported index types: `file_hash`, `file_path`, `file_name`, `domain`, `ip`, `u
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: validate_usp_mapping
     - Parameters: {
@@ -328,7 +328,7 @@ Skill("test-limacharlie-adapter")
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: set_external_adapter
     - Parameters: {
@@ -344,7 +344,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: set_cloud_sensor
     - Parameters: {
@@ -403,7 +403,7 @@ docker run -d --rm -p 514:514/udp refractionpoint/lc-adapter syslog \
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_sensors
     - Parameters: {\"oid\": \"<org-id>\", \"selector\": \"iid == `<installation-key-iid>`\"}
@@ -419,7 +419,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: get_external_adapter
     - Parameters: {\"oid\": \"<org-id>\", \"adapter_name\": \"<adapter-name>\"}
@@ -431,7 +431,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: get_org_errors
     - Parameters: {\"oid\": \"<org-id>\"}
@@ -449,7 +449,7 @@ start=$(date -d '1 hour ago' +%s) && end=$(date +%s)
 
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: get_historic_events
     - Parameters: {\"oid\": \"<org-id>\", \"sid\": \"<sensor-id>\", \"start\": <start-epoch>, \"end\": <end-epoch>, \"limit\": 10}
@@ -559,7 +559,7 @@ Task(
    ```
    Task(
      subagent_type="lc-essentials:limacharlie-api-executor",
-     model="haiku",
+     model="sonnet",
      prompt="Execute LimaCharlie API call:
        - Function: set_external_adapter
        - Parameters: {
@@ -627,7 +627,7 @@ Task(
    ```
    Task(
      subagent_type="lc-essentials:limacharlie-api-executor",
-     model="haiku",
+     model="sonnet",
      prompt="Execute LimaCharlie API call:
        - Function: get_cloud_sensor
        - Parameters: {\"oid\": \"<oid>\", \"sensor_name\": \"azure-event-hub\"}
