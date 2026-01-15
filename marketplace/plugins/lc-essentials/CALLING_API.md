@@ -104,6 +104,10 @@ The sub-agent handles the call, processes results, and returns structured data t
 
 Authentication is handled automatically using the MCP server's auth context. You don't need to provide API keys or JWT tokens.
 
+## Direct MCP Calls (Fast Path)
+
+For simple functions with small responses, call MCP directly to bypass executor overhead (0.5-2s vs 5-15s). See AUTOINIT.md section 1a for the whitelist. If response contains `resource_link`, spawn executor to handle download.
+
 ## Response Structure
 
 Tools return their results directly without HTTP wrapper:

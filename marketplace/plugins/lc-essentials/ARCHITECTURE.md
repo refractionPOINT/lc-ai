@@ -80,6 +80,10 @@ The executor agent is the only component that directly calls the MCP tool. This 
 - **Parallel execution**: Multiple executors can run simultaneously
 - **Large result handling**: Executor handles downloads autonomously
 
+### 2a. Exception: Direct MCP for Simple Operations
+
+For simple functions with small responses, direct MCP calls bypass the executor (0.5-2s vs 5-15s). See AUTOINIT.md for the whitelist.
+
 ### 3. Parallel Execution Pattern
 
 Spawn multiple agents in a SINGLE message for true parallelism:

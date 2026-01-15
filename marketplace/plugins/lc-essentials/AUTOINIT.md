@@ -13,6 +13,16 @@
 - **WRONG**: `mcp__plugin_lc-essentials_limacharlie__lc_call_tool(...)`
 - **CORRECT**: Use Task tool with `subagent_type="lc-essentials:limacharlie-api-executor"`
 
+### 1a. Exception: Direct MCP for Simple Operations
+
+For functions with guaranteed small responses, direct MCP calls bypass the executor (saves 5-15s):
+
+**Safe for direct calls:** `is_online`, `is_isolated`, `get_org_oid_by_name`, `who_am_i`, `add_tag`, `remove_tag`, `delete_sensor`, `get_sensor_info`, `get_org_info`, `create_installation_key`, `create_api_key`, `list_installation_keys`, `list_api_keys`, `list_sensor_tags`
+
+**NOT safe (use executor):** `list_user_orgs`, `list_sensors`, `run_lcql_query`, `get_historic_*`, `get_processes`, `get_network_connections`, `dir_list`, `search_iocs`, `get_detection_rules`
+
+If response contains `resource_link`, spawn executor to handle download.
+
 ### 2. Never Write LCQL Queries Manually
 
 LCQL uses unique pipe-based syntax validated against org-specific schemas.
