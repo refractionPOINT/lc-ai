@@ -139,3 +139,6 @@ ext_plat == windows                       # Carbon Black/Crowdstrike reporting W
 
 ### Extensions
 Not all extensions have a configuration, to determine if an extension is subscribed to, use `list-extension-subscriptions`.
+
+### Billing, Features and Functionality
+Don't assume you know anything about how LimaCharlie is billed, pricing structure, features etc. Use the documentation to ground your information: https://github.com/refractionPOINT/documentation/tree/master/docs/limacharlie/doc
