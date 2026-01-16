@@ -1,6 +1,6 @@
 ---
 name: limacharlie-call
-description: "**REQUIRED for ALL LimaCharlie operations** - list orgs, sensors, rules, detections, queries, and 144 functions. NEVER call LimaCharlie MCP tools directly. Use cases: 'what orgs do I have', 'list sensors', 'search IOCs', 'run LCQL query', 'create detection rule'. This skill loads function docs and delegates to sub-agent."
+description: "**REQUIRED for ALL LimaCharlie operations** - list orgs, sensors, rules, detections, queries, and 160 functions. NEVER call LimaCharlie MCP tools directly. Use cases: 'what orgs do I have', 'list sensors', 'search IOCs', 'run LCQL query', 'create detection rule'. This skill loads function docs and delegates to sub-agent."
 allowed-tools:
   - Task
   - Read
@@ -126,7 +126,7 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 - `list_lookups` / `set_lookup` / `query_lookup` - Lookups
 - `list_payloads` / `create_payload` / `get_payload` / `delete_payload` - Payloads
 
-## Available Functions (146)
+## Available Functions (160)
 
 ### Organization Management (9)
 - `list_user_orgs` → `./functions/list-user-orgs.md`
@@ -176,7 +176,7 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 - `set_external_adapter` → `./functions/set-external-adapter.md`
 - `delete_external_adapter` → `./functions/delete-external-adapter.md`
 
-### Live Sensor Commands (19)
+### Live Sensor Commands (21)
 - `get_processes` → `./functions/get-processes.md`
 - `get_process_modules` → `./functions/get-process-modules.md`
 - `get_process_strings` → `./functions/get-process-strings.md`
