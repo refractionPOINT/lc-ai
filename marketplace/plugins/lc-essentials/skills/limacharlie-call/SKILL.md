@@ -1,6 +1,6 @@
 ---
 name: limacharlie-call
-description: "**REQUIRED for ALL LimaCharlie operations** - list orgs, sensors, rules, detections, queries, and 144 functions. NEVER call LimaCharlie MCP tools directly. Use cases: 'what orgs do I have', 'list sensors', 'search IOCs', 'run LCQL query', 'create detection rule'. This skill loads function docs and delegates to sub-agent."
+description: "**REQUIRED for ALL LimaCharlie operations** - list orgs, sensors, rules, detections, queries, and 160 functions. NEVER call LimaCharlie MCP tools directly. Use cases: 'what orgs do I have', 'list sensors', 'search IOCs', 'run LCQL query', 'create detection rule'. This skill loads function docs and delegates to sub-agent."
 allowed-tools:
   - Task
   - Read
@@ -95,8 +95,26 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 ### Threat Hunting
 
 **LCQL Workflow (mandatory):**
+
 1. `generate_lcql_query` - Convert natural language to LCQL
-2. `run_lcql_query` - Execute generated query
+
+2. **Choose execution method based on timeframe:**
+
+   **Default: Use `run_lcql_query_free` (no cost)**
+   - When user doesn't specify a timeframe
+   - When user requests recent data (last hours/days/weeks within 30 days)
+   - When timeframe is unspecified or vague ("recent", "lately", "this month")
+   - Automatically uses past 30 days if no timeframe in query
+
+   **Use `run_lcql_query` only for older data (may incur costs)**
+   - When user explicitly requests data older than 30 days
+   - **Required workflow:**
+     1. `generate_lcql_query` - Generate the query
+     2. `estimate_lcql_query` - Get cost estimate
+     3. **Show cost to user and get confirmation**
+     4. `run_lcql_query` - Execute only after user confirms
+
+**Cost awareness:** Queries beyond 30 days may incur charges (~$0.01 per 200K events). Always use `estimate_lcql_query` and confirm with user before running `run_lcql_query`.
 
 **Other search functions:**
 - `search_iocs` / `batch_search_iocs` - IOC searches
@@ -126,7 +144,7 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 - `list_lookups` / `set_lookup` / `query_lookup` - Lookups
 - `list_payloads` / `create_payload` / `get_payload` / `delete_payload` - Payloads
 
-## Available Functions (144)
+## Available Functions (160)
 
 ### Organization Management (9)
 - `list_user_orgs` → `./functions/list-user-orgs.md`
@@ -176,7 +194,7 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 - `set_external_adapter` → `./functions/set-external-adapter.md`
 - `delete_external_adapter` → `./functions/delete-external-adapter.md`
 
-### Live Sensor Commands (19)
+### Live Sensor Commands (21)
 - `get_processes` → `./functions/get-processes.md`
 - `get_process_modules` → `./functions/get-process-modules.md`
 - `get_process_strings` → `./functions/get-process-strings.md`
@@ -287,8 +305,12 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 - `get_event_types_with_schemas_for_platform` → `./functions/get-event-types-with-schemas-for-platform.md`
 - `get_platform_names` → `./functions/get-platform-names.md`
 
-### Queries (6)
+### Queries (10)
 - `run_lcql_query` → `./functions/run-lcql-query.md`
+- `run_lcql_query_free` → `./functions/run-lcql-query-free.md`
+- `validate_lcql_query` → `./functions/validate-lcql-query.md`
+- `estimate_lcql_query` → `./functions/estimate-lcql-query.md`
+- `analyze_lcql_query` → `./functions/analyze-lcql-query.md`
 - `list_saved_queries` → `./functions/list-saved-queries.md`
 - `get_saved_query` → `./functions/get-saved-query.md`
 - `set_saved_query` → `./functions/set-saved-query.md`
