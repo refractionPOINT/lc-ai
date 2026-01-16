@@ -95,8 +95,26 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 ### Threat Hunting
 
 **LCQL Workflow (mandatory):**
+
 1. `generate_lcql_query` - Convert natural language to LCQL
-2. `run_lcql_query_free` - Execute query (free tier, ≤30 days) OR `run_lcql_query` - Execute query (any timeframe, may incur costs)
+
+2. **Choose execution method based on timeframe:**
+
+   **Default: Use `run_lcql_query_free` (no cost)**
+   - When user doesn't specify a timeframe
+   - When user requests recent data (last hours/days/weeks within 30 days)
+   - When timeframe is unspecified or vague ("recent", "lately", "this month")
+   - Automatically uses past 30 days if no timeframe in query
+
+   **Use `run_lcql_query` only for older data (may incur costs)**
+   - When user explicitly requests data older than 30 days
+   - **Required workflow:**
+     1. `generate_lcql_query` - Generate the query
+     2. `estimate_lcql_query` - Get cost estimate
+     3. **Show cost to user and get confirmation**
+     4. `run_lcql_query` - Execute only after user confirms
+
+**Cost awareness:** Queries beyond 30 days may incur charges (~$0.01 per 200K events). Always use `estimate_lcql_query` and confirm with user before running `run_lcql_query`.
 
 **Other search functions:**
 - `search_iocs` / `batch_search_iocs` - IOC searches
