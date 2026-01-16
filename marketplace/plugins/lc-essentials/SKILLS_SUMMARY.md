@@ -167,9 +167,10 @@
 - set-external-adapter
 - delete-external-adapter
 
-#### Configuration: Extensions (6 skills)
+#### Configuration: Extensions (7 skills)
 - list-extension-configs
 - get-extension-config
+- get-extension-schema
 - set-extension-config
 - delete-extension-config
 - subscribe-to-extension
