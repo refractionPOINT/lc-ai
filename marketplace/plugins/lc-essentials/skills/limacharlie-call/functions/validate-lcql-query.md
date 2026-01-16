@@ -59,6 +59,6 @@ lc_call_tool(tool_name="validate_lcql_query", parameters={
 
 - Does NOT execute the query, only validates syntax
 - Use `run_lcql_query` with `limit` parameter for result limiting
-- Use `estimate_lcql_query` to get resource estimates (fails on invalid queries)
+- Use `estimate_lcql_query` to get resource estimates (includes validation status)
 - Use `analyze_lcql_query` to get both validation status and resource estimates
 - Related: `generate_lcql_query`, `run_lcql_query`, `estimate_lcql_query`, `analyze_lcql_query`
