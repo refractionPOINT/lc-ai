@@ -24,7 +24,13 @@ This skill retrieves the complete list of event type names that have schema defi
 
 ## Required Information
 
-No parameters are required - this returns all available event types globally.
+Before calling this skill, gather:
+
+- **oid**: Organization ID (UUID) - the organization to query schemas for
+
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| oid | UUID | Yes | Organization ID ([Core Concepts](../../../CALLING_API.md#core-concepts)) |
 
 ## How to Use
 
@@ -35,13 +41,16 @@ Use the `lc_call_tool` MCP tool from the `limacharlie` server:
 ```
 mcp__limacharlie__lc_call_tool(
   tool_name="get_event_types_with_schemas",
-  parameters={}
+  parameters={
+    "oid": "[organization-uuid]"
+  }
 )
 ```
 
 **API Details:**
 - Tool: `get_event_types_with_schemas`
-- No parameters required (global operation)
+- Required parameters:
+  - `oid`: Organization ID (UUID)
 
 ### Step 2: Handle the Response
 
@@ -57,7 +66,8 @@ The API returns a response with:
     "FILE_DELETE",
     "REGISTRY_CREATE",
     ...
-  ]
+  ],
+  "count": 85
 }
 ```
 
@@ -69,6 +79,7 @@ The API returns a response with:
 
 **Common Errors:**
 - **403 Forbidden**: Insufficient API permissions to read schemas
+- **404 Not Found**: Invalid or missing OID parameter
 - **500 Server Error**: Temporary API issue - retry after a short delay
 
 ### Step 3: Format the Response
@@ -91,7 +102,9 @@ Steps:
 ```
 mcp__limacharlie__lc_call_tool(
   tool_name="get_event_types_with_schemas",
-  parameters={}
+  parameters={
+    "oid": "c7e8f940-1234-5678-abcd-1234567890ab"
+  }
 )
 ```
 
@@ -107,7 +120,8 @@ Expected response:
     "FILE_DELETE",
     "REGISTRY_CREATE",
     ...
-  ]
+  ],
+  "count": 85
 }
 ```
 
@@ -122,7 +136,7 @@ Present to user grouped by category:
 User request: "What events are available for DNS monitoring?"
 
 Steps:
-1. Get all event types
+1. Get all event types with OID
 2. Filter for DNS-related names
 3. Present matching event types with brief descriptions
 
