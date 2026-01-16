@@ -96,7 +96,7 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 
 **LCQL Workflow (mandatory):**
 1. `generate_lcql_query` - Convert natural language to LCQL
-2. `run_lcql_query` - Execute generated query
+2. `run_lcql_query_free` - Execute query (free tier, ≤30 days) OR `run_lcql_query` - Execute query (any timeframe, may incur costs)
 
 **Other search functions:**
 - `search_iocs` / `batch_search_iocs` - IOC searches
@@ -287,8 +287,9 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 - `get_event_types_with_schemas_for_platform` → `./functions/get-event-types-with-schemas-for-platform.md`
 - `get_platform_names` → `./functions/get-platform-names.md`
 
-### Queries (9)
+### Queries (10)
 - `run_lcql_query` → `./functions/run-lcql-query.md`
+- `run_lcql_query_free` → `./functions/run-lcql-query-free.md`
 - `validate_lcql_query` → `./functions/validate-lcql-query.md`
 - `estimate_lcql_query` → `./functions/estimate-lcql-query.md`
 - `analyze_lcql_query` → `./functions/analyze-lcql-query.md`
