@@ -8,8 +8,8 @@ The `lc_call_tool` provides unified access to all LimaCharlie MCP tools. This do
 
 ### Why Use a Sub-Agent?
 
-- **Cost Optimization**: Haiku model is cheaper for straightforward API calls
-- **Speed**: Faster execution for simple operations
+- **Reliability**: Sonnet model provides better reasoning for API operations
+- **Accuracy**: More reliable handling of complex parameters and responses
 - **Parallel Execution**: Multiple API calls can run concurrently
 - **Separation of Concerns**: Main thread focuses on orchestration, sub-agent handles API details
 - **Autonomous Result Processing**: Sub-agent handles large result downloads, schema analysis, and data extraction
@@ -19,7 +19,7 @@ The `lc_call_tool` provides unified access to all LimaCharlie MCP tools. This do
 ```
 Main Thread/Skill
     ↓ (delegates via Task tool)
-limacharlie-api-executor Agent (Haiku)
+limacharlie-api-executor Agent (Sonnet)
     ↓ (calls MCP tool)
 lc_call_tool
     ↓ (API request)

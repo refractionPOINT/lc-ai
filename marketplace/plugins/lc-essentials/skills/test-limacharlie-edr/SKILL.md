@@ -26,7 +26,7 @@ All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: <function-name>
     - Parameters: {<params>}
@@ -87,7 +87,7 @@ First, get the list of available organizations:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_user_orgs
     - Parameters: {}
@@ -104,7 +104,7 @@ Check for existing "Test EDR" installation key:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_installation_keys
     - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\"}
@@ -119,7 +119,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: create_installation_key
     - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"description\": \"Test EDR\", \"tags\": [\"test-edr\", \"temporary\"]}
@@ -182,7 +182,7 @@ After starting, the sensor should appear in your LimaCharlie organization within
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_sensors
     - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"selector\": \"iid == `<INSTALLATION_KEY_IID>`\"}
@@ -227,7 +227,7 @@ The `[l]` bracket trick prevents grep from matching itself in the output.
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_user_orgs
     - Parameters: {}
@@ -243,7 +243,7 @@ Response shows: `[{"name": "My Test Org", "oid": "abc123-def456-..."}]`
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_installation_keys
     - Parameters: {\"oid\": \"abc123-def456-...\"}
@@ -255,7 +255,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: create_installation_key
     - Parameters: {\"oid\": \"abc123-def456-...\", \"description\": \"Test EDR\", \"tags\": [\"test-edr\", \"temporary\"]}
@@ -295,7 +295,7 @@ echo "Sensor started in $TEMP_DIR"
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: list_sensors
     - Parameters: {\"oid\": \"abc123-def456-...\", \"selector\": \"iid == `<IID_FROM_INSTALLATION_KEY>`\"}
@@ -325,7 +325,7 @@ ps aux | grep "[l]c_sensor" || echo "Sensor stopped"
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: delete_sensor
     - Parameters: {\"oid\": \"abc123-def456-...\", \"sid\": \"<SENSOR_ID>\"}

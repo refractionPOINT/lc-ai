@@ -92,7 +92,7 @@ Use the `Task` tool to spawn `lc-essentials:limacharlie-api-executor` agents. **
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API calls:
     - OID: {oid}
     Call: get_org_info, get_billing_details
@@ -101,7 +101,7 @@ Task(
 
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API calls:
     - OID: {oid}
     Call: list_sensors, get_online_sensors
@@ -110,7 +110,7 @@ Task(
 
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API calls:
     - OID: {oid}
     - Time Range: start={start}, end={end}
@@ -120,7 +120,7 @@ Task(
 
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API calls:
     - OID: {oid}
     Call: list_dr_general_rules

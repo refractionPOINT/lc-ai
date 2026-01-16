@@ -1,6 +1,6 @@
 ---
 name: limacharlie-call
-description: "**REQUIRED for ALL LimaCharlie operations** - list orgs, sensors, rules, detections, queries, and 143 functions. NEVER call LimaCharlie MCP tools directly. Use cases: 'what orgs do I have', 'list sensors', 'search IOCs', 'run LCQL query', 'create detection rule'. This skill loads function docs and delegates to sub-agent."
+description: "**REQUIRED for ALL LimaCharlie operations** - list orgs, sensors, rules, detections, queries, and 144 functions. NEVER call LimaCharlie MCP tools directly. Use cases: 'what orgs do I have', 'list sensors', 'search IOCs', 'run LCQL query', 'create detection rule'. This skill loads function docs and delegates to sub-agent."
 allowed-tools:
   - Task
   - Read
@@ -49,7 +49,7 @@ All API operations go through the `limacharlie-api-executor` sub-agent:
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="haiku",
+  model="sonnet",
   prompt="Execute LimaCharlie API call:
     - Function: <function-name>
     - Parameters: {<params>}
@@ -249,9 +249,10 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 - `set_playbook` → `./functions/set-playbook.md`
 - `delete_playbook` → `./functions/delete-playbook.md`
 
-### Extensions (7)
+### Extensions (8)
 - `list_extension_configs` → `./functions/list-extension-configs.md`
 - `get_extension_config` → `./functions/get-extension-config.md`
+- `get_extension_schema` → `./functions/get-extension-schema.md`
 - `set_extension_config` → `./functions/set-extension-config.md`
 - `delete_extension_config` → `./functions/delete-extension-config.md`
 - `subscribe_to_extension` → `./functions/subscribe-to-extension.md`
