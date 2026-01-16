@@ -206,7 +206,64 @@ Run `/help` in Claude Code to explore available commands.
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](https://github.com/refractionPOINT/documentation/blob/master/CONTRIBUTING.md) for guidelines.
+Thank you for your interest in contributing to LimaCharlie AI Integrations!
+
+### Local Development
+
+1. Clone the repository:
+```bash
+git clone https://github.com/refractionPOINT/lc-ai.git
+cd lc-ai
+```
+
+2. Add as a local marketplace in your project:
+```bash
+cd your-project
+/plugin marketplace add /path/to/lc-ai
+/plugin install lc-essentials@lc-marketplace
+```
+
+### Making Changes
+
+#### Editing Skills
+
+1. Find the relevant skill in `marketplace/plugins/lc-essentials/skills/`
+2. Make your changes to the `SKILL.md` file
+3. Test locally by reinstalling the plugin
+4. Submit a pull request
+
+#### Adding New Skills
+
+1. Create a new directory in `marketplace/plugins/lc-essentials/skills/`
+2. Add a `SKILL.md` file following the existing skill format
+3. Update `SKILLS_SUMMARY.md` with your new skill
+4. Test the skill locally
+5. Submit a pull request
+
+#### Adding New Agents
+
+1. Create a new markdown file in `marketplace/plugins/lc-essentials/agents/`
+2. Follow the existing agent format
+3. Reference the agent in relevant skills
+4. Test locally and submit a pull request
+
+### Pull Request Guidelines
+
+1. **Focus**: Keep PRs focused on a single topic or issue
+2. **Testing**: Test your changes locally before submitting
+3. **Description**: Provide a clear description of what changed and why
+4. **Screenshots**: Include screenshots for visual changes
+5. **Links**: Verify all internal links work correctly
+
+### Code of Conduct
+
+Please be respectful and professional in all interactions. We're building tools to help the security community, and we appreciate your contributions!
+
+### Questions?
+
+- Join our [Community Slack](https://slack.limacharlie.io)
+- Email [support@limacharlie.io](mailto:support@limacharlie.io)
+- Open an [issue on GitHub](https://github.com/refractionPOINT/lc-ai/issues)
 
 ## License
 
