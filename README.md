@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://images.ctfassets.net/8ypp714zy4gs/5QH5UdlNkikGfeWICDnN6k/511a03a00aff79bec59959d5facb846e/Group_1798.png" alt="LimaCharlie AI">
+</p>
+
 # LimaCharlie AI Integrations
 
 This repository contains AI integrations for LimaCharlie, including Claude Code plugins, agents, and skills for security operations.
