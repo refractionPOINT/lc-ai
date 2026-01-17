@@ -52,6 +52,14 @@ Use Claude Code directly through the LimaCharlie web interface at [app.limacharl
 
 #### Option 1: Add as a Marketplace (Recommended)
 
+<p align="center">
+  <a href="https://youtu.be/0ANw5Xgftzo">
+    <img src="https://images.ctfassets.net/8ypp714zy4gs/35FhLnqWkbvOBnHHX54oY9/d194c0ac3099e9c60c7794d8095dc4b7/screencap.png" alt="Installing the AgenticSecOps Workspace" width="600">
+  </a>
+  <br>
+  <em>Installing the AgenticSecOps Workspace</em>
+</p>
+
 From within a project directory:
 
 ```bash
