@@ -1,6 +1,6 @@
 ---
 name: limacharlie-call
-description: "**REQUIRED for ALL LimaCharlie operations** - list orgs, sensors, rules, detections, queries, and 160 functions. NEVER call LimaCharlie MCP tools directly. Use cases: 'what orgs do I have', 'list sensors', 'search IOCs', 'run LCQL query', 'create detection rule'. This skill loads function docs and delegates to sub-agent."
+description: "**REQUIRED for ALL LimaCharlie operations** - list orgs, sensors, rules, detections, queries, and 179 functions. NEVER call LimaCharlie MCP tools directly. Use cases: 'what orgs do I have', 'list sensors', 'search IOCs', 'run LCQL query', 'create detection rule'. This skill loads function docs and delegates to sub-agent."
 allowed-tools:
   - Task
   - Read
@@ -144,7 +144,7 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 - `list_lookups` / `set_lookup` / `query_lookup` - Lookups
 - `list_payloads` / `create_payload` / `get_payload` / `delete_payload` - Payloads
 
-## Available Functions (160)
+## Available Functions (179)
 
 ### Organization Management (9)
 - `list_user_orgs` → `./functions/list-user-orgs.md`
@@ -161,6 +161,29 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 - `list_api_keys` → `./functions/list-api-keys.md`
 - `create_api_key` → `./functions/create-api-key.md`
 - `delete_api_key` → `./functions/delete-api-key.md`
+
+### User Management (7)
+- `list_org_users` → `./functions/list-org-users.md`
+- `add_org_user` → `./functions/add-org-user.md`
+- `remove_org_user` → `./functions/remove-org-user.md`
+- `get_users_permissions` → `./functions/get-users-permissions.md`
+- `add_user_permission` → `./functions/add-user-permission.md`
+- `remove_user_permission` → `./functions/remove-user-permission.md`
+- `set_user_role` → `./functions/set-user-role.md`
+
+### Group Management (12)
+- `list_groups` → `./functions/list-groups.md`
+- `list_groups_detailed` → `./functions/list-groups-detailed.md`
+- `create_group` → `./functions/create-group.md`
+- `get_group_info` → `./functions/get-group-info.md`
+- `delete_group` → `./functions/delete-group.md`
+- `add_group_member` → `./functions/add-group-member.md`
+- `remove_group_member` → `./functions/remove-group-member.md`
+- `add_group_owner` → `./functions/add-group-owner.md`
+- `remove_group_owner` → `./functions/remove-group-owner.md`
+- `set_group_permissions` → `./functions/set-group-permissions.md`
+- `add_org_to_group` → `./functions/add-org-to-group.md`
+- `remove_org_from_group` → `./functions/remove-org-from-group.md`
 
 ### Sensor Operations (13)
 - `list_sensors` → `./functions/list-sensors.md`
