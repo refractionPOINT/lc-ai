@@ -9,6 +9,7 @@ Create a new API key with optional permission restrictions.
 | oid | UUID | Yes | Organization ID ([Core Concepts](../../../CALLING_API.md#core-concepts)) |
 | key_name | string | Yes | Description for the key |
 | permissions | array | Yes | Permissions to grant (empty = full access) |
+| allowed_ip_range | string | No | CIDR notation for IP restriction (e.g., "203.0.113.0/24") |
 
 ## Common Permissions
 
@@ -51,10 +52,21 @@ lc_call_tool(tool_name="create_api_key", parameters={
 })
 ```
 
+**IP-restricted key:**
+```
+lc_call_tool(tool_name="create_api_key", parameters={
+  "oid": "c7e8f940-1234-5678-abcd-1234567890ab",
+  "key_name": "Office Network Only",
+  "permissions": [],
+  "allowed_ip_range": "203.0.113.0/24"
+})
+```
+
 ## Notes
 
 - **Save the key immediately** - cannot be retrieved later
 - Empty permissions array = full organization access
 - Use specific permissions for least-privilege security
+- Use `allowed_ip_range` to restrict API key usage to specific networks (CIDR notation)
 - Store keys in secret managers, not version control
 - Related: `list_api_keys`, `delete_api_key`
