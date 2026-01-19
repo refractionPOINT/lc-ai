@@ -85,7 +85,7 @@ Saved Queries (3 total)
 
 2. powershell-encoded
    Description: Detect encoded PowerShell commands
-   Query: -7d | * | NEW_PROCESS | event.COMMAND_LINE contains 'encodedCommand'
+   Query: -168h | * | NEW_PROCESS | event.COMMAND_LINE contains 'encodedCommand'
    Tags: threat-hunting, powershell
    Created: 2024-01-15 by security-team@example.com
 
