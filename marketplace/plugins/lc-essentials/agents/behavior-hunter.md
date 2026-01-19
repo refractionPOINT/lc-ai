@@ -114,7 +114,7 @@ Use the `limacharlie-call` skill:
 Function: generate_lcql_query
 Parameters: {
   "oid": "<org-uuid>",
-  "natural_language_query": "<behavior description with indicators>"
+  "query": "<behavior description with indicators>"
 }
 ```
 
