@@ -15,7 +15,7 @@ Pre-configured Claude Code environment with the lc-essentials plugin for LimaCha
 ## Quick Start
 
 ```bash
-docker compose run --rm lc-claude
+docker compose run -it --rm lc-claude
 ```
 
 ## Build Only
@@ -39,7 +39,7 @@ This opens your browser for OAuth authentication. Once approved, you're ready to
 To work on a specific project directory:
 
 ```bash
-docker compose run --rm -v /path/to/your/project:/home/lc/project lc-claude
+docker compose run -it --rm -v /path/to/your/project:/home/lc/project lc-claude
 ```
 
 Or create a `project/` directory next to the docker-compose.yml file - it's automatically mounted.
@@ -58,7 +58,7 @@ This container uses **host networking** (`network_mode: host`) which is required
 
 ## Available Skills
 
-Once authenticated, you have access to 121+ LimaCharlie skills including:
+Once authenticated, you have access to LimaCharlie skills including:
 
 - Sensor management and live investigation
 - Detection & Response rule creation
