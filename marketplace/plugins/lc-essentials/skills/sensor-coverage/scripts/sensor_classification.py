@@ -13,21 +13,34 @@ from typing import Dict, List, Any, Set, Tuple
 
 
 # Platform code mappings
+# Source of truth: CONSTANTS.md (from go-limacharlie/limacharlie/identification.go)
 PLATFORM_CODES = {
-    268435456: 'windows',
-    184549376: 'windows-legacy',
-    536870912: 'linux',
-    805306368: 'macos',
-    1073741824: 'macos-legacy',
-    1610612736: 'ios',
-    2147483648: 'adapter',
-    2415919104: 'extension',
-    100663296: 'cloud-okta',
-    67108864: 'cloud-o365',
-    134217728: 'cloud-aws',
-    167772160: 'network-appliance',
-    2952790016: 'cloud-trail',
-    150994944: 'cloud-slack'
+    # EDR platforms
+    268435456: 'windows',       # 0x10000000
+    536870912: 'linux',         # 0x20000000
+    805306368: 'macos',         # 0x30000000
+    1073741824: 'ios',          # 0x40000000
+    1342177280: 'android',      # 0x50000000
+    1610612736: 'chromeos',     # 0x60000000
+    1879048192: 'vpn',          # 0x70000000
+    # USP adapter platforms
+    2147483648: 'adapter-text',      # 0x80000000
+    2415919104: 'adapter-json',      # 0x90000000
+    2684354560: 'cloud-gcp',         # 0xA0000000
+    2952790016: 'cloud-aws',         # 0xB0000000
+    3221225472: 'cloud-carbonblack', # 0xC0000000
+    3489660928: 'cloud-1password',   # 0xD0000000
+    3758096384: 'cloud-o365',        # 0xE0000000
+    4026531840: 'cloud-sophos',      # 0xF0000000
+    16777216: 'cloud-crowdstrike',   # 0x01000000
+    67108864: 'cloud-msdefender',    # 0x04000000
+    83886080: 'cloud-duo',           # 0x05000000
+    100663296: 'cloud-okta',         # 0x06000000
+    117440512: 'cloud-sentinelone',  # 0x07000000
+    134217728: 'cloud-github',       # 0x08000000
+    150994944: 'cloud-slack',        # 0x09000000
+    201326592: 'cloud-azuread',      # 0x0C000000
+    218103808: 'cloud-azuremonitor', # 0x0D000000
 }
 
 # System tag prefixes to ignore when checking for user tags
@@ -109,14 +122,26 @@ def is_edr_platform(platform_code: int, architecture: int = None) -> bool:
     if architecture == 9:
         return False
 
+    # Non-EDR platforms (USP adapters, cloud integrations)
+    # These cannot be tasked with EDR commands
     non_edr_platforms = {
-        2147483648,   # adapter
-        2415919104,   # extension
-        100663296,    # cloud-okta
-        67108864,     # cloud-o365
-        134217728,    # cloud-aws
-        2952790016,   # cloud-trail
-        150994944     # cloud-slack
+        2147483648,   # adapter-text (0x80000000)
+        2415919104,   # adapter-json (0x90000000)
+        2684354560,   # cloud-gcp (0xA0000000)
+        2952790016,   # cloud-aws (0xB0000000)
+        3221225472,   # cloud-carbonblack (0xC0000000)
+        3489660928,   # cloud-1password (0xD0000000)
+        3758096384,   # cloud-o365 (0xE0000000)
+        4026531840,   # cloud-sophos (0xF0000000)
+        16777216,     # cloud-crowdstrike (0x01000000)
+        67108864,     # cloud-msdefender (0x04000000)
+        83886080,     # cloud-duo (0x05000000)
+        100663296,    # cloud-okta (0x06000000)
+        117440512,    # cloud-sentinelone (0x07000000)
+        134217728,    # cloud-github (0x08000000)
+        150994944,    # cloud-slack (0x09000000)
+        201326592,    # cloud-azuread (0x0C000000)
+        218103808,    # cloud-azuremonitor (0x0D000000)
     }
     return platform_code not in non_edr_platforms
 

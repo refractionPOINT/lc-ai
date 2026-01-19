@@ -1,5 +1,13 @@
 # Using LimaCharlie
 
+## Reference Documents
+
+These files are the **source of truth** for LimaCharlie constants and validation:
+
+- [CONSTANTS.md](CONSTANTS.md) - Platform codes, IOC types, timestamp formats, billing
+- [PARAMETER_VALIDATION.md](PARAMETER_VALIDATION.md) - Validation rules for all parameter types
+- Function docs: `skills/limacharlie-call/functions/<function-name>.md` - Parameter names
+
 ## Required Skill
 
 **ALWAYS load the `lc-essentials:limacharlie-call` skill** before any LimaCharlie API operation. Never call LimaCharlie MCP tools directly.
@@ -87,7 +95,7 @@ Use AI generation tools:
 
 ### 5. Never Calculate Timestamps Manually
 
-LLMs consistently produce incorrect timestamp values.
+LLMs consistently produce incorrect timestamp values. See [CONSTANTS.md](CONSTANTS.md) for format reference.
 
 **ALWAYS use bash:**
 ```bash
@@ -95,6 +103,22 @@ date +%s                           # Current time (seconds)
 date -d '1 hour ago' +%s           # 1 hour ago
 date -d '7 days ago' +%s           # 7 days ago
 date -d '2025-01-15 00:00:00 UTC' +%s  # Specific date
+```
+
+**Validation before API calls:**
+1. Run bash to get timestamps FIRST, capture the actual values
+2. Verify: historical timestamps must be in the past (less than current time)
+3. Verify: time ranges must have `start_time < end_time`
+4. Show calculated values in your reasoning before making API calls
+
+**Example workflow:**
+```
+# Get timestamps
+now=$(date +%s)           # e.g., 1737312000
+start=$(date -d '24 hours ago' +%s)  # e.g., 1737225600
+
+# Verify before API call
+# now=1737312000, start=1737225600, start < now ✓
 ```
 
 ### 6. OID is UUID, NOT Organization Name
