@@ -4,10 +4,20 @@ Validate an LCQL query syntax without executing it.
 
 ## Use Case
 
-Use this tool to check if an LCQL query is syntactically valid before running it with `run_lcql_query`. This is useful for:
-- Verifying generated queries are valid
-- Debugging query syntax errors
-- Pre-flight validation before expensive queries
+Use this tool to check if an LCQL query is syntactically valid before running it with `run_lcql_query`.
+
+**When to use:**
+- Debugging query syntax errors (validation only, no cost estimate needed)
+
+**Prefer `analyze_lcql_query()` instead when:**
+- Validating user-provided LCQL queries that will be executed
+- Validating saved queries retrieved via `get_saved_query()`
+- Validating queries from external sources (documentation, scripts, etc.)
+- Pre-flight check before expensive queries (beyond 30 days)
+- `analyze_lcql_query()` combines validation + cost estimate in one call
+
+**When NOT to use:**
+- After `generate_lcql_query()` - it validates internally and retries up to 10 times, so returned queries are guaranteed valid
 
 ## CRITICAL: LCQL Syntax Rules
 

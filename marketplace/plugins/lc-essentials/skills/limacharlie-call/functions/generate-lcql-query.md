@@ -38,7 +38,8 @@ lc_call_tool(tool_name="generate_lcql_query", parameters={
 ## Notes
 
 - Uses AI (Gemini) with LCQL-specific prompts
-- Validates against your organization's event schema
-- Retries up to 10 times to generate valid query
+- **Built-in validation**: Validates each generated query internally before returning
+- **Auto-retry**: Retries up to 10 times with feedback injection if validation fails
+- **No need to call `validate_lcql_query()`** after this function - returned queries are guaranteed valid
 - Review explanation to ensure query matches intent
-- Related: `run_lcql_query`
+- Related: `run_lcql_query`, `run_lcql_query_free`
