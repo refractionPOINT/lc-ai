@@ -42,7 +42,8 @@ lc_call_tool(tool_name="get_sensor_info", parameters={
 
 ## Notes
 
-- Platform codes: Windows=268435456, Linux=67108864, macOS=33554432
-- Architecture codes: x64=1, x86=2, ARM=3
+- Platform codes: See [CONSTANTS.md](../../../CONSTANTS.md) for authoritative values
+  - Windows=268435456, Linux=536870912, macOS=805306368
+- Architecture codes: x86=1, x64=2, ARM=3, ARM64=4
 - `alive` timestamp shows last check-in time
 - `iid` is the installation key used to enroll the sensor

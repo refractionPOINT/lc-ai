@@ -6,6 +6,7 @@ services:
     network_mode: host
     stdin_open: true
     tty: true
+    init: true
     volumes:
       # Persist Claude Code credentials and settings
       - ~/.claude:/home/lc/.claude

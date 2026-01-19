@@ -1,5 +1,12 @@
 # Using LimaCharlie
 
+## Reference Documents
+
+These files are the **source of truth** for LimaCharlie constants and validation:
+
+- [CONSTANTS.md](CONSTANTS.md) - Platform codes, IOC types, timestamp formats, billing
+- Function docs: `skills/limacharlie-call/functions/<function-name>.md` - Parameter names
+
 ## Required Skill
 
 **ALWAYS load the `lc-essentials:limacharlie-call` skill** before any LimaCharlie API operation. Never call LimaCharlie MCP tools directly.
@@ -13,7 +20,22 @@
 - **WRONG**: `mcp__plugin_lc-essentials_limacharlie__lc_call_tool(...)`
 - **CORRECT**: Use Task tool with `subagent_type="lc-essentials:limacharlie-api-executor"`
 
-### 2. LCQL Query Handling
+### 2. Always Verify Function Parameters
+
+Before calling any LimaCharlie tool, **verify the exact parameter names** from the authoritative function documentation in `skills/limacharlie-call/functions/<function-name>.md`.
+
+**Why:** Agent examples and other documentation may contain outdated or incorrect parameter names. The function `.md` files are the source of truth.
+
+**Example:**
+- Before calling `generate_lcql_query`, check `skills/limacharlie-call/functions/generate-lcql-query.md`
+- The file shows: `query` (not `natural_language_request` or `natural_language_query`)
+
+**NEVER** rely on parameter names from:
+- Agent documentation examples
+- Skill workflow examples
+- Your own assumptions about parameter naming
+
+### 3. LCQL Query Handling
 
 LCQL uses unique pipe-based syntax validated against org-specific schemas. **LLMs do NOT know correct LCQL syntax** - any manually written or AI-generated LCQL without using the generation tools will be invalid.
 
@@ -63,16 +85,16 @@ If a user asks for "example LCQL queries" or "LCQL syntax", explain that LCQL is
 - Validate the new query again
 - If validation fails 3 times, report the issue to the user rather than continuing to retry
 
-### 3. Never Generate D&R Rules Manually
+### 4. Never Generate D&R Rules Manually
 
 Use AI generation tools:
 1. `generate_dr_rule_detection()` - Generate detection YAML
 2. `generate_dr_rule_respond()` - Generate response YAML
 3. `validate_dr_rule_components()` - Validate before deploy
 
-### 4. Never Calculate Timestamps Manually
+### 5. Never Calculate Timestamps Manually
 
-LLMs consistently produce incorrect timestamp values.
+LLMs consistently produce incorrect timestamp values. See [CONSTANTS.md](CONSTANTS.md) for format reference.
 
 **ALWAYS use bash:**
 ```bash
@@ -82,27 +104,43 @@ date -d '7 days ago' +%s           # 7 days ago
 date -d '2025-01-15 00:00:00 UTC' +%s  # Specific date
 ```
 
-### 5. OID is UUID, NOT Organization Name
+**Validation before API calls:**
+1. Run bash to get timestamps FIRST, capture the actual values
+2. Verify: historical timestamps must be in the past (less than current time)
+3. Verify: time ranges must have `start_time < end_time`
+4. Show calculated values in your reasoning before making API calls
+
+**Example workflow:**
+```
+# Get timestamps
+now=$(date +%s)           # e.g., 1737312000
+start=$(date -d '24 hours ago' +%s)  # e.g., 1737225600
+
+# Verify before API call
+# now=1737312000, start=1737225600, start < now ✓
+```
+
+### 6. OID is UUID, NOT Organization Name
 
 - **WRONG**: `oid: "my-org-name"`
 - **CORRECT**: `oid: "c1ffedc0-ffee-4a1e-b1a5-abc123def456"`
 - Use `get_org_oid_by_name` to convert a single org name to OID (cached, efficient)
 - Use `list_user_orgs` to list all accessible orgs with their OIDs
 
-### 6. Timestamp Milliseconds vs Seconds
+### 7. Timestamp Milliseconds vs Seconds
 
 - Detection/event data: **milliseconds** (13 digits)
 - API parameters (`get_historic_events`, `get_historic_detections`): **seconds** (10 digits)
 - **ALWAYS** divide by 1000 when using detection timestamps for API queries
 
-### 7. Never Fabricate Data
+### 8. Never Fabricate Data
 
 - Only report what APIs return
 - Never estimate, infer, or extrapolate data
 - Show "N/A" or "Data unavailable" for missing fields
 - Never calculate costs (no pricing data in API)
 
-### 8. Spawn Agents in Parallel
+### 9. Spawn Agents in Parallel
 
 When processing multiple organizations or items:
 - Use a SINGLE message with multiple Task calls

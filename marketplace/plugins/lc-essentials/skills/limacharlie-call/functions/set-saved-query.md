@@ -102,7 +102,7 @@ You can now run this query using:
 User: "Save this query as 'powershell-encoded'"
 
 ```
-LCQL: -7d | * | NEW_PROCESS | event.COMMAND_LINE contains 'encodedCommand'
+LCQL: -168h | * | NEW_PROCESS | event.COMMAND_LINE contains 'encodedCommand'
 Description: Detect encoded PowerShell commands
 ```
 

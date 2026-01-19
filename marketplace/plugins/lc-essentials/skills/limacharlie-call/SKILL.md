@@ -116,6 +116,29 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 
 **Cost awareness:** Queries beyond 30 days may incur charges (~$0.01 per 200K events). Always use `estimate_lcql_query` and confirm with user before running `run_lcql_query`.
 
+**Always offer a free alternative:** When showing cost estimates, also offer to run the query over the free 30-day window instead:
+```
+Estimated cost: $0.49 for 60-day query
+
+Options:
+1. Run full 60-day query ($0.49)
+2. Run free 30-day query instead (no cost)
+```
+
+**Displaying LCQL queries:**
+- **Always show the query before running it** - users must see what will be executed
+- Use code blocks (backticks) since LCQL contains `|` which breaks markdown tables
+- Format: `Query: \`-1h | * | NEW_PROCESS | / exists\``
+
+Example workflow output:
+```
+Generated query: `-1h | * | NEW_PROCESS | / exists`
+Explanation: Lists all process executions in the last hour
+
+Running query...
+[results]
+```
+
 **Other search functions:**
 - `search_iocs` / `batch_search_iocs` - IOC searches
 - `search_hosts` - Host searches

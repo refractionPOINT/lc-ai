@@ -114,7 +114,7 @@ Use the `limacharlie-call` skill:
 Function: generate_lcql_query
 Parameters: {
   "oid": "<org-uuid>",
-  "natural_language_query": "<behavior description with indicators>"
+  "query": "<behavior description with indicators>"
 }
 ```
 
@@ -164,7 +164,7 @@ Parameters: {
       "mitre_technique": "T1059.001",
       "mitre_tactic": "Execution",
       "platform": "windows",
-      "lcql_query": "-7d | plat == windows | NEW_PROCESS | event/COMMAND_LINE contains '-enc' | ...",
+      "lcql_query": "-168h | plat == windows | NEW_PROCESS | event/COMMAND_LINE contains '-enc' | ...",
       "classification": "MODERATE",
       "event_count": 45,
       "sample_events": [
@@ -195,7 +195,7 @@ Parameters: {
       "mitre_technique": "T1547.001",
       "mitre_tactic": "Persistence",
       "platform": "windows",
-      "lcql_query": "-7d | plat == windows | REGISTRY_WRITE | event/KEY_PATH contains 'CurrentVersion\\Run' | ...",
+      "lcql_query": "-168h | plat == windows | REGISTRY_WRITE | event/KEY_PATH contains 'CurrentVersion\\Run' | ...",
       "classification": "FEW",
       "event_count": 3,
       "sample_events": [
@@ -218,7 +218,7 @@ Parameters: {
       "behavior": "WMI Persistence",
       "mitre_technique": "T1546.003",
       "platform": "windows",
-      "lcql_query": "-7d | plat == windows | NEW_PROCESS | ...",
+      "lcql_query": "-168h | plat == windows | NEW_PROCESS | ...",
       "event_count": 0,
       "note": "No events in time window"
     }
