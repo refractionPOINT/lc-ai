@@ -41,5 +41,6 @@ lc_call_tool(tool_name="generate_lcql_query", parameters={
 - **Built-in validation**: Validates each generated query internally before returning
 - **Auto-retry**: Retries up to 10 times with feedback injection if validation fails
 - **No need to call `validate_lcql_query()`** after this function - returned queries are guaranteed valid
+- **Always display the query to the user before running it** - show both query and explanation
 - Review explanation to ensure query matches intent
 - Related: `run_lcql_query`, `run_lcql_query_free`

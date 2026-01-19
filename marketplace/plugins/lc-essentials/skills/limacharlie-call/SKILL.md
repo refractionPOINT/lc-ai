@@ -116,13 +116,18 @@ Do NOT use `get_online_sensors` + loop through `get_sensor_info`—that wastes A
 
 **Cost awareness:** Queries beyond 30 days may incur charges (~$0.01 per 200K events). Always use `estimate_lcql_query` and confirm with user before running `run_lcql_query`.
 
-**Displaying LCQL queries:** LCQL queries contain pipe `|` characters which break markdown table formatting. Always display queries in code blocks (backticks), never in table cells:
-```
-# Good - use code block
-Query: `-1h | * | NEW_PROCESS | / exists`
+**Displaying LCQL queries:**
+- **Always show the query before running it** - users must see what will be executed
+- Use code blocks (backticks) since LCQL contains `|` which breaks markdown tables
+- Format: `Query: \`-1h | * | NEW_PROCESS | / exists\``
 
-# Bad - table cells break on pipes
-| Query | -1h | * | ... |  ← broken!
+Example workflow output:
+```
+Generated query: `-1h | * | NEW_PROCESS | / exists`
+Explanation: Lists all process executions in the last hour
+
+Running query...
+[results]
 ```
 
 **Other search functions:**
