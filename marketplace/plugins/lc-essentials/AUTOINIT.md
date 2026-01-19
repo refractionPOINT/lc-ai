@@ -5,7 +5,6 @@
 These files are the **source of truth** for LimaCharlie constants and validation:
 
 - [CONSTANTS.md](CONSTANTS.md) - Platform codes, IOC types, timestamp formats, billing
-- [PARAMETER_VALIDATION.md](PARAMETER_VALIDATION.md) - Validation rules for all parameter types
 - Function docs: `skills/limacharlie-call/functions/<function-name>.md` - Parameter names
 
 ## Required Skill
