@@ -78,7 +78,7 @@ Extract from your prompt:
 
 The `limacharlie-call` skill you have access to provides 124 functions. The function documentation is in:
 ```
-./functions/{function-name}.md
+${CLAUDE_PLUGIN_ROOT}/skills/limacharlie-call/functions/{function-name}.md
 ```
 
 If you need to understand the function better, refer to its documentation file. However, for most straightforward calls, you can proceed directly to execution.

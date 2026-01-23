@@ -55,7 +55,7 @@ Task(
 
 Function documentation is located at:
 ```
-plugins/lc-essentials/skills/limacharlie-call/functions/[function-name].md
+${CLAUDE_PLUGIN_ROOT}/skills/limacharlie-call/functions/[function-name].md
 ```
 
 **Mandatory workflow when using a tool for the first time (or when you get a parameter error):**
@@ -67,7 +67,7 @@ plugins/lc-essentials/skills/limacharlie-call/functions/[function-name].md
 
 **Example - before calling `search_iocs`:**
 ```
-Read: plugins/lc-essentials/skills/limacharlie-call/functions/search-iocs.md
+Read: ${CLAUDE_PLUGIN_ROOT}/skills/limacharlie-call/functions/search-iocs.md
 ```
 
 **Why this matters:**
