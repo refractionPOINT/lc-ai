@@ -101,7 +101,7 @@ Task(prompt="...org2...")
 
 Before calling any LimaCharlie function, read its documentation:
 ```
-Read ./functions/{function-name}.md
+Read ${CLAUDE_PLUGIN_ROOT}/skills/limacharlie-call/functions/{function-name}.md
 ```
 
 Parameter names are often prefixed (e.g., `secret_name` not `name`). Wrong names cause silent failures.

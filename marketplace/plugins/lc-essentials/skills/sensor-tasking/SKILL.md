@@ -228,7 +228,7 @@ For more than 5 sensors, offline sensors, or fleet-wide operations, use reliable
 
 **Read the function documentation first:**
 ```
-Read: plugins/lc-essentials/skills/limacharlie-call/functions/reliable-tasking.md
+Read: ${CLAUDE_PLUGIN_ROOT}/skills/limacharlie-call/functions/reliable-tasking.md
 ```
 
 **Create a reliable task:**
