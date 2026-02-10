@@ -310,7 +310,7 @@ Use the Task tool to spawn the html-renderer subagent:
 ```
 Task(
   subagent_type="lc-essentials:html-renderer",
-  model="haiku",
+  model="sonnet",
   prompt="Render HTML dashboard with the following parameters:
 
     Template: mssp-dashboard

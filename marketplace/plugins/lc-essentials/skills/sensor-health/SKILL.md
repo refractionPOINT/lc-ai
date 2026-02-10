@@ -97,7 +97,7 @@ For each organization, spawn a `lc-essentials:sensor-health-reporter` agent in p
 ```
 Task(
   subagent_type="lc-essentials:sensor-health-reporter",
-  model="haiku",
+  model="sonnet",
   prompt="Check sensors in organization '{org_name}' (OID: {oid}) that are online but have not sent telemetry in the last {timeframe}."
 )
 ```
@@ -156,9 +156,9 @@ Task(
 **Step 3**: Spawn parallel agents (example with 3 orgs)
 ```
 # Single message with 3 Task calls
-Task(subagent_type="lc-essentials:sensor-health-reporter", model="haiku", prompt="Check org1...")
-Task(subagent_type="lc-essentials:sensor-health-reporter", model="haiku", prompt="Check org2...")
-Task(subagent_type="lc-essentials:sensor-health-reporter", model="haiku", prompt="Check org3...")
+Task(subagent_type="lc-essentials:sensor-health-reporter", model="sonnet", prompt="Check org1...")
+Task(subagent_type="lc-essentials:sensor-health-reporter", model="sonnet", prompt="Check org2...")
+Task(subagent_type="lc-essentials:sensor-health-reporter", model="sonnet", prompt="Check org3...")
 ```
 
 **Step 4**: Aggregate
@@ -220,7 +220,7 @@ date -d 'X weeks ago' +%s
 
 1. **Always spawn agents in parallel** - Use a single message with multiple Task calls
 2. **Limit scope if needed** - For quick checks, allow user to specify specific orgs
-3. **Use Haiku model** - Sensor health checks are straightforward data gathering
+3. **Use Sonnet model** - Sensor health checks are straightforward data gathering
 4. **Handle errors gracefully** - If one org fails, continue with others
 5. **Cache org list** - If doing multiple related queries, reuse the org list
 
@@ -264,7 +264,7 @@ If an agent fails:
 - **Parallel Execution**: ALWAYS spawn agents in parallel (single message, multiple Tasks)
 - **OID Format**: Organization ID is a UUID, not the org name
 - **Time Limits**: Data availability checks must be <30 days
-- **Model**: Always use "haiku" for the sub-agents
+- **Model**: Always use "sonnet" for the sub-agents
 - **Error Tolerance**: Continue with partial results if some orgs fail
 
 ## Related Skills

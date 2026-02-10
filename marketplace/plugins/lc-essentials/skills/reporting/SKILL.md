@@ -932,7 +932,7 @@ If user requests HTML output:
 │                                                    │
 │    Task(                                          │
 │      subagent_type="lc-essentials:org-reporter",
-│      model="haiku",                               │
+│      model="sonnet",                               │
 │      prompt="Collect reporting data for org       │
 │        'Client ABC' (OID: uuid-1)                 │
 │        Time Range:                                │
@@ -942,7 +942,7 @@ If user requests HTML output:
 │    )                                              │
 │    Task(                                          │
 │      subagent_type="lc-essentials:org-reporter",
-│      model="haiku",                               │
+│      model="sonnet",                               │
 │      prompt="Collect reporting data for org       │
 │        'Client XYZ' (OID: uuid-2)..."             │
 │    )                                              │
@@ -1210,7 +1210,7 @@ The above console output displays ALL collected data. Do NOT automatically proce
 3. Spawn ONE org-reporter agent for that organization:
    Task(
      subagent_type="lc-essentials:org-reporter",
-     model="haiku",
+     model="sonnet",
      prompt="Collect reporting data for org 'Client ABC' (OID: uuid)
        Time Range: [start] to [end]
        Detection Limit: 5000"

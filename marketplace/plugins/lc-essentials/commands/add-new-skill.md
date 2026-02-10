@@ -131,7 +131,7 @@ Add skill-specific rows to Critical Rules table:
 
 ### Model Selection (at agent level)
 
-- **Haiku**: Fast, cost-effective for straightforward operations (data gathering, API calls, simple analysis)
+- **Sonnet**: Fast, cost-effective for straightforward operations (data gathering, API calls, simple analysis)
 - **Sonnet**: Complex analysis, entity extraction, multi-step reasoning
 - **Opus**: Rarely needed (only for extremely complex tasks)
 
@@ -168,7 +168,7 @@ Agent frontmatter:
 ---
 name: agent-name
 description: What it does and when to use (determines when Claude invokes it)
-model: haiku|sonnet|opus
+model: sonnet|opus
 skills:
   - lc-essentials:skill-name
 ---
@@ -208,7 +208,7 @@ Before completing, verify:
 - [ ] No `mcp__*` tools in `allowed-tools`
 - [ ] Has "LimaCharlie Integration" section with Critical Rules table (if LC-using skill)
 - [ ] All Task spawns use `subagent_type=` (not `subagent=`)
-- [ ] All Task spawns include `model="haiku"` (or appropriate model)
+- [ ] All Task spawns include `model="sonnet"` (or appropriate model)
 - [ ] Timestamps use bash `date +%s` commands (never LLM calculations)
 - [ ] OID is always UUID, never org name
 - [ ] LCQL queries use `generate_lcql_query()` first

@@ -1,7 +1,7 @@
 ---
 name: behavior-hunter
 description: Search for malicious behaviors within a SINGLE LimaCharlie organization using LCQL queries. Designed to be spawned in parallel (one instance per org) by the threat-report-evaluation skill. Returns summarized findings with sample events.
-model: haiku
+model: sonnet
 skills:
   - lc-essentials:limacharlie-call
 ---

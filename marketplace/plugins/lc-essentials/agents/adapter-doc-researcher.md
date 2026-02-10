@@ -1,7 +1,7 @@
 ---
 name: adapter-doc-researcher
 description: Research adapter documentation from multiple sources in parallel. Gathers configuration parameters, examples, and credential requirements from local docs, GitHub usp-adapters repo, and external API documentation.
-model: haiku
+model: sonnet
 skills: []
 ---
 

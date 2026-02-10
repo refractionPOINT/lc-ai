@@ -1,7 +1,7 @@
 ---
 name: dr-replay-tester
 description: Test D&R rules via historical replay against a SINGLE LimaCharlie organization. Designed to be spawned in parallel (one instance per org) by the detection-engineering skill. Returns summarized results (stats, samples, patterns) instead of all matches.
-model: haiku
+model: sonnet
 skills:
   - lc-essentials:limacharlie-call
 ---

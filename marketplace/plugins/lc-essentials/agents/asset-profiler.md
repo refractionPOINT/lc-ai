@@ -1,7 +1,7 @@
 ---
 name: asset-profiler
 description: Collect comprehensive asset profile for a SINGLE sensor. Designed to be spawned in parallel (batched) by the sensor-coverage skill. Gathers OS version, packages, users, services, autoruns, and network connections. Returns structured JSON profile.
-model: haiku
+model: sonnet
 skills:
   - lc-essentials:limacharlie-call
 ---

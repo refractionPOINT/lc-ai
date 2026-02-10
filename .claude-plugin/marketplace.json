@@ -12,7 +12,7 @@
       "name": "lc-essentials",
       "description": "Essential LimaCharlie utilities including API operations, documentation search, and threat report evaluation for IOC analysis and detection rule creation",
       "source": "./marketplace/plugins/lc-essentials",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": {
         "name": "LimaCharlie",
         "email": "support@limacharlie.io"

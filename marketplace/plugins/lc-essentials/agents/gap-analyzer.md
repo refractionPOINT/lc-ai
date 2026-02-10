@@ -1,7 +1,7 @@
 ---
 name: gap-analyzer
 description: Analyze coverage gaps and calculate risk scores for sensors in a LimaCharlie organization. Receives sensor classification data from the parent skill and returns risk-scored gap analysis with remediation priorities. Designed to be spawned by the sensor-coverage skill.
-model: haiku
+model: sonnet
 skills:
   - lc-essentials:limacharlie-call
 ---

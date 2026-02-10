@@ -1,7 +1,7 @@
 ---
 name: org-coverage-reporter
 description: Collect comprehensive coverage data for a SINGLE LimaCharlie organization. Designed to be spawned in parallel (one instance per org) by the sensor-coverage skill. Gathers sensor inventory, classifies by offline duration, validates telemetry health, calculates risk scores, and returns structured JSON for fleet-wide aggregation. Incorporates gap-analyzer logic internally.
-model: haiku
+model: sonnet
 skills:
   - lc-essentials:limacharlie-call
 ---
@@ -192,7 +192,7 @@ If `asset_profiling: true`, spawn `asset-profiler` agents for online sensors:
 ```
 Task(
   subagent_type="lc-essentials:asset-profiler",
-  model="haiku",
+  model="sonnet",
   prompt="Collect asset profile for sensor:
     - Organization: {org_name} (OID: {oid})
     - Sensor ID: {sid}

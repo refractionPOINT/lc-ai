@@ -1,7 +1,7 @@
 ---
 name: org-reporter
 description: Collect comprehensive reporting data for a SINGLE LimaCharlie organization. Designed to be spawned in parallel (one instance per org) by the reporting skill. Gathers usage stats, billing, sensors, detections, and rules. Returns structured data for aggregation.
-model: haiku
+model: sonnet
 skills:
   - lc-essentials:limacharlie-call
 ---

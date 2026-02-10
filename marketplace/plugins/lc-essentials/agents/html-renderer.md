@@ -1,7 +1,7 @@
 ---
 name: html-renderer
 description: Render interactive HTML dashboards from structured JSON data using Jinja2 templates and D3.js charts. Designed to be spawned by the graphic-output skill. Produces self-contained HTML files with embedded visualizations. Built with strict data accuracy guardrails - NEVER fabricates data.
-model: haiku
+model: sonnet
 skills:
   - lc-essentials:limacharlie-call
 ---

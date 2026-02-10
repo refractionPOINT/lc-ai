@@ -115,7 +115,7 @@ The **sensor-health** skill orchestrates parallel sensor health checks across mu
 **Architecture:**
 - **Skill**: `sensor-health` - Orchestrates the workflow
 - **Agent**: `sensor-health-reporter` - Checks a single organization (spawned in parallel, one per org)
-- **Model**: Haiku (fast and cost-effective)
+- **Model**: Sonnet (fast and cost-effective)
 
 **How It Works:**
 1. Skill gets list of user's organizations
@@ -125,7 +125,7 @@ The **sensor-health** skill orchestrates parallel sensor health checks across mu
 
 **Key Features:**
 - **Massive Parallelization**: Checks 10+ orgs simultaneously
-- **Fast Execution**: Using Haiku model + parallel agents = seconds, not minutes
+- **Fast Execution**: Using Sonnet model + parallel agents = seconds, not minutes
 - **Comprehensive**: Covers all organizations in your account
 - **Flexible**: Handles various query types (connectivity, data availability, offline sensors)
 

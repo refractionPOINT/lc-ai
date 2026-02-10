@@ -1,7 +1,7 @@
 ---
 name: ioc-hunter
 description: Search for IOCs within a SINGLE LimaCharlie organization. Designed to be spawned in parallel (one instance per org) by the threat-report-evaluation skill. Returns summarized findings classified by severity.
-model: haiku
+model: sonnet
 skills:
   - lc-essentials:limacharlie-call
 ---

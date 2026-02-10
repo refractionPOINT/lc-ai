@@ -1,7 +1,7 @@
 ---
 name: sensor-health-reporter
 description: Check sensor health for a SINGLE LimaCharlie organization. This agent is designed to be spawned in parallel (one instance per org) by the sensor-health skill. Accepts org ID and parameters in the prompt, returns findings for that org only.
-model: haiku
+model: sonnet
 skills:
   - lc-essentials:limacharlie-call
 ---
