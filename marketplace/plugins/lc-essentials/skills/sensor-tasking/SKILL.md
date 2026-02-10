@@ -164,7 +164,7 @@ Task(
 > ```
 > Task(
 >   subagent_type="lc-essentials:limacharlie-api-executor",
->   model="haiku",
+>   model="sonnet",
 >   prompt="Execute LimaCharlie API call:
 >     - Function: list_sensors
 >     - Parameters: {

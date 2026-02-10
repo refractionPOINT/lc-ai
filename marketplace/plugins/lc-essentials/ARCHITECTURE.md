@@ -130,11 +130,11 @@ Sub-agents spawned by skills for specific tasks:
 | Agent | Purpose | Model |
 |-------|---------|-------|
 | limacharlie-api-executor | Execute single API operations | sonnet |
-| sensor-health-reporter | Check sensors for one org | haiku |
-| org-reporter | Collect reporting data for one org | haiku |
-| ioc-hunter | Search IOCs in one org | haiku |
-| behavior-hunter | Search behaviors via LCQL | haiku |
-| detection-builder | Generate D&R rules | haiku |
+| sensor-health-reporter | Check sensors for one org | sonnet |
+| org-reporter | Collect reporting data for one org | sonnet |
+| ioc-hunter | Search IOCs in one org | sonnet |
+| behavior-hunter | Search behaviors via LCQL | sonnet |
+| detection-builder | Generate D&R rules | sonnet |
 | threat-report-parser | Parse threat reports, extract IOCs | sonnet |
 | And more... | | |
 

@@ -366,7 +366,7 @@ Batch sensors (5-10 at a time) and spawn agents in parallel:
 ```
 Task(
   subagent_type="lc-essentials:asset-profiler",
-  model="haiku",
+  model="sonnet",
   prompt="Collect asset profile for sensor:
     - Organization: {org_name} (OID: {oid})
     - Sensor ID: {sid}
@@ -484,7 +484,7 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:gap-analyzer",
-  model="haiku",
+  model="sonnet",
   prompt="Analyze gaps and calculate risk scores:
     - Organization: {org_name} (OID: {oid})
     - Total sensors: {count}
@@ -666,7 +666,7 @@ AskUserQuestion(
 ```
 Task(
   subagent_type="lc-essentials:org-coverage-reporter",
-  model="haiku",
+  model="sonnet",
   prompt="Collect coverage data for organization:
     - Organization: Client ABC (OID: uuid-1)
     - Timestamps: NOW={now}, 4H={t4h}, 24H={t24h}, 7D={t7d}, 30D={t30d}
@@ -681,7 +681,7 @@ Task(
 
 Task(
   subagent_type="lc-essentials:org-coverage-reporter",
-  model="haiku",
+  model="sonnet",
   prompt="Collect coverage data for organization:
     - Organization: Client XYZ (OID: uuid-2)
     ..."

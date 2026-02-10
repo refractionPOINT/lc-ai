@@ -160,7 +160,7 @@ Spawn one `ioc-hunter` agent per organization. For multi-org scenarios, spawn al
 ```
 Task(
   subagent_type="lc-essentials:ioc-hunter",
-  model="haiku",
+  model="sonnet",
   prompt="Search for IOCs in organization '{org_name}' (OID: {oid})
 
 IOCs:
@@ -192,7 +192,7 @@ Spawn one `behavior-hunter` agent per organization.
 ```
 Task(
   subagent_type="lc-essentials:behavior-hunter",
-  model="haiku",
+  model="sonnet",
   prompt="Search for behaviors in organization '{org_name}' (OID: {oid})
 
 Behaviors:
@@ -263,7 +263,7 @@ Based on findings and user input, spawn `detection-builder` agents for each dete
 ```
 Task(
   subagent_type="lc-essentials:detection-builder",
-  model="haiku",
+  model="sonnet",
   prompt="Build detections for layer 'process' in organization '{org_name}' (OID: {oid})
 
 Threat Name: {threat_name}

@@ -1,7 +1,7 @@
 ---
 name: detection-builder
 description: Generate and validate D&R rules for a specific detection layer within a SINGLE LimaCharlie organization. Designed to be spawned in parallel (one per layer) by the threat-report-evaluation skill. Returns validated rules ready for deployment.
-model: haiku
+model: sonnet
 skills:
   - lc-essentials:limacharlie-call
 ---

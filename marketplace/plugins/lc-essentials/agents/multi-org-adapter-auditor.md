@@ -1,7 +1,7 @@
 ---
 name: multi-org-adapter-auditor
 description: Audit adapters for a single LimaCharlie organization. Designed for parallel execution by the adapter-assistant skill. Returns adapter inventory, error states, and configuration issues.
-model: haiku
+model: sonnet
 skills:
   - lc-essentials:limacharlie-call
 ---

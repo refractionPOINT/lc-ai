@@ -6,7 +6,7 @@ This directory contains specialized agents for the lc-essentials plugin. These a
 
 ### sensor-health-reporter
 
-**Model**: Claude Haiku (fast and cost-effective)
+**Model**: Claude Sonnet (fast and cost-effective)
 
 **Purpose**: Check sensor health for a **single** LimaCharlie organization. Designed to be spawned in parallel by the `sensor-health` skill.
 
@@ -44,7 +44,7 @@ Sensors with issues (N):
 
 **Key Features**:
 - **Single-Org Focus**: Only checks the one organization specified in its prompt
-- **Fast Execution**: Uses Haiku model + parallel API calls within the org
+- **Fast Execution**: Uses Sonnet model + parallel API calls within the org
 - **Concise Output**: Returns findings only, no aggregation or analysis
 - **Error Tolerance**: Handles API errors gracefully, reports partial results
 - **Designed for Parallelism**: Optimized to run alongside other instances
@@ -61,7 +61,7 @@ Sensors with issues (N):
 
 ### dr-replay-tester
 
-**Model**: Claude Haiku (fast and cost-effective)
+**Model**: Claude Sonnet (fast and cost-effective)
 
 **Purpose**: Test D&R rules via historical replay against a **single** LimaCharlie organization. Designed to be spawned in parallel by the `detection-engineering` skill for multi-org testing.
 
@@ -109,7 +109,7 @@ Returns **summarized** findings (not all matches):
 - **Single-Org Focus**: Only tests against the one organization specified
 - **Result Summarization**: Returns stats and top 5 samples, not all hits
 - **Pattern Analysis**: Identifies common patterns in matches (hostnames, processes)
-- **Fast Execution**: Uses Haiku model for quick turnaround
+- **Fast Execution**: Uses Sonnet model for quick turnaround
 - **Designed for Parallelism**: Optimized to run alongside other instances
 
 **Skills Used**:
@@ -124,7 +124,7 @@ Returns **summarized** findings (not all matches):
 
 ### org-reporter
 
-**Model**: Claude Haiku (fast and cost-effective)
+**Model**: Claude Sonnet (fast and cost-effective)
 
 **Purpose**: Collect comprehensive reporting data for a **single** LimaCharlie organization. Designed to be spawned in parallel by the `reporting` skill for multi-tenant reports.
 
@@ -221,7 +221,7 @@ Returns structured JSON with:
 
 ### ioc-hunter
 
-**Model**: Claude Haiku (fast and cost-effective)
+**Model**: Claude Sonnet (fast and cost-effective)
 
 **Purpose**: Search for IOCs within a **single** LimaCharlie organization. Designed to be spawned in parallel (one instance per org) by the `threat-report-evaluation` skill.
 
@@ -250,7 +250,7 @@ Returns summarized findings classified by severity:
 
 ### behavior-hunter
 
-**Model**: Claude Haiku (fast and cost-effective)
+**Model**: Claude Sonnet (fast and cost-effective)
 
 **Purpose**: Search for malicious behaviors within a **single** LimaCharlie organization using LCQL queries. Designed to be spawned in parallel by the `threat-report-evaluation` skill.
 
@@ -279,7 +279,7 @@ Returns summarized findings with:
 
 ### detection-builder
 
-**Model**: Claude Haiku (fast and cost-effective)
+**Model**: Claude Sonnet (fast and cost-effective)
 
 **Purpose**: Generate and validate D&R rules for a specific detection layer within a **single** LimaCharlie organization. Designed to be spawned in parallel (one per layer) by the `threat-report-evaluation` skill.
 
@@ -309,7 +309,7 @@ Returns validated rules ready for deployment:
 
 ### asset-profiler
 
-**Model**: Claude Haiku (fast and cost-effective)
+**Model**: Claude Sonnet (fast and cost-effective)
 
 **Purpose**: Collect comprehensive asset profile for a **single** sensor. Designed to be spawned in parallel (batched) by the `sensor-coverage` skill in single-org mode.
 
@@ -347,7 +347,7 @@ Returns structured JSON with asset details:
 
 ### gap-analyzer
 
-**Model**: Claude Haiku (fast and cost-effective)
+**Model**: Claude Sonnet (fast and cost-effective)
 
 **Purpose**: Analyze coverage gaps and calculate risk scores for sensors in a **single** LimaCharlie organization. Receives sensor classification data from the parent skill and returns risk-scored gap analysis with remediation priorities.
 
@@ -385,7 +385,7 @@ Returns comprehensive gap analysis:
 
 ### org-coverage-reporter
 
-**Model**: Claude Haiku (fast and cost-effective)
+**Model**: Claude Sonnet (fast and cost-effective)
 
 **Purpose**: Collect comprehensive coverage data for a **single** LimaCharlie organization. Designed to be spawned in parallel (one instance per org) by the `sensor-coverage` skill in multi-org mode. Incorporates gap-analyzer logic internally and supports telemetry health checking.
 
@@ -436,7 +436,7 @@ Returns structured JSON with complete coverage data:
 
 ### sensor-tasking-executor
 
-**Model**: Claude Haiku (fast and cost-effective)
+**Model**: Claude Sonnet (fast and cost-effective)
 
 **Purpose**: Execute sensor tasks (live response commands) on a single sensor and return results. Designed for parallel execution by the `sensor-tasking` and `fleet-payload-tasking` skills.
 
@@ -474,7 +474,7 @@ Returns structured JSON with task results:
 
 **Key Features**:
 - **Online Check**: Verifies sensor is online before tasking
-- **Fast Execution**: Uses Haiku model for quick turnaround
+- **Fast Execution**: Uses Sonnet model for quick turnaround
 - **Error Handling**: Returns structured errors for offline sensors or task failures
 - **Parallel-Friendly**: Optimized to run alongside other instances
 
@@ -615,7 +615,7 @@ Rather than following a rigid checklist, adapts investigation based on findings:
 
 ### cloud-discoverer
 
-**Model**: Claude Haiku (fast and cost-effective)
+**Model**: Claude Sonnet (fast and cost-effective)
 
 **Purpose**: Survey a **single** cloud platform (GCP, AWS, Azure, DigitalOcean) to discover projects, VMs, and security-relevant log sources. Designed to be spawned in parallel (one instance per platform) by the `onboard-new-org` skill.
 
@@ -654,7 +654,7 @@ Returns structured JSON with:
 
 ### vm-edr-installer
 
-**Model**: Claude Haiku (fast and cost-effective)
+**Model**: Claude Sonnet (fast and cost-effective)
 
 **Purpose**: Deploy LimaCharlie EDR to VMs on a **single** cloud platform using native deployment methods (OS Config for GCP, SSM for AWS, Run Command for Azure). Designed to be spawned in parallel (one instance per platform) by the `onboard-new-org` skill.
 
@@ -699,7 +699,7 @@ All agents follow Claude Code best practices:
 - Single responsibility per agent
 - Clear frontmatter with name, description, model, and skills
 - Structured system prompts with role, instructions, examples, and constraints
-- Optimized model selection (Haiku for simple tasks, Sonnet for complex analysis)
+- Optimized model selection (Sonnet for all tasks)
 - Efficient tool usage with parallel operations where possible
 
 ## Adding New Agents
@@ -712,7 +712,7 @@ To add a new agent to this plugin:
    ---
    name: agent-name
    description: What it does and when to use it
-   model: haiku|sonnet|opus
+   model: sonnet|opus
    skills:
      - lc-essentials:skill-name
    ---
@@ -723,7 +723,7 @@ To add a new agent to this plugin:
 
 ## Best Practices
 
-- **Model Selection**: Use Haiku for straightforward data gathering and reporting, Sonnet for complex analysis
+- **Model Selection**: Use Sonnet for all tasks, Opus for complex analysis requiring deeper reasoning
 - **Skill Access**: Only include skills the agent actually needs
 - **Clear Descriptions**: The description field determines when Claude invokes the agent
 - **Examples**: Include concrete examples of queries the agent handles

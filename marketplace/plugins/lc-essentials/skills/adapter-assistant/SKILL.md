@@ -471,7 +471,7 @@ For auditing adapters across multiple organizations, spawn parallel sub-agents:
 ```
 Task(
   subagent_type="lc-essentials:multi-org-adapter-auditor",
-  model="haiku",
+  model="sonnet",
   prompt="Audit adapters for organization: {org_name} ({oid})
 
     Return:
