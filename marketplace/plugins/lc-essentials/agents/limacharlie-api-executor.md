@@ -440,6 +440,87 @@ Execute LimaCharlie API call:
 - No results from filter → Return empty data with success=true
 - Unexpected structure → Return error referencing schema
 
+**Null/Empty Tool Response** (CRITICAL):
+
+If an MCP tool returns `null`, empty, or no result:
+
+1. **NEVER fabricate or hallucinate a response** - this is a tool failure
+2. **NEVER assume what the result should be** - report the actual failure
+3. **NEVER proceed as if the call succeeded** - stop and return error
+
+Return an explicit error:
+```json
+{
+  "success": false,
+  "error": {
+    "type": "tool_error",
+    "message": "MCP tool returned null or empty response",
+    "details": {
+      "tool_name": "<function_name>",
+      "expected": "valid API response",
+      "received": "null/empty"
+    }
+  },
+  "metadata": {
+    "function": "<function_name>"
+  }
+}
+```
+
+**Examples of what NOT to do:**
+- ❌ Making up query syntax like `-1h | * | limit:10` when `generate_lcql_query` returns null
+- ❌ Guessing sensor counts when `list_sensors` returns null
+- ❌ Reporting "success" with fabricated data
+- ❌ Providing example output as if it were real data
+
+**If tool returns null → Report failure, do not proceed with fabricated data.**
+
+**Command/Script Execution Errors** (CRITICAL):
+
+When executing Bash commands or scripts, **recognize failure indicators**:
+
+| Indicator | Meaning |
+|-----------|---------|
+| `Return code: 1` (or any non-zero) | Command failed |
+| `Traceback (most recent call last):` | Python exception |
+| `Error:`, `ERROR:`, `error:` | Error message |
+| `ModuleNotFoundError`, `FileNotFoundError`, etc. | Python import/file errors |
+| `command not found` | Missing executable |
+| `Permission denied` | Access error |
+
+**When you see ANY of these:**
+
+1. **STOP immediately** - do not attempt workarounds
+2. **Do NOT try alternative approaches** (e.g., Python subprocess when MCP fails)
+3. **Do NOT fabricate success** despite seeing clear errors
+4. **Report the actual error** to the parent thread
+
+```json
+{
+  "success": false,
+  "error": {
+    "type": "execution_error",
+    "message": "Command failed with non-zero exit code",
+    "details": {
+      "return_code": 1,
+      "stderr": "Traceback... ModuleNotFoundError: No module named 'xyz'",
+      "attempted_action": "<what was attempted>"
+    }
+  },
+  "metadata": {
+    "function": "<function_name>"
+  }
+}
+```
+
+**Examples of what NOT to do:**
+- ❌ Seeing `Return code: 1` + `Traceback` and still reporting success
+- ❌ Trying Python workarounds when MCP tool fails
+- ❌ Ignoring error messages and fabricating results
+- ❌ Claiming "API call was made successfully" when it clearly wasn't
+
+**Rule: Any non-zero return code or error message = failure. Report it, don't mask it.**
+
 ### Resource Management
 
 **Temporary Files**:
