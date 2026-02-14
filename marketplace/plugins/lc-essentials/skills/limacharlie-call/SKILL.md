@@ -1,6 +1,6 @@
 ---
 name: limacharlie-call
-description: "**REQUIRED for ALL LimaCharlie operations** - list orgs, sensors, rules, detections, queries, and 179 functions. NEVER call LimaCharlie MCP tools directly. Use cases: 'what orgs do I have', 'list sensors', 'search IOCs', 'run LCQL query', 'create detection rule'. This skill loads function docs and delegates to sub-agent."
+description: "**REQUIRED for ALL LimaCharlie operations** - list orgs, sensors, rules, detections, queries, and 186 functions. NEVER call LimaCharlie MCP tools directly. Use cases: 'what orgs do I have', 'list sensors', 'search IOCs', 'run LCQL query', 'create detection rule'. This skill loads function docs and delegates to sub-agent."
 allowed-tools:
   - Task
   - Read
@@ -167,7 +167,7 @@ Running query...
 - `list_lookups` / `set_lookup` / `query_lookup` - Lookups
 - `list_payloads` / `create_payload` / `get_payload` / `delete_payload` - Payloads
 
-## Available Functions (179)
+## Available Functions (186)
 
 ### Organization Management (9)
 - `list_user_orgs` → `${CLAUDE_PLUGIN_ROOT}/skills/limacharlie-call/functions/list-user-orgs.md`
@@ -327,6 +327,15 @@ Running query...
 - `list_velociraptor_artifacts` → `${CLAUDE_PLUGIN_ROOT}/skills/limacharlie-call/functions/list-velociraptor-artifacts.md`
 - `show_velociraptor_artifact` → `${CLAUDE_PLUGIN_ROOT}/skills/limacharlie-call/functions/show-velociraptor-artifact.md`
 - `collect_velociraptor_artifact` → `${CLAUDE_PLUGIN_ROOT}/skills/limacharlie-call/functions/collect-velociraptor-artifact.md`
+
+### Binary Library (Binlib) (7)
+- `binlib_check_hash` → `./functions/binlib-check-hash.md`
+- `binlib_get_hash_metadata` → `./functions/binlib-get-hash-metadata.md`
+- `binlib_get_hash_data` → `./functions/binlib-get-hash-data.md`
+- `binlib_tag` → `./functions/binlib-tag.md`
+- `binlib_untag` → `./functions/binlib-untag.md`
+- `binlib_search` → `./functions/binlib-search.md`
+- `binlib_yara_scan` → `./functions/binlib-yara-scan.md`
 
 ### YARA Rules (4)
 - `list_yara_rules` → `${CLAUDE_PLUGIN_ROOT}/skills/limacharlie-call/functions/list-yara-rules.md`
