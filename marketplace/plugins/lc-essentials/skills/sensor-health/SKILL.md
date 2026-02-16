@@ -17,30 +17,25 @@ This skill orchestrates parallel sensor health checks across multiple LimaCharli
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
 
@@ -75,20 +70,11 @@ Identify the key parameters:
 
 ### Step 2: Get Organizations
 
-Use the LimaCharlie API to get the user's organizations:
+Use the LimaCharlie CLI to get the user's organizations:
 
+```bash
+limacharlie org list --output json
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_user_orgs
-    - Parameters: {}
-    - Return: RAW"
-)
-```
-
-Handle large results with the analyze script if needed.
 
 ### Step 3: Spawn Parallel Agents
 
@@ -97,7 +83,6 @@ For each organization, spawn a `lc-essentials:sensor-health-reporter` agent in p
 ```
 Task(
   subagent_type="lc-essentials:sensor-health-reporter",
-  model="sonnet",
   prompt="Check sensors in organization '{org_name}' (OID: {oid}) that are online but have not sent telemetry in the last {timeframe}."
 )
 ```
@@ -142,23 +127,16 @@ one_hour_ago=$(date -d '1 hour ago' +%s)
 ```
 
 **Step 2**: Get org list
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_user_orgs
-    - Parameters: {}
-    - Return: RAW"
-)
+```bash
+limacharlie org list --output json
 ```
 
 **Step 3**: Spawn parallel agents (example with 3 orgs)
 ```
 # Single message with 3 Task calls
-Task(subagent_type="lc-essentials:sensor-health-reporter", model="sonnet", prompt="Check org1...")
-Task(subagent_type="lc-essentials:sensor-health-reporter", model="sonnet", prompt="Check org2...")
-Task(subagent_type="lc-essentials:sensor-health-reporter", model="sonnet", prompt="Check org3...")
+Task(subagent_type="lc-essentials:sensor-health-reporter", prompt="Check org1...")
+Task(subagent_type="lc-essentials:sensor-health-reporter", prompt="Check org2...")
+Task(subagent_type="lc-essentials:sensor-health-reporter", prompt="Check org3...")
 ```
 
 **Step 4**: Aggregate
@@ -188,16 +166,6 @@ Total: 17 sensors
 These sensors are connected but not generating events...
 ```
 
-## Handling Large Result Sets
-
-When `list_user_orgs` returns a `resource_link`, use the analyze script from the plugin root. From this skill's base directory (shown at the top of the skill prompt), the script is at `../../scripts/analyze-lc-result.sh`:
-
-```bash
-# Path: {skill_base_directory}/../../scripts/analyze-lc-result.sh
-bash "{skill_base_directory}/../../scripts/analyze-lc-result.sh" "<resource_link>"
-jq -r '.orgs[] | "\(.oid)|\(.name)"' /tmp/lc-result-*.json
-```
-
 ## Time Window Calculations
 
 Use bash to calculate timestamps:
@@ -220,7 +188,7 @@ date -d 'X weeks ago' +%s
 
 1. **Always spawn agents in parallel** - Use a single message with multiple Task calls
 2. **Limit scope if needed** - For quick checks, allow user to specify specific orgs
-3. **Use Sonnet model** - Sensor health checks are straightforward data gathering
+3. **Sub-agents define their own model** - No need to specify model in Task calls
 4. **Handle errors gracefully** - If one org fails, continue with others
 5. **Cache org list** - If doing multiple related queries, reuse the org list
 
@@ -264,7 +232,7 @@ If an agent fails:
 - **Parallel Execution**: ALWAYS spawn agents in parallel (single message, multiple Tasks)
 - **OID Format**: Organization ID is a UUID, not the org name
 - **Time Limits**: Data availability checks must be <30 days
-- **Model**: Always use "sonnet" for the sub-agents
+- **Model**: Sub-agents define their own model in frontmatter
 - **Error Tolerance**: Continue with partial results if some orgs fail
 
 ## Related Skills
@@ -272,10 +240,9 @@ If an agent fails:
 - `sensor-tasking` - For sending commands to sensors (live response, data collection)
 - `sensor-coverage` - For comprehensive asset inventory and coverage gap analysis
 
-## Related Functions
+## Related CLI Commands
 
-From `limacharlie-call` skill:
-- `list_user_orgs` - Get organizations
-- `get_online_sensors` - Get online sensor list (used by agent)
-- `get_time_when_sensor_has_data` - Check data timeline (used by agent)
-- `list_sensors` - Get all sensors (used by agent for offline checks)
+- `limacharlie org list` - Get organizations
+- `limacharlie sensor list --online --oid <oid>` - Get online sensor list (used by agent)
+- `limacharlie event retention --sid <sid> --oid <oid>` - Check data timeline (used by agent)
+- `limacharlie sensor list --oid <oid>` - Get all sensors (used by agent for offline checks)

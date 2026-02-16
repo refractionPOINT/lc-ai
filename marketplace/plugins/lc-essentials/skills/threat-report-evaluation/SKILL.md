@@ -20,31 +20,26 @@ Systematically evaluate threat reports to determine organizational impact and cr
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
-| **D&R Rules** | Write YAML manually | Use `generate_dr_rule_*()` + `validate_dr_rule_components()` |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
+| **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-detection` + `limacharlie rule validate` |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
 
@@ -122,7 +117,6 @@ Spawn the `threat-report-parser` agent to extract all IOCs and behaviors. Always
 ```
 Task(
   subagent_type="lc-essentials:threat-report-parser",
-  model="sonnet",
   prompt="Parse threat report and extract all IOCs and behaviors:
 
 Report Source: /tmp/threat_report.pdf
@@ -144,9 +138,8 @@ Report Type: pdf"
 
 Use a lightweight API call to verify platforms exist in target org(s).
 
-```
-Function: get_platform_names
-Parameters: {"oid": "<organization_id>"}
+```bash
+limacharlie event types --oid <oid> --output json
 ```
 
 Filter IOCs and behaviors to matching platforms only.
@@ -160,7 +153,6 @@ Spawn one `ioc-hunter` agent per organization. For multi-org scenarios, spawn al
 ```
 Task(
   subagent_type="lc-essentials:ioc-hunter",
-  model="sonnet",
   prompt="Search for IOCs in organization '{org_name}' (OID: {oid})
 
 IOCs:
@@ -192,7 +184,6 @@ Spawn one `behavior-hunter` agent per organization.
 ```
 Task(
   subagent_type="lc-essentials:behavior-hunter",
-  model="sonnet",
   prompt="Search for behaviors in organization '{org_name}' (OID: {oid})
 
 Behaviors:
@@ -263,7 +254,6 @@ Based on findings and user input, spawn `detection-builder` agents for each dete
 ```
 Task(
   subagent_type="lc-essentials:detection-builder",
-  model="sonnet",
   prompt="Build detections for layer 'process' in organization '{org_name}' (OID: {oid})
 
 Threat Name: {threat_name}
@@ -319,26 +309,14 @@ Present all generated rules for approval:
 
 For each approved rule, deploy using:
 
-```
-Function: set_dr_general_rule
-Parameters: {
-  "oid": "<organization_id>",
-  "name": "<rule_name>",
-  "detection": <detect_yaml>,
-  "response": <respond_yaml>,
-  "is_enabled": true
-}
+```bash
+limacharlie rule create <rule_name> --detect '<detect_yaml>' --respond '<respond_yaml>' --oid <oid>
 ```
 
 Also create IOC lookup tables:
 
-```
-Function: set_lookup
-Parameters: {
-  "oid": "<organization_id>",
-  "name": "<threat>-<ioc-type>",
-  "data": {<ioc_data>}
-}
+```bash
+limacharlie lookup set <threat>-<ioc-type> --data '<ioc_data>' --oid <oid>
 ```
 
 ---
@@ -475,7 +453,7 @@ All responses include metadata:
 
 For MSSP scenarios with multiple organizations:
 
-1. **Get org list** via `list_user_orgs`
+1. **Get org list** via `limacharlie org list --output json`
 2. **Spawn ioc-hunter agents in parallel** (one per org in single message)
 3. **Spawn behavior-hunter agents in parallel** (one per org in single message)
 4. **Aggregate results** across all orgs

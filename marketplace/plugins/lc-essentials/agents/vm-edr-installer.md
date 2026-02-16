@@ -2,8 +2,7 @@
 name: vm-edr-installer
 description: Deploy LimaCharlie EDR to VMs on a single cloud platform using native deployment methods (OS Config for GCP, SSM for AWS, Run Command for Azure). Designed to be spawned in parallel (one instance per platform) by the onboard-new-org skill. Handles installation key retrieval, command execution, and deployment verification.
 model: sonnet
-skills:
-  - lc-essentials:limacharlie-call
+skills: []
 ---
 
 # VM EDR Installer Agent
@@ -289,20 +288,8 @@ Wait for deployment to complete (varies by platform):
 
 After deployment, verify sensors appear in LimaCharlie:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_sensors
-    - Parameters: {
-        \"oid\": \"<org-id>\",
-        \"selector\": \"iid == \\`<installation-key-iid>\\`\",
-        \"online_only\": true
-      }
-    - Return: List of hostnames and SIDs
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
+```bash
+limacharlie sensor list --online --oid <org-id> --output json | jq '[.[] | select(.iid == "<installation-key-iid>")]'
 ```
 
 ## Output Format
@@ -409,19 +396,8 @@ end=$(date +%s)
 
 Query for new sensors with the installation key:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_sensors
-    - Parameters: {
-        \"oid\": \"OID\",
-        \"selector\": \"iid == \\`INSTALLATION_KEY_IID\\`\"
-      }
-    - Return: Count and list of hostnames with SIDs
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
+```bash
+limacharlie sensor list --oid OID --output json | jq '[.[] | select(.iid == "INSTALLATION_KEY_IID")]'
 ```
 
 Check if sensors are sending data:
@@ -430,24 +406,8 @@ Check if sensors are sending data:
 # Calculate timestamps
 start=$(date -d '5 minutes ago' +%s)
 end=$(date +%s)
-```
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_historic_events
-    - Parameters: {
-        \"oid\": \"OID\",
-        \"sid\": \"SENSOR_ID\",
-        \"start\": START_TIMESTAMP,
-        \"end\": END_TIMESTAMP,
-        \"limit\": 5
-      }
-    - Return: Count of events and first 3 event types
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
+limacharlie event list --sid SENSOR_ID --start $start --end $end --oid OID --output json
 ```
 
 ## Important Guidelines

@@ -20,30 +20,25 @@ Deploy payloads (scripts) or shell commands to all endpoints in an organization 
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 > **Architecture Note**: This skill focuses on payload preparation and upload. It delegates the reliable tasking workflow (D&R rules, task deployment, response collection) to the `sensor-tasking` skill to avoid duplication.
 
@@ -65,13 +60,8 @@ Use this skill when the user needs to:
 
 For simple data collection, use `run --shell-command` directly - no payload upload needed:
 
-```
-reliable_tasking(
-  task="run --shell-command 'hostname'",
-  selector="plat == macos",
-  context="shell-scan-001",
-  ttl=3600
-)
+```bash
+limacharlie task reliable-send --task 'run --shell-command hostname' --selector 'plat == macos' --context shell-scan-001 --ttl 3600 --oid <oid> --output json
 ```
 
 **Pros:**
@@ -182,11 +172,8 @@ run --shell-command "cat /etc/hostname"
 
 ### Step 1: Select Organization
 
-```
-lc_call_tool(
-  tool_name="list_user_orgs",
-  parameters={}
-)
+```bash
+limacharlie org list --output json
 ```
 
 ### Step 2: Build Shell Command
@@ -273,19 +260,8 @@ echo "$OUTPUT_FILE"
 Use `file_content` with base64-encoded script:
 
 ```bash
-# Encode the script
-base64 -w0 /tmp/my-payload.sh
-```
-
-```
-lc_call_tool(
-  tool_name="create_payload",
-  parameters={
-    "oid": "[org-id]",
-    "name": "my-payload.sh",
-    "file_content": "[base64-encoded-content]"
-  }
-)
+# Upload the payload script
+limacharlie payload upload my-payload.sh --file /tmp/my-payload.sh --oid [org-id] --output json
 ```
 
 ### Step 3: Deploy and Collect Results (Delegate to sensor-tasking)
@@ -332,11 +308,8 @@ See the **sensor-tasking** skill documentation for advanced D&R rule patterns.
 
 ## Monitoring Task Progress
 
-```
-lc_call_tool(
-  tool_name="list_reliable_tasks",
-  parameters={"oid": "[org-id]"}
-)
+```bash
+limacharlie task reliable-list --oid [org-id] --output json
 ```
 
 Shows:
@@ -349,7 +322,7 @@ Shows:
 | Issue | Cause | Resolution |
 |-------|-------|------------|
 | No results | Sensors offline | Wait for TTL period |
-| Partial results | Some sensors offline | Check `list_reliable_tasks` for pending |
+| Partial results | Some sensors offline | Check `limacharlie task reliable-list` for pending |
 | D&R not matching | Wrong STDOUT pattern | Verify regex matches actual output |
 | Payload failed | Script error | Check RECEIPT events for STDERR |
 
@@ -359,11 +332,8 @@ Shows:
 
 If you uploaded a payload, delete it after the operation:
 
-```
-lc_call_tool(
-  tool_name="delete_payload",
-  parameters={"oid": "[org-id]", "name": "my-payload.sh"}
-)
+```bash
+limacharlie payload delete my-payload.sh --oid [org-id]
 ```
 
 ### D&R Rule and Task Cleanup (sensor-tasking)
@@ -387,4 +357,4 @@ See the **sensor-tasking** skill documentation for cleanup workflows.
 - **sensor-tasking** - **REQUIRED for deployment.** Handles reliable tasking, D&R rules for response collection, and result retrieval. Use this skill for the execution workflow after preparing your payload/command here.
 - `sensor-coverage` - Fleet inventory and health before tasking
 - `detection-engineering` - Create custom D&R rules for advanced scenarios
-- `limacharlie-call` - Low-level API access for payload management
+- `limacharlie` CLI - Direct API access for payload management

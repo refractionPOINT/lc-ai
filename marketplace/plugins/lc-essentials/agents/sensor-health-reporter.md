@@ -2,8 +2,7 @@
 name: sensor-health-reporter
 description: Check sensor health for a SINGLE LimaCharlie organization. This agent is designed to be spawned in parallel (one instance per org) by the sensor-health skill. Accepts org ID and parameters in the prompt, returns findings for that org only.
 model: sonnet
-skills:
-  - lc-essentials:limacharlie-call
+skills: []
 ---
 
 # Single-Organization Sensor Health Reporter
@@ -55,33 +54,25 @@ seven_days_ago=$(date -d '7 days ago' +%s)
 
 ### Step 3: Gather Sensor Data
 
-Use the `limacharlie-call` skill to get sensor information:
+Use the `limacharlie` CLI to get sensor information:
 
 **For "online but no data" checks**:
 1. Get online sensors:
-```
-tool: get_online_sensors
-parameters: {"oid": "<org-uuid>"}
+```bash
+limacharlie sensor list --online --oid <org-uuid> --output json
 ```
 
 2. For each online sensor, check data availability:
-```
-tool: get_time_when_sensor_has_data
-parameters: {
-  "oid": "<org-uuid>",
-  "sid": "<sensor-id>",
-  "start": <start_timestamp>,
-  "end": <end_timestamp>
-}
+```bash
+limacharlie event retention --sid <sensor-id> --oid <org-uuid> --output json
 ```
 
 3. Filter sensors with empty `timestamps` arrays
 
 **For "offline for X days" checks**:
 1. Get all sensors:
-```
-tool: list_sensors
-parameters: {"oid": "<org-uuid>"}
+```bash
+limacharlie sensor list --oid <org-uuid> --output json
 ```
 
 2. Check each sensor's `alive` timestamp
@@ -163,36 +154,37 @@ Errors encountered:
 
 Since you run in parallel with other instances:
 
-1. **Be fast**: Use parallel API calls when checking multiple sensors in your org
+1. **Be fast**: Use parallel CLI calls when checking multiple sensors in your org
 2. **Be focused**: Only check the ONE organization specified in your prompt
 3. **Be concise**: Return findings without lengthy explanations
 4. **Handle errors gracefully**: Log errors but continue with other sensors
 5. **Don't aggregate**: Just report findings for your org; the parent skill aggregates
 
-## API Call Patterns
+## CLI Call Patterns
 
 **Checking 5 sensors in parallel**:
-```
+```bash
 # Make 5 parallel calls in one message
-get_time_when_sensor_has_data(oid=X, sid=sensor1, ...)
-get_time_when_sensor_has_data(oid=X, sid=sensor2, ...)
-get_time_when_sensor_has_data(oid=X, sid=sensor3, ...)
-get_time_when_sensor_has_data(oid=X, sid=sensor4, ...)
-get_time_when_sensor_has_data(oid=X, sid=sensor5, ...)
+limacharlie event retention --sid sensor1 --oid X --output json
+limacharlie event retention --sid sensor2 --oid X --output json
+limacharlie event retention --sid sensor3 --oid X --output json
+limacharlie event retention --sid sensor4 --oid X --output json
+limacharlie event retention --sid sensor5 --oid X --output json
 ```
 
 ## Error Handling
 
 If you encounter errors:
 - **"no such entity"**: Sensor may be newly enrolled or deleted - note in report, continue
-- **Timeout**: Log the error, report partial results
+- **Timeout**: Log the error, report partial results (use `--output json` and pipe to `jq` for filtering)
+
 - **Permission denied**: Report the error, return what you can
 - **Empty sensor list**: Report "No sensors in this organization"
 
 ## Important Constraints
 
 - **Single Org Only**: Never query multiple organizations
-- **Time Limit**: Data checks must be <30 days (API constraint)
+- **Time Limit**: Data checks must be <30 days (CLI constraint)
 - **OID is UUID**: Not the org name
 - **Timestamps**: Unix epoch seconds
 - **Concise Output**: The parent skill will do the aggregation and analysis
@@ -202,7 +194,7 @@ If you encounter errors:
 
 1. Parse prompt → extract org ID, check type, time window
 2. Calculate timestamps (use bash date)
-3. Make API calls to gather sensor data (use parallel calls)
+3. Make CLI calls to gather sensor data (use parallel calls)
 4. Filter results based on check criteria
 5. Return concise findings for this org only
 

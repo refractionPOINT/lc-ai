@@ -50,7 +50,7 @@ Sensors with issues (N):
 - **Designed for Parallelism**: Optimized to run alongside other instances
 
 **Skills Used**:
-- `lc-essentials:limacharlie-call` - For API operations
+- Bash (for `limacharlie` CLI)
 
 **How It Works**:
 1. Extracts org ID, check type, and time window from prompt
@@ -113,7 +113,7 @@ Returns **summarized** findings (not all matches):
 - **Designed for Parallelism**: Optimized to run alongside other instances
 
 **Skills Used**:
-- `lc-essentials:limacharlie-call` - For `replay_dr_rule` API calls
+- Bash (for `limacharlie` CLI)
 
 **How It Works**:
 1. Extracts org ID, detection rule, time window, and selector from prompt
@@ -177,11 +177,11 @@ Returns structured JSON with all collected data:
 - **Structured Output**: Returns JSON for easy aggregation by parent skill
 
 **Skills Used**:
-- `lc-essentials:limacharlie-call` - For all API operations
+- Bash (for `limacharlie` CLI)
 
 **How It Works**:
 1. Extracts org ID, name, time range, and detection limit from prompt
-2. Invokes `limacharlie-call` skill to collect all data (9 API functions)
+2. Uses `limacharlie` CLI to collect all data (9 API calls)
 3. Filters usage stats to requested time range
 4. Tracks detection limit and flags if reached
 5. Returns structured JSON for aggregation by parent skill
@@ -246,7 +246,7 @@ Returns summarized findings classified by severity:
 - IOCs not found
 
 **Skills Used**:
-- `lc-essentials:limacharlie-call` - For IOC search APIs
+- Bash (for `limacharlie` CLI)
 
 ### behavior-hunter
 
@@ -275,7 +275,7 @@ Returns summarized findings with:
 - Classification by event count (NONE/FEW/MODERATE/MANY/EXCESSIVE)
 
 **Skills Used**:
-- `lc-essentials:limacharlie-call` - For LCQL generation and execution
+- Bash (for `limacharlie` CLI)
 
 ### detection-builder
 
@@ -305,7 +305,7 @@ Returns validated rules ready for deployment:
 - Validation failures with error details
 
 **Skills Used**:
-- `lc-essentials:limacharlie-call` - For D&R rule generation and validation
+- Bash (for `limacharlie` CLI)
 
 ### asset-profiler
 
@@ -343,7 +343,7 @@ Returns structured JSON with asset details:
 ```
 
 **Skills Used**:
-- `lc-essentials:limacharlie-call` - For sensor data collection APIs
+- Bash (for `limacharlie` CLI)
 
 ### gap-analyzer
 
@@ -381,7 +381,7 @@ Returns comprehensive gap analysis:
 ```
 
 **Skills Used**:
-- `lc-essentials:limacharlie-call` - For any additional API calls needed
+- Bash (for `limacharlie` CLI)
 
 ### org-coverage-reporter
 
@@ -432,7 +432,7 @@ Returns structured JSON with complete coverage data:
 - **Structured for aggregation** - Output designed for `fleet-pattern-analyzer`
 
 **Skills Used**:
-- `lc-essentials:limacharlie-call` - For sensor data collection APIs
+- Bash (for `limacharlie` CLI)
 
 ### sensor-tasking-executor
 
@@ -479,7 +479,7 @@ Returns structured JSON with task results:
 - **Parallel-Friendly**: Optimized to run alongside other instances
 
 **Skills Used**:
-- `lc-essentials:limacharlie-call` - For sensor commands and status checks
+- Bash (for `limacharlie` CLI)
 
 ---
 
@@ -601,7 +601,7 @@ Rather than following a rigid checklist, adapts investigation based on findings:
 - Checks for related activity (other detections, network connections, persistence)
 
 **Skills Used**:
-- `lc-essentials:limacharlie-call` - For all LimaCharlie API operations (120+ functions)
+- Bash (for `limacharlie` CLI)
 
 **How It Works**:
 1. Extracts pattern data from prompt
@@ -688,8 +688,7 @@ Returns structured JSON with:
 - **Parallel VM Deployment**: Deploys to multiple VMs in a single command
 
 **Skills Used**:
-- `lc-essentials:limacharlie-call` - For sensor verification
-- `Bash` - For executing cloud CLI deployment commands
+- Bash (for `limacharlie` CLI and cloud CLI deployment commands)
 
 ---
 
@@ -713,8 +712,7 @@ To add a new agent to this plugin:
    name: agent-name
    description: What it does and when to use it
    model: sonnet|opus
-   skills:
-     - lc-essentials:skill-name
+   skills: []
    ---
    ```
 3. Write a clear system prompt (2-4 paragraphs minimum)

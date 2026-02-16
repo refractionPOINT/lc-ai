@@ -2,8 +2,7 @@
 name: org-coverage-reporter
 description: Collect comprehensive coverage data for a SINGLE LimaCharlie organization. Designed to be spawned in parallel (one instance per org) by the sensor-coverage skill. Gathers sensor inventory, classifies by offline duration, validates telemetry health, calculates risk scores, and returns structured JSON for fleet-wide aggregation. Incorporates gap-analyzer logic internally.
 model: sonnet
-skills:
-  - lc-essentials:limacharlie-call
+skills: []
 ---
 
 # Single-Organization Coverage Reporter
@@ -16,9 +15,9 @@ Collect sensor inventory, calculate coverage metrics, classify offline sensors, 
 
 **Key Feature**: You incorporate gap-analyzer logic directly - no need to spawn additional agents.
 
-## Skills Available
+## Tools Available
 
-You have access to the `lc-essentials:limacharlie-call` skill which provides 120+ LimaCharlie API functions. Use this skill for ALL API operations.
+You have access to the `limacharlie` CLI which provides 120+ LimaCharlie operations. Use `Bash` to run `limacharlie` CLI commands for ALL API operations.
 
 ## Expected Prompt Format
 
@@ -78,22 +77,20 @@ Parse the prompt to extract:
 
 ### Step 2: Collect Sensor Data
 
-Use the `limacharlie-call` skill to gather sensor information.
+Use the `limacharlie` CLI to gather sensor information.
 
 #### 2.1 Get All Sensors
 
-```
-tool: list_sensors
-parameters: {"oid": "<org-uuid>"}
+```bash
+limacharlie sensor list --oid <org-uuid> --output json
 ```
 
 Returns sensor list with: `sid`, `hostname`, `alive`, `plat`, `tags`, `enroll`, `int_ip`, `ext_ip`
 
 #### 2.2 Get Online Sensors
 
-```
-tool: get_online_sensors
-parameters: {"oid": "<org-uuid>"}
+```bash
+limacharlie sensor list --online --oid <org-uuid> --output json
 ```
 
 Returns: `{"sensors": {"<sid>": true, ...}}`
@@ -108,7 +105,7 @@ For each sensor, determine:
 
 #### 3.1 Online/Offline Status
 
-Check if sensor SID is in the online sensors set from `get_online_sensors`.
+Check if sensor SID is in the online sensors set from `limacharlie sensor list --online`.
 
 #### 3.2 Offline Duration Category
 
@@ -295,9 +292,9 @@ Set `status` based on results:
 
 - **"success"**: All critical APIs returned data successfully
 - **"partial"**: Some APIs failed but sensor data available
-- **"failed"**: Critical APIs failed (list_sensors or get_online_sensors)
+- **"failed"**: Critical APIs failed (`limacharlie sensor list` or `limacharlie sensor list --online`)
 
-Critical APIs: `list_sensors`, `get_online_sensors`
+Critical CLI commands: `limacharlie sensor list`, `limacharlie sensor list --online`
 
 ## Example Outputs
 
@@ -451,7 +448,7 @@ Since you run in parallel with other instances:
 
 - **Single Org Only**: Never query multiple organizations
 - **OID is UUID**: Not the org name
-- **Use Skills Only**: All API calls go through `limacharlie-call` skill
+- **Use CLI Only**: All API calls go through the `limacharlie` CLI
 - **Timestamps**: Use the values provided in prompt (Unix epoch seconds)
 - **Structured Output**: Return exact JSON format specified
 - **Error Transparency**: Document all failures in errors array
@@ -460,7 +457,7 @@ Since you run in parallel with other instances:
 ## Your Workflow Summary
 
 1. **Parse prompt** - Extract org ID, name, timestamps, thresholds
-2. **Call APIs** - Get sensors and online status
+2. **Call CLI** - Get sensors and online status
 3. **Classify sensors** - Offline duration, platform, tags
 4. **Calculate risk scores** - Apply formula to each sensor
 5. **Aggregate statistics** - Coverage, breakdown, distribution

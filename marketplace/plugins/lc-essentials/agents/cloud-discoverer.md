@@ -2,8 +2,7 @@
 name: cloud-discoverer
 description: Survey a single cloud platform (GCP, AWS, Azure, DigitalOcean) to discover projects, VMs, and security-relevant log sources. Designed to be spawned in parallel (one instance per platform) by the onboard-new-org skill. Returns structured JSON with discovered resources.
 model: sonnet
-skills:
-  - lc-essentials:limacharlie-call
+skills: []
 ---
 
 # Cloud Discoverer Agent

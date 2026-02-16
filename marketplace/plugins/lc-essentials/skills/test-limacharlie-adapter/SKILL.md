@@ -19,30 +19,25 @@ Deploy a temporary LimaCharlie Adapter on the local Linux or Mac OS host for tes
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 | **Parsing** | Write Grok patterns manually | Use `parsing-helper` skill (identifies timezone requirements) |
 
 ---
@@ -91,47 +86,28 @@ Before starting, ensure you have:
 
 First, get the list of available organizations:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_user_orgs
-    - Parameters: {}
-    - Return: RAW"
-)
+```bash
+limacharlie org list --output json
 ```
 
-This returns your available organizations. Use AskUserQuestion to let the user select one, or if they need a new org, use the `limacharlie-call` skill to create one with `create_org`.
+This returns your available organizations. Use AskUserQuestion to let the user select one, or if they need a new org, use `limacharlie org create` to create one.
 
 ### Phase 1: Get or Create Installation Key
 
 Check for existing "Test Adapter" installation key:
 
+```bash
+limacharlie installation-key list --oid <SELECTED_ORG_ID> --output json
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_installation_keys
-    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\"}
-    - Return: Look for key with description 'Test Adapter' and return its iid"
-)
-```
+
+Look for a key with description 'Test Adapter' and extract its `iid`.
 
 **If "Test Adapter" key exists**: Extract the `iid` value from the response.
 
 **If not exists**: Create one:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: create_installation_key
-    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"description\": \"Test Adapter\", \"tags\": [\"test-adapter\", \"temporary\"]}
-    - Return: The iid of the created key"
-)
+```bash
+limacharlie installation-key create --oid <SELECTED_ORG_ID> --output json
 ```
 
 Save the returned `iid` for later phases.
@@ -246,15 +222,8 @@ If you prefer not to use the helper script, you can set up manually with separat
 
 After starting, the adapter should appear in your LimaCharlie organization within a few seconds as a sensor. Verify by listing sensors with a selector that matches the installation key's `iid`:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_sensors
-    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"selector\": \"iid == `<IID>`\"}
-    - Return: RAW"
-)
+```bash
+limacharlie sensor list --oid <SELECTED_ORG_ID> --output json | jq '[.[] | select(.iid == "<IID>")]'
 ```
 
 You can also check the adapter log for connection status:
@@ -267,16 +236,11 @@ Look for `usp-client connected` to confirm successful connection.
 
 Also check for any adapter errors:
 
+```bash
+limacharlie org errors --oid <SELECTED_ORG_ID> --output json
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_org_errors
-    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\"}
-    - Return: Look for errors related to the test adapter"
-)
-```
+
+Look for errors related to the test adapter in the output.
 
 ### Phase 5: Viewing Ingested Data
 
@@ -284,28 +248,14 @@ After the adapter has been running for a few minutes, query the ingested logs.
 
 **Step 1**: Generate the LCQL query from natural language:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: generate_lcql_query
-    - Parameters: {\"oid\": \"<OID>\", \"query\": \"all events from sensor <SID> in the last 10 minutes\"}
-    - Return: The generated LCQL query string"
-)
+```bash
+limacharlie ai generate-query --prompt "all events from sensor <SID> in the last 10 minutes" --oid <OID> --output json
 ```
 
 **Step 2**: Execute the generated query:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: run_lcql_query
-    - Parameters: {\"oid\": \"<OID>\", \"query\": \"<GENERATED_QUERY_FROM_STEP_1>\", \"limit\": 50}
-    - Return: Return sample TEXT values from the events to show the log format"
-)
+```bash
+limacharlie search run --query "<GENERATED_QUERY_FROM_STEP_1>" --start <ts> --end <ts> --oid <OID> --output json
 ```
 
 Replace `<OID>` with the organization ID and `<SID>` with the sensor ID from the verification step.
@@ -343,15 +293,8 @@ Use `;` instead of `&&` since pkill returns non-zero exit codes even on success.
 **Steps**:
 
 1. List organizations:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_user_orgs
-    - Parameters: {}
-    - Return: RAW"
-)
+```bash
+limacharlie org list --output json
 ```
 
 Response shows: `[{"name": "My Test Org", "oid": "abc123-def456-..."}]`
@@ -359,27 +302,15 @@ Response shows: `[{"name": "My Test Org", "oid": "abc123-def456-..."}]`
 2. Ask user to select org (via AskUserQuestion)
 
 3. Check for existing installation key:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_installation_keys
-    - Parameters: {\"oid\": \"abc123-def456-...\"}
-    - Return: Look for key with description 'Test Adapter' and return its iid"
-)
+```bash
+limacharlie installation-key list --oid abc123-def456-... --output json
 ```
 
+Look for key with description 'Test Adapter' and extract its iid.
+
 4. Create installation key if needed:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: create_installation_key
-    - Parameters: {\"oid\": \"abc123-def456-...\", \"description\": \"Test Adapter\", \"tags\": [\"test-adapter\", \"temporary\"]}
-    - Return: The iid of the created key"
-)
+```bash
+limacharlie installation-key create --oid abc123-def456-... --output json
 ```
 
 Returns: `{"iid": "729b2770-9ae6-4e14-beea-5e42b854adf5", ...}`
@@ -432,15 +363,8 @@ Output shows platform detection, download progress, and configuration saved.
 ```
 
 9. Verify adapter connection:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_sensors
-    - Parameters: {\"oid\": \"abc123-def456-...\", \"selector\": \"iid == `729b2770-9ae6-4e14-beea-5e42b854adf5`\"}
-    - Return: RAW"
-)
+```bash
+limacharlie sensor list --oid abc123-def456-... --output json | jq '[.[] | select(.iid == "729b2770-9ae6-4e14-beea-5e42b854adf5")]'
 ```
 
 10. Inform user the adapter is running and how to stop it.
@@ -462,15 +386,8 @@ Task(
 ```
 
 3. Optionally, delete the sensor from LimaCharlie:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: delete_sensor
-    - Parameters: {\"oid\": \"abc123-def456-...\", \"sid\": \"<SENSOR_ID>\"}
-    - Return: RAW"
-)
+```bash
+limacharlie sensor delete --sid <SENSOR_ID> --oid abc123-def456-...
 ```
 
 ## Additional Notes
@@ -490,7 +407,6 @@ Task(
 ## Related Skills
 
 - `parsing-helper`: **Used in Phase 2** to generate and validate Grok parsing patterns for your log data
-- `limacharlie-call`: For creating organizations or other API operations
 - `detection-engineering`: For creating D&R rules to test with the adapter
 - `sensor-health`: To check if your test adapter is reporting properly
 - `investigation-creation`: To investigate events from your test adapter

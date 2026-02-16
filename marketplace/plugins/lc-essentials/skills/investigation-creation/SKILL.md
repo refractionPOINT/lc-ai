@@ -24,93 +24,59 @@ You are an expert SOC analyst. Your job is to investigate security activity and 
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
-**Before calling ANY LimaCharlie function, read its documentation first.**
+**Before calling ANY LimaCharlie CLI command, use `--ai-help` to check usage.**
 
 ---
 
-Function documentation is located at:
-```
-${CLAUDE_PLUGIN_ROOT}/skills/limacharlie-call/functions/[function-name].md
-```
-
-**Mandatory workflow when using a tool for the first time (or when you get a parameter error):**
-
-1. **Read the doc**: Use the `Read` tool to read the function's `.md` file
-2. **Understand required parameters**: Note all required vs optional parameters
-3. **Check parameter types and valid values**: Many functions have specific enum values
-4. **Then call the tool**: With the correct parameters
-
-**Example - before calling `search_iocs`:**
-```
-Read: ${CLAUDE_PLUGIN_ROOT}/skills/limacharlie-call/functions/search-iocs.md
-```
-
-**Why this matters:**
-- Parameter errors waste investigation time
-- Guessing at parameters leads to failed queries and missed evidence
-- The docs contain required parameters, valid values, and usage examples
-- 30 seconds reading docs saves minutes of trial-and-error
-
 **If you get a parameter validation error:**
 1. STOP - do not work around with alternative approaches
-2. READ the function documentation
-3. FIX your parameters based on the docs
+2. Run `limacharlie <command> --ai-help` for usage details
+3. FIX your parameters based on the help output
 4. RETRY the call
 
 ---
 
 ## CRITICAL: NEVER Write LCQL Queries Manually
 
-**You MUST use `generate_lcql_query` for ALL LCQL queries. NEVER write LCQL syntax yourself.**
+**You MUST use `limacharlie ai generate-query` for ALL LCQL queries. NEVER write LCQL syntax yourself.**
 
 LCQL is NOT SQL. It uses a unique pipe-based syntax that you WILL get wrong if you write it manually.
 
 ### Mandatory Workflow for EVERY Query
 
 ```
-WRONG: run_lcql_query(query="sensor(abc) -1h | * | NEW_PROCESS | ...")  <- NEVER DO THIS
-RIGHT: generate_lcql_query(query="Find processes on sensor abc in last hour") -> run_lcql_query(query=<generated>)
+WRONG: limacharlie search run --query "sensor(abc) -1h | * | NEW_PROCESS | ..."  <- NEVER DO THIS
+RIGHT: limacharlie ai generate-query --prompt "..." -> limacharlie search run --query <generated>
 ```
 
 **Step 1 - ALWAYS generate first:**
-```
-tool: generate_lcql_query
-parameters:
-  oid: [organization-id]
-  query: "natural language description of what you want to find"
+```bash
+limacharlie ai generate-query --prompt "Find processes on sensor abc in last hour" --oid <oid> --output json
 ```
 
 **Step 2 - Execute the generated query:**
-```
-tool: run_lcql_query
-parameters:
-  oid: [organization-id]
-  query: [COPY EXACT OUTPUT FROM STEP 1]
+```bash
+limacharlie search run --query "<generated_query>" --start <ts> --end <ts> --oid <oid> --output json
 ```
 
 ### Why This Matters
@@ -120,7 +86,7 @@ parameters:
 - The generator validates against your actual telemetry
 - Manual queries WILL break investigations
 
-**If you skip `generate_lcql_query`, your investigation WILL produce incorrect or incomplete results.**
+**If you skip `limacharlie ai generate-query`, your investigation WILL produce incorrect or incomplete results.**
 
 ---
 
@@ -291,7 +257,7 @@ When you only include 3 events from a 12-event attack chain:
 
 Before starting, gather from the user:
 
-- **Organization ID (OID)**: UUID of the target organization (use `list_user_orgs` if needed)
+- **Organization ID (OID)**: UUID of the target organization (use `limacharlie org list` if needed)
 - **Starting Point** (one of):
   - **Event**: atom + sid (sensor ID)
   - **Detection**: detection_id
@@ -444,38 +410,26 @@ Use these techniques as needed based on what you're investigating. This is a ref
 ### Getting Started
 
 **From an Event (atom + sid)**:
-```
-tool: get_event_by_atom
-parameters:
-  oid: [oid]
-  sid: [sid]
-  atom: [atom]
+```bash
+limacharlie event get --sid <sid> --atom <atom> --oid <oid> --output json
 ```
 
 **From a Detection**:
-```
-tool: get_detection
-parameters:
-  oid: [oid]
-  detection_id: [detection-id]
+```bash
+limacharlie detection get <detection-id> --oid <oid> --output json
 ```
 Extract the triggering event atom, sensor ID, and timestamps.
 
 **From an LCQL Query**:
-```
-tool: run_lcql_query
-parameters:
-  oid: [oid]
-  query: [use generate_lcql_query first!]
-  limit: 100
+```bash
+# Always generate query first!
+limacharlie ai generate-query --prompt "..." --oid <oid> --output json
+limacharlie search run --query "<generated>" --start <ts> --end <ts> --oid <oid> --output json
 ```
 
 **Sensor Context**:
-```
-tool: get_sensor_info
-parameters:
-  oid: [oid]
-  sid: [sensor-id]
+```bash
+limacharlie sensor get --sid <sid> --oid <oid> --output json
 ```
 
 ### Process Investigation
@@ -483,21 +437,13 @@ parameters:
 **Direct Atom Navigation** (preferred when you have atoms):
 
 Get Parent:
-```
-tool: get_event_by_atom
-parameters:
-  oid: [oid]
-  sid: [sid]
-  atom: [routing.parent from current event]
+```bash
+limacharlie event get --sid <sid> --atom <parent_atom> --oid <oid> --output json
 ```
 
 Get Children:
-```
-tool: get_atom_children
-parameters:
-  oid: [oid]
-  sid: [sid]
-  atom: [routing.this from parent event]
+```bash
+limacharlie event children --sid <sid> --atom <atom> --oid <oid> --output json
 ```
 
 **LCQL Queries** (when searching by attributes):
@@ -540,24 +486,13 @@ parameters:
 - "Find all process executions by user [username] on sensor [sid] within [time_window]"
 
 **Related Detections** (remember: divide timestamps by 1000!):
-```
-tool: get_historic_detections
-parameters:
-  oid: [oid]
-  sid: [sid]
-  start: [timestamp_in_seconds]
-  end: [timestamp_in_seconds]
-  limit: 50
+```bash
+limacharlie detection list --sid <sid> --start <ts_seconds> --end <ts_seconds> --oid <oid> --output json
 ```
 
-**Org-wide IOC Search** (read `search-iocs.md` first!):
-```
-tool: search_iocs
-parameters:
-  oid: [oid]
-  ioc_type: "ip"           # Required: ip, domain, file_hash, file_path, file_name, user, etc.
-  ioc_value: "203.0.113.50" # Required: the IOC value to search
-  info_type: "locations"    # Required: "summary" for counts, "locations" for sensor details
+**Org-wide IOC Search**:
+```bash
+limacharlie ioc search --type ip --value "203.0.113.50" --oid <oid> --output json
 ```
 
 ---
@@ -603,14 +538,8 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
 
 **Investigation Steps**:
 1. **Get all detections on this host** around the incident time:
-   ```
-   tool: get_historic_detections
-   parameters:
-     oid: [oid]
-     sid: [sid]
-     start: [event_time_seconds - 3600]  # 1 hour before
-     end: [event_time_seconds + 3600]    # 1 hour after
-     limit: 100
+   ```bash
+   limacharlie detection list --sid <sid> --start $((event_time_seconds - 3600)) --end $((event_time_seconds + 3600)) --oid <oid> --output json
    ```
 
 2. **Look for related suspicious activity**:
@@ -642,32 +571,17 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
 **The Question**: Is this happening on other systems? How widespread is the compromise?
 
 **Investigation Steps**:
-1. **Search for the malware hash org-wide** (read `search-iocs.md` for full parameter details):
-   ```
-   tool: search_iocs
-   parameters:
-     oid: [oid]
-     ioc_type: "file_hash"
-     ioc_value: "[malware_sha256]"
-     info_type: "locations"
+1. **Search for the malware hash org-wide**:
+   ```bash
+   limacharlie ioc search --type file_hash --value "<malware_sha256>" --oid <oid> --output json
    ```
 
 2. **Search for C2 IPs/domains org-wide** (one search per IOC type):
+   ```bash
+   limacharlie ioc search --type ip --value "<c2_ip>" --oid <oid> --output json
    ```
-   tool: search_iocs
-   parameters:
-     oid: [oid]
-     ioc_type: "ip"
-     ioc_value: "[c2_ip]"
-     info_type: "locations"
-   ```
-   ```
-   tool: search_iocs
-   parameters:
-     oid: [oid]
-     ioc_type: "domain"
-     ioc_value: "[c2_domain]"
-     info_type: "locations"
+   ```bash
+   limacharlie ioc search --type domain --value "<c2_domain>" --oid <oid> --output json
    ```
 
 3. **Search for the malware file path pattern org-wide**:
@@ -679,14 +593,8 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
    - Particularly for encoded PowerShell, unusual LOLBin arguments
 
 5. **Check for related detections org-wide**:
-   ```
-   tool: get_historic_detections
-   parameters:
-     oid: [oid]
-     # No sid - searches all sensors
-     start: [timestamp_seconds - 86400]  # 24 hours before
-     end: [timestamp_seconds + 3600]
-     limit: 200
+   ```bash
+   limacharlie detection list --start $((timestamp_seconds - 86400)) --end $((timestamp_seconds + 3600)) --oid <oid> --output json
    ```
    Filter results for same rule name or similar detection categories.
 
@@ -1026,19 +934,14 @@ Always confirm with user before saving:
 
 ### Save Investigation
 
-```
-tool: set_investigation
-parameters:
-  oid: [oid]
-  investigation_name: [investigation_name]
-  investigation_data: [investigation_record]
+```bash
+limacharlie investigation create --name "<investigation_name>" --data '<investigation_record>' --oid <oid> --output json
 ```
 
 ---
 
 ## Related Skills
 
-- `lookup-lc-doc` - For LCQL syntax and event schema reference
 - `detection-engineering` - For creating D&R rules based on investigation findings
 - `threat-report-evaluation` - For evaluating threat reports and searching for IOCs
 - `sensor-tasking` - For live response and data collection from sensors during investigation (**EDR sensors only**: requires platform=windows/linux/macos AND arch!=usp_adapter)
@@ -1047,8 +950,8 @@ parameters:
 
 - **Investigation Hive Documentation**: [Config Hive: Investigation](https://github.com/refractionPOINT/documentation/blob/master/docs/limacharlie/doc/Platform_Management/Config_Hive/config-hive-investigation.md)
 - **Investigation JSON Schema**: The authoritative schema defining valid fields, types, and enums is at `legion_config_hive/hives/schemas/investigation.schema.json`
-- **expand_investigation function**: [Expand Investigation](../limacharlie-call/functions/expand-investigation.md)
 - **Investigation Guide**: [Investigation Best Practices](https://github.com/refractionPOINT/documentation/blob/master/docs/limacharlie/doc/Getting_Started/Use_Cases/investigation-guide.md)
+- Use `limacharlie investigation --ai-help` for CLI help
 
 ## Schema Quick Reference
 

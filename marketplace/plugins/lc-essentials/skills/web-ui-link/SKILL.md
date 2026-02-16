@@ -16,28 +16,23 @@ Generate direct URLs to any page in the LimaCharlie web application at `https://
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
 
@@ -157,15 +152,8 @@ Extract from the user's request:
 
 If the user provided an organization **name** instead of OID, or if no organization was specified:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_user_orgs
-    - Parameters: {}
-    - Return: List of organizations with their OIDs and names"
-)
+```bash
+limacharlie org list --output json
 ```
 
 **Handling multiple organizations:**
@@ -177,16 +165,11 @@ Task(
 
 If the user requested a sensor-specific URL but provided a **hostname** instead of SID:
 
+```bash
+limacharlie sensor list --oid [oid] --output json
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_sensors
-    - Parameters: {\"oid\": \"[oid]\"}
-    - Return: Find sensor with hostname matching '[hostname]' and return its SID"
-)
-```
+
+Then filter the results to find the sensor with hostname matching '[hostname]' and extract its SID.
 
 ### Step 4: Match Feature to URL Path
 
@@ -211,7 +194,7 @@ Return the URL in a clickable markdown format:
 
 **Steps**:
 1. Feature identified: `secrets-manager`
-2. No org specified - call `list_user_orgs`
+2. No org specified - call `limacharlie org list --output json`
 3. If single org, use its OID; if multiple, ask user to select
 4. Construct URL
 
@@ -228,8 +211,8 @@ Here's the link to the Secrets Manager:
 
 **Steps**:
 1. Feature identified: `timeline` (sensor route)
-2. Org name: "production" - resolve to OID via `list_user_orgs`
-3. Hostname: "DESKTOP-PROD01" - resolve to SID via `list_sensors`
+2. Org name: "production" - resolve to OID via `limacharlie org list --output json`
+3. Hostname: "DESKTOP-PROD01" - resolve to SID via `limacharlie sensor list --oid <oid> --output json`
 4. Construct sensor timeline URL
 
 **Response**:
@@ -336,6 +319,5 @@ I can also list sensors in your organization if you need to find one.
 
 ## Related Skills
 
-- `limacharlie-call` - For actually interacting with LimaCharlie APIs
 - `lookup-lc-doc` - For documentation about LimaCharlie features
 - `sensor-health` - For checking sensor status before linking to sensor pages

@@ -19,30 +19,25 @@ You are a Detection Tuning specialist helping security operators investigate noi
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
 
@@ -71,11 +66,9 @@ Use when the user wants to:
 
 Before starting, gather from the user:
 
-- **Organization ID (OID)**: UUID of the target organization (use `list_user_orgs` if needed)
+- **Organization ID (OID)**: UUID of the target organization (use `limacharlie org list` if needed)
 - **Time Window** (optional): Defaults to 7 days. User can specify different window.
 - **Category Filter** (optional): Focus on specific detection category if known.
-
-> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 ---
 
@@ -117,20 +110,13 @@ echo "Start: $start, End: $end"
 
 ### 1.2 Fetch Historic Detections
 
-```
-tool: get_historic_detections
-parameters:
-  oid: [organization-id]
-  start: [calculated start timestamp]
-  end: [calculated end timestamp]
-  limit: 5000
+```bash
+limacharlie detection list --start $start --end $end --oid [organization-id] --output json
 ```
 
-If user specified a category filter:
-```
-parameters:
-  ...
-  cat: [category-name]
+If user specified a category filter, pipe through jq:
+```bash
+limacharlie detection list --start $start --end $end --oid [organization-id] --output json | jq '[.[] | select(.cat == "[category-name]")]'
 ```
 
 ### 1.3 Analyze Detection Patterns
@@ -259,14 +245,11 @@ Examples:
 
 Validate the FP rule syntax before testing:
 
-```
-tool: validate_dr_rule_components
-parameters:
-  oid: [organization-id]
-  detect: [fp_rule_logic]
+```bash
+limacharlie rule validate --detect '<fp_rule_logic>' --oid [organization-id]
 ```
 
-**Note**: FP rules use the same detection logic syntax as D&R rules, so we can use the D&R validation tool.
+**Note**: FP rules use the same detection logic syntax as D&R rules, so we can use the D&R validation command.
 
 ---
 
@@ -280,7 +263,7 @@ parameters:
 
 ### 4.2 Transform Detection to Test Event
 
-FP rules operate on detection output. To test with `test_dr_rule_events`, we need to transform the detection structure to look like an event.
+FP rules operate on detection output. To test with `limacharlie rule test`, we need to transform the detection structure to look like an event.
 
 **Original detection structure:**
 ```json
@@ -325,13 +308,8 @@ FP rules operate on detection output. To test with `test_dr_rule_events`, we nee
 
 Test that the FP rule matches the benign detections:
 
-```
-tool: test_dr_rule_events
-parameters:
-  oid: [organization-id]
-  detect: [fp_rule_logic]
-  events: [transformed_benign_detections]
-  trace: true
+```bash
+limacharlie rule test --detect '<fp_rule_logic>' --events '<transformed_benign_detections_json>' --trace --oid [organization-id] --output json
 ```
 
 **Expected result**: `matched: true` for all benign detections
@@ -342,13 +320,8 @@ Test that the FP rule does NOT match legitimate detections (if available):
 
 Select sample detections from the SAME category but DIFFERENT hosts/patterns:
 
-```
-tool: test_dr_rule_events
-parameters:
-  oid: [organization-id]
-  detect: [fp_rule_logic]
-  events: [transformed_legitimate_detections]
-  trace: true
+```bash
+limacharlie rule test --detect '<fp_rule_logic>' --events '<transformed_legitimate_detections_json>' --trace --oid [organization-id] --output json
 ```
 
 **Expected result**: `matched: false` for legitimate detections
@@ -422,24 +395,17 @@ Use `AskUserQuestion` with clear options:
 
 ### 6.1 Create FP Rule
 
-```
-tool: set_fp_rule
-parameters:
-  oid: [organization-id]
-  rule_name: "fp-suspicious-process-sccm-server-20251204"
-  rule_content:
-    detection:
-      op: and
-      rules:
-        - op: is
-          path: cat
-          value: suspicious_process
-        - op: is
-          path: routing/hostname
-          value: SCCM-SERVER
-        - op: contains
-          path: detect/event/FILE_PATH
-          value: "C:\\Windows\\CCM\\"
+```bash
+limacharlie fp create fp-suspicious-process-sccm-server-20251204 --data '{
+  "detection": {
+    "op": "and",
+    "rules": [
+      {"op": "is", "path": "cat", "value": "suspicious_process"},
+      {"op": "is", "path": "routing/hostname", "value": "SCCM-SERVER"},
+      {"op": "contains", "path": "detect/event/FILE_PATH", "value": "C:\\Windows\\CCM\\"}
+    ]
+  }
+}' --oid [organization-id]
 ```
 
 ### 6.2 Confirm Deployment
@@ -456,7 +422,7 @@ The rule is now filtering detections.
 **Recommended next steps:**
 1. Monitor detection volume over the next 24-48 hours
 2. Verify expected reduction in noisy alerts
-3. If issues arise, use `delete_fp_rule` to remove the rule
+3. If issues arise, use `limacharlie fp delete <name> --oid <oid>` to remove the rule
 ```
 
 ---
@@ -508,17 +474,17 @@ detection:
 **User**: "I'm getting too many alerts from our SCCM server. Can you help tune them?"
 
 **Assistant**:
-1. Gets OID from user or uses `list_user_orgs`
+1. Gets OID from user or uses `limacharlie org list --output json`
 2. Calculates 7-day time window
-3. Fetches historic detections with `get_historic_detections`
+3. Fetches historic detections with `limacharlie detection list`
 4. Groups and analyzes patterns
 5. Presents findings table showing SCCM-SERVER generating 334 detections/day
 6. Uses `AskUserQuestion` to confirm SCCM activity is benign
 7. Generates FP rule targeting SCCM-SERVER + CCM path
-8. Validates syntax with `validate_dr_rule_components`
-9. Tests FP rule with `test_dr_rule_events` using transformed detections
+8. Validates syntax with `limacharlie rule validate`
+9. Tests FP rule with `limacharlie rule test` using transformed detections
 10. Presents rule with test results for approval
-11. On approval, deploys with `set_fp_rule`
+11. On approval, deploys with `limacharlie fp create`
 12. Confirms success and recommends monitoring
 
 ---
@@ -541,7 +507,7 @@ detection:
 
 - Check operator spelling (`is`, not `equals`)
 - Verify path format (forward slashes, correct prefixes)
-- Use `validate_dr_rule_components` with `trace: true`
+- Use `limacharlie rule validate --detect '...' --trace --oid <oid>`
 
 ### No Noisy Patterns Found
 

@@ -11,7 +11,7 @@ description: Clear description with trigger keywords. Use when [specific scenari
 allowed-tools:
   - Task              # Required for spawning sub-agents
   - Read              # Required for reading files
-  - Bash              # Required for shell commands (timestamps, etc.)
+  - Bash              # Required for shell commands (limacharlie CLI, timestamps, etc.)
   - Skill             # Only if skill invokes other skills
   - AskUserQuestion   # Only if skill prompts user
   - WebFetch          # Only if skill fetches web content
@@ -21,7 +21,7 @@ allowed-tools:
 ---
 ```
 
-**Important**: Never include `mcp__*` tools in allowed-tools. Skills don't call MCP directly.
+**Important**: Never include `mcp__*` tools in allowed-tools. Skills use the `limacharlie` CLI directly via Bash.
 
 ## Structure
 
@@ -36,30 +36,26 @@ Brief description of what this skill does.
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
+| **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-*` + `limacharlie rule validate` |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
 
@@ -93,9 +89,9 @@ Add after the Critical Rules table:
 ### D&R Rule Generation
 
 Never write D&R YAML manually:
-1. `generate_dr_rule_detection()` - Generate detection logic
-2. `generate_dr_rule_respond()` - Generate response actions
-3. `validate_dr_rule_components()` - Validate before deploy
+1. `limacharlie ai generate-detection --description "..." --oid <oid> --output json` - Generate detection logic
+2. `limacharlie ai generate-response --description "..." --oid <oid> --output json` - Generate response actions
+3. `limacharlie rule validate --detect '...' --respond '...' --oid <oid>` - Validate before deploy
 ```
 
 ### For Multi-Org Skills

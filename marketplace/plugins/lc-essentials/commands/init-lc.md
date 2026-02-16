@@ -1,12 +1,12 @@
 ---
 name: init-lc
-description: Initialize the current working directory's CLAUDE.md with LimaCharlie guidelines. Merges AUTOINIT.md content into a '# Using LimaCharlie' section. Safe to run multiple times.
+description: Initialize the current working directory's CLAUDE.md with LimaCharlie CLI guidelines. Merges AUTOINIT.md content into a '# Using LimaCharlie' section. Safe to run multiple times.
 allowed-tools: Read, Write, Edit, Bash, Glob
 ---
 
 # Initialize LimaCharlie Guidelines
 
-You are initializing the current working directory's CLAUDE.md with LimaCharlie-specific guidelines.
+You are initializing the current working directory's CLAUDE.md with LimaCharlie CLI guidelines.
 
 ## Instructions
 

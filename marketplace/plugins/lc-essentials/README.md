@@ -1,6 +1,6 @@
 # LimaCharlie Essentials Plugin
 
-Essential LimaCharlie skills for API access, sensor management, detection engineering, and security operations. Includes 124 comprehensive skills covering core operations, historical data, forensics, detection rules, threat intelligence analysis, MSSP multi-tenant reporting, configuration management, and administration. Includes a specialized script for efficiently analyzing large API result sets.
+Essential LimaCharlie skills for CLI-based API access, sensor management, detection engineering, and security operations. Includes 124 comprehensive skills covering core operations, historical data, forensics, detection rules, threat intelligence analysis, MSSP multi-tenant reporting, configuration management, and administration.
 
 ## Important: Organization ID (OID) Requirements
 
@@ -190,28 +190,17 @@ The **sensor-health** skill orchestrates parallel sensor health checks across mu
 
 ## How It Works
 
-Skills in this plugin connect to the LimaCharlie API via MCP (Model Context Protocol) to:
+Skills in this plugin connect to the LimaCharlie API via the `limacharlie` CLI to:
 
 1. **Authenticate** using your LimaCharlie API credentials
 2. **Execute operations** against your organization(s)
-3. **Return results** in a structured, readable format
+3. **Return results** in a structured, readable JSON format
 
 Most skills require:
-- **OID**: Organization ID (UUID) - get this via `list-user-orgs`
+- **OID**: Organization ID (UUID) - get this via `limacharlie org list --output json`
 - **Additional parameters**: Sensor IDs, rule names, query parameters, etc.
 
-### Large Result Handling
-
-When API calls return large datasets (>100KB), the response includes a `resource_link` URL. To work with these large result sets:
-
-1. **Download**: Use curl to download the resource_link to a temp file
-2. **Analyze**: Run the `analyze-lc-result.sh` script to understand the JSON structure
-3. **Extract**: Use `jq` to extract the specific information you need
-4. **Cleanup**: Remove the temp file when done
-
-The analyze script outputs a JSON schema showing object keys, array patterns, and data types, allowing you to craft precise jq queries to extract only the information you need—keeping your conversation context clean and focused.
-
-See [CALLING_API.md](./CALLING_API.md) for details on how large result handling works.
+See [CALLING_API.md](./CALLING_API.md) for details on CLI usage patterns.
 
 ## Documentation Coverage
 

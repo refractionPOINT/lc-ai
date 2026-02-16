@@ -1,7 +1,7 @@
 {
   "name": "lc-essentials",
-  "version": "1.0.0",
-  "description": "Makes LimaCharlie documentation accessible and instructs how to perform operations in LC. Performing operations is ALWAYS done by using the SKILLs within along with the MCP tool calling the API, NEVER via the CLI/SDK.",
+  "version": "2.0.0",
+  "description": "Makes LimaCharlie documentation accessible and instructs how to perform operations in LC. Performing operations is done through the `limacharlie` CLI via Bash.",
   "author": {
     "name": "LimaCharlie",
     "email": "support@limacharlie.io"

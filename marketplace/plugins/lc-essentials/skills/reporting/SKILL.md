@@ -17,30 +17,25 @@ allowed-tools:
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
 
@@ -129,7 +124,7 @@ Ensure you are authenticated to LimaCharlie with access to target organizations:
 ### Understanding Organization IDs (OIDs)
 **⚠️ CRITICAL**: Organization ID (OID) is a **UUID** (like `c7e8f940-1234-5678-abcd-1234567890ab`), **NOT** the organization name.
 
-- Use `list-user-orgs` function to get OID from organization name
+- Use `limacharlie org list` to get OID from organization name
 - All API calls require the UUID, not the friendly name
 - OIDs are permanent identifiers (names can change)
 
@@ -319,7 +314,7 @@ Client ABC (oid: c7e8f940-...)
 ## Available Data Sources
 
 ### 1. Multi-Tenant Discovery
-**Function**: `list-user-orgs`
+**CLI**: `limacharlie org list`
 - **Endpoint**: GET /v1/user/orgs
 - **OID Required**: NO (user-level operation)
 - **Returns**: List of accessible organizations with OIDs and names
@@ -351,7 +346,7 @@ Client ABC (oid: c7e8f940-...)
 - Confirm role is "owner", "admin", or "user"
 
 ### 2. Organization Metadata
-**Function**: `get-org-info`
+**CLI**: `limacharlie org info`
 - **Endpoint**: GET /v1/orgs/{oid}
 - **OID Required**: YES
 - **Returns**: Organization details, creation date, settings
@@ -368,7 +363,7 @@ Client ABC (oid: c7e8f940-...)
 ```
 
 ### 3. Usage Statistics
-**Function**: `get-usage-stats`
+**CLI**: `limacharlie org stats`
 - **Endpoint**: GET /v1/usage/{oid}
 - **OID Required**: YES
 - **Returns**: Daily usage metrics (~90 days historical)
@@ -420,7 +415,7 @@ For time range Nov 1-30, 2025:
 ```
 
 ### 4. Billing Details
-**Function**: `get-billing-details`
+**CLI**: `limacharlie billing details`
 - **Endpoint**: GET /orgs/{oid}/details (billing endpoint)
 - **OID Required**: YES
 - **Permissions**: Requires admin/owner role
@@ -446,7 +441,7 @@ For time range Nov 1-30, 2025:
 - Continue with partial data
 
 ### 5. Invoice URLs
-**Function**: `get-org-invoice-url`
+**CLI**: `limacharlie billing invoice-url`
 - **Endpoint**: GET /orgs/{oid}/invoice
 - **OID Required**: YES
 - **Returns**: Direct URL to organization's invoice
@@ -466,7 +461,7 @@ For billing details and charges:
 ```
 
 ### 6. Sensor Inventory
-**Function**: `list-sensors`
+**CLI**: `limacharlie sensor list`
 - **Endpoint**: GET /v1/sensors/{oid}
 - **OID Required**: YES
 - **Returns**: All sensors with metadata
@@ -494,46 +489,20 @@ For billing details and charges:
 ```
 
 **Large Result Handling:**
-If API returns `resource_link` instead of inline data:
 
-```json
-{
-  "success": true,
-  "resource_link": "https://storage.googleapis.com/...",
-  "resource_size": 234329,
-  "reason": "results too large, see resource_link"
-}
-```
-
-**REQUIRED Workflow for resource_link:**
-
-The analyze script is at `scripts/analyze-lc-result.sh` in the plugin root. From this skill's base directory (shown at the top of the skill prompt), the path is `../../scripts/analyze-lc-result.sh`.
+For large result sets, pipe CLI output to a file and use jq:
 
 ```bash
-# Step 1: Download and analyze schema (MANDATORY - do not skip)
-# Path: {skill_base_directory}/../../scripts/analyze-lc-result.sh
-bash "{skill_base_directory}/../../scripts/analyze-lc-result.sh" "https://storage.googleapis.com/..."
+# Save large results to file
+limacharlie sensor list --oid <oid> --output json > /tmp/sensors.json
 
-# Output shows schema and file path:
-# (stdout) {"sensors": {"sensor-id": {"sid": "string", "hostname": "string", ...}}}
-# (stderr) ---FILE_PATH---
-# (stderr) /tmp/lc-result-1234567890.json
+# Extract needed fields with jq
+jq '.sensors | length' /tmp/sensors.json  # Count
+jq '.sensors | to_entries | .[].value.hostname' /tmp/sensors.json | head -20  # Sample hostnames
 
-# Step 2: Review schema output BEFORE writing jq queries
-
-# Step 3: Extract only needed fields with jq
-jq '.sensors | length' /tmp/lc-result-1234567890.json  # Count
-jq '.sensors | to_entries | .[].value.hostname' /tmp/lc-result-1234567890.json | head -20  # Sample hostnames
-
-# Step 4: Clean up
-rm /tmp/lc-result-1234567890.json
+# Clean up
+rm /tmp/sensors.json
 ```
-
-**NEVER:**
-- Assume JSON structure without analyzing schema
-- Write jq queries before seeing schema output
-- Skip the analyze-lc-result.sh step
-- Load entire large file into context
 
 **Field Validation - CRITICAL:**
 
@@ -596,7 +565,7 @@ Sensor count: 30
 ```
 
 ### 7. Online Sensors
-**Function**: `get-online-sensors`
+**CLI**: `limacharlie sensor list --online`
 - **Endpoint**: GET /v1/sensors/online/{oid}
 - **OID Required**: YES
 - **Returns**: List of currently online sensor IDs
@@ -628,7 +597,7 @@ offline_count = total_sensors - online_count
 ```
 
 ### 8. Historic Detections
-**Function**: `get-historic-detections`
+**CLI**: `limacharlie detection list`
 - **Endpoint**: GET /v1/insight/{oid}/detections
 - **OID Required**: YES
 - **Returns**: Security detections within time range
@@ -728,7 +697,7 @@ if limit_reached:
 ```
 
 ### 9. D&R Rules Inventory
-**Function**: `list-dr-general-rules`
+**CLI**: `limacharlie rule list`
 - **Endpoint**: GET /v1/rules/{oid}?namespace=general
 - **OID Required**: YES
 - **Returns**: Custom D&R rules in general namespace
@@ -763,7 +732,7 @@ if limit_reached:
 - List detection types: Extract event types from detect blocks
 
 ### 10. Outputs Configuration
-**Function**: `list-outputs`
+**CLI**: `limacharlie output list`
 - **Endpoint**: GET /v1/outputs/{oid}
 - **OID Required**: YES
 - **Returns**: Configured data outputs (SIEM, storage, webhooks)
@@ -783,7 +752,7 @@ This skill uses a **parallel subagent architecture** for efficient multi-tenant 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  reporting (this skill)                                │
-│  ├─ Phase 1: Discovery (list orgs via limacharlie-call)     │
+│  ├─ Phase 1: Discovery (list orgs via CLI)                   │
 │  ├─ Phase 2: Time range validation                          │
 │  ├─ Phase 3: Spawn parallel agents ────────────────────┐    │
 │  ├─ Phase 4: Aggregate results                         │    │
@@ -865,8 +834,8 @@ If user requests HTML output:
 
 ```
 ┌─ PHASE 1: DISCOVERY ──────────────────────────────┐
-│ 1. Use limacharlie-call skill to get org list:   │
-│    Function: list-user-orgs (no OID required)     │
+│ 1. Use CLI to get org list:                       │
+│    limacharlie org list --output json              │
 │                                                    │
 │ 2. Validation:                                    │
 │    ✓ Check orgs array exists and not empty        │
@@ -931,8 +900,7 @@ If user requests HTML output:
 │    message to achieve true parallelism:           │
 │                                                    │
 │    Task(                                          │
-│      subagent_type="lc-essentials:org-reporter",
-│      model="sonnet",                               │
+│      subagent_type="lc-essentials:org-reporter",  │
 │      prompt="Collect reporting data for org       │
 │        'Client ABC' (OID: uuid-1)                 │
 │        Time Range:                                │
@@ -941,8 +909,7 @@ If user requests HTML output:
 │        Detection Limit: 5000"                     │
 │    )                                              │
 │    Task(                                          │
-│      subagent_type="lc-essentials:org-reporter",
-│      model="sonnet",                               │
+│      subagent_type="lc-essentials:org-reporter",  │
 │      prompt="Collect reporting data for org       │
 │        'Client XYZ' (OID: uuid-2)..."             │
 │    )                                              │
@@ -1082,13 +1049,13 @@ If user requests HTML output:
 │                                                    │
 │     G. METHODOLOGY SECTION                        │
 │        Data Sources:                              │
-│          - list-user-orgs: Organization discovery │
-│          - get-usage-stats: Daily metrics         │
-│          - get-billing-details: Subscription info │
-│          - list-sensors: Endpoint inventory       │
-│          - get-online-sensors: Real-time status   │
-│          - get-historic-detections: Security data │
-│          - list-dr-general-rules: Custom rules    │
+│          - limacharlie org list: Organization discovery │
+│          - limacharlie org stats: Daily metrics   │
+│          - limacharlie billing details: Sub info  │
+│          - limacharlie sensor list: Endpoint inv  │
+│          - limacharlie sensor list --online: Live │
+│          - limacharlie detection list: Security   │
+│          - limacharlie rule list: Custom rules    │
 │                                                    │
 │        Query Parameters:                          │
 │          - Detection limit: 5,000 per org         │
@@ -1169,7 +1136,7 @@ The above console output displays ALL collected data. Do NOT automatically proce
    - Required: year (integer), month (1-12)
    - Optional: scope (single/all), oid (UUID), format (json/markdown)
 
-3. Use limacharlie-call skill: list-user-orgs
+3. Get orgs: limacharlie org list --output json
 
 4. Spawn org-reporter agents in parallel (same as Pattern 1)
    - Agents collect ALL data (billing focus is in report generation)
@@ -1204,13 +1171,12 @@ The above console output displays ALL collected data. Do NOT automatically proce
 ```
 1. Read customer-health-report.json template for structure
 
-2. Use limacharlie-call skill: list-user-orgs
+2. Get orgs: limacharlie org list --output json
    - Filter to find OID for the specified org name
 
 3. Spawn ONE org-reporter agent for that organization:
    Task(
      subagent_type="lc-essentials:org-reporter",
-     model="sonnet",
      prompt="Collect reporting data for org 'Client ABC' (OID: uuid)
        Time Range: [start] to [end]
        Detection Limit: 5000"
@@ -1241,7 +1207,7 @@ The above console output displays ALL collected data. Do NOT automatically proce
 
 2. Ask user for time range (7/14/30 days)
 
-3. Use limacharlie-call skill: list-user-orgs
+3. Get orgs: limacharlie org list --output json
 
 4. Spawn org-reporter agents in parallel:
    - Each agent collects detection data for its org
@@ -1599,7 +1565,7 @@ Recommendations:
 - **Workaround**: Generate usage-only reports
 
 **Issue**: "Large sensor list timing out"
-- **Solution**: Use resource_link pattern with analyze script
+- **Solution**: Pipe CLI output to file and use jq
 - **Workaround**: Extract summary only (count, platforms)
 
 ### Getting Help

@@ -2,8 +2,7 @@
 name: dr-replay-tester
 description: Test D&R rules via historical replay against a SINGLE LimaCharlie organization. Designed to be spawned in parallel (one instance per org) by the detection-engineering skill. Returns summarized results (stats, samples, patterns) instead of all matches.
 model: sonnet
-skills:
-  - lc-essentials:limacharlie-call
+skills: []
 ---
 
 # Single-Organization D&R Rule Replay Tester
@@ -63,18 +62,10 @@ Convert time windows to seconds:
 
 ### Step 3: Run Replay
 
-Use the `replay_dr_rule` function:
+Use the `limacharlie` CLI to run the replay:
 
-```
-tool: replay_dr_rule
-parameters: {
-  "oid": "<org-uuid>",
-  "detect": <detection_rule>,
-  "respond": <response_rule>,
-  "last_seconds": <calculated>,
-  "selector": "<sensor_selector>",
-  "limit_event": 10000
-}
+```bash
+limacharlie rule replay --detect '<detection_rule>' --respond '<response_rule>' --last-seconds <calculated> --oid <org-uuid> --output json
 ```
 
 ### Step 4: Analyze Results
@@ -229,7 +220,7 @@ Since you run in parallel with other instances:
 
 1. Parse prompt → extract org ID, detection, time window, selector
 2. Convert time window to `last_seconds`
-3. Run `replay_dr_rule` with extracted parameters
+3. Run `limacharlie rule replay` with extracted parameters
 4. Analyze results → calculate stats, extract samples, find patterns
 5. Return concise summary for this org only
 

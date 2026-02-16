@@ -11,37 +11,26 @@ User Request
 ┌─────────────────────────────────────────────────────────────┐
 │  Skill (e.g., detection-engineering, sensor-health, etc.)  │
 │  - Orchestrates workflow                                    │
-│  - Spawns sub-agents for API calls                         │
+│  - Calls CLI directly via Bash for simple operations       │
+│  - Spawns sub-agents for parallel multi-org/multi-item work│
 │  - Aggregates results                                       │
 └─────────────────────────────────────────────────────────────┘
-    │
-    │ references function docs
-    ▼
-┌─────────────────────────────────────────────────────────────┐
-│  limacharlie-call skill                                     │
-│  - Central function documentation (143 functions)          │
-│  - Parameter specifications in ./functions/*.md            │
-│  - Defines the API Access Pattern                          │
-└─────────────────────────────────────────────────────────────┘
-    │
-    │ spawns via Task tool
-    ▼
-┌─────────────────────────────────────────────────────────────┐
-│  limacharlie-api-executor agent (Sonnet model)              │
-│  - Executes single API operations                          │
-│  - Handles large result downloads autonomously             │
-│  - Returns structured JSON to parent                       │
-└─────────────────────────────────────────────────────────────┘
-    │
-    │ calls MCP tool
-    ▼
-┌─────────────────────────────────────────────────────────────┐
-│  mcp__plugin_lc-essentials_limacharlie__lc_call_tool       │
-│  - Unified MCP tool for all LimaCharlie API operations     │
-│  - Handles authentication, rate limiting, retries          │
-└─────────────────────────────────────────────────────────────┘
-    │
-    ▼
+    │                          │
+    │ direct CLI calls         │ spawns via Task tool
+    ▼                          ▼
+┌──────────────────┐  ┌─────────────────────────────────────────┐
+│  limacharlie CLI │  │  Specialized Agent (e.g., org-reporter) │
+│  via Bash        │  │  - Handles ONE org/item                  │
+│                  │  │  - Calls CLI directly via Bash            │
+│  limacharlie     │  │  - Returns structured data to parent     │
+│  <noun> <verb>   │  └─────────────────────────────────────────┘
+│  --oid <oid>     │                    │
+│  --output json   │                    │ direct CLI calls
+└────────┬─────────┘                    ▼
+         │                    ┌──────────────────┐
+         │                    │  limacharlie CLI │
+         │                    │  via Bash        │
+         ▼                    └────────┬─────────┘
 ┌─────────────────────────────────────────────────────────────┐
 │  LimaCharlie Platform API                                   │
 └─────────────────────────────────────────────────────────────┘
@@ -49,7 +38,7 @@ User Request
 
 ## Key Design Rules
 
-### 1. Skills NEVER Call MCP Tools Directly
+### 1. Skills Call CLI Directly via Bash
 
 **Wrong:**
 ```
@@ -59,36 +48,44 @@ mcp__plugin_lc-essentials_limacharlie__lc_call_tool(
 )
 ```
 
-**Right:**
+**Also Wrong:**
 ```
 Task(
   subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
   prompt="Execute LimaCharlie API call:
-    - Function: list_sensors
-    - Parameters: {...}
-    - Return: RAW
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
+    - Function: list_sensors ..."
 )
 ```
 
-### 2. Only limacharlie-api-executor Calls MCP Tools
+**Right:**
+```bash
+limacharlie sensor list --oid <oid> --output json
+```
 
-The executor agent is the only component that directly calls the MCP tool. This provides:
-- **Reliability**: Sonnet model for accurate API operations
-- **Consistency**: Better handling of complex parameters and responses
-- **Parallel execution**: Multiple executors can run simultaneously
-- **Large result handling**: Executor handles downloads autonomously
+### 2. All Agents Call CLI Directly Too
 
-### 3. Parallel Execution Pattern
+Specialized agents (sensor-health-reporter, org-reporter, etc.) call the CLI directly via Bash. There is no intermediate api-executor agent.
+
+### 3. Use `--ai-help` for Command Documentation
+
+When unsure about a CLI command's flags:
+```bash
+limacharlie <command> --ai-help
+```
+
+### 4. Always Pass `--output json`
+
+All CLI operations must include `--output json` for machine-readable output.
+
+### 5. Parallel Execution Pattern
 
 Spawn multiple agents in a SINGLE message for true parallelism:
 
 ```
 # RIGHT - All in one message = parallel
-Task(subagent_type="lc-essentials:limacharlie-api-executor", prompt="...org1...")
-Task(subagent_type="lc-essentials:limacharlie-api-executor", prompt="...org2...")
-Task(subagent_type="lc-essentials:limacharlie-api-executor", prompt="...org3...")
+Task(subagent_type="lc-essentials:sensor-health-reporter", prompt="...org1...")
+Task(subagent_type="lc-essentials:sensor-health-reporter", prompt="...org2...")
+Task(subagent_type="lc-essentials:sensor-health-reporter", prompt="...org3...")
 
 # WRONG - Sequential messages = sequential execution
 Task(prompt="...org1...")
@@ -96,15 +93,6 @@ Task(prompt="...org1...")
 Task(prompt="...org2...")
 [wait for result]
 ```
-
-### 4. Read Function Docs Before Calling
-
-Before calling any LimaCharlie function, read its documentation:
-```
-Read ${CLAUDE_PLUGIN_ROOT}/skills/limacharlie-call/functions/{function-name}.md
-```
-
-Parameter names are often prefixed (e.g., `secret_name` not `name`). Wrong names cause silent failures.
 
 ## Component Types
 
@@ -114,7 +102,6 @@ User-invocable capabilities that orchestrate workflows:
 
 | Category | Skills |
 |----------|--------|
-| **Core API** | limacharlie-call |
 | **Detection** | detection-engineering, detection-tuner, fp-pattern-finder |
 | **Data Collection** | sensor-tasking, fleet-payload-tasking, velociraptor |
 | **Analysis** | sensor-health, sensor-coverage, threat-report-evaluation |
@@ -125,47 +112,58 @@ User-invocable capabilities that orchestrate workflows:
 
 ### Agents (./agents/)
 
-Sub-agents spawned by skills for specific tasks:
+Sub-agents spawned by skills for specific tasks. All agents call the CLI directly via Bash:
 
 | Agent | Purpose | Model |
 |-------|---------|-------|
-| limacharlie-api-executor | Execute single API operations | sonnet |
 | sensor-health-reporter | Check sensors for one org | sonnet |
 | org-reporter | Collect reporting data for one org | sonnet |
+| org-coverage-reporter | Collect coverage data for one org | sonnet |
 | ioc-hunter | Search IOCs in one org | sonnet |
 | behavior-hunter | Search behaviors via LCQL | sonnet |
 | detection-builder | Generate D&R rules | sonnet |
+| dr-replay-tester | Test D&R rules via replay | sonnet |
 | threat-report-parser | Parse threat reports, extract IOCs | sonnet |
-| And more... | | |
+| asset-profiler | Profile a single sensor | sonnet |
+| gap-analyzer | Analyze coverage gaps for one org | sonnet |
+| sensor-tasking-executor | Execute tasks on one sensor | sonnet |
+| fp-pattern-investigator | Investigate one FP pattern | sonnet |
+| multi-org-adapter-auditor | Audit adapters for one org | sonnet |
+| cloud-discoverer | Survey one cloud platform | sonnet |
+| vm-edr-installer | Deploy EDR on one cloud platform | sonnet |
+| fleet-pattern-analyzer | Analyze cross-tenant patterns | sonnet |
+| adapter-doc-researcher | Research adapter docs | sonnet |
+| html-renderer | Render HTML dashboards | sonnet |
 
 ## Critical Rules Summary
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` |
-| **LCQL Queries** | Write syntax manually | Use `generate_lcql_query()` first |
-| **D&R Rules** | Write YAML manually | Use `generate_dr_rule_*()` functions |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write syntax manually | Use `limacharlie ai generate-query` first |
+| **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-*` + `limacharlie rule validate` |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (from `list_user_orgs`) |
+| **OID** | Use org name | Use UUID (from `limacharlie org list`) |
 
 ## File Organization
 
 ```
 lc-essentials/
 ├── ARCHITECTURE.md          # This file
-├── CALLING_API.md           # Detailed API usage guide
+├── AUTOINIT.md              # Bootstrap procedure
+├── CALLING_API.md           # CLI usage guide
+├── CONSTANTS.md             # Platform codes, IOC types, timestamps
 ├── skills/
 │   ├── _shared/
 │   │   └── SKILL_TEMPLATE.md  # Reference template
-│   ├── limacharlie-call/
-│   │   ├── SKILL.md         # Core skill with function index
-│   │   └── functions/       # 143 function documentation files
-│   └── [other-skills]/
+│   └── [skill-name]/
 │       └── SKILL.md
 ├── agents/
 │   ├── README.md            # Agent registry
-│   ├── limacharlie-api-executor.md
-│   └── [other-agents].md
+│   └── [agent-name].md
+├── commands/
+│   ├── add-new-skill.md
+│   └── init-lc.md
 └── scripts/
-    └── analyze-lc-result.sh # Large result schema analyzer
+    └── render-html.py       # HTML rendering script
 ```

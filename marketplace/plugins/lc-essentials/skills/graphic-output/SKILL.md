@@ -633,7 +633,7 @@ Generated HTML files are:
 - **reporting** - Source of MSSP report data
 - **sensor-health** - Source of health monitoring data
 - **detection-engineering** - Source of rule test results
-- **limacharlie-call** - Direct API access for custom data
+- `limacharlie` CLI - Direct API access for custom data
 
 ## Files in This Skill
 
