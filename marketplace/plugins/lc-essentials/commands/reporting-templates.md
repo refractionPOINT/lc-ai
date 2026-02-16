@@ -148,7 +148,7 @@ Once the user selects a template:
 
 1. **Confirm Time Range**: Use `AskUserQuestion` to confirm or customize the time period
 2. **Confirm Scope**: Ask if they want all orgs or a specific subset
-3. **Collect Data**: Use the `lc-essentials:limacharlie-call` skill to list organizations, then spawn `org-reporter` agents in parallel to collect data from each organization
+3. **Collect Data**: Use `limacharlie org list --output json` to list organizations, then spawn `org-reporter` agents in parallel to collect data from each organization
 4. **Display Results**: Output the report as formatted markdown tables directly in the console
 
 ### Optional: HTML Output
@@ -167,7 +167,7 @@ Assistant: [Presents template menu]
 
 User: MSSP Executive Summary
 
-Assistant: [Confirms time range, collects data via limacharlie-call skill, displays formatted report in console]
+Assistant: [Confirms time range, collects data via limacharlie CLI, displays formatted report in console]
 
 Assistant: Here is your MSSP Executive Summary:
 

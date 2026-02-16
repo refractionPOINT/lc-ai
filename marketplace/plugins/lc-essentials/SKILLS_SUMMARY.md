@@ -2,8 +2,7 @@
 
 ## Overview
 
-**Sub-Agents**: 10 specialized agents for parallel operations:
-- `limacharlie-api-executor`: Execute single API operations
+**Sub-Agents**: 9 specialized agents for parallel operations:
 - `sensor-health-reporter`: Check sensor health for a single org
 - `dr-replay-tester`: Test D&R rules via replay for a single org
 - `org-reporter`: Collect comprehensive reporting data for a single org
@@ -16,7 +15,7 @@
 ## What Was Created
 
 ### 1. Enhanced Documentation
-- **CALLING_API.md**: Comprehensive guide for using lc_call_tool with 8 common patterns, error handling, and examples
+- **CALLING_API.md**: Comprehensive guide for using the `limacharlie` CLI with common patterns, error handling, and examples
 - **SKILL_TEMPLATE.md**: Detailed template for creating consistent, discoverable skills
 
 ### 2. Skills by Category
@@ -219,42 +218,37 @@ Every SKILL.md file contains:
 1. **YAML Frontmatter**:
    - name: Kebab-case skill name
    - description: Rich, keyword-optimized description (max 1024 chars)
-   - allowed-tools: Relevant MCP tools (lc_call_tool, Read, or specific MCP tools)
+   - allowed-tools: Tools the skill needs (Task, Read, Bash, etc.)
 
 2. **Comprehensive Documentation**:
    - Title and overview
    - "When to Use" section with use cases and scenarios
    - "What This Skill Does" detailed explanation
    - "Required Information" listing all parameters
-   - "How to Use" with 4-step process:
-     - Step 1: Validate Parameters
-     - Step 2: Call the API (or MCP tool)
-     - Step 3: Handle the Response
-     - Step 4: Format the Response
+   - "How to Use" with step-by-step process using `limacharlie` CLI commands
    - Multiple concrete examples (2-3 per skill)
    - "Additional Notes" with best practices and gotchas
    - "Reference" section with links to source code
 
 3. **Technical Details**:
-   - Exact API endpoints with HTTP methods
+   - CLI commands with flags and expected output
    - Request/response structures with examples
-   - Error handling for common HTTP status codes
+   - Error handling for common failure modes
    - Security warnings for destructive operations
 
 ## How Skills Work
 
-### Skills Using lc_call_tool
-Most skills (100+) use the `lc_call_tool` MCP tool to invoke LimaCharlie tools:
-- tool_name: Name of the tool to call (e.g., "list_sensors", "get_sensor_info")
-- parameters: Object containing the tool parameters
-- Reference CALLING_API.md for patterns
+### CLI-Based Access
+All skills use the `limacharlie` CLI directly via Bash:
 
-### Skills Using Direct MCP Tools
-Some investigation skills use dedicated MCP tools that send sensor commands:
-- get-processes, get-services, get-users, etc.
-- yara-scan-* operations
-- dir-list, dir-find-hash
-- These use mcp__limacharlie__[tool-name]
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
+```
+
+- **Command discovery**: `limacharlie discover` to find available commands
+- **Command help**: `limacharlie <command> --ai-help` for detailed usage
+- **All operations** go through the CLI - no MCP tools or intermediary agents needed
+- Reference CALLING_API.md for common patterns
 
 ## Quality Assurance
 
@@ -283,7 +277,7 @@ plugins/lc-essentials/skills/[skill-name]/SKILL.md
 
 ### Phase 2: Parallel Generation
 Launched 8 sub-agents in parallel to create skills by category:
-- Each sub-agent analyzed MCP tool implementations
+- Each sub-agent analyzed CLI command implementations
 - Cross-referenced Go SDK for API endpoints
 - Created complete, detailed SKILL.md files
 - Total: 119 new skills created
@@ -297,9 +291,7 @@ Launched 8 sub-agents in parallel to create skills by category:
 ## Excluded Tools
 
 As per design decisions:
-- **test_tool**: Skipped (connectivity check only, no API interaction)
-- **lc_call_tool**: Skipped (this is the wrapper used by other skills)
-- **AI generation tools** (6 total): Skipped (already simple, single-purpose)
+- **AI generation tools** (6 total): Accessed directly via `limacharlie ai <command>` CLI
   - generate_lcql_query
   - generate_dr_rule_detection
   - generate_dr_rule_respond
@@ -311,20 +303,20 @@ As per design decisions:
 
 These skills enable Claude to:
 1. Discover the right skill based on user intent (rich descriptions)
-2. Call the LimaCharlie tools through lc_call_tool
+2. Execute LimaCharlie operations via the `limacharlie` CLI
 3. Handle responses and errors appropriately
 4. Format results for users
 
-The skills replace verbose MCP tool definitions in the context window with focused, discoverable skills that guide Claude through API operations.
+The skills provide focused, discoverable guides that direct Claude to the right CLI commands for each API operation.
 
 ## Benefits
 
-1. **Reduced Context Window Usage**: Skills load on-demand vs. all MCP tool definitions
+1. **Reduced Context Window Usage**: Skills load on-demand instead of loading all tool definitions
 2. **Better Discoverability**: Rich descriptions with keywords help Claude find the right skill
 3. **Comprehensive Guidance**: Each skill includes examples, error handling, and best practices
 4. **Consistency**: All skills follow the same template structure
-5. **Maintainability**: Easier to update skills than MCP tool implementations
-6. **Flexibility**: Can add new skills without modifying MCP server code
+5. **Maintainability**: Easier to update skills than CLI wrapper implementations
+6. **Flexibility**: Can add new skills without modifying CLI code
 
 ## Next Steps
 

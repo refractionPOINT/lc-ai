@@ -22,30 +22,25 @@ You are an Asset Inventory & Coverage specialist helping MSSPs maintain comprehe
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
 
@@ -200,15 +195,8 @@ Phase 7: Report Generation & Remediation
 
 If OID not provided, get the user's organizations:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_user_orgs
-    - Parameters: {}
-    - Return: RAW"
-)
+```bash
+limacharlie org list --output json
 ```
 
 If multiple orgs, use `AskUserQuestion` to let user select one.
@@ -248,31 +236,17 @@ Proceed with sensor coverage check?
 
 #### 2.1 Get All Sensors
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_sensors
-    - Parameters: {\"oid\": \"[org-id]\"}
-    - Return: RAW"
-)
+```bash
+limacharlie sensor list --oid <oid> --output json
 ```
 
 #### 2.2 Get Online Sensors
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_online_sensors
-    - Parameters: {\"oid\": \"[org-id]\"}
-    - Return: RAW"
-)
+```bash
+limacharlie sensor list --online --oid <oid> --output json
 ```
 
-**TIP**: Spawn both API calls in parallel (single message with multiple Task blocks).
+**TIP**: Run both CLI commands in parallel.
 
 #### 2.3 Classify by Offline Duration
 
@@ -300,36 +274,22 @@ Check `enroll` timestamp for sensors enrolled in last 24 hours - potential Shado
 
 For each online sensor, check if events are flowing. Use LCQL to count recent events:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: generate_lcql_query
-    - Parameters: {
-        \"oid\": \"[org-id]\",
-        \"query\": \"count events from sensor [sid] in last 4 hours\"
-      }
-    - Then run the generated query with run_lcql_query
-    - Return: event count"
-)
+```bash
+# Generate query first
+limacharlie ai generate-query --prompt "count events from sensor [sid] in last 4 hours" --oid <oid> --output json
+
+# Then run the generated query
+limacharlie search run --query "..." --start <ts> --end <ts> --oid <oid> --output json
 ```
 
 **Batch Processing**: For efficiency, query multiple sensors in a single LCQL query:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: generate_lcql_query
-    - Parameters: {
-        \"oid\": \"[org-id]\",
-        \"query\": \"count events grouped by routing/sid where routing/sid in ['sid1', 'sid2', 'sid3'] in last 4 hours\"
-      }
-    - Then run with run_lcql_query
-    - Return: sensor event counts"
-)
+```bash
+# Generate batch query
+limacharlie ai generate-query --prompt "count events grouped by routing/sid where routing/sid in ['sid1', 'sid2', 'sid3'] in last 4 hours" --oid <oid> --output json
+
+# Then run the generated query
+limacharlie search run --query "..." --start <ts> --end <ts> --oid <oid> --output json
 ```
 
 #### 3.2 Classify Telemetry Health
@@ -366,7 +326,6 @@ Batch sensors (5-10 at a time) and spawn agents in parallel:
 ```
 Task(
   subagent_type="lc-essentials:asset-profiler",
-  model="sonnet",
   prompt="Collect asset profile for sensor:
     - Organization: {org_name} (OID: {oid})
     - Sensor ID: {sid}
@@ -384,12 +343,11 @@ Task(
 #### 4.2 Asset Profile Data Collected
 
 Each agent collects:
-- `get_os_version` - OS name, version, build, architecture
-- `get_packages` - Installed software inventory
-- `get_users` - User accounts (flag admin users)
-- `get_services` - Running services
-- `get_autoruns` - Persistence mechanisms
-- `get_network_connections` - Active connections
+- `limacharlie task send --task os_version` - OS name, version, build, architecture
+- `limacharlie task send --task os_packages` - Installed software inventory
+- `limacharlie task send --task os_services` - Running services
+- `limacharlie task send --task os_autoruns` - Persistence mechanisms
+- `limacharlie task send --task os_netstat` - Active connections
 
 ### Phase 5: Compliance Check (NEW)
 
@@ -404,18 +362,8 @@ Expected assets can come from:
 
 #### 5.2 Check for Expected Assets Lookup
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_lookup
-    - Parameters: {
-        \"oid\": \"[org-id]\",
-        \"lookup_name\": \"expected_assets\"
-      }
-    - Return: lookup data or 'NOT_FOUND' if doesn't exist"
-)
+```bash
+limacharlie lookup get expected_assets --oid <oid> --output json
 ```
 
 #### 5.3 Expected Assets Format
@@ -484,7 +432,6 @@ Task(
 ```
 Task(
   subagent_type="lc-essentials:gap-analyzer",
-  model="sonnet",
   prompt="Analyze gaps and calculate risk scores:
     - Organization: {org_name} (OID: {oid})
     - Total sensors: {count}
@@ -594,15 +541,8 @@ Phase 4: Fleet Report Generation
 
 #### 1.1 Get All Organizations
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_user_orgs
-    - Parameters: {}
-    - Return: RAW"
-)
+```bash
+limacharlie org list --output json
 ```
 
 #### 1.2 Calculate Timestamps
@@ -666,7 +606,6 @@ AskUserQuestion(
 ```
 Task(
   subagent_type="lc-essentials:org-coverage-reporter",
-  model="sonnet",
   prompt="Collect coverage data for organization:
     - Organization: Client ABC (OID: uuid-1)
     - Timestamps: NOW={now}, 4H={t4h}, 24H={t24h}, 7D={t7d}, 30D={t30d}
@@ -681,7 +620,6 @@ Task(
 
 Task(
   subagent_type="lc-essentials:org-coverage-reporter",
-  model="sonnet",
   prompt="Collect coverage data for organization:
     - Organization: Client XYZ (OID: uuid-2)
     ..."
@@ -773,7 +711,6 @@ After collecting all per-org results:
 ```
 Task(
   subagent_type="lc-essentials:fleet-pattern-analyzer",
-  model="sonnet",  # Use sonnet for complex pattern analysis
   prompt="Analyze fleet-wide patterns from coverage data:
 
     Configuration:
@@ -955,23 +892,12 @@ Organizations Failing SLA (sorted by gap):
 
 To enable compliance checking, create an `expected_assets` lookup table:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: set_lookup
-    - Parameters: {
-        \"oid\": \"[org-id]\",
-        \"lookup_name\": \"expected_assets\",
-        \"lookup_data\": {
-          \"SRV-DC01\": {\"type\": \"server\", \"criticality\": \"high\", \"required_tags\": [\"production\", \"domain-controller\"]},
-          \"SRV-WEB01\": {\"type\": \"server\", \"criticality\": \"medium\", \"required_tags\": [\"production\", \"web\"]},
-          \"WKS-*\": {\"type\": \"workstation\", \"criticality\": \"low\", \"required_tags\": [\"workstation\"], \"naming_pattern\": true}
-        }
-      }
-    - Return: confirmation"
-)
+```bash
+limacharlie lookup set expected_assets --data '{
+  "SRV-DC01": {"type": "server", "criticality": "high", "required_tags": ["production", "domain-controller"]},
+  "SRV-WEB01": {"type": "server", "criticality": "medium", "required_tags": ["production", "web"]},
+  "WKS-*": {"type": "workstation", "criticality": "low", "required_tags": ["workstation"], "naming_pattern": true}
+}' --oid <oid>
 ```
 
 ### Importing from CSV
@@ -1010,7 +936,7 @@ Remediation Steps:
 4. Verify sensor hasn't been resource-limited
 5. Consider sensor restart or reinstall
 6. Tag for tracking:
-   - add_tag(sid="{sid}", tag="silent-investigation", ttl=604800)
+   - limacharlie tag add {sid} silent-investigation --ttl 604800 --oid <oid>
 ```
 
 ### Playbook: Missing Expected Asset (NEW)
@@ -1039,9 +965,9 @@ Remediation Steps:
    - Verify sensor service status
    - Consider sensor reinstallation
 4. If decommissioned:
-   - Remove sensor: delete_sensor(sid="{sid}")
+   - Remove sensor: limacharlie sensor delete {sid} --oid <oid>
 5. Tag for tracking:
-   - add_tag(sid="{sid}", tag="stale-30d-review", ttl=604800)
+   - limacharlie tag add {sid} stale-30d-review --ttl 604800 --oid <oid>
 ```
 
 ### Playbook: New Asset Detected (Shadow IT)
@@ -1054,10 +980,10 @@ Remediation Steps:
 2. Verify hostname matches naming convention
 3. Check installation key used
 4. If legitimate:
-   - Apply department tags: add_tag(sid, "{dept}")
+   - Apply department tags: limacharlie tag add {sid} {dept} --oid <oid>
 5. If unauthorized:
    - Investigate device ownership
-   - Consider isolation: isolate_network(sid)
+   - Consider isolation: limacharlie endpoint-policy isolate {sid} --oid <oid>
 ```
 
 ### Playbook: Platform Degradation (Multi-Org)

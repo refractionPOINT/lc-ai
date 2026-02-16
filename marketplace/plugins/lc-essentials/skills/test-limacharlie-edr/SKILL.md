@@ -19,30 +19,25 @@ Deploy a temporary LimaCharlie EDR sensor on the local Linux or Mac OS host for 
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
 
@@ -84,47 +79,26 @@ Before starting, ensure you have:
 
 First, get the list of available organizations:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_user_orgs
-    - Parameters: {}
-    - Return: RAW"
-)
+```bash
+limacharlie org list --output json
 ```
 
-This returns your available organizations. Use AskUserQuestion to let the user select one, or if they need a new org, use the `limacharlie-call` skill to create one with `create_org`.
+This returns your available organizations. Use AskUserQuestion to let the user select one, or if they need a new org, create one with `limacharlie org create --name "<name>" --output json`.
 
 ### Phase 1: Get or Create Installation Key
 
 Check for existing "Test EDR" installation key:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_installation_keys
-    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\"}
-    - Return: Look for key with description 'Test EDR' and return its key and iid"
-)
+```bash
+limacharlie installation-key list --oid <SELECTED_ORG_ID> --output json | jq '.[] | select(.description == "Test EDR")'
 ```
 
 **If "Test EDR" key exists**: Extract the `key` value from the response.
 
 **If not exists**: Create one:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: create_installation_key
-    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"description\": \"Test EDR\", \"tags\": [\"test-edr\", \"temporary\"]}
-    - Return: The key and iid of the created installation key"
-)
+```bash
+limacharlie installation-key create --description "Test EDR" --tags "test-edr,temporary" --oid <SELECTED_ORG_ID> --output json
 ```
 
 Save the returned `key` value for the next phase.
@@ -179,15 +153,8 @@ echo "Sensor started in $TEMP_DIR"
 
 After starting, the sensor should appear in your LimaCharlie organization within a few seconds. Verify by listing sensors with a selector that matches the installation key's `iid` (Installation ID, a UUID):
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_sensors
-    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"selector\": \"iid == `<INSTALLATION_KEY_IID>`\"}
-    - Return: RAW"
-)
+```bash
+limacharlie sensor list --selector "iid == \`<INSTALLATION_KEY_IID>\`" --oid <SELECTED_ORG_ID> --output json
 ```
 
 Replace `<INSTALLATION_KEY_IID>` with the `iid` UUID from the installation key used. This selector fetches only the sensor enrolled with that specific installation key, rather than listing all sensors in the organization.
@@ -224,15 +191,8 @@ The `[l]` bracket trick prevents grep from matching itself in the output.
 **Steps**:
 
 1. List organizations:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_user_orgs
-    - Parameters: {}
-    - Return: RAW"
-)
+```bash
+limacharlie org list --output json
 ```
 
 Response shows: `[{"name": "My Test Org", "oid": "abc123-def456-..."}]`
@@ -240,27 +200,13 @@ Response shows: `[{"name": "My Test Org", "oid": "abc123-def456-..."}]`
 2. Ask user to select org (via AskUserQuestion)
 
 3. Check for existing installation key:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_installation_keys
-    - Parameters: {\"oid\": \"abc123-def456-...\"}
-    - Return: Look for key with description 'Test EDR' and return its key and iid"
-)
+```bash
+limacharlie installation-key list --oid abc123-def456-... --output json | jq '.[] | select(.description == "Test EDR")'
 ```
 
 4. Create installation key if needed:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: create_installation_key
-    - Parameters: {\"oid\": \"abc123-def456-...\", \"description\": \"Test EDR\", \"tags\": [\"test-edr\", \"temporary\"]}
-    - Return: The key and iid of the created installation key"
-)
+```bash
+limacharlie installation-key create --description "Test EDR" --tags "test-edr,temporary" --oid abc123-def456-... --output json
 ```
 
 Returns: `{"iid": "test-edr", "key": "abc123:def456:..."}`
@@ -292,15 +238,8 @@ echo "Sensor started in $TEMP_DIR"
 ```
 
 6. Verify sensor connection using a selector with the installation key's `iid`:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_sensors
-    - Parameters: {\"oid\": \"abc123-def456-...\", \"selector\": \"iid == `<IID_FROM_INSTALLATION_KEY>`\"}
-    - Return: RAW"
-)
+```bash
+limacharlie sensor list --selector "iid == \`<IID_FROM_INSTALLATION_KEY>\`" --oid abc123-def456-... --output json
 ```
 
 7. Inform user the sensor is running and how to stop it (using `sudo pkill -f lc_sensor`).
@@ -322,15 +261,8 @@ ps aux | grep "[l]c_sensor" || echo "Sensor stopped"
 ```
 
 3. Optionally, delete the sensor from LimaCharlie:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: delete_sensor
-    - Parameters: {\"oid\": \"abc123-def456-...\", \"sid\": \"<SENSOR_ID>\"}
-    - Return: RAW"
-)
+```bash
+limacharlie sensor delete <SENSOR_ID> --oid abc123-def456-...
 ```
 
 ## Additional Notes
@@ -347,7 +279,6 @@ Task(
 
 ## Related Skills
 
-- `limacharlie-call`: For creating organizations or other API operations
 - `detection-engineering`: For creating D&R rules to test with the sensor
 - `sensor-health`: To check if your test sensor is reporting properly
 - `investigation-creation`: To investigate events from your test sensor

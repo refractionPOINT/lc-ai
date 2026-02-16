@@ -17,30 +17,25 @@ Launch Velociraptor forensic collections and work with collection results in Lim
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
 
@@ -76,7 +71,7 @@ Use this skill when the user wants to:
 ## Prerequisites
 
 The organization must have the `ext-velociraptor` extension subscribed.
-> Always load the `limacharlie-call` skill prior to using LimaCharlie.
+> The `limacharlie` CLI must be available.
 
 ## How to Use
 
@@ -84,180 +79,82 @@ The organization must have the `ext-velociraptor` extension subscribed.
 
 If not already known, get the OID:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_user_orgs
-    - Parameters: {}
-    - Return: OID for organization named '{org_name}'"
-)
+```bash
+limacharlie org list --output json
 ```
 
 ### Step 2: List Available Velociraptor Artifacts
 
 List all VQL artifacts available for collection (built-in and external from triage.velocidex.com):
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_velociraptor_artifacts
-    - Parameters: {
-        'oid': '<oid>'
-      }
-    - Return: List of artifact names with their source (built-in or external)"
-)
+```bash
+limacharlie velociraptor list-artifacts --oid <oid> --output json
 ```
 
 ### Step 3: View Artifact Definition
 
 Before collecting, view an artifact's YAML to understand its parameters:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: show_velociraptor_artifact
-    - Parameters: {
-        'oid': '<oid>',
-        'artifact_name': 'Windows.System.Drivers'
-      }
-    - Return: The artifact YAML definition"
-)
+```bash
+limacharlie velociraptor show-artifact Windows.System.Drivers --oid <oid> --output json
 ```
 
 ### Step 4: Launch a Collection
 
 Collect from a single sensor:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: collect_velociraptor_artifact
-    - Parameters: {
-        'oid': '<oid>',
-        'artifact_list': ['Windows.System.Drivers'],
-        'sid': '<sensor-id>'
-      }
-    - Return: The job_id and number of sensors tasked"
-)
+```bash
+limacharlie velociraptor collect --sid <sensor-id> --artifact Windows.System.Drivers --oid <oid> --output json
 ```
 
 Collect from multiple sensors using a selector:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: collect_velociraptor_artifact
-    - Parameters: {
-        'oid': '<oid>',
-        'artifact_list': ['Windows.KapeFiles.Targets'],
-        'sensor_selector': 'plat == windows',
-        'args': 'KapeTriage=Y',
-        'collection_ttl': 3600,
-        'retention_ttl': 7
-      }
-    - Return: The job_id and number of sensors tasked"
-)
+```bash
+limacharlie velociraptor collect \
+  --selector "plat == windows" \
+  --artifact Windows.KapeFiles.Targets \
+  --args "KapeTriage=Y" \
+  --collection-ttl 3600 \
+  --retention-ttl 7 \
+  --oid <oid> --output json
 ```
 
 ### Step 5: Find Collection Results (Raw Artifacts)
 
 List raw Velociraptor artifacts stored in the Artifact system:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_artifacts
-    - Parameters: {
-        'oid': '<oid>',
-        'artifact_type': 'velociraptor',
-        'sid': '<sensor-id>'  # Optional: filter to specific sensor
-      }
-    - Return: All velociraptor artifacts with id, sid, size, timestamp"
-)
+```bash
+limacharlie artifact list --type velociraptor --sid <sensor-id> --oid <oid> --output json
 ```
 
 Download an artifact:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_artifact
-    - Parameters: {
-        'oid': '<oid>',
-        'artifact_id': '<artifact-id>',
-        'get_url_only': true
-      }
-    - Return: The signed download URL"
-)
+```bash
+limacharlie artifact get <artifact-id> --url-only --oid <oid> --output json
 ```
 
 ### Step 6: Query Processed Events
 
 For small collections, data is also available as events. Use LCQL to query them.
 
-**CRITICAL**: Always use `generate_lcql_query` first - never write LCQL manually.
+**CRITICAL**: Always use `limacharlie ai generate-query` first - never write LCQL manually.
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: generate_lcql_query
-    - Parameters: {
-        'oid': '<oid>',
-        'description': 'velociraptor_collection events from the last 7 days'
-      }
-    - Return: The generated LCQL query string"
-)
+```bash
+limacharlie ai generate-query --prompt "velociraptor_collection events from the last 7 days" --oid <oid> --output json
 ```
 
 Then execute:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: run_lcql_query
-    - Parameters: {
-        'oid': '<oid>',
-        'query': '<generated-query>',
-        'limit': 100
-      }
-    - Return: Summary of events found"
-)
+```bash
+limacharlie search run --query "<generated-query>" --start <ts> --end <ts> --oid <oid> --output json
 ```
 
 ### Step 7: Find the Velociraptor Sensor
 
 To find the virtual sensor that receives processed Velociraptor data:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_sensors
-    - Parameters: {
-        'oid': '<oid>',
-        'selector': '`ext:ext-velociraptor` in tags'
-      }
-    - Return: Sensor ID (SID) for the velociraptor sensor"
-)
+```bash
+limacharlie sensor list --selector "\`ext:ext-velociraptor\` in tags" --oid <oid> --output json
 ```
 
 ## Collection Parameters
@@ -378,4 +275,4 @@ date -d '7 days ago' +%s        # 7 days ago
 
 - [Velociraptor Extension Documentation](https://github.com/refractionPOINT/documentation/blob/master/docs/limacharlie/doc/Add-Ons/Extensions/Third-Party_Extensions/ext-velociraptor.md)
 - [Velociraptor to BigQuery Tutorial](https://github.com/refractionPOINT/documentation/blob/master/docs/limacharlie/doc/Add-Ons/Extensions/Tutorials/velociraptor-to-bigquery.md)
-- [CALLING_API.md](../../CALLING_API.md)
+- Use `limacharlie velociraptor --ai-help` for CLI help

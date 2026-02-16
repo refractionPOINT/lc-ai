@@ -23,30 +23,25 @@ A comprehensive, dynamic assistant for LimaCharlie adapter lifecycle management.
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
 
@@ -177,51 +172,25 @@ Execute the dynamic research strategy above to gather all relevant information a
 ### Phase 2: Organization and Configuration Discovery
 
 **Get organizations:**
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_user_orgs
-    - Parameters: {}
-    - Return: RAW"
-)
+```bash
+limacharlie org list --output json
 ```
 
 **List existing External Adapters:**
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_external_adapters
-    - Parameters: {\"oid\": \"<org-id>\"}
-    - Return: RAW"
-)
+```bash
+limacharlie adapter list --oid <oid> --output json
 ```
 
 **List existing Cloud Sensors:**
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_cloud_sensors
-    - Parameters: {\"oid\": \"<org-id>\"}
-    - Return: RAW"
-)
+```bash
+limacharlie cloud-sensor list --oid <oid> --output json
 ```
 
 **Get existing configuration (if modifying):**
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_external_adapter  # or get_cloud_sensor
-    - Parameters: {\"oid\": \"<org-id>\", \"adapter_name\": \"<adapter-name>\"}  # use sensor_name for get_cloud_sensor
-    - Return: RAW"
-)
+```bash
+limacharlie adapter get <adapter-name> --oid <oid> --output json
+# or for cloud sensors:
+limacharlie cloud-sensor get <sensor-name> --oid <oid> --output json
 ```
 
 ### Phase 3: Configuration Generation
@@ -255,15 +224,8 @@ client_secret: "hive://secret/azure-client-secret"
 ```
 
 Check existing secrets:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_secrets
-    - Parameters: {\"oid\": \"<org-id>\"}
-    - Return: RAW"
-)
+```bash
+limacharlie secret list --oid <oid> --output json
 ```
 
 #### Indexing configuration (optional):
@@ -284,26 +246,12 @@ Supported index types: `file_hash`, `file_path`, `file_name`, `domain`, `ip`, `u
 
 **Validate parsing rules before deployment:**
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: validate_usp_mapping
-    - Parameters: {
-        \"oid\": \"<org-id>\",
-        \"platform\": \"text\",
-        \"mapping\": {
-          \"parsing_grok\": {
-            \"message\": \"%{TIMESTAMP_ISO8601:timestamp} %{WORD:action} ...\"
-          },
-          \"event_type_path\": \"action\",
-          \"event_time_path\": \"timestamp\"
-        },
-        \"text_input\": \"<sample-log-lines>\"
-      }
-    - Return: RAW"
-)
+```bash
+limacharlie adapter validate-mapping \
+  --platform text \
+  --mapping '{"parsing_grok": {"message": "%{TIMESTAMP_ISO8601:timestamp} %{WORD:action} ..."}, "event_type_path": "action", "event_time_path": "timestamp"}' \
+  --text-input "<sample-log-lines>" \
+  --oid <oid> --output json
 ```
 
 **Review validation results:**
@@ -325,35 +273,13 @@ Skill("test-limacharlie-adapter")
 ### Phase 5: Deployment
 
 **Deploy External Adapter:**
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: set_external_adapter
-    - Parameters: {
-        \"oid\": \"<org-id>\",
-        \"adapter_name\": \"<adapter-name>\",
-        \"adapter_config\": {<full-configuration-including-adapter_type>}
-      }
-    - Return: RAW"
-)
+```bash
+limacharlie adapter set <adapter-name> --config '<full-configuration-json>' --oid <oid> --output json
 ```
 
 **Deploy Cloud Sensor:**
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: set_cloud_sensor
-    - Parameters: {
-        \"oid\": \"<org-id>\",
-        \"sensor_name\": \"<sensor-name>\",
-        \"sensor_config\": {<full-configuration>}
-      }
-    - Return: RAW"
-)
+```bash
+limacharlie cloud-sensor set <sensor-name> --config '<full-configuration-json>' --oid <oid> --output json
 ```
 
 **For On-prem Adapters**, generate deployment artifacts:
@@ -400,15 +326,8 @@ docker run -d --rm -p 514:514/udp refractionpoint/lc-adapter syslog \
 ```
 
 **Verify deployment:**
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_sensors
-    - Parameters: {\"oid\": \"<org-id>\", \"selector\": \"iid == `<installation-key-iid>`\"}
-    - Return: RAW"
-)
+```bash
+limacharlie sensor list --selector "iid == \`<installation-key-iid>\`" --oid <oid> --output json
 ```
 
 ### Phase 6: Post-Deployment
@@ -416,45 +335,24 @@ Task(
 **Troubleshoot if data not appearing:**
 
 1. Check adapter last_error field:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_external_adapter
-    - Parameters: {\"oid\": \"<org-id>\", \"adapter_name\": \"<adapter-name>\"}
-    - Return: RAW"
-)
+```bash
+limacharlie adapter get <adapter-name> --oid <oid> --output json
 ```
 
 2. Check organization errors for adapter issues:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_org_errors
-    - Parameters: {\"oid\": \"<org-id>\"}
-    - Return: RAW"
-)
+```bash
+limacharlie org errors --oid <oid> --output json
 ```
 Look for errors with component names containing the adapter name.
 
 3. Verify sensor exists in sensor list
 
 4. Query for recent events:
-```
+```bash
 # First calculate timestamps dynamically
 start=$(date -d '1 hour ago' +%s) && end=$(date +%s)
 
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_historic_events
-    - Parameters: {\"oid\": \"<org-id>\", \"sid\": \"<sensor-id>\", \"start\": <start-epoch>, \"end\": <end-epoch>, \"limit\": 10}
-    - Return: RAW"
-)
+limacharlie event list --sid <sensor-id> --start $start --end $end --oid <oid> --output json
 ```
 
 5. Check for unparsed events (`event_type: "unknown_event"` with only `text` field)
@@ -471,7 +369,6 @@ For auditing adapters across multiple organizations, spawn parallel sub-agents:
 ```
 Task(
   subagent_type="lc-essentials:multi-org-adapter-auditor",
-  model="sonnet",
   prompt="Audit adapters for organization: {org_name} ({oid})
 
     Return:
@@ -535,7 +432,7 @@ Task(
 
 3. **External Setup Instructions**:
    - Create API token in Okta Admin Console
-   - Store token in LimaCharlie secrets: `set_secret` with name "okta-api-key"
+   - Store token in LimaCharlie secrets: `limacharlie secret set okta-api-key --oid <oid>`
 
 4. **Deploy**: Use `set_cloud_sensor`
 
@@ -556,37 +453,26 @@ Task(
 3. **Validate** with `validate_usp_mapping` using the sample log
 
 4. **Deploy as External Adapter**:
-   ```
-   Task(
-     subagent_type="lc-essentials:limacharlie-api-executor",
-     model="sonnet",
-     prompt="Execute LimaCharlie API call:
-       - Function: set_external_adapter
-       - Parameters: {
-           \"oid\": \"<oid>\",
-           \"adapter_name\": \"firewall-syslog\",
-           \"adapter_config\": {
-             \"adapter_type\": \"syslog\",
-             \"port\": 514,
-             \"is_udp\": true,
-             \"client_options\": {
-               \"identity\": {\"oid\": \"<oid>\", \"installation_key\": \"<iid>\"},
-               \"platform\": \"text\",
-               \"sensor_seed_key\": \"firewall-logs\",
-               \"hostname\": \"firewall-syslog\",
-               \"mapping\": {
-                 \"parsing_grok\": {
-                   \"message\": \"<%{INT:priority}>%{SYSLOGTIMESTAMP:timestamp} %{HOSTNAME:host} %{WORD:action} %{WORD:protocol} %{IP:src_ip}:%{NUMBER:src_port} %{IP:dst_ip}:%{NUMBER:dst_port}\"
-                 },
-                 \"event_type_path\": \"action\",
-                 \"event_time_path\": \"timestamp\",
-                 \"sensor_hostname_path\": \"host\"
-               }
-             }
-           }
-         }
-       - Return: RAW"
-   )
+   ```bash
+   limacharlie adapter set firewall-syslog --config '{
+     "adapter_type": "syslog",
+     "port": 514,
+     "is_udp": true,
+     "client_options": {
+       "identity": {"oid": "<oid>", "installation_key": "<iid>"},
+       "platform": "text",
+       "sensor_seed_key": "firewall-logs",
+       "hostname": "firewall-syslog",
+       "mapping": {
+         "parsing_grok": {
+           "message": "<%{INT:priority}>%{SYSLOGTIMESTAMP:timestamp} %{HOSTNAME:host} %{WORD:action} %{WORD:protocol} %{IP:src_ip}:%{NUMBER:src_port} %{IP:dst_ip}:%{NUMBER:dst_port}"
+         },
+         "event_type_path": "action",
+         "event_time_path": "timestamp",
+         "sensor_hostname_path": "host"
+       }
+     }
+   }' --oid <oid> --output json
    ```
 
 ### Example 3: Connect Unknown Product via Webhook
@@ -624,15 +510,8 @@ Task(
 **Workflow**:
 
 1. **Get current configuration**:
-   ```
-   Task(
-     subagent_type="lc-essentials:limacharlie-api-executor",
-     model="sonnet",
-     prompt="Execute LimaCharlie API call:
-       - Function: get_cloud_sensor
-       - Parameters: {\"oid\": \"<oid>\", \"sensor_name\": \"azure-event-hub\"}
-       - Return: RAW"
-   )
+   ```bash
+   limacharlie cloud-sensor get azure-event-hub --oid <oid> --output json
    ```
 
 2. **Check for errors** in `last_error` field of `sys_mtd`
@@ -679,8 +558,6 @@ Task(
 ## Related Skills
 
 - `parsing-helper` - For complex Grok pattern generation and validation
-- `lookup-lc-doc` - For general LimaCharlie documentation lookup
-- `limacharlie-call` - For direct API operations
 - `test-limacharlie-adapter` - For local testing before production deployment
 - `detection-engineering` - For creating D&R rules on adapter data
 

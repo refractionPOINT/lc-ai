@@ -18,36 +18,32 @@ You are an expert Detection Engineer helping users create, test, and deploy D&R 
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
+| **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-*` + `limacharlie rule validate` |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ### D&R Rule Generation (NEVER write manually)
 
 ```
-WRONG: set_dr_general_rule(detect={yaml you wrote})
-RIGHT: generate_dr_rule_detection() → generate_dr_rule_respond() → validate_dr_rule_components() → set_dr_general_rule()
+WRONG: limacharlie rule create <name> --detect '{yaml you wrote}'
+RIGHT: limacharlie ai generate-detection → limacharlie ai generate-response → limacharlie rule validate → limacharlie rule create
 ```
 
 LCQL and D&R syntax are validated against organization-specific schemas. Manual syntax WILL fail.
@@ -68,7 +64,7 @@ LCQL and D&R syntax are validated against organization-specific schemas. Manual 
 
 Before starting, gather from the user:
 
-- **Organization ID (OID)**: UUID of the target organization (use `list_user_orgs` if needed)
+- **Organization ID (OID)**: UUID of the target organization (use `limacharlie org list` if needed)
 - **Detection Target**: What behavior/threat to detect (be specific)
 - **Platform(s)**: Windows, Linux, macOS, or all
 - **Priority**: Critical (9-10), High (7-8), Medium (4-6), Low (1-3)
@@ -98,38 +94,33 @@ Before building rules, understand what data exists:
 
 Get event structure for relevant event types:
 
-```
-tool: get_event_types_with_schemas_for_platform
-parameters: {"platform": "windows"}
+```bash
+limacharlie event types --platform windows --oid <oid> --output json
 ```
 
 For specific event types:
-```
-tool: get_event_schema
-parameters: {"event_type": "NEW_PROCESS"}
+```bash
+limacharlie event schema NEW_PROCESS --oid <oid> --output json
 ```
 
 ### 2.2 LCQL Exploration
 
 Explore existing data to understand patterns:
 
-```
-tool: generate_lcql_query
-parameters: {"oid": "<oid>", "query": "show me process executions with encoded PowerShell commands"}
+```bash
+limacharlie ai generate-query --prompt "show me process executions with encoded PowerShell commands" --oid <oid> --output json
 ```
 
 Then execute:
-```
-tool: run_lcql_query
-parameters: {"oid": "<oid>", "query": "<generated_query>", "limit": 100}
+```bash
+limacharlie search run --query "<generated_query>" --start <ts> --end <ts> --oid <oid> --output json
 ```
 
 ### 2.3 Data Availability Check
 
 Verify sensors have relevant data:
-```
-tool: get_time_when_sensor_has_data
-parameters: {"oid": "<oid>", "sid": "<sensor-id>", "start": <epoch>, "end": <epoch>}
+```bash
+limacharlie sensor data-range --sid <sensor-id> --start <epoch> --end <epoch> --oid <oid> --output json
 ```
 
 **Tip**: Use `lookup-lc-doc` skill to understand event types and field paths.
@@ -142,33 +133,20 @@ parameters: {"oid": "<oid>", "sid": "<sensor-id>", "start": <epoch>, "end": <epo
 
 Use natural language with specific details:
 
-```
-tool: generate_dr_rule_detection
-parameters: {
-  "oid": "<oid>",
-  "query": "Detect NEW_PROCESS events where the command line contains '-enc' or '-encodedcommand' and the process is powershell.exe"
-}
+```bash
+limacharlie ai generate-detection --description "Detect NEW_PROCESS events where the command line contains '-enc' or '-encodedcommand' and the process is powershell.exe" --oid <oid> --output json
 ```
 
 ### 3.2 Generate Response Component
 
-```
-tool: generate_dr_rule_respond
-parameters: {
-  "oid": "<oid>",
-  "query": "Report the detection with priority 8, add tag 'encoded-powershell' with 7 day TTL"
-}
+```bash
+limacharlie ai generate-response --description "Report the detection with priority 8, add tag 'encoded-powershell' with 7 day TTL" --oid <oid> --output json
 ```
 
 ### 3.3 Validate Before Testing
 
-```
-tool: validate_dr_rule_components
-parameters: {
-  "oid": "<oid>",
-  "detect": <detection_from_step_1>,
-  "respond": <response_from_step_2>
-}
+```bash
+limacharlie rule validate --detect '<detection_from_step_1>' --respond '<response_from_step_2>' --oid <oid>
 ```
 
 Present the generated rule to the user for initial review before testing.
@@ -203,23 +181,16 @@ This is the core iterative loop:
 
 Test with crafted sample events:
 
-```
-tool: test_dr_rule_events
-parameters: {
-  "oid": "<oid>",
-  "detect": <detection>,
-  "respond": <response>,
-  "events": [
-    {
-      "routing": {"event_type": "NEW_PROCESS"},
-      "event": {
-        "COMMAND_LINE": "powershell.exe -enc SGVsbG8=",
-        "FILE_PATH": "C:\\Windows\\System32\\powershell.exe"
-      }
+```bash
+limacharlie rule test --detect '<detection>' --respond '<response>' --events '[
+  {
+    "routing": {"event_type": "NEW_PROCESS"},
+    "event": {
+      "COMMAND_LINE": "powershell.exe -enc SGVsbG8=",
+      "FILE_PATH": "C:\\Windows\\System32\\powershell.exe"
     }
-  ],
-  "trace": true
-}
+  }
+]' --trace --oid <oid> --output json
 ```
 
 **Create test cases**:
@@ -232,25 +203,12 @@ Use `trace: true` to debug why rules match or don't match.
 
 Test against real historical data:
 
-```
+```bash
 # First, estimate volume with dry_run
-tool: replay_dr_rule
-parameters: {
-  "oid": "<oid>",
-  "detect": <detection>,
-  "last_seconds": 3600,
-  "dry_run": true
-}
+limacharlie rule replay --detect '<detection>' --last-seconds 3600 --dry-run --oid <oid> --output json
 
 # Then run actual replay
-tool: replay_dr_rule
-parameters: {
-  "oid": "<oid>",
-  "detect": <detection>,
-  "respond": <response>,
-  "last_seconds": 3600,
-  "selector": "plat == \"windows\""
-}
+limacharlie rule replay --detect '<detection>' --respond '<response>' --last-seconds 3600 --selector 'plat == "windows"' --oid <oid> --output json
 ```
 
 ### 4.3 Historical Replay - Multi-Org (Parallel)
@@ -258,8 +216,8 @@ parameters: {
 For testing across multiple organizations, use the `dr-replay-tester` sub-agent:
 
 1. Get list of organizations:
-```
-tool: list_user_orgs
+```bash
+limacharlie org list --output json
 ```
 
 2. Spawn one agent per organization IN PARALLEL using a single message with multiple Task calls:
@@ -324,15 +282,8 @@ Examples:
 
 ### 5.2 Create the Rule
 
-```
-tool: set_dr_general_rule
-parameters: {
-  "oid": "<oid>",
-  "name": "apt-x-process-encoded-powershell",
-  "detect": <validated_detection>,
-  "respond": <validated_response>,
-  "is_enabled": true
-}
+```bash
+limacharlie rule create apt-x-process-encoded-powershell --detect '<validated_detection>' --respond '<validated_response>' --oid <oid>
 ```
 
 ---

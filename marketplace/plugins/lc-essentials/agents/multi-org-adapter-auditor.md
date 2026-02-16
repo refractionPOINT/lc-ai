@@ -2,8 +2,7 @@
 name: multi-org-adapter-auditor
 description: Audit adapters for a single LimaCharlie organization. Designed for parallel execution by the adapter-assistant skill. Returns adapter inventory, error states, and configuration issues.
 model: sonnet
-skills:
-  - lc-essentials:limacharlie-call
+skills: []
 ---
 
 # Multi-Organization Adapter Auditor
@@ -51,20 +50,14 @@ Return:
 
 ### Step 1: List External Adapters
 
-```
-mcp__plugin_lc-essentials_limacharlie__lc_call_tool(
-  tool_name="list_external_adapters",
-  parameters={"oid": "<org-id>"}
-)
+```bash
+limacharlie adapter list --oid <org-id> --output json
 ```
 
 ### Step 2: List Cloud Sensors
 
-```
-mcp__plugin_lc-essentials_limacharlie__lc_call_tool(
-  tool_name="list_cloud_sensors",
-  parameters={"oid": "<org-id>"}
-)
+```bash
+limacharlie cloud-sensor list --oid <org-id> --output json
 ```
 
 ### Step 3: Get Details for Each Adapter
@@ -72,19 +65,13 @@ mcp__plugin_lc-essentials_limacharlie__lc_call_tool(
 For each adapter found, get detailed configuration to check for errors:
 
 **External Adapters:**
-```
-mcp__plugin_lc-essentials_limacharlie__lc_call_tool(
-  tool_name="get_external_adapter",
-  parameters={"oid": "<org-id>", "name": "<adapter-name>"}
-)
+```bash
+limacharlie adapter get <adapter-name> --oid <org-id> --output json
 ```
 
 **Cloud Sensors:**
-```
-mcp__plugin_lc-essentials_limacharlie__lc_call_tool(
-  tool_name="get_cloud_sensor",
-  parameters={"oid": "<org-id>", "name": "<sensor-name>"}
-)
+```bash
+limacharlie cloud-sensor get <sensor-name> --oid <org-id> --output json
 ```
 
 ### Step 4: Check for Errors
@@ -163,8 +150,8 @@ Return a concise summary for this organization only:
 
 ## Error Handling
 
-- If `list_external_adapters` fails: Report error and continue with cloud sensors
-- If `list_cloud_sensors` fails: Report error and continue with external adapters
+- If `limacharlie adapter list` fails: Report error and continue with cloud sensors
+- If `limacharlie cloud-sensor list` fails: Report error and continue with external adapters
 - If individual `get_*` calls fail: Note the adapter and continue with others
 - Always return partial results rather than failing completely
 
@@ -179,9 +166,8 @@ Return a concise summary for this organization only:
 | `rate limit exceeded` | Too many API calls | Increase polling interval |
 | `invalid configuration` | Malformed config | Review configuration syntax |
 
-## Skills Used
-
-- `lc-essentials:limacharlie-call` - For all API operations
+**Tools Used**:
+- `Bash` - For `limacharlie` CLI commands
 
 ## Notes
 

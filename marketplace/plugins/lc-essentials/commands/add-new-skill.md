@@ -37,9 +37,8 @@ First, use the Task tool with `subagent_type="claude-code-guide"` to look up:
 Read these files to understand the lc-essentials framework (paths relative to plugin root):
 - `ARCHITECTURE.md` - Plugin hierarchy and design rules
 - `skills/_shared/SKILL_TEMPLATE.md` - Canonical skill template (USE THIS)
-- `CALLING_API.md` - API execution architecture
+- `CALLING_API.md` - CLI usage patterns and examples
 - `agents/README.md` - Sub-agent patterns
-- `skills/limacharlie-call/SKILL.md` - Core API skill reference
 
 Plugin root: `plugins/lc-essentials/`
 
@@ -49,15 +48,13 @@ Plugin root: `plugins/lc-essentials/`
 
 Run `/init-lc` to load the complete guidelines into your CLAUDE.md. Key rules:
 
-1. **Never call MCP tools directly** - Use Task with `limacharlie-api-executor`
-2. **Always load the `limacharlie-call` skill** - prior to using LimaCharlie.
-2. **Never write LCQL queries manually** - Use `generate_lcql_query` first
-3. **Never generate D&R rules manually** - Use AI generation tools
+1. **Use the `limacharlie` CLI via Bash** - Never call MCP tools or spawn api-executor agents
+2. **Never write LCQL queries manually** - Use `limacharlie ai generate-query` first
+3. **Never generate D&R rules manually** - Use `limacharlie ai generate-*` commands
 4. **Never calculate timestamps manually** - Use bash `date` commands
-5. **OID is UUID, not org name** - Use `list_user_orgs` to map names to UUIDs
-6. **Always specify Return field** for API executor calls
-7. **Use sub-agents for parallel operations** - Spawn one agent per item
-8. **Use server-side filtering** - `selector` and `online_only` parameters
+5. **OID is UUID, not org name** - Use `limacharlie org list` to map names to UUIDs
+6. **Use sub-agents for parallel operations** - Spawn one agent per item
+7. **Use server-side filtering** - `selector` and `online_only` parameters
 
 See `AUTOINIT.md` in the plugin root for complete details.
 
@@ -82,7 +79,7 @@ allowed-tools:
 
 **IMPORTANT**:
 - Use YAML list format for `allowed-tools` (not comma-separated)
-- NEVER include `mcp__*` tools - skills don't call MCP directly
+- NEVER include `mcp__*` tools - skills use the `limacharlie` CLI via Bash
 
 ### Required Preamble (for LimaCharlie-using skills)
 
@@ -95,36 +92,32 @@ After the title and brief description, include this standardized section:
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+\`\`\`bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 \`\`\`
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-\`\`\`
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
+| **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-*` + `limacharlie rule validate` |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
 ```
 
 Add skill-specific rows to Critical Rules table:
-- D&R skills: Add row for `generate_dr_rule_*()` requirement
+- D&R skills: Add row for `limacharlie ai generate-*` requirement
 - Parsing skills: Add row for `parsing-helper` skill requirement
 
 **Reference**: See `skills/_shared/SKILL_TEMPLATE.md` for the complete template.
@@ -142,7 +135,7 @@ Determine which category your skill falls into:
 ### Category A: API Wrapper Skill
 Simple skills that wrap a single API operation.
 - Validate parameters
-- Delegate to `limacharlie-api-executor`
+- Execute via `Bash("limacharlie ...")`
 - Format and return results
 
 ### Category B: Orchestration Skill
@@ -169,8 +162,7 @@ Agent frontmatter:
 name: agent-name
 description: What it does and when to use (determines when Claude invokes it)
 model: sonnet|opus
-skills:
-  - lc-essentials:skill-name
+skills: []
 ---
 ```
 
@@ -207,11 +199,12 @@ Before completing, verify:
 - [ ] Frontmatter uses YAML list format for `allowed-tools`
 - [ ] No `mcp__*` tools in `allowed-tools`
 - [ ] Has "LimaCharlie Integration" section with Critical Rules table (if LC-using skill)
+- [ ] All LimaCharlie operations use `Bash("limacharlie ...")` directly
 - [ ] All Task spawns use `subagent_type=` (not `subagent=`)
 - [ ] All Task spawns include `model="sonnet"` (or appropriate model)
 - [ ] Timestamps use bash `date +%s` commands (never LLM calculations)
 - [ ] OID is always UUID, never org name
-- [ ] LCQL queries use `generate_lcql_query()` first
-- [ ] D&R rules use `generate_dr_rule_*()` functions
+- [ ] LCQL queries use `limacharlie ai generate-query` first
+- [ ] D&R rules use `limacharlie ai generate-*` commands
 - [ ] Updated SKILLS_SUMMARY.md
 - [ ] Updated agents/README.md (if new agent created)

@@ -2,8 +2,7 @@
 name: asset-profiler
 description: Collect comprehensive asset profile for a SINGLE sensor. Designed to be spawned in parallel (batched) by the sensor-coverage skill. Gathers OS version, packages, users, services, autoruns, and network connections. Returns structured JSON profile.
 model: sonnet
-skills:
-  - lc-essentials:limacharlie-call
+skills: []
 ---
 
 # Single-Sensor Asset Profiler
@@ -46,53 +45,42 @@ Parse the prompt to extract:
 
 ### Step 2: Collect Asset Data
 
-Use the `limacharlie-call` skill to gather system information:
+Use the `limacharlie` CLI to gather system information:
 
 #### 2.1 OS Version (Always collected)
 
-```
-tool: get_os_version
-parameters: {"oid": "<org-uuid>", "sid": "<sensor-uuid>"}
+```bash
+limacharlie task send --sid <sensor-uuid> --task os_version --oid <org-uuid> --output json
 ```
 
 Returns: `os_name`, `os_version`, `os_build`, `architecture`
 
 #### 2.2 Installed Packages
 
-```
-tool: get_packages
-parameters: {"oid": "<org-uuid>", "sid": "<sensor-uuid>"}
+```bash
+limacharlie task send --sid <sensor-uuid> --task os_packages --oid <org-uuid> --output json
 ```
 
 Returns: Array of `{name, version, architecture}`
 
 #### 2.3 User Accounts
 
-```
-tool: get_users
-parameters: {"oid": "<org-uuid>", "sid": "<sensor-uuid>"}
-```
-
-Returns: Array of `{username, uid, groups, home}`
-
-Identify admin users by checking for:
+Check user accounts via sensor tasking. Identify admin users by checking for:
 - Windows: "Administrators" group membership
 - Linux/macOS: uid=0 or "wheel"/"sudo" group
 
 #### 2.4 Running Services
 
-```
-tool: get_services
-parameters: {"oid": "<org-uuid>", "sid": "<sensor-uuid>"}
+```bash
+limacharlie task send --sid <sensor-uuid> --task os_services --oid <org-uuid> --output json
 ```
 
 Returns: Array of `{name, display_name, state, start_type, path}`
 
 #### 2.5 Autoruns (Persistence)
 
-```
-tool: get_autoruns
-parameters: {"oid": "<org-uuid>", "sid": "<sensor-uuid>"}
+```bash
+limacharlie task send --sid <sensor-uuid> --task os_autoruns --oid <org-uuid> --output json
 ```
 
 Returns: Array of `{location, name, path, signed}`
@@ -101,9 +89,8 @@ Flag unsigned autoruns as potential concerns.
 
 #### 2.6 Network Connections
 
-```
-tool: get_network_connections
-parameters: {"oid": "<org-uuid>", "sid": "<sensor-uuid>"}
+```bash
+limacharlie task send --sid <sensor-uuid> --task os_netstat --oid <org-uuid> --output json
 ```
 
 Returns: Array of `{state, local_address, local_port, remote_address, remote_port, pid, process_name, protocol}`

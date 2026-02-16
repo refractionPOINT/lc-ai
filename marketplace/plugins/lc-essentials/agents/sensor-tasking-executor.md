@@ -2,8 +2,7 @@
 name: sensor-tasking-executor
 description: Execute sensor tasks (live response commands) on a single sensor and return results. Designed for parallel execution by parent skills. Handles online verification, task execution, and result formatting.
 model: sonnet
-skills:
-  - lc-essentials:limacharlie-call
+skills: []
 ---
 
 # Sensor Tasking Executor Agent
@@ -65,14 +64,8 @@ Extract from your prompt:
 
 Before executing, verify the sensor is online:
 
-```
-mcp__plugin_lc-essentials_limacharlie__lc_call_tool(
-  tool_name="is_online",
-  parameters={
-    "oid": "[oid]",
-    "sid": "[sid]"
-  }
-)
+```bash
+limacharlie sensor online [sid] --oid [oid] --output json
 ```
 
 If offline, return immediately with status indicating sensor is offline.
@@ -89,14 +82,8 @@ A sensor running on Linux but with `arch=9` (usp_adapter) is an **adapter**, not
 
 If the platform/architecture were provided in your prompt, check them directly. Otherwise, get sensor info:
 
-```
-mcp__plugin_lc-essentials_limacharlie__lc_call_tool(
-  tool_name="get_sensor_info",
-  parameters={
-    "oid": "[oid]",
-    "sid": "[sid]"
-  }
-)
+```bash
+limacharlie sensor get --sid [sid] --oid [oid] --output json
 ```
 
 Check **both** `info.platform` AND `info.arch` fields:
@@ -143,39 +130,19 @@ Map the task name to the appropriate function and execute:
 
 **Data Collection Tasks** (return inline response):
 
-| Task | Function | Parameters |
-|------|----------|------------|
-| get_processes | `get_processes` | oid, sid |
-| get_network_connections | `get_network_connections` | oid, sid |
-| get_os_version | `get_os_version` | oid, sid |
-| get_users | `get_users` | oid, sid |
-| get_services | `get_services` | oid, sid |
-| get_drivers | `get_drivers` | oid, sid |
-| get_autoruns | `get_autoruns` | oid, sid |
-| get_packages | `get_packages` | oid, sid |
-| dir_list | `dir_list` | oid, sid, path |
-| get_registry_keys | `get_registry_keys` | oid, sid, path |
-| find_strings | `find_strings` | oid, sid, pattern, (optional: pid) |
-
-**YARA Scanning Tasks**:
-
-| Task | Function | Parameters |
-|------|----------|------------|
-| yara_scan_process | `yara_scan_process` | oid, sid, pid, yara_rule |
-| yara_scan_file | `yara_scan_file` | oid, sid, file_path, yara_rule |
-| yara_scan_directory | `yara_scan_directory` | oid, sid, dir_path, yara_rule |
-| yara_scan_memory | `yara_scan_memory` | oid, sid, yara_rule |
+| Task | CLI Command |
+|------|-------------|
+| get_processes | `limacharlie task send --sid <sid> --task os_processes --oid <oid> --output json` |
+| get_network_connections | `limacharlie task send --sid <sid> --task os_netstat --oid <oid> --output json` |
+| get_os_version | `limacharlie task send --sid <sid> --task os_version --oid <oid> --output json` |
+| get_services | `limacharlie task send --sid <sid> --task os_services --oid <oid> --output json` |
+| get_autoruns | `limacharlie task send --sid <sid> --task os_autoruns --oid <oid> --output json` |
+| get_packages | `limacharlie task send --sid <sid> --task os_packages --oid <oid> --output json` |
 
 **Example execution**:
 
-```
-mcp__plugin_lc-essentials_limacharlie__lc_call_tool(
-  tool_name="get_processes",
-  parameters={
-    "oid": "[oid]",
-    "sid": "[sid]"
-  }
-)
+```bash
+limacharlie task send --sid [sid] --task os_processes --oid [oid] --output json
 ```
 
 ### Step 4: Format Output
@@ -353,9 +320,8 @@ Execute sensor task:
 - **Architecture Validation**: Only task EDR agents (arch != usp_adapter / code 9)
 - **Timeout Awareness**: Some tasks (YARA scans) may take longer
 
-## Skills Used
-
-- `lc-essentials:limacharlie-call` - For all API operations
+**Tools Used**:
+- `Bash` - For `limacharlie` CLI commands
 
 ## Your Workflow Summary
 
@@ -366,7 +332,7 @@ Execute sensor task:
 5. **If platform not taskable** → Return platform_not_taskable error
 6. **Validate architecture** → Check arch is not `9` / `usp_adapter`
 7. **If architecture is USP** → Return architecture_not_taskable error
-8. **If EDR sensor** → Execute task via MCP tool
+8. **If EDR sensor** → Execute task via CLI
 9. **Format output** → Return structured JSON with results/errors
 10. **Return to parent** → Provide data matching caller's specifications
 

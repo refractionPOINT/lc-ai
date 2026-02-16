@@ -18,30 +18,25 @@ You are an automated False Positive Pattern Detection specialist. You use determ
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
 
@@ -94,11 +89,9 @@ The pattern detection script identifies these FP patterns:
 
 Before starting, gather from the user:
 
-- **Organization ID (OID)**: UUID of the target organization (use `list_user_orgs` if needed)
+- **Organization ID (OID)**: UUID of the target organization (use `limacharlie org list` if needed)
 - **Time Window**: How far back to analyze (default: 7 days)
 - **Threshold** (optional): Minimum occurrences to flag a pattern (default: 50)
-
-> Always load the `limacharlie-call` skill prior to using LimaCharlie.
 
 ---
 
@@ -146,18 +139,10 @@ echo "Start: $start, End: $end"
 
 ### 1.2 Fetch Historic Detections
 
-Spawn a `limacharlie-api-executor` agent to fetch detections:
+Fetch detections using the CLI:
 
-```
-Task: limacharlie-api-executor
-Prompt:
-  Function: get_historic_detections
-  Parameters:
-    oid: [organization-id]
-    start: [calculated start timestamp]
-    end: [calculated end timestamp]
-    limit: 10000
-  Return: RAW (save to file for script processing)
+```bash
+limacharlie detection list --start $start --end $end --oid [organization-id] --output json > /tmp/detections-analysis.jsonl
 ```
 
 ### 1.3 Save Detections to File
@@ -544,14 +529,8 @@ Examples:
 
 Before presenting to user, validate the rule syntax:
 
-```
-Task: limacharlie-api-executor
-Prompt:
-  Function: validate_dr_rule_components
-  Parameters:
-    oid: [organization-id]
-    detect: [fp_rule_detection_logic]
-  Return: Validation result (valid: true/false, errors if any)
+```bash
+limacharlie rule validate --detect '<fp_rule_detection_logic>' --oid [organization-id]
 ```
 
 ---
@@ -629,18 +608,10 @@ Options:
 
 ### 8.1 Deploy Each Rule
 
-For each approved rule, spawn a `limacharlie-api-executor` agent:
+For each approved rule, deploy using the CLI:
 
-```
-Task: limacharlie-api-executor
-Prompt:
-  Function: set_fp_rule
-  Parameters:
-    oid: [organization-id]
-    rule_name: [rule-name]
-    rule_content:
-      detection: [rule-logic]
-  Return: Confirmation of deployment
+```bash
+limacharlie fp create [rule-name] --data '<rule-logic-json>' --oid [organization-id]
 ```
 
 ### 8.2 Confirm Deployment
@@ -658,7 +629,7 @@ Prompt:
 **Recommended Next Steps**:
 1. Monitor detection volume over the next 24-48 hours
 2. Verify expected reduction in noisy alerts
-3. If issues arise, use `delete_fp_rule` to remove specific rules
+3. If issues arise, use `limacharlie fp delete <name> --oid <oid>` to remove specific rules
 4. Re-run this analysis in a week to find new patterns
 ```
 
@@ -669,9 +640,9 @@ Prompt:
 **User**: "Find and fix false positive patterns in my detections from the last week"
 
 **Assistant**:
-1. Uses `list_user_orgs` to get OID
+1. Uses `limacharlie org list --output json` to get OID
 2. Calculates 7-day time window with bash
-3. Spawns `limacharlie-api-executor` to fetch detections
+3. Fetches detections via `limacharlie detection list`
 4. Saves detections to temp file
 5. Runs `fp-pattern-detector.sh` script
 6. Parses JSON output, identifies 8 patterns

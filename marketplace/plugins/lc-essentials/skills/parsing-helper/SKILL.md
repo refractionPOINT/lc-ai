@@ -19,30 +19,25 @@ A guided workflow for creating, testing, and deploying Grok parsing configuratio
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
 
@@ -98,15 +93,8 @@ Before starting, gather:
 
 Get the list of available organizations:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_user_orgs
-    - Parameters: {}
-    - Return: RAW"
-)
+```bash
+limacharlie org list --output json
 ```
 
 Use `AskUserQuestion` to let the user select an organization if multiple are available.
@@ -118,53 +106,25 @@ Ask the user which adapter type they're working with using `AskUserQuestion`:
 **Option A: External Adapter** (cloud-managed syslog, webhook, API)
 
 1. List available external adapters:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_external_adapters
-    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\"}
-    - Return: RAW"
-)
+```bash
+limacharlie adapter list --oid <SELECTED_ORG_ID> --output json
 ```
 
 2. Get the selected adapter's current configuration:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_external_adapter
-    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"name\": \"<ADAPTER_NAME>\"}
-    - Return: RAW"
-)
+```bash
+limacharlie adapter get <ADAPTER_NAME> --oid <SELECTED_ORG_ID> --output json
 ```
 
 **Option B: Cloud Sensor** (AWS, Azure, GCP, SaaS)
 
 1. List available cloud sensors:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_cloud_sensors
-    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\"}
-    - Return: RAW"
-)
+```bash
+limacharlie cloud-sensor list --oid <SELECTED_ORG_ID> --output json
 ```
 
 2. Get the selected cloud sensor's current configuration:
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_cloud_sensor
-    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"name\": \"<SENSOR_NAME>\"}
-    - Return: RAW"
-)
+```bash
+limacharlie cloud-sensor get <SENSOR_NAME> --oid <SELECTED_ORG_ID> --output json
 ```
 
 **Option C: One-off/USP Adapter** (local adapter, no cloud config)
@@ -178,15 +138,8 @@ No API calls needed. Proceed directly to sample log collection.
 If the adapter is already ingesting data, you can fetch sample events:
 
 1. Find the sensor by IID (Installation ID from the adapter's installation key):
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_sensors
-    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"selector\": \"iid == `<IID>`\"}
-    - Return: RAW"
-)
+```bash
+limacharlie sensor list --oid <SELECTED_ORG_ID> --output json | jq '[.[] | select(.iid == "<IID>")]'
 ```
 
 2. Get recent events from the sensor:
@@ -198,17 +151,10 @@ Task(
 start=$(date -d '1 hour ago' +%s) && end=$(date +%s) && echo "start=$start end=$end"
 ```
 
-Then use the actual output values (e.g., `start=1764805928 end=1764809528`) directly in the API call - do NOT use placeholder values:
+Then use the actual output values (e.g., `start=1764805928 end=1764809528`) directly in the CLI call - do NOT use placeholder values:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_historic_events
-    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\", \"sid\": \"<SENSOR_ID>\", \"start\": 1764805928, \"end\": 1764809528, \"limit\": 10}
-    - Return: RAW"
-)
+```bash
+limacharlie search run --query "event sid = '<SENSOR_ID>'" --start $start --end $end --oid <SELECTED_ORG_ID> --output json | jq '.[:10]'
 ```
 
 3. Extract the raw log content from the events for analysis.
@@ -328,27 +274,15 @@ date -u +%s
 
 Use `validate_usp_mapping` to test the Grok pattern against sample data:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: validate_usp_mapping
-    - Parameters: {
-        \"oid\": \"<SELECTED_ORG_ID>\",
-        \"platform\": \"text\",
-        \"mapping\": {
-          \"parsing_grok\": {
-            \"message\": \"%{SYSLOGTIMESTAMP:date} %{HOSTNAME:host} %{WORD:service}\\\\[%{INT:pid}\\\\]: %{GREEDYDATA:msg}\"
-          },
-          \"event_type_path\": \"service\",
-          \"event_time_path\": \"date\",
-          \"sensor_hostname_path\": \"host\"
-        },
-        \"text_input\": \"<SAMPLE_LOG_LINES>\"
-      }
-    - Return: RAW"
-)
+```bash
+limacharlie adapter validate-mapping --oid <SELECTED_ORG_ID> --platform text --mapping '{
+  "parsing_grok": {
+    "message": "%{SYSLOGTIMESTAMP:date} %{HOSTNAME:host} %{WORD:service}\\[%{INT:pid}\\]: %{GREEDYDATA:msg}"
+  },
+  "event_type_path": "service",
+  "event_time_path": "date",
+  "sensor_hostname_path": "host"
+}' --text-input "<SAMPLE_LOG_LINES>" --output json
 ```
 
 > **Note**: The `mapping` object should have `parsing_grok`, `event_type_path`, `event_time_path`, and `sensor_hostname_path` at the same level - NOT nested under a `parsing` key.
@@ -377,66 +311,28 @@ If validation fails or fields are missing, adjust the Grok pattern and re-valida
 **Step 4: Apply configuration**
 
 **For External Adapters:**
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: set_external_adapter
-    - Parameters: {
-        \"oid\": \"<SELECTED_ORG_ID>\",
-        \"name\": \"<ADAPTER_NAME>\",
-        \"adapter_type\": \"<EXISTING_TYPE>\",
-        \"config\": {
-          // ... existing config ...
-          \"parsing_rules\": {
-            \"parsing_grok\": {
-              \"message\": \"<GROK_PATTERN>\"
-            },
-            \"event_type_path\": \"<PATH>\",
-            \"event_time_path\": \"<PATH>\",
-            \"sensor_hostname_path\": \"<PATH>\"
-          }
-        }
-      }
-    - Return: RAW"
-)
+```bash
+limacharlie adapter set <ADAPTER_NAME> --oid <SELECTED_ORG_ID> --data '{
+  ... existing config with updated parsing_rules ...
+}'
 ```
 
 **For Cloud Sensors:**
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: set_cloud_sensor
-    - Parameters: {
-        \"oid\": \"<SELECTED_ORG_ID>\",
-        \"name\": \"<SENSOR_NAME>\",
-        \"config\": {
-          // ... existing config with updated parsing ...
-        }
-      }
-    - Return: RAW"
-)
+```bash
+limacharlie cloud-sensor set <SENSOR_NAME> --oid <SELECTED_ORG_ID> --data '{
+  ... existing config with updated parsing ...
+}'
 ```
 
 **Step 5: Verify no adapter errors**
 
 After applying the configuration for External Adapters or Cloud Sensors, check for any errors:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_org_errors
-    - Parameters: {\"oid\": \"<SELECTED_ORG_ID>\"}
-    - Return: Look for errors related to the adapter"
-)
+```bash
+limacharlie org errors --oid <SELECTED_ORG_ID> --output json
 ```
 
-If errors appear, review the adapter configuration and address the issues.
+Look for errors related to the adapter. If errors appear, review the adapter configuration and address the issues.
 
 **For One-off/USP Adapters:**
 
@@ -719,7 +615,6 @@ Supported index types: `file_hash`, `file_path`, `file_name`, `domain`, `ip`, `u
 
 ## Related Skills
 
-- `limacharlie-call`: For other LimaCharlie API operations
 - `detection-engineering`: Create D&R rules to detect patterns in parsed logs
 - `test-limacharlie-adapter`: Deploy a test adapter to verify parsing
 - `lookup-lc-doc`: Search LimaCharlie documentation for more parsing details

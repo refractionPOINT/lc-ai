@@ -21,30 +21,25 @@ This skill orchestrates sending tasks (commands) to EDR sensors and handling res
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
 
-### API Access Pattern
+### LimaCharlie CLI Access
 
-All LimaCharlie API calls go through the `limacharlie-api-executor` sub-agent:
+All LimaCharlie operations use the `limacharlie` CLI directly:
 
+```bash
+limacharlie <noun> <verb> --oid <oid> --output json [flags]
 ```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: <function-name>
-    - Parameters: {<params>}
-    - Return: RAW | <extraction instructions>
-    - Script path: {skill_base_directory}/../../scripts/analyze-lc-result.sh"
-)
-```
+
+For command help: `limacharlie <command> --ai-help`
+For command discovery: `limacharlie discover`
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
-| **MCP Access** | Call `mcp__*` directly | Use `limacharlie-api-executor` sub-agent |
-| **LCQL Queries** | Write query syntax manually | Use `generate_lcql_query()` first |
+| **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
-| **OID** | Use org name | Use UUID (call `list_user_orgs` if needed) |
+| **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
 
@@ -125,28 +120,14 @@ Parse the user's request to determine:
 
 If you don't have the OID, get it first:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_user_orgs
-    - Parameters: {}
-    - Return: RAW"
-)
+```bash
+limacharlie org list --output json
 ```
 
 Check sensor status if targeting specific sensors:
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: is_online
-    - Parameters: {\"oid\": \"[oid]\", \"sid\": \"[sid]\"}
-    - Return: RAW"
-)
+```bash
+limacharlie sensor online <sid> --oid <oid> --output json
 ```
 
 > **CRITICAL: Filter to Taskable EDR Sensors**
@@ -161,19 +142,8 @@ Task(
 > A sensor running on Linux platform but with `arch=usp_adapter` is an **adapter** (USP), not an EDR agent. These adapters forward logs but cannot execute commands.
 >
 > **Use combined selector when listing sensors:**
-> ```
-> Task(
->   subagent_type="lc-essentials:limacharlie-api-executor",
->   model="sonnet",
->   prompt="Execute LimaCharlie API call:
->     - Function: list_sensors
->     - Parameters: {
->         \"oid\": \"[oid]\",
->         \"selector\": \"(plat==windows or plat==linux or plat==macos) and arch!=usp_adapter\",
->         \"online_only\": true
->       }
->     - Return: List of SIDs with hostnames and platforms"
-> )
+> ```bash
+> limacharlie sensor list --selector "(plat==windows or plat==linux or plat==macos) and arch!=usp_adapter" --online --oid <oid> --output json
 > ```
 >
 > **Or check sensor info** before tasking - verify both `platform` is in `["windows", "linux", "macos", "chrome"]` AND `arch` is not `9` / `usp_adapter`.
@@ -205,15 +175,8 @@ For immediate data collection from a small number of online sensors (up to 5), u
 
 **Example - Get processes from a sensor:**
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_processes
-    - Parameters: {\"oid\": \"[oid]\", \"sid\": \"[sid]\"}
-    - Return: RAW"
-)
+```bash
+limacharlie task send --sid <sid> --task os_processes --oid <oid> --output json
 ```
 
 ### Step 3B: Reliable Tasking (>5 Sensors or Offline)
@@ -226,28 +189,10 @@ For more than 5 sensors, offline sensors, or fleet-wide operations, use reliable
 >
 > Order: **D&R Rule → Reliable Task** (not the other way around)
 
-**Read the function documentation first:**
-```
-Read: ${CLAUDE_PLUGIN_ROOT}/skills/limacharlie-call/functions/reliable-tasking.md
-```
-
 **Create a reliable task:**
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: reliable_tasking
-    - Parameters: {
-        \"oid\": \"[oid]\",
-        \"task\": \"os_version\",
-        \"selector\": \"plat==windows\",
-        \"context\": \"fleet-inventory-2024-01\",
-        \"ttl\": 86400
-      }
-    - Return: RAW"
-)
+```bash
+limacharlie task reliable-send --task 'os_version' --selector 'plat==windows' --context 'fleet-inventory-2024-01' --ttl 86400 --oid <oid> --output json
 ```
 
 **Key Parameters:**
@@ -281,35 +226,14 @@ After reliable tasking, wait at least 2 minutes for responses to arrive, then qu
 
 **First, generate the LCQL query:**
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: generate_lcql_query
-    - Parameters: {
-        \"oid\": \"[oid]\",
-        \"query\": \"Find all events in the last 2 hours where investigation_id contains 'fleet-inventory-2024-01'\"
-      }
-    - Return: RAW"
-)
+```bash
+limacharlie ai generate-query --prompt "Find all events in the last 2 hours where investigation_id contains 'fleet-inventory-2024-01'" --oid <oid> --output json
 ```
 
 **Then run the query:**
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: run_lcql_query
-    - Parameters: {
-        \"oid\": \"[oid]\",
-        \"query\": \"[generated_query]\",
-        \"limit\": 1000
-      }
-    - Return: RAW"
-)
+```bash
+limacharlie search run --query "<generated_query>" --start <ts> --end <ts> --oid <oid> --output json
 ```
 
 #### Option B: D&R Rule (Automated Handling)
@@ -320,51 +244,20 @@ For automated response handling, create a D&R rule that matches the investigatio
 
 **Step 1: Generate the detection:**
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: generate_dr_rule_detection
-    - Parameters: {
-        \"oid\": \"[oid]\",
-        \"description\": \"Match events where investigation_id contains 'fleet-inventory-2024-01'\"
-      }
-    - Return: RAW"
-)
+```bash
+limacharlie ai generate-detection --description "Match events where investigation_id contains 'fleet-inventory-2024-01'" --oid <oid> --output json
 ```
 
 **Step 2: Generate the response:**
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: generate_dr_rule_respond
-    - Parameters: {
-        \"oid\": \"[oid]\",
-        \"description\": \"Report to output 'siem' and add detection 'FLEET_INVENTORY_RESPONSE'\"
-      }
-    - Return: RAW"
-)
+```bash
+limacharlie ai generate-response --description "Report to output 'siem' and add detection 'FLEET_INVENTORY_RESPONSE'" --oid <oid> --output json
 ```
 
 **Step 3: Validate the rule:**
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: validate_dr_rule_components
-    - Parameters: {
-        \"oid\": \"[oid]\",
-        \"detection\": [detection_yaml],
-        \"response\": [response_yaml]
-      }
-    - Return: RAW"
-)
+```bash
+limacharlie rule validate --detect '<detection_yaml>' --respond '<response_yaml>' --oid <oid>
 ```
 
 **Step 4: Deploy with expiry:**
@@ -374,22 +267,8 @@ Calculate expiry timestamp (e.g., 7 days from now):
 date -d '+7 days' +%s
 ```
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: set_dr_general_rule
-    - Parameters: {
-        \"oid\": \"[oid]\",
-        \"name\": \"temp-fleet-inventory-handler\",
-        \"detection\": [detection_yaml],
-        \"response\": [response_yaml],
-        \"is_enabled\": true,
-        \"ttl\": [expiry_timestamp]
-      }
-    - Return: RAW"
-)
+```bash
+limacharlie rule create temp-fleet-inventory-handler --detect '<detection_yaml>' --respond '<response_yaml>' --oid <oid>
 ```
 
 **Step 5: NOW create the reliable task**
@@ -400,31 +279,14 @@ Only after the D&R rule is deployed, create the reliable task (see Step 3B above
 
 **List pending tasks:**
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: list_reliable_tasks
-    - Parameters: {\"oid\": \"[oid]\"}
-    - Return: RAW"
-)
+```bash
+limacharlie task reliable-list --oid <oid> --output json
 ```
 
 **Delete/cancel a task:**
 
-```
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: delete_reliable_task
-    - Parameters: {
-        \"oid\": \"[oid]\",
-        \"task_id\": \"[task_id]\"
-      }
-    - Return: RAW"
-)
+```bash
+limacharlie task reliable-delete --task-id <task_id> --oid <oid>
 ```
 
 ## Example Workflows
@@ -433,47 +295,21 @@ Task(
 
 User: "Get running processes from sensor abc-123"
 
-```
+```bash
 # Check if online
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: is_online
-    - Parameters: {\"oid\": \"c7e8f940-...\", \"sid\": \"abc-123\"}
-    - Return: RAW"
-)
+limacharlie sensor online abc-123 --oid c7e8f940-... --output json
 
 # If online, get processes directly
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: get_processes
-    - Parameters: {\"oid\": \"c7e8f940-...\", \"sid\": \"abc-123\"}
-    - Return: RAW"
-)
+limacharlie task send --sid abc-123 --task os_processes --oid c7e8f940-... --output json
 ```
 
 ### Example 2: Fleet-Wide OS Inventory
 
 User: "Get OS version from all Windows servers when they come online"
 
-```
+```bash
 # Create reliable task with context for later collection
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: reliable_tasking
-    - Parameters: {
-        \"oid\": \"c7e8f940-...\",
-        \"task\": \"os_version\",
-        \"selector\": \"plat==windows\",
-        \"context\": \"os-inventory-20240120\"
-      }
-    - Return: RAW"
-)
+limacharlie task reliable-send --task 'os_version' --selector 'plat==windows' --context 'os-inventory-20240120' --oid c7e8f940-... --output json
 ```
 
 Response to user:
@@ -493,37 +329,19 @@ User: "Run memory collection on all hosts tagged 'incident-response', I need the
 # Rule should match: routing/investigation_id contains "ir-memcollect-001"
 # Response should: report to SIEM output
 
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: set_dr_general_rule
-    - Parameters: {
-        \"oid\": \"c7e8f940-...\",
-        \"name\": \"temp-ir-memcollect-handler\",
-        \"detection\": {\"op\": \"contains\", \"path\": \"routing/investigation_id\", \"value\": \"ir-memcollect-001\"},
-        \"response\": [{\"action\": \"report\", \"name\": \"IR_MEMCOLLECT_RESPONSE\", \"to\": \"siem\"}],
-        \"is_enabled\": true,
-        \"ttl\": 172800
-      }
-    - Return: RAW"
-)
+# Step 1: Create D&R rule FIRST
+limacharlie rule create temp-ir-memcollect-handler \
+  --detect '{"op": "contains", "path": "routing/investigation_id", "value": "ir-memcollect-001"}' \
+  --respond '[{"action": "report", "name": "IR_MEMCOLLECT_RESPONSE", "to": "siem"}]' \
+  --oid c7e8f940-...
 
 # Step 2: THEN create reliable task (rule is now in place to catch responses)
-Task(
-  subagent_type="lc-essentials:limacharlie-api-executor",
-  model="sonnet",
-  prompt="Execute LimaCharlie API call:
-    - Function: reliable_tasking
-    - Parameters: {
-        \"oid\": \"c7e8f940-...\",
-        \"task\": \"mem_map --pid 4\",
-        \"selector\": \"incident-response in tags\",
-        \"context\": \"ir-memcollect-001\",
-        \"ttl\": 172800
-      }
-    - Return: RAW"
-)
+limacharlie task reliable-send \
+  --task 'mem_map --pid 4' \
+  --selector 'incident-response in tags' \
+  --context 'ir-memcollect-001' \
+  --ttl 172800 \
+  --oid c7e8f940-... --output json
 ```
 
 ### Example 4: Quick Data Collection with Inline Response
@@ -532,13 +350,14 @@ User: "What's the OS version on all 5 of our production Linux servers?"
 
 If sensors are online and small in number, parallel direct tasking is faster:
 
-```
-# Spawn parallel tasks for each sensor
-Task(subagent_type="lc-essentials:limacharlie-api-executor", prompt="get_os_version for sid1...")
-Task(subagent_type="lc-essentials:limacharlie-api-executor", prompt="get_os_version for sid2...")
-Task(subagent_type="lc-essentials:limacharlie-api-executor", prompt="get_os_version for sid3...")
-Task(subagent_type="lc-essentials:limacharlie-api-executor", prompt="get_os_version for sid4...")
-Task(subagent_type="lc-essentials:limacharlie-api-executor", prompt="get_os_version for sid5...")
+```bash
+# Run parallel tasks for each sensor
+limacharlie task send --sid sid1 --task os_version --oid <oid> --output json &
+limacharlie task send --sid sid2 --task os_version --oid <oid> --output json &
+limacharlie task send --sid sid3 --task os_version --oid <oid> --output json &
+limacharlie task send --sid sid4 --task os_version --oid <oid> --output json &
+limacharlie task send --sid sid5 --task os_version --oid <oid> --output json &
+wait
 ```
 
 ## Important Notes
@@ -602,14 +421,11 @@ When setting TTL or expiry:
 
 ## Related Skills
 
-- `limacharlie-call` - For function documentation and direct API operations
 - `detection-engineering` - For creating D&R rules to handle responses
 - `sensor-health` - For checking sensor online status across fleet
 - `sensor-coverage` - For understanding fleet coverage before tasking
 
 ## Reference
 
-- [reliable-tasking.md](../limacharlie-call/functions/reliable-tasking.md) - Reliable task function details
-- [list-reliable-tasks.md](../limacharlie-call/functions/list-reliable-tasks.md) - List pending tasks
-- [delete-reliable-task.md](../limacharlie-call/functions/delete-reliable-task.md) - Cancel tasks
 - [ext-reliable-tasking documentation](https://github.com/refractionPOINT/documentation/blob/master/docs/limacharlie/doc/Add-Ons/Extensions/LimaCharlie_Extensions/ext-reliable-tasking.md)
+- Use `limacharlie task --ai-help` for CLI help
