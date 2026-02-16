@@ -245,8 +245,7 @@ All skills use the `limacharlie` CLI directly via Bash:
 limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
-- **Command discovery**: `limacharlie discover` to find available commands
-- **Command help**: `limacharlie <command> --ai-help` for detailed usage
+- **Command discovery and help**: `limacharlie <command> --ai-help` for detailed usage and discovery
 - **All operations** go through the CLI - no MCP tools or intermediary agents needed
 - Reference CALLING_API.md for common patterns
 

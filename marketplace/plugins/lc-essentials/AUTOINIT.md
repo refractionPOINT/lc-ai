@@ -51,7 +51,6 @@ Every command that operates on an organization requires `--oid <uuid>`. Use `lim
 When unsure about a command's flags or usage:
 ```bash
 limacharlie <command> --ai-help
-limacharlie discover
 ```
 
 ### 6. LCQL Query Handling

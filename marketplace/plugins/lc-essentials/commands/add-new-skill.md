@@ -77,10 +77,6 @@ allowed-tools:
 ---
 ```
 
-**IMPORTANT**:
-- Use YAML list format for `allowed-tools` (not comma-separated)
-- NEVER include `mcp__*` tools - skills use the `limacharlie` CLI via Bash
-
 ### Required Preamble (for LimaCharlie-using skills)
 
 After the title and brief description, include this standardized section:
@@ -100,8 +96,7 @@ All LimaCharlie operations use the `limacharlie` CLI directly:
 limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 \`\`\`
 
-For command help: `limacharlie <command> --ai-help`
-For command discovery: `limacharlie discover`
+For command help and discovery: `limacharlie <command> --ai-help`
 
 ### Critical Rules
 
@@ -198,7 +193,6 @@ Based on the user's description above, create a skill that fulfills their requir
 Before completing, verify:
 
 - [ ] Frontmatter uses YAML list format for `allowed-tools`
-- [ ] No `mcp__*` tools in `allowed-tools`
 - [ ] Has "LimaCharlie Integration" section with Critical Rules table (if LC-using skill)
 - [ ] All LimaCharlie operations use `Bash("limacharlie ...")` directly
 - [ ] All Task spawns use `subagent_type=` (not `subagent=`)

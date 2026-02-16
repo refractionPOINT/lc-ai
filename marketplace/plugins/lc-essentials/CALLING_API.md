@@ -36,10 +36,7 @@ limacharlie org list --output yaml
 ## Command Discovery
 
 ```bash
-# Discover available commands
-limacharlie discover
-
-# Get AI-powered help for a specific command
+# Get AI-powered help and discover available commands
 limacharlie <command> --ai-help
 
 # Get help for a topic

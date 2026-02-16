@@ -24,8 +24,7 @@ All LimaCharlie operations use the `limacharlie` CLI directly:
 limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
-For command help: `limacharlie <command> --ai-help`
-For command discovery: `limacharlie discover`
+For command help and discovery: `limacharlie <command> --ai-help`
 
 ### Critical Rules
 
