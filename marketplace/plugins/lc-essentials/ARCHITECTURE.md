@@ -25,7 +25,7 @@ User Request
 │  limacharlie     │  │  - Returns structured data to parent     │
 │  <noun> <verb>   │  └─────────────────────────────────────────┘
 │  --oid <oid>     │                    │
-│  --output json   │                    │ direct CLI calls
+│  --output yaml   │                    │ direct CLI calls
 └────────┬─────────┘                    ▼
          │                    ┌──────────────────┐
          │                    │  limacharlie CLI │
@@ -59,7 +59,7 @@ Task(
 
 **Right:**
 ```bash
-limacharlie sensor list --oid <oid> --output json
+limacharlie sensor list --oid <oid> --output yaml
 ```
 
 ### 2. All Agents Call CLI Directly Too
@@ -73,9 +73,9 @@ When unsure about a CLI command's flags:
 limacharlie <command> --ai-help
 ```
 
-### 4. Always Pass `--output json`
+### 4. Always Pass `--output yaml`
 
-All CLI operations must include `--output json` for machine-readable output.
+All CLI operations must include `--output yaml` for machine-readable output that is more token-efficient than JSON.
 
 ### 5. Parallel Execution Pattern
 
@@ -140,6 +140,8 @@ Sub-agents spawned by skills for specific tasks. All agents call the CLI directl
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write syntax manually | Use `limacharlie ai generate-query` first |
 | **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-*` + `limacharlie rule validate` |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |

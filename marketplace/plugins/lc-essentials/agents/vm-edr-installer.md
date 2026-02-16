@@ -289,7 +289,7 @@ Wait for deployment to complete (varies by platform):
 After deployment, verify sensors appear in LimaCharlie:
 
 ```bash
-limacharlie sensor list --online --oid <org-id> --output json | jq '[.[] | select(.iid == "<installation-key-iid>")]'
+limacharlie sensor list --online --oid <org-id> --filter "[?iid=='<installation-key-iid>']" --output yaml
 ```
 
 ## Output Format
@@ -397,7 +397,7 @@ end=$(date +%s)
 Query for new sensors with the installation key:
 
 ```bash
-limacharlie sensor list --oid OID --output json | jq '[.[] | select(.iid == "INSTALLATION_KEY_IID")]'
+limacharlie sensor list --oid OID --filter "[?iid=='INSTALLATION_KEY_IID']" --output yaml
 ```
 
 Check if sensors are sending data:
@@ -407,7 +407,7 @@ Check if sensors are sending data:
 start=$(date -d '5 minutes ago' +%s)
 end=$(date +%s)
 
-limacharlie event list --sid SENSOR_ID --start $start --end $end --oid OID --output json
+limacharlie event list --sid SENSOR_ID --start $start --end $end --oid OID --output yaml
 ```
 
 ## Important Guidelines

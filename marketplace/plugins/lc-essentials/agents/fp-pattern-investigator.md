@@ -29,22 +29,22 @@ You have access to the `limacharlie` CLI which provides **120+ LimaCharlie opera
 You have the full arsenal of LimaCharlie investigative tools at your disposal:
 
 ### Detection Analysis
-- `limacharlie detection get <id> --oid <oid> --output json` - Get full detection details including the triggering event
-- `limacharlie detection list --start <ts> --end <ts> --oid <oid> --output json` - Find other detections on the same host or in the same timeframe
+- `limacharlie detection get <id> --oid <oid> --output yaml` - Get full detection details including the triggering event
+- `limacharlie detection list --start <ts> --end <ts> --oid <oid> --output yaml` - Find other detections on the same host or in the same timeframe
 
 ### Event Exploration
 - `limacharlie ai generate-query` + `limacharlie search run` - Search for related events, behaviors, and patterns
-- `limacharlie event list --sid <sid> --start <ts> --end <ts> --oid <oid> --output json` - Retrieve historical events for a sensor
+- `limacharlie event list --sid <sid> --start <ts> --end <ts> --oid <oid> --output yaml` - Retrieve historical events for a sensor
 
 ### Sensor Context
-- `limacharlie sensor get --sid <sid> --oid <oid> --output json` - Sensor tags, platform, hostname, enrollment info
-- `limacharlie task send --sid <sid> --task os_processes --oid <oid> --output json` - Current running processes (if sensor is online)
-- `limacharlie task send --sid <sid> --task os_netstat --oid <oid> --output json` - Active network connections
-- `limacharlie task send --sid <sid> --task os_autoruns --oid <oid> --output json` - Persistence mechanisms on the host
-- `limacharlie task send --sid <sid> --task os_services --oid <oid> --output json` - Running services
+- `limacharlie sensor get --sid <sid> --oid <oid> --output yaml` - Sensor tags, platform, hostname, enrollment info
+- `limacharlie task send --sid <sid> --task os_processes --oid <oid> --output yaml` - Current running processes (if sensor is online)
+- `limacharlie task send --sid <sid> --task os_netstat --oid <oid> --output yaml` - Active network connections
+- `limacharlie task send --sid <sid> --task os_autoruns --oid <oid> --output yaml` - Persistence mechanisms on the host
+- `limacharlie task send --sid <sid> --task os_services --oid <oid> --output yaml` - Running services
 
 ### IOC Searches
-- `limacharlie ioc search --type <t> --value <v> --oid <oid> --output json` / `limacharlie ioc batch-search` - Check if file hashes, domains, or IPs appear elsewhere in the org
+- `limacharlie ioc search --type <t> --value <v> --oid <oid> --output yaml` / `limacharlie ioc batch-search` - Check if file hashes, domains, or IPs appear elsewhere in the org
 
 ### Timeline Building
 - Correlated event queries via LCQL using `limacharlie search run`

@@ -34,7 +34,7 @@ Manage multi-tenant LimaCharlie configurations using git-based Infrastructure as
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -45,6 +45,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-*` + `limacharlie rule validate` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
@@ -158,7 +160,7 @@ Creates a new ext-git-sync compatible repository:
 Adds an existing LimaCharlie organization to the repository:
 
 **Workflow:**
-1. Look up organization by name using `limacharlie org list --output json`
+1. Look up organization by name using `limacharlie org list --output yaml`
 2. Confirm with user if multiple matches
 3. Create `orgs/<oid>/index.yaml` with global includes
 4. Create `orgs/<oid>/custom/` directory for future customizations
@@ -241,7 +243,7 @@ Fetches an EXISTING rule from a LimaCharlie tenant and adds it to the IaC repo:
 1. Look up tenant OID from `org-manifest.yaml`
 2. Fetch rule using the CLI:
    ```bash
-   limacharlie rule get encoded-powershell --oid <tenant-oid> --output json
+   limacharlie rule get encoded-powershell --oid <tenant-oid> --output yaml
    ```
 3. Ask user: Add as **global** (all tenants) or **tenant-specific**?
 4. If global: Add to `hives/dr-general.yaml`
@@ -259,7 +261,7 @@ Takes an existing rule from ONE tenant and makes it apply to ALL tenants:
 
 **Workflow:**
 1. Look up source tenant OID from `org-manifest.yaml`
-2. Fetch rule using `limacharlie rule get <name> --oid <oid> --output json`
+2. Fetch rule using `limacharlie rule get <name> --oid <oid> --output yaml`
 3. Add rule to `hives/dr-general.yaml`
 4. Ask user: Remove from tenant's custom config? (if it was tenant-specific)
 5. If yes: Remove from `orgs/<oid>/custom/rules.yaml`
@@ -398,7 +400,7 @@ Imports ALL D&R rules from a tenant into the IaC repo:
 
 **Workflow:**
 1. Look up tenant OID
-2. Fetch all rules using `limacharlie rule list --oid <oid> --output json` and `limacharlie rule get <name> --oid <oid> --output json`
+2. Fetch all rules using `limacharlie rule list --oid <oid> --output yaml` and `limacharlie rule get <name> --oid <oid> --output yaml`
 3. Ask user: Add as global or tenant-specific?
 4. Add rules to appropriate location
 5. Commit: "Import N rules from [tenant]"
@@ -499,10 +501,10 @@ When creating NEW detection rules:
 
 ```bash
 # 1. Generate detection component from natural language
-limacharlie ai generate-detection --description "..." --oid <oid> --output json
+limacharlie ai generate-detection --description "..." --oid <oid> --output yaml
 
 # 2. Generate response component from natural language
-limacharlie ai generate-response --description "..." --oid <oid> --output json
+limacharlie ai generate-response --description "..." --oid <oid> --output yaml
 
 # 3. Validate before adding to repo
 limacharlie rule validate --detect '...' --respond '...' --oid <oid>
@@ -520,7 +522,7 @@ After initializing the repo and adding tenants, each org needs ext-git-sync conf
 
 1. **Subscribe to ext-git-sync extension** in each org:
    ```bash
-   limacharlie extension subscribe --oid <oid> --output json
+   limacharlie extension subscribe --oid <oid> --output yaml
    ```
 
 2. **Create SSH deploy key:**
@@ -581,25 +583,25 @@ After configuration, verify the setup is working:
 
 1. **Check extension subscription:**
    ```bash
-   limacharlie extension list --oid <oid> --output json
+   limacharlie extension list --oid <oid> --output yaml
    # Should show ext-git-sync in the list
    ```
 
 2. **Verify secret exists:**
    ```bash
-   limacharlie secret list --oid <oid> --output json
+   limacharlie secret list --oid <oid> --output yaml
    # Should include "git-sync-ssh-key"
    ```
 
 3. **Check extension config:**
    ```bash
-   limacharlie extension get ext-git-sync --oid <oid> --output json
+   limacharlie extension get ext-git-sync --oid <oid> --output yaml
    # Verify repo_url, branch, conf_root are correct
    ```
 
 4. **Check for org errors:**
    ```bash
-   limacharlie org errors --oid <oid> --output json
+   limacharlie org errors --oid <oid> --output yaml
    # Look for ext-git-sync errors (SSH auth failures, repo access issues)
    ```
 
@@ -785,7 +787,7 @@ Use consistent naming: `[category]-[description]`
 | Issue | Cause | Solution |
 |-------|-------|----------|
 | "repo_url is required" | Wrong field name | Use `repo_url`, not `repository` |
-| "ssh_key is required" | Secret doesn't exist or wrong name | Verify secret exists with `limacharlie secret list --oid <oid> --output json` |
+| "ssh_key is required" | Secret doesn't exist or wrong name | Verify secret exists with `limacharlie secret list --oid <oid> --output yaml` |
 | "conf_root not found" | Wrong path in config | Use full path: `orgs/<oid>/index.yaml` |
 | SSH auth failure | Deploy key not added or wrong key | Verify public key is in GitHub deploy keys |
 | "Host key verification failed" | First connection to GitHub | Add GitHub to known_hosts or use `ssh -o StrictHostKeyChecking=no` |
@@ -796,13 +798,13 @@ Use consistent naming: `[category]-[description]`
 
 1. **Check org errors first:**
    ```bash
-   limacharlie org errors --oid <oid> --output json
+   limacharlie org errors --oid <oid> --output yaml
    ```
    This shows recent errors from ext-git-sync including SSH failures and config issues.
 
 2. **Verify the complete config:**
    ```bash
-   limacharlie extension get ext-git-sync --oid <oid> --output json
+   limacharlie extension get ext-git-sync --oid <oid> --output yaml
    ```
    Ensure all required fields are present: `repo_url`, `branch`, `conf_root`, `ssh_key_source`, `ssh_key_secret_name`
 

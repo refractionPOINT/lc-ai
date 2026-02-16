@@ -26,7 +26,7 @@ This skill orchestrates sending tasks (commands) to EDR sensors and handling res
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -37,6 +37,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
@@ -121,13 +123,13 @@ Parse the user's request to determine:
 If you don't have the OID, get it first:
 
 ```bash
-limacharlie org list --output json
+limacharlie org list --output yaml
 ```
 
 Check sensor status if targeting specific sensors:
 
 ```bash
-limacharlie sensor online <sid> --oid <oid> --output json
+limacharlie sensor online <sid> --oid <oid> --output yaml
 ```
 
 > **CRITICAL: Filter to Taskable EDR Sensors**
@@ -143,7 +145,7 @@ limacharlie sensor online <sid> --oid <oid> --output json
 >
 > **Use combined selector when listing sensors:**
 > ```bash
-> limacharlie sensor list --selector "(plat==windows or plat==linux or plat==macos) and arch!=usp_adapter" --online --oid <oid> --output json
+> limacharlie sensor list --selector "(plat==windows or plat==linux or plat==macos) and arch!=usp_adapter" --online --oid <oid> --output yaml
 > ```
 >
 > **Or check sensor info** before tasking - verify both `platform` is in `["windows", "linux", "macos", "chrome"]` AND `arch` is not `9` / `usp_adapter`.
@@ -176,7 +178,7 @@ For immediate data collection from a small number of online sensors (up to 5), u
 **Example - Get processes from a sensor:**
 
 ```bash
-limacharlie task send --sid <sid> --task os_processes --oid <oid> --output json
+limacharlie task send --sid <sid> --task os_processes --oid <oid> --output yaml
 ```
 
 ### Step 3B: Reliable Tasking (>5 Sensors or Offline)
@@ -192,7 +194,7 @@ For more than 5 sensors, offline sensors, or fleet-wide operations, use reliable
 **Create a reliable task:**
 
 ```bash
-limacharlie task reliable-send --task 'os_version' --selector 'plat==windows' --context 'fleet-inventory-2024-01' --ttl 86400 --oid <oid> --output json
+limacharlie task reliable-send --task 'os_version' --selector 'plat==windows' --context 'fleet-inventory-2024-01' --ttl 86400 --oid <oid> --output yaml
 ```
 
 **Key Parameters:**
@@ -227,13 +229,13 @@ After reliable tasking, wait at least 2 minutes for responses to arrive, then qu
 **First, generate the LCQL query:**
 
 ```bash
-limacharlie ai generate-query --prompt "Find all events in the last 2 hours where investigation_id contains 'fleet-inventory-2024-01'" --oid <oid> --output json
+limacharlie ai generate-query --prompt "Find all events in the last 2 hours where investigation_id contains 'fleet-inventory-2024-01'" --oid <oid> --output yaml
 ```
 
 **Then run the query:**
 
 ```bash
-limacharlie search run --query "<generated_query>" --start <ts> --end <ts> --oid <oid> --output json
+limacharlie search run --query "<generated_query>" --start <ts> --end <ts> --oid <oid> --output yaml
 ```
 
 #### Option B: D&R Rule (Automated Handling)
@@ -245,13 +247,13 @@ For automated response handling, create a D&R rule that matches the investigatio
 **Step 1: Generate the detection:**
 
 ```bash
-limacharlie ai generate-detection --description "Match events where investigation_id contains 'fleet-inventory-2024-01'" --oid <oid> --output json
+limacharlie ai generate-detection --description "Match events where investigation_id contains 'fleet-inventory-2024-01'" --oid <oid> --output yaml
 ```
 
 **Step 2: Generate the response:**
 
 ```bash
-limacharlie ai generate-response --description "Report to output 'siem' and add detection 'FLEET_INVENTORY_RESPONSE'" --oid <oid> --output json
+limacharlie ai generate-response --description "Report to output 'siem' and add detection 'FLEET_INVENTORY_RESPONSE'" --oid <oid> --output yaml
 ```
 
 **Step 3: Validate the rule:**
@@ -280,7 +282,7 @@ Only after the D&R rule is deployed, create the reliable task (see Step 3B above
 **List pending tasks:**
 
 ```bash
-limacharlie task reliable-list --oid <oid> --output json
+limacharlie task reliable-list --oid <oid> --output yaml
 ```
 
 **Delete/cancel a task:**
@@ -297,10 +299,10 @@ User: "Get running processes from sensor abc-123"
 
 ```bash
 # Check if online
-limacharlie sensor online abc-123 --oid c7e8f940-... --output json
+limacharlie sensor online abc-123 --oid c7e8f940-... --output yaml
 
 # If online, get processes directly
-limacharlie task send --sid abc-123 --task os_processes --oid c7e8f940-... --output json
+limacharlie task send --sid abc-123 --task os_processes --oid c7e8f940-... --output yaml
 ```
 
 ### Example 2: Fleet-Wide OS Inventory
@@ -309,7 +311,7 @@ User: "Get OS version from all Windows servers when they come online"
 
 ```bash
 # Create reliable task with context for later collection
-limacharlie task reliable-send --task 'os_version' --selector 'plat==windows' --context 'os-inventory-20240120' --oid c7e8f940-... --output json
+limacharlie task reliable-send --task 'os_version' --selector 'plat==windows' --context 'os-inventory-20240120' --oid c7e8f940-... --output yaml
 ```
 
 Response to user:
@@ -341,7 +343,7 @@ limacharlie task reliable-send \
   --selector 'incident-response in tags' \
   --context 'ir-memcollect-001' \
   --ttl 172800 \
-  --oid c7e8f940-... --output json
+  --oid c7e8f940-... --output yaml
 ```
 
 ### Example 4: Quick Data Collection with Inline Response
@@ -352,11 +354,11 @@ If sensors are online and small in number, parallel direct tasking is faster:
 
 ```bash
 # Run parallel tasks for each sensor
-limacharlie task send --sid sid1 --task os_version --oid <oid> --output json &
-limacharlie task send --sid sid2 --task os_version --oid <oid> --output json &
-limacharlie task send --sid sid3 --task os_version --oid <oid> --output json &
-limacharlie task send --sid sid4 --task os_version --oid <oid> --output json &
-limacharlie task send --sid sid5 --task os_version --oid <oid> --output json &
+limacharlie task send --sid sid1 --task os_version --oid <oid> --output yaml &
+limacharlie task send --sid sid2 --task os_version --oid <oid> --output yaml &
+limacharlie task send --sid sid3 --task os_version --oid <oid> --output yaml &
+limacharlie task send --sid sid4 --task os_version --oid <oid> --output yaml &
+limacharlie task send --sid sid5 --task os_version --oid <oid> --output yaml &
 wait
 ```
 

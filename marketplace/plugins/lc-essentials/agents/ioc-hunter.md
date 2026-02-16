@@ -95,12 +95,12 @@ cat > /tmp/iocs.json << 'EOF'
   {"type": "file_name", "value": "svchost.exe"}
 ]
 EOF
-limacharlie ioc batch-search --input-file /tmp/iocs.json --oid <org-uuid> --output json
+limacharlie ioc batch-search --input-file /tmp/iocs.json --oid <org-uuid> --output yaml
 ```
 
 **For individual IOC searches** (e.g., file paths):
 ```bash
-limacharlie ioc search --type file_path --value "C:\\Windows\\Temp\\svchost.exe" --oid <org-uuid> --output json
+limacharlie ioc search --type file_path --value "C:\\Windows\\Temp\\svchost.exe" --oid <org-uuid> --output yaml
 ```
 
 ### Step 3: Analyze Results

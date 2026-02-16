@@ -23,7 +23,7 @@ You are an expert Detection Engineer helping users create, test, and deploy D&R 
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -34,6 +34,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-*` + `limacharlie rule validate` |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
@@ -95,12 +97,12 @@ Before building rules, understand what data exists:
 Get event structure for relevant event types:
 
 ```bash
-limacharlie event types --platform windows --oid <oid> --output json
+limacharlie event types --platform windows --oid <oid> --output yaml
 ```
 
 For specific event types:
 ```bash
-limacharlie event schema NEW_PROCESS --oid <oid> --output json
+limacharlie event schema NEW_PROCESS --oid <oid> --output yaml
 ```
 
 ### 2.2 LCQL Exploration
@@ -108,19 +110,19 @@ limacharlie event schema NEW_PROCESS --oid <oid> --output json
 Explore existing data to understand patterns:
 
 ```bash
-limacharlie ai generate-query --prompt "show me process executions with encoded PowerShell commands" --oid <oid> --output json
+limacharlie ai generate-query --prompt "show me process executions with encoded PowerShell commands" --oid <oid> --output yaml
 ```
 
 Then execute:
 ```bash
-limacharlie search run --query "<generated_query>" --start <ts> --end <ts> --oid <oid> --output json
+limacharlie search run --query "<generated_query>" --start <ts> --end <ts> --oid <oid> --output yaml
 ```
 
 ### 2.3 Data Availability Check
 
 Verify sensors have relevant data:
 ```bash
-limacharlie sensor data-range --sid <sensor-id> --start <epoch> --end <epoch> --oid <oid> --output json
+limacharlie sensor data-range --sid <sensor-id> --start <epoch> --end <epoch> --oid <oid> --output yaml
 ```
 
 **Tip**: Use `lookup-lc-doc` skill to understand event types and field paths.
@@ -134,13 +136,13 @@ limacharlie sensor data-range --sid <sensor-id> --start <epoch> --end <epoch> --
 Use natural language with specific details:
 
 ```bash
-limacharlie ai generate-detection --description "Detect NEW_PROCESS events where the command line contains '-enc' or '-encodedcommand' and the process is powershell.exe" --oid <oid> --output json
+limacharlie ai generate-detection --description "Detect NEW_PROCESS events where the command line contains '-enc' or '-encodedcommand' and the process is powershell.exe" --oid <oid> --output yaml
 ```
 
 ### 3.2 Generate Response Component
 
 ```bash
-limacharlie ai generate-response --description "Report the detection with priority 8, add tag 'encoded-powershell' with 7 day TTL" --oid <oid> --output json
+limacharlie ai generate-response --description "Report the detection with priority 8, add tag 'encoded-powershell' with 7 day TTL" --oid <oid> --output yaml
 ```
 
 ### 3.3 Validate Before Testing
@@ -190,7 +192,7 @@ limacharlie rule test --detect '<detection>' --respond '<response>' --events '[
       "FILE_PATH": "C:\\Windows\\System32\\powershell.exe"
     }
   }
-]' --trace --oid <oid> --output json
+]' --trace --oid <oid> --output yaml
 ```
 
 **Create test cases**:
@@ -205,10 +207,10 @@ Test against real historical data:
 
 ```bash
 # First, estimate volume with dry_run
-limacharlie rule replay --detect '<detection>' --last-seconds 3600 --dry-run --oid <oid> --output json
+limacharlie rule replay --detect '<detection>' --last-seconds 3600 --dry-run --oid <oid> --output yaml
 
 # Then run actual replay
-limacharlie rule replay --detect '<detection>' --respond '<response>' --last-seconds 3600 --selector 'plat == "windows"' --oid <oid> --output json
+limacharlie rule replay --detect '<detection>' --respond '<response>' --last-seconds 3600 --selector 'plat == "windows"' --oid <oid> --output yaml
 ```
 
 ### 4.3 Historical Replay - Multi-Org (Parallel)
@@ -217,7 +219,7 @@ For testing across multiple organizations, use the `dr-replay-tester` sub-agent:
 
 1. Get list of organizations:
 ```bash
-limacharlie org list --output json
+limacharlie org list --output yaml
 ```
 
 2. Spawn one agent per organization IN PARALLEL using a single message with multiple Task calls:

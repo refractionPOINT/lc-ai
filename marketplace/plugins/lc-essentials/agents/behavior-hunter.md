@@ -110,7 +110,7 @@ For EACH behavior:
 **Step 3a: Generate Query (MANDATORY)**
 Use the `limacharlie` CLI:
 ```bash
-limacharlie ai generate-query --prompt "<behavior description with indicators>" --oid <org-uuid> --output json
+limacharlie ai generate-query --prompt "<behavior description with indicators>" --oid <org-uuid> --output yaml
 ```
 
 Example natural language prompts:
@@ -120,7 +120,7 @@ Example natural language prompts:
 
 **Step 3b: Execute Query**
 ```bash
-limacharlie search run --query "<generated_query>" --start <start_ts> --end <end_ts> --oid <org-uuid> --output json
+limacharlie search run --query "<generated_query>" --start <start_ts> --end <end_ts> --oid <org-uuid> --output yaml
 ```
 
 **Step 3c: Analyze Results**

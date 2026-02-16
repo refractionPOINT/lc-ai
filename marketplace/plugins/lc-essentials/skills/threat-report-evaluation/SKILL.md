@@ -25,7 +25,7 @@ Systematically evaluate threat reports to determine organizational impact and cr
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -36,6 +36,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-detection` + `limacharlie rule validate` |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
@@ -139,7 +141,7 @@ Report Type: pdf"
 Use a lightweight API call to verify platforms exist in target org(s).
 
 ```bash
-limacharlie event types --oid <oid> --output json
+limacharlie event types --oid <oid> --output yaml
 ```
 
 Filter IOCs and behaviors to matching platforms only.
@@ -453,7 +455,7 @@ All responses include metadata:
 
 For MSSP scenarios with multiple organizations:
 
-1. **Get org list** via `limacharlie org list --output json`
+1. **Get org list** via `limacharlie org list --output yaml`
 2. **Spawn ioc-hunter agents in parallel** (one per org in single message)
 3. **Spawn behavior-hunter agents in parallel** (one per org in single message)
 4. **Aggregate results** across all orgs

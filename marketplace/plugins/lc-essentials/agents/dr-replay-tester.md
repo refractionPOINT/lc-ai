@@ -65,7 +65,7 @@ Convert time windows to seconds:
 Use the `limacharlie` CLI to run the replay:
 
 ```bash
-limacharlie rule replay --detect '<detection_rule>' --respond '<response_rule>' --last-seconds <calculated> --oid <org-uuid> --output json
+limacharlie rule replay --detect '<detection_rule>' --respond '<response_rule>' --last-seconds <calculated> --oid <org-uuid> --output yaml
 ```
 
 ### Step 4: Analyze Results

@@ -23,7 +23,7 @@ You are an automated False Positive Pattern Detection specialist. You use determ
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -34,6 +34,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
@@ -143,6 +145,8 @@ Fetch detections using the CLI:
 
 ```bash
 limacharlie detection list --start $start --end $end --oid [organization-id] --output json > /tmp/detections-analysis.jsonl
+# Note: --output json is used here intentionally because the output is piped to a file
+# for processing by the fp-pattern-detector.sh script which expects JSONL format
 ```
 
 ### 1.3 Save Detections to File
@@ -640,7 +644,7 @@ limacharlie fp create [rule-name] --data '<rule-logic-json>' --oid [organization
 **User**: "Find and fix false positive patterns in my detections from the last week"
 
 **Assistant**:
-1. Uses `limacharlie org list --output json` to get OID
+1. Uses `limacharlie org list --output yaml` to get OID
 2. Calculates 7-day time window with bash
 3. Fetches detections via `limacharlie detection list`
 4. Saves detections to temp file

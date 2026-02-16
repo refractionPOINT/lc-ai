@@ -24,7 +24,7 @@ A guided workflow for creating, testing, and deploying Grok parsing configuratio
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -35,6 +35,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
@@ -94,7 +96,7 @@ Before starting, gather:
 Get the list of available organizations:
 
 ```bash
-limacharlie org list --output json
+limacharlie org list --output yaml
 ```
 
 Use `AskUserQuestion` to let the user select an organization if multiple are available.
@@ -107,24 +109,24 @@ Ask the user which adapter type they're working with using `AskUserQuestion`:
 
 1. List available external adapters:
 ```bash
-limacharlie adapter list --oid <SELECTED_ORG_ID> --output json
+limacharlie adapter list --oid <SELECTED_ORG_ID> --output yaml
 ```
 
 2. Get the selected adapter's current configuration:
 ```bash
-limacharlie adapter get <ADAPTER_NAME> --oid <SELECTED_ORG_ID> --output json
+limacharlie adapter get <ADAPTER_NAME> --oid <SELECTED_ORG_ID> --output yaml
 ```
 
 **Option B: Cloud Sensor** (AWS, Azure, GCP, SaaS)
 
 1. List available cloud sensors:
 ```bash
-limacharlie cloud-sensor list --oid <SELECTED_ORG_ID> --output json
+limacharlie cloud-sensor list --oid <SELECTED_ORG_ID> --output yaml
 ```
 
 2. Get the selected cloud sensor's current configuration:
 ```bash
-limacharlie cloud-sensor get <SENSOR_NAME> --oid <SELECTED_ORG_ID> --output json
+limacharlie cloud-sensor get <SENSOR_NAME> --oid <SELECTED_ORG_ID> --output yaml
 ```
 
 **Option C: One-off/USP Adapter** (local adapter, no cloud config)
@@ -139,7 +141,7 @@ If the adapter is already ingesting data, you can fetch sample events:
 
 1. Find the sensor by IID (Installation ID from the adapter's installation key):
 ```bash
-limacharlie sensor list --oid <SELECTED_ORG_ID> --output json | jq '[.[] | select(.iid == "<IID>")]'
+limacharlie sensor list --oid <SELECTED_ORG_ID> --filter "[?iid=='<IID>']" --output yaml
 ```
 
 2. Get recent events from the sensor:
@@ -154,7 +156,7 @@ start=$(date -d '1 hour ago' +%s) && end=$(date +%s) && echo "start=$start end=$
 Then use the actual output values (e.g., `start=1764805928 end=1764809528`) directly in the CLI call - do NOT use placeholder values:
 
 ```bash
-limacharlie search run --query "event sid = '<SENSOR_ID>'" --start $start --end $end --oid <SELECTED_ORG_ID> --output json | jq '.[:10]'
+limacharlie search run --query "event sid = '<SENSOR_ID>'" --start $start --end $end --oid <SELECTED_ORG_ID> --filter "[:10]" --output yaml
 ```
 
 3. Extract the raw log content from the events for analysis.
@@ -282,7 +284,7 @@ limacharlie adapter validate-mapping --oid <SELECTED_ORG_ID> --platform text --m
   "event_type_path": "service",
   "event_time_path": "date",
   "sensor_hostname_path": "host"
-}' --text-input "<SAMPLE_LOG_LINES>" --output json
+}' --text-input "<SAMPLE_LOG_LINES>" --output yaml
 ```
 
 > **Note**: The `mapping` object should have `parsing_grok`, `event_type_path`, `event_time_path`, and `sensor_hostname_path` at the same level - NOT nested under a `parsing` key.
@@ -329,7 +331,7 @@ limacharlie cloud-sensor set <SENSOR_NAME> --oid <SELECTED_ORG_ID> --data '{
 After applying the configuration for External Adapters or Cloud Sensors, check for any errors:
 
 ```bash
-limacharlie org errors --oid <SELECTED_ORG_ID> --output json
+limacharlie org errors --oid <SELECTED_ORG_ID> --output yaml
 ```
 
 Look for errors related to the adapter. If errors appear, review the adapter configuration and address the issues.

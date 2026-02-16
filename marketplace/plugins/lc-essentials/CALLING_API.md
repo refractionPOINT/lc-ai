@@ -5,13 +5,13 @@ All LimaCharlie operations are performed through the `limacharlie` CLI. This doc
 ## CLI Basics
 
 ```bash
-limacharlie <noun> <verb> [flags] --oid <oid> --output json
+limacharlie <noun> <verb> [flags] --oid <oid> --output yaml
 ```
 
 - `<noun>`: The resource type (e.g., `sensor`, `rule`, `search`, `org`)
 - `<verb>`: The action (e.g., `list`, `get`, `create`, `delete`, `run`)
 - `--oid <uuid>`: Organization ID (required for most commands)
-- `--output json`: Machine-readable JSON output (always use this)
+- `--output yaml`: Machine-readable YAML output (always use this)
 
 ## Authentication
 
@@ -24,13 +24,13 @@ Authentication is managed via:
 
 ```bash
 # Check current auth
-limacharlie auth whoami --output json
+limacharlie auth whoami --output yaml
 
 # Login interactively
 limacharlie auth login
 
 # List accessible orgs
-limacharlie org list --output json
+limacharlie org list --output yaml
 ```
 
 ## Command Discovery
@@ -48,20 +48,23 @@ limacharlie help <topic>
 
 ## Output Handling
 
-- `--output json`: JSON output (always use for programmatic access; auto-enabled when piped)
-- `--filter JMESPATH`: Filter output with JMESPath expressions
+- `--output yaml`: YAML output (always use -- more token-efficient than JSON)
+- `--filter JMESPATH`: Pre-filter output with JMESPath expressions (replaces piping to jq)
+- `--output json`: JSON output (only for edge cases; prefer yaml)
 - `--wide`: Show all fields in table output
 
-For large results, pipe to file + jq:
+For large results, use `--filter` to select only the fields you need:
 ```bash
-limacharlie sensor list --oid <oid> --output json > /tmp/sensors.json
-jq '.[] | select(.plat == "windows")' /tmp/sensors.json
-rm /tmp/sensors.json
+# Select specific fields from a sensor list
+limacharlie sensor list --oid <oid> --filter "[].{sid:sid,hostname:hostname,plat:plat}" --output yaml
+
+# Filter to specific platform
+limacharlie sensor list --oid <oid> --filter "[?plat=='windows']" --output yaml
 ```
 
 Or use CLI-level filtering:
 ```bash
-limacharlie sensor list --oid <oid> --selector 'plat == windows' --output json
+limacharlie sensor list --oid <oid> --selector 'plat == windows' --output yaml
 ```
 
 ## Common Patterns
@@ -69,30 +72,30 @@ limacharlie sensor list --oid <oid> --selector 'plat == windows' --output json
 ### Pattern 1: Get Single Resource
 
 ```bash
-limacharlie sensor get --sid <sid> --oid <oid> --output json
-limacharlie rule get <name> --oid <oid> --output json
-limacharlie sop get <name> --oid <oid> --output json
+limacharlie sensor get --sid <sid> --oid <oid> --output yaml
+limacharlie rule get <name> --oid <oid> --output yaml
+limacharlie sop get <name> --oid <oid> --output yaml
 ```
 
 ### Pattern 2: List Resources
 
 ```bash
-limacharlie sensor list --oid <oid> --output json
-limacharlie rule list --oid <oid> --output json
-limacharlie output list --oid <oid> --output json
+limacharlie sensor list --oid <oid> --output yaml
+limacharlie rule list --oid <oid> --output yaml
+limacharlie output list --oid <oid> --output yaml
 ```
 
 ### Pattern 3: Server-Side Filtering
 
 ```bash
 # Filter sensors by platform
-limacharlie sensor list --oid <oid> --selector 'plat == windows' --output json
+limacharlie sensor list --oid <oid> --selector 'plat == windows' --output yaml
 
 # Online sensors only
-limacharlie sensor list --oid <oid> --online --output json
+limacharlie sensor list --oid <oid> --online --output yaml
 
 # Combined filters
-limacharlie sensor list --oid <oid> --selector 'plat == windows' --online --output json
+limacharlie sensor list --oid <oid> --selector 'plat == windows' --online --output yaml
 ```
 
 ### Pattern 4: Create/Update Resources
@@ -115,56 +118,56 @@ limacharlie sensor delete <sid> --confirm --oid <oid>
 
 ```bash
 # Generate query from natural language (REQUIRED - never write LCQL manually)
-limacharlie ai generate-query --prompt "find DNS requests to example.com" --oid <oid> --output json
+limacharlie ai generate-query --prompt "find DNS requests to example.com" --oid <oid> --output yaml
 
 # Validate query
-limacharlie search validate --query "<generated-query>" --oid <oid> --output json
+limacharlie search validate --query "<generated-query>" --oid <oid> --output yaml
 
 # Execute query
-limacharlie search run --query "<validated-query>" --start <ts> --end <ts> --oid <oid> --output json
+limacharlie search run --query "<validated-query>" --start <ts> --end <ts> --oid <oid> --output yaml
 ```
 
 ### Pattern 7: Search IOCs
 
 ```bash
-limacharlie ioc search --type domain --value malicious.com --oid <oid> --output json
-limacharlie ioc batch-search --input-file iocs.txt --oid <oid> --output json
-limacharlie ioc hosts <hostname-prefix> --oid <oid> --output json
+limacharlie ioc search --type domain --value malicious.com --oid <oid> --output yaml
+limacharlie ioc batch-search --input-file iocs.txt --oid <oid> --output yaml
+limacharlie ioc hosts <hostname-prefix> --oid <oid> --output yaml
 ```
 
 ### Pattern 8: Live Sensor Commands
 
 ```bash
-limacharlie task send --sid <sid> --task os_processes --oid <oid> --output json
-limacharlie task send --sid <sid> --task os_netstat --oid <oid> --output json
-limacharlie task send --sid <sid> --task os_version --oid <oid> --output json
+limacharlie task send --sid <sid> --task os_processes --oid <oid> --output yaml
+limacharlie task send --sid <sid> --task os_netstat --oid <oid> --output yaml
+limacharlie task send --sid <sid> --task os_version --oid <oid> --output yaml
 ```
 
 ### Pattern 9: AI-Powered Generation
 
 ```bash
 # Generate D&R detection rule
-limacharlie ai generate-detection --description "detect encoded PowerShell" --oid <oid> --output json
+limacharlie ai generate-detection --description "detect encoded PowerShell" --oid <oid> --output yaml
 
 # Generate D&R response rule
-limacharlie ai generate-response --description "report with priority 8, add tag" --oid <oid> --output json
+limacharlie ai generate-response --description "report with priority 8, add tag" --oid <oid> --output yaml
 
 # Generate sensor selector
-limacharlie ai generate-selector --description "all production Windows servers" --oid <oid> --output json
+limacharlie ai generate-selector --description "all production Windows servers" --oid <oid> --output yaml
 
 # Generate LCQL query
-limacharlie ai generate-query --prompt "find lateral movement via PsExec" --oid <oid> --output json
+limacharlie ai generate-query --prompt "find lateral movement via PsExec" --oid <oid> --output yaml
 ```
 
 ## Multi-Org Operations
 
 ```bash
 # List all accessible orgs
-limacharlie org list --output json
+limacharlie org list --output yaml
 
 # Use --oid per-command for each org
-limacharlie sensor list --oid <org1-uuid> --output json
-limacharlie sensor list --oid <org2-uuid> --output json
+limacharlie sensor list --oid <org1-uuid> --output yaml
+limacharlie sensor list --oid <org2-uuid> --output yaml
 ```
 
 For parallel multi-org operations, skills spawn specialized sub-agents (one per org) that each call the CLI directly.
@@ -178,11 +181,11 @@ CLI exit codes:
 - `3`: Not found
 - `4`: Validation error
 
-Errors are written to stderr. JSON output on stdout is only produced on success.
+Errors are written to stderr. YAML output on stdout is only produced on success.
 
 ```bash
 # Check for errors
-if ! result=$(limacharlie sensor get --sid <sid> --oid <oid> --output json 2>/tmp/lc-err.txt); then
+if ! result=$(limacharlie sensor get --sid <sid> --oid <oid> --output yaml 2>/tmp/lc-err.txt); then
   echo "Error: $(cat /tmp/lc-err.txt)"
 fi
 ```
@@ -191,7 +194,7 @@ fi
 
 The OID is a **UUID** (e.g., `c1ffedc0-ffee-4a1e-b1a5-abc123def456`), **NOT** the organization name.
 
-- Use `limacharlie org list --output json` to get all accessible orgs with their OIDs
+- Use `limacharlie org list --output yaml` to get all accessible orgs with their OIDs
 - All commands require OID except: `limacharlie org list`, `limacharlie auth whoami`
 
 ## Timestamp Formats

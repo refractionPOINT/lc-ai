@@ -82,7 +82,7 @@ Use the `limacharlie` CLI to gather sensor information.
 #### 2.1 Get All Sensors
 
 ```bash
-limacharlie sensor list --oid <org-uuid> --output json
+limacharlie sensor list --oid <org-uuid> --output yaml
 ```
 
 Returns sensor list with: `sid`, `hostname`, `alive`, `plat`, `tags`, `enroll`, `int_ip`, `ext_ip`
@@ -90,7 +90,7 @@ Returns sensor list with: `sid`, `hostname`, `alive`, `plat`, `tags`, `enroll`, 
 #### 2.2 Get Online Sensors
 
 ```bash
-limacharlie sensor list --online --oid <org-uuid> --output json
+limacharlie sensor list --online --oid <org-uuid> --output yaml
 ```
 
 Returns: `{"sensors": {"<sid>": true, ...}}`

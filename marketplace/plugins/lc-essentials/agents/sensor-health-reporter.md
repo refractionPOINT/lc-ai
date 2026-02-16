@@ -59,12 +59,12 @@ Use the `limacharlie` CLI to get sensor information:
 **For "online but no data" checks**:
 1. Get online sensors:
 ```bash
-limacharlie sensor list --online --oid <org-uuid> --output json
+limacharlie sensor list --online --oid <org-uuid> --output yaml
 ```
 
 2. For each online sensor, check data availability:
 ```bash
-limacharlie event retention --sid <sensor-id> --oid <org-uuid> --output json
+limacharlie event retention --sid <sensor-id> --oid <org-uuid> --output yaml
 ```
 
 3. Filter sensors with empty `timestamps` arrays
@@ -72,7 +72,7 @@ limacharlie event retention --sid <sensor-id> --oid <org-uuid> --output json
 **For "offline for X days" checks**:
 1. Get all sensors:
 ```bash
-limacharlie sensor list --oid <org-uuid> --output json
+limacharlie sensor list --oid <org-uuid> --output yaml
 ```
 
 2. Check each sensor's `alive` timestamp
@@ -165,18 +165,18 @@ Since you run in parallel with other instances:
 **Checking 5 sensors in parallel**:
 ```bash
 # Make 5 parallel calls in one message
-limacharlie event retention --sid sensor1 --oid X --output json
-limacharlie event retention --sid sensor2 --oid X --output json
-limacharlie event retention --sid sensor3 --oid X --output json
-limacharlie event retention --sid sensor4 --oid X --output json
-limacharlie event retention --sid sensor5 --oid X --output json
+limacharlie event retention --sid sensor1 --oid X --output yaml
+limacharlie event retention --sid sensor2 --oid X --output yaml
+limacharlie event retention --sid sensor3 --oid X --output yaml
+limacharlie event retention --sid sensor4 --oid X --output yaml
+limacharlie event retention --sid sensor5 --oid X --output yaml
 ```
 
 ## Error Handling
 
 If you encounter errors:
 - **"no such entity"**: Sensor may be newly enrolled or deleted - note in report, continue
-- **Timeout**: Log the error, report partial results (use `--output json` and pipe to `jq` for filtering)
+- **Timeout**: Log the error, report partial results (use `--filter JMESPATH` to select specific fields and `--output yaml`)
 
 - **Permission denied**: Report the error, return what you can
 - **Empty sensor list**: Report "No sensors in this organization"

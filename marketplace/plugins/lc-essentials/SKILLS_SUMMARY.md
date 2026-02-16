@@ -242,7 +242,7 @@ Every SKILL.md file contains:
 All skills use the `limacharlie` CLI directly via Bash:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 - **Command discovery**: `limacharlie discover` to find available commands

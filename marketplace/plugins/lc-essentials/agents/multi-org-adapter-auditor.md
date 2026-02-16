@@ -51,13 +51,13 @@ Return:
 ### Step 1: List External Adapters
 
 ```bash
-limacharlie adapter list --oid <org-id> --output json
+limacharlie adapter list --oid <org-id> --output yaml
 ```
 
 ### Step 2: List Cloud Sensors
 
 ```bash
-limacharlie cloud-sensor list --oid <org-id> --output json
+limacharlie cloud-sensor list --oid <org-id> --output yaml
 ```
 
 ### Step 3: Get Details for Each Adapter
@@ -66,12 +66,12 @@ For each adapter found, get detailed configuration to check for errors:
 
 **External Adapters:**
 ```bash
-limacharlie adapter get <adapter-name> --oid <org-id> --output json
+limacharlie adapter get <adapter-name> --oid <org-id> --output yaml
 ```
 
 **Cloud Sensors:**
 ```bash
-limacharlie cloud-sensor get <sensor-name> --oid <org-id> --output json
+limacharlie cloud-sensor get <sensor-name> --oid <org-id> --output yaml
 ```
 
 ### Step 4: Check for Errors

@@ -29,7 +29,7 @@ You are an expert SOC analyst. Your job is to investigate security activity and 
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -40,6 +40,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
@@ -71,12 +73,12 @@ RIGHT: limacharlie ai generate-query --prompt "..." -> limacharlie search run --
 
 **Step 1 - ALWAYS generate first:**
 ```bash
-limacharlie ai generate-query --prompt "Find processes on sensor abc in last hour" --oid <oid> --output json
+limacharlie ai generate-query --prompt "Find processes on sensor abc in last hour" --oid <oid> --output yaml
 ```
 
 **Step 2 - Execute the generated query:**
 ```bash
-limacharlie search run --query "<generated_query>" --start <ts> --end <ts> --oid <oid> --output json
+limacharlie search run --query "<generated_query>" --start <ts> --end <ts> --oid <oid> --output yaml
 ```
 
 ### Why This Matters
@@ -411,25 +413,25 @@ Use these techniques as needed based on what you're investigating. This is a ref
 
 **From an Event (atom + sid)**:
 ```bash
-limacharlie event get --sid <sid> --atom <atom> --oid <oid> --output json
+limacharlie event get --sid <sid> --atom <atom> --oid <oid> --output yaml
 ```
 
 **From a Detection**:
 ```bash
-limacharlie detection get <detection-id> --oid <oid> --output json
+limacharlie detection get <detection-id> --oid <oid> --output yaml
 ```
 Extract the triggering event atom, sensor ID, and timestamps.
 
 **From an LCQL Query**:
 ```bash
 # Always generate query first!
-limacharlie ai generate-query --prompt "..." --oid <oid> --output json
-limacharlie search run --query "<generated>" --start <ts> --end <ts> --oid <oid> --output json
+limacharlie ai generate-query --prompt "..." --oid <oid> --output yaml
+limacharlie search run --query "<generated>" --start <ts> --end <ts> --oid <oid> --output yaml
 ```
 
 **Sensor Context**:
 ```bash
-limacharlie sensor get --sid <sid> --oid <oid> --output json
+limacharlie sensor get --sid <sid> --oid <oid> --output yaml
 ```
 
 ### Process Investigation
@@ -438,12 +440,12 @@ limacharlie sensor get --sid <sid> --oid <oid> --output json
 
 Get Parent:
 ```bash
-limacharlie event get --sid <sid> --atom <parent_atom> --oid <oid> --output json
+limacharlie event get --sid <sid> --atom <parent_atom> --oid <oid> --output yaml
 ```
 
 Get Children:
 ```bash
-limacharlie event children --sid <sid> --atom <atom> --oid <oid> --output json
+limacharlie event children --sid <sid> --atom <atom> --oid <oid> --output yaml
 ```
 
 **LCQL Queries** (when searching by attributes):
@@ -487,12 +489,12 @@ limacharlie event children --sid <sid> --atom <atom> --oid <oid> --output json
 
 **Related Detections** (remember: divide timestamps by 1000!):
 ```bash
-limacharlie detection list --sid <sid> --start <ts_seconds> --end <ts_seconds> --oid <oid> --output json
+limacharlie detection list --sid <sid> --start <ts_seconds> --end <ts_seconds> --oid <oid> --output yaml
 ```
 
 **Org-wide IOC Search**:
 ```bash
-limacharlie ioc search --type ip --value "203.0.113.50" --oid <oid> --output json
+limacharlie ioc search --type ip --value "203.0.113.50" --oid <oid> --output yaml
 ```
 
 ---
@@ -539,7 +541,7 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
 **Investigation Steps**:
 1. **Get all detections on this host** around the incident time:
    ```bash
-   limacharlie detection list --sid <sid> --start $((event_time_seconds - 3600)) --end $((event_time_seconds + 3600)) --oid <oid> --output json
+   limacharlie detection list --sid <sid> --start $((event_time_seconds - 3600)) --end $((event_time_seconds + 3600)) --oid <oid> --output yaml
    ```
 
 2. **Look for related suspicious activity**:
@@ -573,15 +575,15 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
 **Investigation Steps**:
 1. **Search for the malware hash org-wide**:
    ```bash
-   limacharlie ioc search --type file_hash --value "<malware_sha256>" --oid <oid> --output json
+   limacharlie ioc search --type file_hash --value "<malware_sha256>" --oid <oid> --output yaml
    ```
 
 2. **Search for C2 IPs/domains org-wide** (one search per IOC type):
    ```bash
-   limacharlie ioc search --type ip --value "<c2_ip>" --oid <oid> --output json
+   limacharlie ioc search --type ip --value "<c2_ip>" --oid <oid> --output yaml
    ```
    ```bash
-   limacharlie ioc search --type domain --value "<c2_domain>" --oid <oid> --output json
+   limacharlie ioc search --type domain --value "<c2_domain>" --oid <oid> --output yaml
    ```
 
 3. **Search for the malware file path pattern org-wide**:
@@ -594,7 +596,7 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
 
 5. **Check for related detections org-wide**:
    ```bash
-   limacharlie detection list --start $((timestamp_seconds - 86400)) --end $((timestamp_seconds + 3600)) --oid <oid> --output json
+   limacharlie detection list --start $((timestamp_seconds - 86400)) --end $((timestamp_seconds + 3600)) --oid <oid> --output yaml
    ```
    Filter results for same rule name or similar detection categories.
 
@@ -935,7 +937,7 @@ Always confirm with user before saving:
 ### Save Investigation
 
 ```bash
-limacharlie investigation create --name "<investigation_name>" --data '<investigation_record>' --oid <oid> --output json
+limacharlie investigation create --name "<investigation_name>" --data '<investigation_record>' --oid <oid> --output yaml
 ```
 
 ---

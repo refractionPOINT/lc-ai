@@ -90,18 +90,18 @@ Use the `limacharlie` CLI to collect all data. **Make multiple parallel CLI call
 
 ```bash
 # Org info and billing
-limacharlie org info --oid {oid} --output json
-limacharlie billing details --oid {oid} --output json
+limacharlie org info --oid {oid} --output yaml
+limacharlie billing details --oid {oid} --output yaml
 
 # Sensors
-limacharlie sensor list --oid {oid} --output json
-limacharlie sensor list --online --oid {oid} --output json
+limacharlie sensor list --oid {oid} --output yaml
+limacharlie sensor list --online --oid {oid} --output yaml
 
 # Detections
-limacharlie detection list --start {start} --end {end} --oid {oid} --output json
+limacharlie detection list --start {start} --end {end} --oid {oid} --output yaml
 
 # Rules
-limacharlie rule list --oid {oid} --output json
+limacharlie rule list --oid {oid} --output yaml
 ```
 
 **CRITICAL**: Make ALL CLI calls in a SINGLE message for parallel execution.
@@ -423,16 +423,16 @@ Use the `limacharlie` CLI directly for all operations:
 
 | CLI Command | Purpose |
 |-------------|---------|
-| `limacharlie org info --oid <oid> --output json` | Org metadata |
-| `limacharlie org stats --oid <oid> --output json` | Daily metrics |
-| `limacharlie billing details --oid <oid> --output json` | Subscription & invoice |
-| `limacharlie sensor list --oid <oid> --output json` | All sensors |
-| `limacharlie sensor list --online --oid <oid> --output json` | Online SIDs |
-| `limacharlie detection list --start <ts> --end <ts> --oid <oid> --output json` | Detections |
-| `limacharlie rule list --oid <oid> --output json` | D&R rules |
-| `limacharlie output list --oid <oid> --output json` | Outputs |
+| `limacharlie org info --oid <oid> --output yaml` | Org metadata |
+| `limacharlie org stats --oid <oid> --output yaml` | Daily metrics |
+| `limacharlie billing details --oid <oid> --output yaml` | Subscription & invoice |
+| `limacharlie sensor list --oid <oid> --output yaml` | All sensors |
+| `limacharlie sensor list --online --oid <oid> --output yaml` | Online SIDs |
+| `limacharlie detection list --start <ts> --end <ts> --oid <oid> --output yaml` | Detections |
+| `limacharlie rule list --oid <oid> --output yaml` | D&R rules |
+| `limacharlie output list --oid <oid> --output yaml` | Outputs |
 
-For large results, pipe through `jq` for filtering.
+For large results, use `--filter JMESPATH` to select specific fields.
 
 ## Efficiency Guidelines
 

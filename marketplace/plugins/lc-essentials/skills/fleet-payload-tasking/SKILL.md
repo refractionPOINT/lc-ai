@@ -25,7 +25,7 @@ Deploy payloads (scripts) or shell commands to all endpoints in an organization 
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -36,6 +36,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
@@ -61,7 +63,7 @@ Use this skill when the user needs to:
 For simple data collection, use `run --shell-command` directly - no payload upload needed:
 
 ```bash
-limacharlie task reliable-send --task 'run --shell-command hostname' --selector 'plat == macos' --context shell-scan-001 --ttl 3600 --oid <oid> --output json
+limacharlie task reliable-send --task 'run --shell-command hostname' --selector 'plat == macos' --context shell-scan-001 --ttl 3600 --oid <oid> --output yaml
 ```
 
 **Pros:**
@@ -173,7 +175,7 @@ run --shell-command "cat /etc/hostname"
 ### Step 1: Select Organization
 
 ```bash
-limacharlie org list --output json
+limacharlie org list --output yaml
 ```
 
 ### Step 2: Build Shell Command
@@ -261,7 +263,7 @@ Use `file_content` with base64-encoded script:
 
 ```bash
 # Upload the payload script
-limacharlie payload upload my-payload.sh --file /tmp/my-payload.sh --oid [org-id] --output json
+limacharlie payload upload my-payload.sh --file /tmp/my-payload.sh --oid [org-id] --output yaml
 ```
 
 ### Step 3: Deploy and Collect Results (Delegate to sensor-tasking)
@@ -309,7 +311,7 @@ See the **sensor-tasking** skill documentation for advanced D&R rule patterns.
 ## Monitoring Task Progress
 
 ```bash
-limacharlie task reliable-list --oid [org-id] --output json
+limacharlie task reliable-list --oid [org-id] --output yaml
 ```
 
 Shows:

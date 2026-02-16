@@ -65,7 +65,7 @@ Extract from your prompt:
 Before executing, verify the sensor is online:
 
 ```bash
-limacharlie sensor online [sid] --oid [oid] --output json
+limacharlie sensor online [sid] --oid [oid] --output yaml
 ```
 
 If offline, return immediately with status indicating sensor is offline.
@@ -83,7 +83,7 @@ A sensor running on Linux but with `arch=9` (usp_adapter) is an **adapter**, not
 If the platform/architecture were provided in your prompt, check them directly. Otherwise, get sensor info:
 
 ```bash
-limacharlie sensor get --sid [sid] --oid [oid] --output json
+limacharlie sensor get --sid [sid] --oid [oid] --output yaml
 ```
 
 Check **both** `info.platform` AND `info.arch` fields:
@@ -132,17 +132,17 @@ Map the task name to the appropriate function and execute:
 
 | Task | CLI Command |
 |------|-------------|
-| get_processes | `limacharlie task send --sid <sid> --task os_processes --oid <oid> --output json` |
-| get_network_connections | `limacharlie task send --sid <sid> --task os_netstat --oid <oid> --output json` |
-| get_os_version | `limacharlie task send --sid <sid> --task os_version --oid <oid> --output json` |
-| get_services | `limacharlie task send --sid <sid> --task os_services --oid <oid> --output json` |
-| get_autoruns | `limacharlie task send --sid <sid> --task os_autoruns --oid <oid> --output json` |
-| get_packages | `limacharlie task send --sid <sid> --task os_packages --oid <oid> --output json` |
+| get_processes | `limacharlie task send --sid <sid> --task os_processes --oid <oid> --output yaml` |
+| get_network_connections | `limacharlie task send --sid <sid> --task os_netstat --oid <oid> --output yaml` |
+| get_os_version | `limacharlie task send --sid <sid> --task os_version --oid <oid> --output yaml` |
+| get_services | `limacharlie task send --sid <sid> --task os_services --oid <oid> --output yaml` |
+| get_autoruns | `limacharlie task send --sid <sid> --task os_autoruns --oid <oid> --output yaml` |
+| get_packages | `limacharlie task send --sid <sid> --task os_packages --oid <oid> --output yaml` |
 
 **Example execution**:
 
 ```bash
-limacharlie task send --sid [sid] --task os_processes --oid [oid] --output json
+limacharlie task send --sid [sid] --task os_processes --oid [oid] --output yaml
 ```
 
 ### Step 4: Format Output

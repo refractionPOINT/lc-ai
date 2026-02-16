@@ -22,7 +22,7 @@ This skill orchestrates parallel sensor health checks across multiple LimaCharli
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -33,6 +33,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
@@ -73,7 +75,7 @@ Identify the key parameters:
 Use the LimaCharlie CLI to get the user's organizations:
 
 ```bash
-limacharlie org list --output json
+limacharlie org list --output yaml
 ```
 
 ### Step 3: Spawn Parallel Agents
@@ -128,7 +130,7 @@ one_hour_ago=$(date -d '1 hour ago' +%s)
 
 **Step 2**: Get org list
 ```bash
-limacharlie org list --output json
+limacharlie org list --output yaml
 ```
 
 **Step 3**: Spawn parallel agents (example with 3 orgs)

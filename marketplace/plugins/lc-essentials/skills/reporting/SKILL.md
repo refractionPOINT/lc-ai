@@ -22,7 +22,7 @@ allowed-tools:
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -33,6 +33,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
@@ -490,18 +492,15 @@ For billing details and charges:
 
 **Large Result Handling:**
 
-For large result sets, pipe CLI output to a file and use jq:
+For large result sets, pipe CLI output to a file:
 
 ```bash
 # Save large results to file
-limacharlie sensor list --oid <oid> --output json > /tmp/sensors.json
+limacharlie sensor list --oid <oid> --output yaml > /tmp/sensors.yaml
 
-# Extract needed fields with jq
-jq '.sensors | length' /tmp/sensors.json  # Count
-jq '.sensors | to_entries | .[].value.hostname' /tmp/sensors.json | head -20  # Sample hostnames
-
-# Clean up
-rm /tmp/sensors.json
+# Or use --filter to extract needed fields directly
+limacharlie sensor list --oid <oid> --filter "length(sensors)" --output yaml  # Count
+limacharlie sensor list --oid <oid> --filter "sensors.*.hostname" --output yaml  # Hostnames
 ```
 
 **Field Validation - CRITICAL:**
@@ -835,7 +834,7 @@ If user requests HTML output:
 ```
 ┌─ PHASE 1: DISCOVERY ──────────────────────────────┐
 │ 1. Use CLI to get org list:                       │
-│    limacharlie org list --output json              │
+│    limacharlie org list --output yaml              │
 │                                                    │
 │ 2. Validation:                                    │
 │    ✓ Check orgs array exists and not empty        │
@@ -1136,7 +1135,7 @@ The above console output displays ALL collected data. Do NOT automatically proce
    - Required: year (integer), month (1-12)
    - Optional: scope (single/all), oid (UUID), format (json/markdown)
 
-3. Get orgs: limacharlie org list --output json
+3. Get orgs: limacharlie org list --output yaml
 
 4. Spawn org-reporter agents in parallel (same as Pattern 1)
    - Agents collect ALL data (billing focus is in report generation)
@@ -1171,7 +1170,7 @@ The above console output displays ALL collected data. Do NOT automatically proce
 ```
 1. Read customer-health-report.json template for structure
 
-2. Get orgs: limacharlie org list --output json
+2. Get orgs: limacharlie org list --output yaml
    - Filter to find OID for the specified org name
 
 3. Spawn ONE org-reporter agent for that organization:
@@ -1207,7 +1206,7 @@ The above console output displays ALL collected data. Do NOT automatically proce
 
 2. Ask user for time range (7/14/30 days)
 
-3. Get orgs: limacharlie org list --output json
+3. Get orgs: limacharlie org list --output yaml
 
 4. Spawn org-reporter agents in parallel:
    - Each agent collects detection data for its org
@@ -1565,7 +1564,7 @@ Recommendations:
 - **Workaround**: Generate usage-only reports
 
 **Issue**: "Large sensor list timing out"
-- **Solution**: Pipe CLI output to file and use jq
+- **Solution**: Use `--filter` to extract summary fields, or pipe CLI output to file
 - **Workaround**: Extract summary only (count, platforms)
 
 ### Getting Help

@@ -27,7 +27,7 @@ You are an Asset Inventory & Coverage specialist helping MSSPs maintain comprehe
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -38,6 +38,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
@@ -196,7 +198,7 @@ Phase 7: Report Generation & Remediation
 If OID not provided, get the user's organizations:
 
 ```bash
-limacharlie org list --output json
+limacharlie org list --output yaml
 ```
 
 If multiple orgs, use `AskUserQuestion` to let user select one.
@@ -237,13 +239,13 @@ Proceed with sensor coverage check?
 #### 2.1 Get All Sensors
 
 ```bash
-limacharlie sensor list --oid <oid> --output json
+limacharlie sensor list --oid <oid> --output yaml
 ```
 
 #### 2.2 Get Online Sensors
 
 ```bash
-limacharlie sensor list --online --oid <oid> --output json
+limacharlie sensor list --online --oid <oid> --output yaml
 ```
 
 **TIP**: Run both CLI commands in parallel.
@@ -276,20 +278,20 @@ For each online sensor, check if events are flowing. Use LCQL to count recent ev
 
 ```bash
 # Generate query first
-limacharlie ai generate-query --prompt "count events from sensor [sid] in last 4 hours" --oid <oid> --output json
+limacharlie ai generate-query --prompt "count events from sensor [sid] in last 4 hours" --oid <oid> --output yaml
 
 # Then run the generated query
-limacharlie search run --query "..." --start <ts> --end <ts> --oid <oid> --output json
+limacharlie search run --query "..." --start <ts> --end <ts> --oid <oid> --output yaml
 ```
 
 **Batch Processing**: For efficiency, query multiple sensors in a single LCQL query:
 
 ```bash
 # Generate batch query
-limacharlie ai generate-query --prompt "count events grouped by routing/sid where routing/sid in ['sid1', 'sid2', 'sid3'] in last 4 hours" --oid <oid> --output json
+limacharlie ai generate-query --prompt "count events grouped by routing/sid where routing/sid in ['sid1', 'sid2', 'sid3'] in last 4 hours" --oid <oid> --output yaml
 
 # Then run the generated query
-limacharlie search run --query "..." --start <ts> --end <ts> --oid <oid> --output json
+limacharlie search run --query "..." --start <ts> --end <ts> --oid <oid> --output yaml
 ```
 
 #### 3.2 Classify Telemetry Health
@@ -363,7 +365,7 @@ Expected assets can come from:
 #### 5.2 Check for Expected Assets Lookup
 
 ```bash
-limacharlie lookup get expected_assets --oid <oid> --output json
+limacharlie lookup get expected_assets --oid <oid> --output yaml
 ```
 
 #### 5.3 Expected Assets Format
@@ -542,7 +544,7 @@ Phase 4: Fleet Report Generation
 #### 1.1 Get All Organizations
 
 ```bash
-limacharlie org list --output json
+limacharlie org list --output yaml
 ```
 
 #### 1.2 Calculate Timestamps

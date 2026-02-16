@@ -28,7 +28,7 @@ A comprehensive onboarding wizard that discovers cloud infrastructure, identifie
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -39,6 +39,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
@@ -91,7 +93,7 @@ This skill performs a complete onboarding workflow:
 Ask user to select the target LimaCharlie organization:
 
 ```bash
-limacharlie org list --output json
+limacharlie org list --output yaml
 ```
 
 Present available organizations and use AskUserQuestion to let user select one.
@@ -280,7 +282,7 @@ AskUserQuestion(
 Create installation keys for each logical segment:
 
 ```bash
-limacharlie installation-key create --oid <org-id> --output json
+limacharlie installation-key create --oid <org-id> --output yaml
 ```
 
 Create separate keys for:
@@ -466,13 +468,13 @@ aws ssm list-command-invocations --command-id COMMAND_ID
 Wait up to 2 minutes for sensors to appear, then verify:
 
 ```bash
-limacharlie sensor list --oid <org-id> --output json | jq '[.[] | select(.iid == "<installation-key-iid>")]'
+limacharlie sensor list --oid <org-id> --filter "[?iid=='<installation-key-iid>']" --output yaml
 ```
 
 Verify sensors are online:
 
 ```bash
-limacharlie sensor list --online --oid <org-id> --output json | jq '[.[] | select(.iid == "<installation-key-iid>")]'
+limacharlie sensor list --online --oid <org-id> --filter "[?iid=='<installation-key-iid>']" --output yaml
 ```
 
 Verify data is flowing (check for recent events):
@@ -484,7 +486,7 @@ end=$(date +%s)
 ```
 
 ```bash
-limacharlie search run --query "event sid = '<sensor-id>'" --start $start --end $end --oid <org-id> --output json | jq '.[:10]'
+limacharlie search run --query "event sid = '<sensor-id>'" --start $start --end $end --oid <org-id> --filter "[:10]" --output yaml
 ```
 
 #### Cloud Adapter Verification
@@ -492,7 +494,7 @@ limacharlie search run --query "event sid = '<sensor-id>'" --start $start --end 
 For each cloud adapter, verify sensor appears and data flows:
 
 ```bash
-limacharlie cloud-sensor list --oid <org-id> --output json
+limacharlie cloud-sensor list --oid <org-id> --output yaml
 ```
 
 Check for recent events from cloud sensor:
@@ -505,13 +507,13 @@ end=$(date +%s)
 Use LCQL to query for specific sensor data:
 
 ```bash
-limacharlie ai generate-query --prompt "Find events from sensor with hostname containing 'cloudtrail' in the last 10 minutes" --oid <org-id> --output json
+limacharlie ai generate-query --prompt "Find events from sensor with hostname containing 'cloudtrail' in the last 10 minutes" --oid <org-id> --output yaml
 ```
 
 Then execute the generated query:
 
 ```bash
-limacharlie search run --query "<GENERATED_QUERY>" --start $start --end $end --oid <org-id> --output json
+limacharlie search run --query "<GENERATED_QUERY>" --start $start --end $end --oid <org-id> --output yaml
 ```
 
 ### Phase 8: Final Report

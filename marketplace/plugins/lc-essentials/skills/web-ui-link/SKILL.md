@@ -21,7 +21,7 @@ Generate direct URLs to any page in the LimaCharlie web application at `https://
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -32,6 +32,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
@@ -153,7 +155,7 @@ Extract from the user's request:
 If the user provided an organization **name** instead of OID, or if no organization was specified:
 
 ```bash
-limacharlie org list --output json
+limacharlie org list --output yaml
 ```
 
 **Handling multiple organizations:**
@@ -166,7 +168,7 @@ limacharlie org list --output json
 If the user requested a sensor-specific URL but provided a **hostname** instead of SID:
 
 ```bash
-limacharlie sensor list --oid [oid] --output json
+limacharlie sensor list --oid [oid] --output yaml
 ```
 
 Then filter the results to find the sensor with hostname matching '[hostname]' and extract its SID.
@@ -194,7 +196,7 @@ Return the URL in a clickable markdown format:
 
 **Steps**:
 1. Feature identified: `secrets-manager`
-2. No org specified - call `limacharlie org list --output json`
+2. No org specified - call `limacharlie org list --output yaml`
 3. If single org, use its OID; if multiple, ask user to select
 4. Construct URL
 
@@ -211,8 +213,8 @@ Here's the link to the Secrets Manager:
 
 **Steps**:
 1. Feature identified: `timeline` (sensor route)
-2. Org name: "production" - resolve to OID via `limacharlie org list --output json`
-3. Hostname: "DESKTOP-PROD01" - resolve to SID via `limacharlie sensor list --oid <oid> --output json`
+2. Org name: "production" - resolve to OID via `limacharlie org list --output yaml`
+3. Hostname: "DESKTOP-PROD01" - resolve to SID via `limacharlie sensor list --oid <oid> --output yaml`
 4. Construct sensor timeline URL
 
 **Response**:

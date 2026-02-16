@@ -103,12 +103,12 @@ For EACH detection requirement:
 **Step 2a: Generate Detection Component (MANDATORY)**
 Use the `limacharlie` CLI:
 ```bash
-limacharlie ai generate-detection --description "<detection_prompt from requirement>" --oid <org-uuid> --output json
+limacharlie ai generate-detection --description "<detection_prompt from requirement>" --oid <org-uuid> --output yaml
 ```
 
 **Step 2b: Generate Response Component (MANDATORY)**
 ```bash
-limacharlie ai generate-response --description "<response_prompt from requirement>" --oid <org-uuid> --output json
+limacharlie ai generate-response --description "<response_prompt from requirement>" --oid <org-uuid> --output yaml
 ```
 
 **Step 2c: Validate Components (MANDATORY)**

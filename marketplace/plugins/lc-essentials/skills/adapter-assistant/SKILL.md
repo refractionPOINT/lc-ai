@@ -28,7 +28,7 @@ A comprehensive, dynamic assistant for LimaCharlie adapter lifecycle management.
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -39,6 +39,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
@@ -173,24 +175,24 @@ Execute the dynamic research strategy above to gather all relevant information a
 
 **Get organizations:**
 ```bash
-limacharlie org list --output json
+limacharlie org list --output yaml
 ```
 
 **List existing External Adapters:**
 ```bash
-limacharlie adapter list --oid <oid> --output json
+limacharlie adapter list --oid <oid> --output yaml
 ```
 
 **List existing Cloud Sensors:**
 ```bash
-limacharlie cloud-sensor list --oid <oid> --output json
+limacharlie cloud-sensor list --oid <oid> --output yaml
 ```
 
 **Get existing configuration (if modifying):**
 ```bash
-limacharlie adapter get <adapter-name> --oid <oid> --output json
+limacharlie adapter get <adapter-name> --oid <oid> --output yaml
 # or for cloud sensors:
-limacharlie cloud-sensor get <sensor-name> --oid <oid> --output json
+limacharlie cloud-sensor get <sensor-name> --oid <oid> --output yaml
 ```
 
 ### Phase 3: Configuration Generation
@@ -225,7 +227,7 @@ client_secret: "hive://secret/azure-client-secret"
 
 Check existing secrets:
 ```bash
-limacharlie secret list --oid <oid> --output json
+limacharlie secret list --oid <oid> --output yaml
 ```
 
 #### Indexing configuration (optional):
@@ -251,7 +253,7 @@ limacharlie adapter validate-mapping \
   --platform text \
   --mapping '{"parsing_grok": {"message": "%{TIMESTAMP_ISO8601:timestamp} %{WORD:action} ..."}, "event_type_path": "action", "event_time_path": "timestamp"}' \
   --text-input "<sample-log-lines>" \
-  --oid <oid> --output json
+  --oid <oid> --output yaml
 ```
 
 **Review validation results:**
@@ -274,12 +276,12 @@ Skill("test-limacharlie-adapter")
 
 **Deploy External Adapter:**
 ```bash
-limacharlie adapter set <adapter-name> --config '<full-configuration-json>' --oid <oid> --output json
+limacharlie adapter set <adapter-name> --config '<full-configuration-json>' --oid <oid> --output yaml
 ```
 
 **Deploy Cloud Sensor:**
 ```bash
-limacharlie cloud-sensor set <sensor-name> --config '<full-configuration-json>' --oid <oid> --output json
+limacharlie cloud-sensor set <sensor-name> --config '<full-configuration-json>' --oid <oid> --output yaml
 ```
 
 **For On-prem Adapters**, generate deployment artifacts:
@@ -327,7 +329,7 @@ docker run -d --rm -p 514:514/udp refractionpoint/lc-adapter syslog \
 
 **Verify deployment:**
 ```bash
-limacharlie sensor list --selector "iid == \`<installation-key-iid>\`" --oid <oid> --output json
+limacharlie sensor list --selector "iid == \`<installation-key-iid>\`" --oid <oid> --output yaml
 ```
 
 ### Phase 6: Post-Deployment
@@ -336,12 +338,12 @@ limacharlie sensor list --selector "iid == \`<installation-key-iid>\`" --oid <oi
 
 1. Check adapter last_error field:
 ```bash
-limacharlie adapter get <adapter-name> --oid <oid> --output json
+limacharlie adapter get <adapter-name> --oid <oid> --output yaml
 ```
 
 2. Check organization errors for adapter issues:
 ```bash
-limacharlie org errors --oid <oid> --output json
+limacharlie org errors --oid <oid> --output yaml
 ```
 Look for errors with component names containing the adapter name.
 
@@ -352,7 +354,7 @@ Look for errors with component names containing the adapter name.
 # First calculate timestamps dynamically
 start=$(date -d '1 hour ago' +%s) && end=$(date +%s)
 
-limacharlie event list --sid <sensor-id> --start $start --end $end --oid <oid> --output json
+limacharlie event list --sid <sensor-id> --start $start --end $end --oid <oid> --output yaml
 ```
 
 5. Check for unparsed events (`event_type: "unknown_event"` with only `text` field)
@@ -472,7 +474,7 @@ Task(
          "sensor_hostname_path": "host"
        }
      }
-   }' --oid <oid> --output json
+   }' --oid <oid> --output yaml
    ```
 
 ### Example 3: Connect Unknown Product via Webhook
@@ -511,7 +513,7 @@ Task(
 
 1. **Get current configuration**:
    ```bash
-   limacharlie cloud-sensor get azure-event-hub --oid <oid> --output json
+   limacharlie cloud-sensor get azure-event-hub --oid <oid> --output yaml
    ```
 
 2. **Check for errors** in `last_error` field of `sys_mtd`

@@ -50,7 +50,7 @@ Use the `limacharlie` CLI to gather system information:
 #### 2.1 OS Version (Always collected)
 
 ```bash
-limacharlie task send --sid <sensor-uuid> --task os_version --oid <org-uuid> --output json
+limacharlie task send --sid <sensor-uuid> --task os_version --oid <org-uuid> --output yaml
 ```
 
 Returns: `os_name`, `os_version`, `os_build`, `architecture`
@@ -58,7 +58,7 @@ Returns: `os_name`, `os_version`, `os_build`, `architecture`
 #### 2.2 Installed Packages
 
 ```bash
-limacharlie task send --sid <sensor-uuid> --task os_packages --oid <org-uuid> --output json
+limacharlie task send --sid <sensor-uuid> --task os_packages --oid <org-uuid> --output yaml
 ```
 
 Returns: Array of `{name, version, architecture}`
@@ -72,7 +72,7 @@ Check user accounts via sensor tasking. Identify admin users by checking for:
 #### 2.4 Running Services
 
 ```bash
-limacharlie task send --sid <sensor-uuid> --task os_services --oid <org-uuid> --output json
+limacharlie task send --sid <sensor-uuid> --task os_services --oid <org-uuid> --output yaml
 ```
 
 Returns: Array of `{name, display_name, state, start_type, path}`
@@ -80,7 +80,7 @@ Returns: Array of `{name, display_name, state, start_type, path}`
 #### 2.5 Autoruns (Persistence)
 
 ```bash
-limacharlie task send --sid <sensor-uuid> --task os_autoruns --oid <org-uuid> --output json
+limacharlie task send --sid <sensor-uuid> --task os_autoruns --oid <org-uuid> --output yaml
 ```
 
 Returns: Array of `{location, name, path, signed}`
@@ -90,7 +90,7 @@ Flag unsigned autoruns as potential concerns.
 #### 2.6 Network Connections
 
 ```bash
-limacharlie task send --sid <sensor-uuid> --task os_netstat --oid <org-uuid> --output json
+limacharlie task send --sid <sensor-uuid> --task os_netstat --oid <org-uuid> --output yaml
 ```
 
 Returns: Array of `{state, local_address, local_port, remote_address, remote_port, pid, process_name, protocol}`

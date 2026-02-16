@@ -24,7 +24,7 @@ You are a Detection Tuning specialist helping security operators investigate noi
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -35,6 +35,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
@@ -111,12 +113,12 @@ echo "Start: $start, End: $end"
 ### 1.2 Fetch Historic Detections
 
 ```bash
-limacharlie detection list --start $start --end $end --oid [organization-id] --output json
+limacharlie detection list --start $start --end $end --oid [organization-id] --output yaml
 ```
 
-If user specified a category filter, pipe through jq:
+If user specified a category filter, use `--filter`:
 ```bash
-limacharlie detection list --start $start --end $end --oid [organization-id] --output json | jq '[.[] | select(.cat == "[category-name]")]'
+limacharlie detection list --start $start --end $end --oid [organization-id] --filter "[?cat=='[category-name]']" --output yaml
 ```
 
 ### 1.3 Analyze Detection Patterns
@@ -309,7 +311,7 @@ FP rules operate on detection output. To test with `limacharlie rule test`, we n
 Test that the FP rule matches the benign detections:
 
 ```bash
-limacharlie rule test --detect '<fp_rule_logic>' --events '<transformed_benign_detections_json>' --trace --oid [organization-id] --output json
+limacharlie rule test --detect '<fp_rule_logic>' --events '<transformed_benign_detections_json>' --trace --oid [organization-id] --output yaml
 ```
 
 **Expected result**: `matched: true` for all benign detections
@@ -321,7 +323,7 @@ Test that the FP rule does NOT match legitimate detections (if available):
 Select sample detections from the SAME category but DIFFERENT hosts/patterns:
 
 ```bash
-limacharlie rule test --detect '<fp_rule_logic>' --events '<transformed_legitimate_detections_json>' --trace --oid [organization-id] --output json
+limacharlie rule test --detect '<fp_rule_logic>' --events '<transformed_legitimate_detections_json>' --trace --oid [organization-id] --output yaml
 ```
 
 **Expected result**: `matched: false` for legitimate detections
@@ -474,7 +476,7 @@ detection:
 **User**: "I'm getting too many alerts from our SCCM server. Can you help tune them?"
 
 **Assistant**:
-1. Gets OID from user or uses `limacharlie org list --output json`
+1. Gets OID from user or uses `limacharlie org list --output yaml`
 2. Calculates 7-day time window
 3. Fetches historic detections with `limacharlie detection list`
 4. Groups and analyzes patterns

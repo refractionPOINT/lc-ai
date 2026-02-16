@@ -194,10 +194,10 @@ Skills in this plugin connect to the LimaCharlie API via the `limacharlie` CLI t
 
 1. **Authenticate** using your LimaCharlie API credentials
 2. **Execute operations** against your organization(s)
-3. **Return results** in a structured, readable JSON format
+3. **Return results** in a structured, readable YAML format
 
 Most skills require:
-- **OID**: Organization ID (UUID) - get this via `limacharlie org list --output json`
+- **OID**: Organization ID (UUID) - get this via `limacharlie org list --output yaml`
 - **Additional parameters**: Sensor IDs, rule names, query parameters, etc.
 
 See [CALLING_API.md](./CALLING_API.md) for details on CLI usage patterns.

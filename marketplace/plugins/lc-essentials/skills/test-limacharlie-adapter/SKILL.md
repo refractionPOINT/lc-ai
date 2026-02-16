@@ -24,7 +24,7 @@ Deploy a temporary LimaCharlie Adapter on the local Linux or Mac OS host for tes
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -35,6 +35,8 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
@@ -87,7 +89,7 @@ Before starting, ensure you have:
 First, get the list of available organizations:
 
 ```bash
-limacharlie org list --output json
+limacharlie org list --output yaml
 ```
 
 This returns your available organizations. Use AskUserQuestion to let the user select one, or if they need a new org, use `limacharlie org create` to create one.
@@ -97,7 +99,7 @@ This returns your available organizations. Use AskUserQuestion to let the user s
 Check for existing "Test Adapter" installation key:
 
 ```bash
-limacharlie installation-key list --oid <SELECTED_ORG_ID> --output json
+limacharlie installation-key list --oid <SELECTED_ORG_ID> --output yaml
 ```
 
 Look for a key with description 'Test Adapter' and extract its `iid`.
@@ -107,7 +109,7 @@ Look for a key with description 'Test Adapter' and extract its `iid`.
 **If not exists**: Create one:
 
 ```bash
-limacharlie installation-key create --oid <SELECTED_ORG_ID> --output json
+limacharlie installation-key create --oid <SELECTED_ORG_ID> --output yaml
 ```
 
 Save the returned `iid` for later phases.
@@ -223,7 +225,7 @@ If you prefer not to use the helper script, you can set up manually with separat
 After starting, the adapter should appear in your LimaCharlie organization within a few seconds as a sensor. Verify by listing sensors with a selector that matches the installation key's `iid`:
 
 ```bash
-limacharlie sensor list --oid <SELECTED_ORG_ID> --output json | jq '[.[] | select(.iid == "<IID>")]'
+limacharlie sensor list --oid <SELECTED_ORG_ID> --filter "[?iid=='<IID>']" --output yaml
 ```
 
 You can also check the adapter log for connection status:
@@ -237,7 +239,7 @@ Look for `usp-client connected` to confirm successful connection.
 Also check for any adapter errors:
 
 ```bash
-limacharlie org errors --oid <SELECTED_ORG_ID> --output json
+limacharlie org errors --oid <SELECTED_ORG_ID> --output yaml
 ```
 
 Look for errors related to the test adapter in the output.
@@ -249,13 +251,13 @@ After the adapter has been running for a few minutes, query the ingested logs.
 **Step 1**: Generate the LCQL query from natural language:
 
 ```bash
-limacharlie ai generate-query --prompt "all events from sensor <SID> in the last 10 minutes" --oid <OID> --output json
+limacharlie ai generate-query --prompt "all events from sensor <SID> in the last 10 minutes" --oid <OID> --output yaml
 ```
 
 **Step 2**: Execute the generated query:
 
 ```bash
-limacharlie search run --query "<GENERATED_QUERY_FROM_STEP_1>" --start <ts> --end <ts> --oid <OID> --output json
+limacharlie search run --query "<GENERATED_QUERY_FROM_STEP_1>" --start <ts> --end <ts> --oid <OID> --output yaml
 ```
 
 Replace `<OID>` with the organization ID and `<SID>` with the sensor ID from the verification step.
@@ -294,7 +296,7 @@ Use `;` instead of `&&` since pkill returns non-zero exit codes even on success.
 
 1. List organizations:
 ```bash
-limacharlie org list --output json
+limacharlie org list --output yaml
 ```
 
 Response shows: `[{"name": "My Test Org", "oid": "abc123-def456-..."}]`
@@ -303,14 +305,14 @@ Response shows: `[{"name": "My Test Org", "oid": "abc123-def456-..."}]`
 
 3. Check for existing installation key:
 ```bash
-limacharlie installation-key list --oid abc123-def456-... --output json
+limacharlie installation-key list --oid abc123-def456-... --output yaml
 ```
 
 Look for key with description 'Test Adapter' and extract its iid.
 
 4. Create installation key if needed:
 ```bash
-limacharlie installation-key create --oid abc123-def456-... --output json
+limacharlie installation-key create --oid abc123-def456-... --output yaml
 ```
 
 Returns: `{"iid": "729b2770-9ae6-4e14-beea-5e42b854adf5", ...}`
@@ -364,7 +366,7 @@ Output shows platform detection, download progress, and configuration saved.
 
 9. Verify adapter connection:
 ```bash
-limacharlie sensor list --oid abc123-def456-... --output json | jq '[.[] | select(.iid == "729b2770-9ae6-4e14-beea-5e42b854adf5")]'
+limacharlie sensor list --oid abc123-def456-... --filter "[?iid=='729b2770-9ae6-4e14-beea-5e42b854adf5']" --output yaml
 ```
 
 10. Inform user the adapter is running and how to stop it.

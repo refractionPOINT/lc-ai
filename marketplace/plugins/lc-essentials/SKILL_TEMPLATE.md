@@ -29,7 +29,7 @@ Brief overview of what this skill does (1-2 sentences).
 All LimaCharlie operations use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [flags]
+limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help: `limacharlie <command> --ai-help`
@@ -40,8 +40,9 @@ For command discovery: `limacharlie discover`
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
+| **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
-| **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-*` + `limacharlie rule validate` |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
@@ -86,7 +87,7 @@ Ensure you have:
 Use the `limacharlie` CLI directly:
 
 ```bash
-limacharlie <noun> <verb> --oid <oid> --output json [--flag value]
+limacharlie <noun> <verb> --oid <oid> --output yaml [--flag value]
 ```
 
 **Command Details:**
@@ -96,11 +97,9 @@ limacharlie <noun> <verb> --oid <oid> --output json [--flag value]
 
 ### Step 3: Handle the Response
 
-The command returns JSON output:
-```json
-{
-  // Response structure specific to this command
-}
+The command returns YAML output:
+```yaml
+# Response structure specific to this command
 ```
 
 **Success:**
@@ -132,14 +131,12 @@ Steps:
 2. [Step 2]
 3. Run command:
 ```bash
-limacharlie sensor list --oid abc123... --output json
+limacharlie sensor list --oid abc123... --output yaml
 ```
 
 Expected response:
-```json
-{
-  // Example response
-}
+```yaml
+# Example response
 ```
 
 ### Example 2: [Edge case or complex scenario]
