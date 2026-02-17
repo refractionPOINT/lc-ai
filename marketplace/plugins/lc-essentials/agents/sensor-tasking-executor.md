@@ -65,7 +65,7 @@ Extract from your prompt:
 Before executing, verify the sensor is online:
 
 ```bash
-limacharlie sensor online [sid] --oid [oid] --output yaml
+limacharlie sensor get --sid [sid] --oid [oid] --output yaml
 ```
 
 If offline, return immediately with status indicating sensor is offline.

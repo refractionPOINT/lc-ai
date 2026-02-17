@@ -46,7 +46,7 @@ For command help and discovery: `limacharlie <command> --ai-help`
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
 | **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
 | **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
-| **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-*` + `limacharlie rule validate` |
+| **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-*` + `limacharlie dr validate` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ---
@@ -164,7 +164,7 @@ Adds an existing LimaCharlie organization to the repository:
 3. Create `orgs/<oid>/index.yaml` with global includes
 4. Create `orgs/<oid>/custom/` directory for future customizations
 5. Add entry to `org-manifest.yaml`
-6. Optionally: Export current config from LC using ext-git-sync or `limacharlie configs fetch`
+6. Optionally: Export current config from LC using ext-git-sync or `limacharlie sync pull`
 7. Commit changes
 
 **Example index.yaml generated:**
@@ -225,7 +225,7 @@ Creates a NEW rule and adds it to global config:
 
 **Workflow:**
 1. Use AI generation (`limacharlie ai generate-detection`, `limacharlie ai generate-response`)
-2. Validate with `limacharlie rule validate`
+2. Validate with `limacharlie dr validate`
 3. Append to `hives/dr-general.yaml`
 4. Commit with descriptive message
 
@@ -242,7 +242,7 @@ Fetches an EXISTING rule from a LimaCharlie tenant and adds it to the IaC repo:
 1. Look up tenant OID from `org-manifest.yaml`
 2. Fetch rule using the CLI:
    ```bash
-   limacharlie rule get encoded-powershell --oid <tenant-oid> --output yaml
+   limacharlie dr get --key encoded-powershell --oid <tenant-oid> --output yaml
    ```
 3. Ask user: Add as **global** (all tenants) or **tenant-specific**?
 4. If global: Add to `hives/dr-general.yaml`
@@ -260,7 +260,7 @@ Takes an existing rule from ONE tenant and makes it apply to ALL tenants:
 
 **Workflow:**
 1. Look up source tenant OID from `org-manifest.yaml`
-2. Fetch rule using `limacharlie rule get <name> --oid <oid> --output yaml`
+2. Fetch rule using `limacharlie dr get --key <name> --oid <oid> --output yaml`
 3. Add rule to `hives/dr-general.yaml`
 4. Ask user: Remove from tenant's custom config? (if it was tenant-specific)
 5. If yes: Remove from `orgs/<oid>/custom/rules.yaml`
@@ -399,7 +399,7 @@ Imports ALL D&R rules from a tenant into the IaC repo:
 
 **Workflow:**
 1. Look up tenant OID
-2. Fetch all rules using `limacharlie rule list --oid <oid> --output yaml` and `limacharlie rule get <name> --oid <oid> --output yaml`
+2. Fetch all rules using `limacharlie dr list --oid <oid> --output yaml` and `limacharlie dr get --key <name> --oid <oid> --output yaml`
 3. Ask user: Add as global or tenant-specific?
 4. Add rules to appropriate location
 5. Commit: "Import N rules from [tenant]"
@@ -459,7 +459,7 @@ Exports current configuration from LimaCharlie into the repository:
 
 **Workflow:**
 1. Look up OID from manifest
-2. Use ext-git-sync export OR `limacharlie configs fetch`
+2. Use ext-git-sync export OR `limacharlie sync pull`
 3. Place exported config in `exports/orgs/<oid>/`
 4. Optionally: Merge into main org folder
 5. Show diff if merging
@@ -473,9 +473,9 @@ Exports current configuration from LimaCharlie into the repository:
 Deploys configuration to LimaCharlie using the CLI:
 
 ```bash
-limacharlie configs push \
+limacharlie sync push \
+  --config-file ./orgs/<oid>/index.yaml \
   --oid <oid> \
-  --config ./orgs/<oid>/index.yaml \
   --force \
   --hive-dr-general \
   --hive-fp \
@@ -505,8 +505,14 @@ limacharlie ai generate-detection --description "..." --oid <oid> --output yaml
 # 2. Generate response component from natural language
 limacharlie ai generate-response --description "..." --oid <oid> --output yaml
 
-# 3. Validate before adding to repo
-limacharlie rule validate --detect '...' --respond '...' --oid <oid>
+# 3. Write to temp files and validate before adding to repo
+cat > /tmp/detect.yaml << 'EOF'
+<detection_yaml>
+EOF
+cat > /tmp/respond.yaml << 'EOF'
+<response_yaml>
+EOF
+limacharlie dr validate --detect /tmp/detect.yaml --respond /tmp/respond.yaml --oid <oid>
 ```
 
 When IMPORTING existing rules from LC, fetch them via API - no generation needed.
@@ -521,7 +527,7 @@ After initializing the repo and adding tenants, each org needs ext-git-sync conf
 
 1. **Subscribe to ext-git-sync extension** in each org:
    ```bash
-   limacharlie extension subscribe --oid <oid> --output yaml
+   limacharlie extension subscribe --name ext-git-sync --oid <oid> --output yaml
    ```
 
 2. **Create SSH deploy key:**
@@ -533,7 +539,7 @@ After initializing the repo and adding tenants, each org needs ext-git-sync conf
 
 4. **Store private key in LC Secret Manager** for each org:
    ```bash
-   limacharlie secret set git-sync-ssh-key --value '<private_key_content>' --oid <oid>
+   limacharlie secret set --key git-sync-ssh-key --input-file /tmp/ssh-key.txt --oid <oid>
    ```
 
 5. **Configure ext-git-sync** using the exact config schema below
@@ -559,13 +565,14 @@ ssh_key_secret_name: "git-sync-ssh-key"              # Name of secret containing
 
 **CLI Example:**
 ```bash
-limacharlie extension set ext-git-sync --oid <org-oid> --data '{
-  "repo_url": "git@github.com:your-org/your-repo.git",
-  "branch": "main",
-  "conf_root": "orgs/<oid>/index.yaml",
-  "ssh_key_source": "secret",
-  "ssh_key_secret_name": "git-sync-ssh-key"
-}'
+cat > /tmp/ext-git-sync-config.yaml << 'EOF'
+repo_url: "git@github.com:your-org/your-repo.git"
+branch: "main"
+conf_root: "orgs/<oid>/index.yaml"
+ssh_key_source: "secret"
+ssh_key_secret_name: "git-sync-ssh-key"
+EOF
+limacharlie extension config-set --name ext-git-sync --input-file /tmp/ext-git-sync-config.yaml --oid <org-oid>
 ```
 
 ### Shared SSH Key Option
@@ -594,7 +601,7 @@ After configuration, verify the setup is working:
 
 3. **Check extension config:**
    ```bash
-   limacharlie extension get ext-git-sync --oid <oid> --output yaml
+   limacharlie extension config-get --name ext-git-sync --oid <oid> --output yaml
    # Verify repo_url, branch, conf_root are correct
    ```
 
@@ -758,7 +765,7 @@ Use consistent naming: `[category]-[description]`
 - Reference secrets in configs, don't embed values
 
 ### 5. Testing Changes
-- Use `limacharlie configs push --dry-run` before deploying
+- Use `limacharlie sync push --dry-run` before deploying
 - Test on one org before rolling out globally
 - Use `detection-engineering` skill to test rules
 
@@ -791,7 +798,7 @@ Use consistent naming: `[category]-[description]`
 | SSH auth failure | Deploy key not added or wrong key | Verify public key is in GitHub deploy keys |
 | "Host key verification failed" | First connection to GitHub | Add GitHub to known_hosts or use `ssh -o StrictHostKeyChecking=no` |
 | Sync runs but no changes | Branch mismatch | Verify `branch` field matches your repo's default branch |
-| Extension not in list | Not subscribed | Run `limacharlie extension subscribe --oid <oid>` |
+| Extension not in list | Not subscribed | Run `limacharlie extension subscribe --name ext-git-sync --oid <oid>` |
 
 ### Debugging ext-git-sync
 
@@ -803,7 +810,7 @@ Use consistent naming: `[category]-[description]`
 
 2. **Verify the complete config:**
    ```bash
-   limacharlie extension get ext-git-sync --oid <oid> --output yaml
+   limacharlie extension config-get --name ext-git-sync --oid <oid> --output yaml
    ```
    Ensure all required fields are present: `repo_url`, `branch`, `conf_root`, `ssh_key_source`, `ssh_key_secret_name`
 

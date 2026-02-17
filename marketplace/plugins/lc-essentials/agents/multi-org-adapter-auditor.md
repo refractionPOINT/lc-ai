@@ -51,13 +51,13 @@ Return:
 ### Step 1: List External Adapters
 
 ```bash
-limacharlie adapter list --oid <org-id> --output yaml
+limacharlie external-adapter list --oid <org-id> --output yaml
 ```
 
 ### Step 2: List Cloud Sensors
 
 ```bash
-limacharlie cloud-sensor list --oid <org-id> --output yaml
+limacharlie cloud-adapter list --oid <org-id> --output yaml
 ```
 
 ### Step 3: Get Details for Each Adapter
@@ -66,12 +66,12 @@ For each adapter found, get detailed configuration to check for errors:
 
 **External Adapters:**
 ```bash
-limacharlie adapter get <adapter-name> --oid <org-id> --output yaml
+limacharlie external-adapter get --key <adapter-name> --oid <org-id> --output yaml
 ```
 
 **Cloud Sensors:**
 ```bash
-limacharlie cloud-sensor get <sensor-name> --oid <org-id> --output yaml
+limacharlie cloud-adapter get --key <sensor-name> --oid <org-id> --output yaml
 ```
 
 ### Step 4: Check for Errors
@@ -150,8 +150,8 @@ Return a concise summary for this organization only:
 
 ## Error Handling
 
-- If `limacharlie adapter list` fails: Report error and continue with cloud sensors
-- If `limacharlie cloud-sensor list` fails: Report error and continue with external adapters
+- If `limacharlie external-adapter list` fails: Report error and continue with cloud sensors
+- If `limacharlie cloud-adapter list` fails: Report error and continue with external adapters
 - If individual `get_*` calls fail: Note the adapter and continue with others
 - Always return partial results rather than failing completely
 

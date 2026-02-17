@@ -55,17 +55,33 @@ Parse the prompt to extract:
 
 ### Step 2: Calculate Time Range
 
-Convert time windows to seconds:
-- "last 1 hour" → `last_seconds: 3600`
-- "last 24 hours" → `last_seconds: 86400`
-- "last 7 days" → `last_seconds: 604800`
+Use bash to calculate start/end timestamps:
+```bash
+start=$(date -d '1 hour ago' +%s)   # or '24 hours ago', '7 days ago'
+end=$(date +%s)
+```
 
-### Step 3: Run Replay
+### Step 3: Deploy Temp Rule and Run Replay
 
-Use the `limacharlie` CLI to run the replay:
+The replay CLI requires a deployed rule name. Deploy the rule as a temporary test rule, replay, then clean up:
 
 ```bash
-limacharlie rule replay --detect '<detection_rule>' --respond '<response_rule>' --last-seconds <calculated> --oid <org-uuid> --output yaml
+# Write rule to temp file
+cat > /tmp/rule.yaml << 'EOF'
+detect:
+  <detection_rule>
+respond:
+  <response_rule>
+EOF
+
+# Deploy temp rule
+limacharlie dr set --key temp-replay-test --input-file /tmp/rule.yaml --oid <org-uuid>
+
+# Run replay
+limacharlie dr replay --name temp-replay-test --start $start --end $end --oid <org-uuid> --output yaml
+
+# Clean up
+limacharlie dr delete --key temp-replay-test --oid <org-uuid>
 ```
 
 ### Step 4: Analyze Results
@@ -219,8 +235,8 @@ Since you run in parallel with other instances:
 ## Your Workflow Summary
 
 1. Parse prompt → extract org ID, detection, time window, selector
-2. Convert time window to `last_seconds`
-3. Run `limacharlie rule replay` with extracted parameters
+2. Calculate start/end timestamps with bash `date`
+3. Deploy temp rule with `limacharlie dr set`, replay with `limacharlie dr replay`, then delete temp rule
 4. Analyze results → calculate stats, extract samples, find patterns
 5. Return concise summary for this org only
 

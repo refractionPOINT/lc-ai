@@ -493,7 +493,7 @@ limacharlie search run --query "event sid = '<sensor-id>'" --start $start --end 
 For each cloud adapter, verify sensor appears and data flows:
 
 ```bash
-limacharlie cloud-sensor list --oid <org-id> --output yaml
+limacharlie cloud-adapter list --oid <org-id> --output yaml
 ```
 
 Check for recent events from cloud sensor:

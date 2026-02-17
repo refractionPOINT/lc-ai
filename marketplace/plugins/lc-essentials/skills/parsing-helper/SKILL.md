@@ -108,24 +108,24 @@ Ask the user which adapter type they're working with using `AskUserQuestion`:
 
 1. List available external adapters:
 ```bash
-limacharlie adapter list --oid <SELECTED_ORG_ID> --output yaml
+limacharlie external-adapter list --oid <SELECTED_ORG_ID> --output yaml
 ```
 
 2. Get the selected adapter's current configuration:
 ```bash
-limacharlie adapter get <ADAPTER_NAME> --oid <SELECTED_ORG_ID> --output yaml
+limacharlie external-adapter get --key <ADAPTER_NAME> --oid <SELECTED_ORG_ID> --output yaml
 ```
 
 **Option B: Cloud Sensor** (AWS, Azure, GCP, SaaS)
 
 1. List available cloud sensors:
 ```bash
-limacharlie cloud-sensor list --oid <SELECTED_ORG_ID> --output yaml
+limacharlie cloud-adapter list --oid <SELECTED_ORG_ID> --output yaml
 ```
 
 2. Get the selected cloud sensor's current configuration:
 ```bash
-limacharlie cloud-sensor get <SENSOR_NAME> --oid <SELECTED_ORG_ID> --output yaml
+limacharlie cloud-adapter get --key <SENSOR_NAME> --oid <SELECTED_ORG_ID> --output yaml
 ```
 
 **Option C: One-off/USP Adapter** (local adapter, no cloud config)
@@ -276,7 +276,7 @@ date -u +%s
 Use `validate_usp_mapping` to test the Grok pattern against sample data:
 
 ```bash
-limacharlie adapter validate-mapping --oid <SELECTED_ORG_ID> --platform text --mapping '{
+limacharlie usp validate --oid <SELECTED_ORG_ID> --platform text --mapping '{
   "parsing_grok": {
     "message": "%{SYSLOGTIMESTAMP:date} %{HOSTNAME:host} %{WORD:service}\\[%{INT:pid}\\]: %{GREEDYDATA:msg}"
   },
@@ -313,16 +313,20 @@ If validation fails or fields are missing, adjust the Grok pattern and re-valida
 
 **For External Adapters:**
 ```bash
-limacharlie adapter set <ADAPTER_NAME> --oid <SELECTED_ORG_ID> --data '{
-  ... existing config with updated parsing_rules ...
-}'
+# Write config to temp file
+cat > /tmp/adapter-config.yaml << 'EOF'
+... existing config with updated parsing_rules ...
+EOF
+limacharlie external-adapter set --key <ADAPTER_NAME> --input-file /tmp/adapter-config.yaml --oid <SELECTED_ORG_ID>
 ```
 
 **For Cloud Sensors:**
 ```bash
-limacharlie cloud-sensor set <SENSOR_NAME> --oid <SELECTED_ORG_ID> --data '{
-  ... existing config with updated parsing ...
-}'
+# Write config to temp file
+cat > /tmp/cloud-adapter-config.yaml << 'EOF'
+... existing config with updated parsing ...
+EOF
+limacharlie cloud-adapter set --key <SENSOR_NAME> --input-file /tmp/cloud-adapter-config.yaml --oid <SELECTED_ORG_ID>
 ```
 
 **Step 5: Verify no adapter errors**

@@ -533,7 +533,14 @@ Examples:
 Before presenting to user, validate the rule syntax:
 
 ```bash
-limacharlie rule validate --detect '<fp_rule_detection_logic>' --oid [organization-id]
+cat > /tmp/detect.yaml << 'EOF'
+<fp_rule_detection_logic>
+EOF
+cat > /tmp/respond.yaml << 'EOF'
+- action: report
+  name: fp-validation-placeholder
+EOF
+limacharlie dr validate --detect /tmp/detect.yaml --respond /tmp/respond.yaml --oid [organization-id]
 ```
 
 ---
@@ -614,7 +621,10 @@ Options:
 For each approved rule, deploy using the CLI:
 
 ```bash
-limacharlie fp create [rule-name] --data '<rule-logic-json>' --oid [organization-id]
+cat > /tmp/fp-rule.yaml << 'EOF'
+<rule-logic-yaml>
+EOF
+limacharlie fp set --key [rule-name] --input-file /tmp/fp-rule.yaml --oid [organization-id]
 ```
 
 ### 8.2 Confirm Deployment

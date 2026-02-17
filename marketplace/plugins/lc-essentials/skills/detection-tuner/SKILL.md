@@ -247,7 +247,14 @@ Examples:
 Validate the FP rule syntax before testing:
 
 ```bash
-limacharlie rule validate --detect '<fp_rule_logic>' --oid [organization-id]
+cat > /tmp/detect.yaml << 'EOF'
+<fp_rule_logic>
+EOF
+cat > /tmp/respond.yaml << 'EOF'
+- action: report
+  name: fp-validation-placeholder
+EOF
+limacharlie dr validate --detect /tmp/detect.yaml --respond /tmp/respond.yaml --oid [organization-id]
 ```
 
 **Note**: FP rules use the same detection logic syntax as D&R rules, so we can use the D&R validation command.
@@ -264,7 +271,7 @@ limacharlie rule validate --detect '<fp_rule_logic>' --oid [organization-id]
 
 ### 4.2 Transform Detection to Test Event
 
-FP rules operate on detection output. To test with `limacharlie rule test`, we need to transform the detection structure to look like an event.
+FP rules operate on detection output. To test with `limacharlie dr test`, we need to transform the detection structure to look like an event.
 
 **Original detection structure:**
 ```json
@@ -310,7 +317,21 @@ FP rules operate on detection output. To test with `limacharlie rule test`, we n
 Test that the FP rule matches the benign detections:
 
 ```bash
-limacharlie rule test --detect '<fp_rule_logic>' --events '<transformed_benign_detections_json>' --trace --oid [organization-id] --output yaml
+# Write FP rule to file
+cat > /tmp/fp-rule.yaml << 'EOF'
+detect:
+  <fp_rule_logic>
+respond:
+  - action: report
+    name: fp-test
+EOF
+
+# Write test events to file
+cat > /tmp/benign-events.json << 'EOF'
+<transformed_benign_detections_json>
+EOF
+
+limacharlie dr test --input-file /tmp/fp-rule.yaml --events /tmp/benign-events.json --trace --oid [organization-id] --output yaml
 ```
 
 **Expected result**: `matched: true` for all benign detections
@@ -322,7 +343,12 @@ Test that the FP rule does NOT match legitimate detections (if available):
 Select sample detections from the SAME category but DIFFERENT hosts/patterns:
 
 ```bash
-limacharlie rule test --detect '<fp_rule_logic>' --events '<transformed_legitimate_detections_json>' --trace --oid [organization-id] --output yaml
+# Write legitimate detections to file
+cat > /tmp/legit-events.json << 'EOF'
+<transformed_legitimate_detections_json>
+EOF
+
+limacharlie dr test --input-file /tmp/fp-rule.yaml --events /tmp/legit-events.json --trace --oid [organization-id] --output yaml
 ```
 
 **Expected result**: `matched: false` for legitimate detections
@@ -397,16 +423,21 @@ Use `AskUserQuestion` with clear options:
 ### 6.1 Create FP Rule
 
 ```bash
-limacharlie fp create fp-suspicious-process-sccm-server-20251204 --data '{
-  "detection": {
-    "op": "and",
-    "rules": [
-      {"op": "is", "path": "cat", "value": "suspicious_process"},
-      {"op": "is", "path": "routing/hostname", "value": "SCCM-SERVER"},
-      {"op": "contains", "path": "detect/event/FILE_PATH", "value": "C:\\Windows\\CCM\\"}
-    ]
-  }
-}' --oid [organization-id]
+cat > /tmp/fp-rule.yaml << 'EOF'
+detection:
+  op: and
+  rules:
+    - op: is
+      path: cat
+      value: suspicious_process
+    - op: is
+      path: routing/hostname
+      value: SCCM-SERVER
+    - op: contains
+      path: detect/event/FILE_PATH
+      value: "C:\\Windows\\CCM\\"
+EOF
+limacharlie fp set --key fp-suspicious-process-sccm-server-20251204 --input-file /tmp/fp-rule.yaml --oid [organization-id]
 ```
 
 ### 6.2 Confirm Deployment
@@ -482,10 +513,10 @@ detection:
 5. Presents findings table showing SCCM-SERVER generating 334 detections/day
 6. Uses `AskUserQuestion` to confirm SCCM activity is benign
 7. Generates FP rule targeting SCCM-SERVER + CCM path
-8. Validates syntax with `limacharlie rule validate`
-9. Tests FP rule with `limacharlie rule test` using transformed detections
+8. Validates syntax with `limacharlie dr validate`
+9. Tests FP rule with `limacharlie dr test` using transformed detections
 10. Presents rule with test results for approval
-11. On approval, deploys with `limacharlie fp create`
+11. On approval, deploys with `limacharlie fp set --key <name> --input-file`
 12. Confirms success and recommends monitoring
 
 ---
@@ -508,7 +539,7 @@ detection:
 
 - Check operator spelling (`is`, not `equals`)
 - Verify path format (forward slashes, correct prefixes)
-- Use `limacharlie rule validate --detect '...' --trace --oid <oid>`
+- Write rule to file and use `limacharlie dr validate --detect /tmp/detect.yaml --respond /tmp/respond.yaml --oid <oid>`
 
 ### No Noisy Patterns Found
 

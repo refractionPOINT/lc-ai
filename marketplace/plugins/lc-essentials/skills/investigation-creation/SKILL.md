@@ -488,7 +488,7 @@ limacharlie event children --sid <sid> --atom <atom> --oid <oid> --output yaml
 
 **Related Detections** (remember: divide timestamps by 1000!):
 ```bash
-limacharlie detection list --sid <sid> --start <ts_seconds> --end <ts_seconds> --oid <oid> --output yaml
+limacharlie detection list --start <ts_seconds> --end <ts_seconds> --oid <oid> --output yaml
 ```
 
 **Org-wide IOC Search**:
@@ -540,7 +540,7 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
 **Investigation Steps**:
 1. **Get all detections on this host** around the incident time:
    ```bash
-   limacharlie detection list --sid <sid> --start $((event_time_seconds - 3600)) --end $((event_time_seconds + 3600)) --oid <oid> --output yaml
+   limacharlie detection list --start $((event_time_seconds - 3600)) --end $((event_time_seconds + 3600)) --oid <oid> --output yaml
    ```
 
 2. **Look for related suspicious activity**:
@@ -936,7 +936,10 @@ Always confirm with user before saving:
 ### Save Investigation
 
 ```bash
-limacharlie investigation create --name "<investigation_name>" --data '<investigation_record>' --oid <oid> --output yaml
+cat > /tmp/investigation.yaml << 'EOF'
+<investigation_record>
+EOF
+limacharlie investigation create --name "<investigation_name>" --input-file /tmp/investigation.yaml --oid <oid> --output yaml
 ```
 
 ---

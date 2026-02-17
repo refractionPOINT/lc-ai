@@ -38,7 +38,7 @@ For command help and discovery: `limacharlie <command> --ai-help`
 | **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
 | **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
-| **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-detection` + `limacharlie rule validate` |
+| **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-detection` + `limacharlie dr validate` |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
@@ -311,13 +311,24 @@ Present all generated rules for approval:
 For each approved rule, deploy using:
 
 ```bash
-limacharlie rule create <rule_name> --detect '<detect_yaml>' --respond '<respond_yaml>' --oid <oid>
+# Write rule to temp file
+cat > /tmp/rule.yaml << 'EOF'
+detect:
+  <detect_yaml>
+respond:
+  <respond_yaml>
+EOF
+
+limacharlie dr set --key <rule_name> --input-file /tmp/rule.yaml --oid <oid>
 ```
 
 Also create IOC lookup tables:
 
 ```bash
-limacharlie lookup set <threat>-<ioc-type> --data '<ioc_data>' --oid <oid>
+cat > /tmp/lookup.yaml << 'EOF'
+<ioc_data>
+EOF
+limacharlie lookup set --key <threat>-<ioc-type> --input-file /tmp/lookup.yaml --oid <oid>
 ```
 
 ---

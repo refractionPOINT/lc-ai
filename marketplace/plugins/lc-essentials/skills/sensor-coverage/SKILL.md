@@ -894,11 +894,22 @@ Organizations Failing SLA (sorted by gap):
 To enable compliance checking, create an `expected_assets` lookup table:
 
 ```bash
-limacharlie lookup set expected_assets --data '{
-  "SRV-DC01": {"type": "server", "criticality": "high", "required_tags": ["production", "domain-controller"]},
-  "SRV-WEB01": {"type": "server", "criticality": "medium", "required_tags": ["production", "web"]},
-  "WKS-*": {"type": "workstation", "criticality": "low", "required_tags": ["workstation"], "naming_pattern": true}
-}' --oid <oid>
+cat > /tmp/expected-assets.yaml << 'EOF'
+SRV-DC01:
+  type: server
+  criticality: high
+  required_tags: [production, domain-controller]
+SRV-WEB01:
+  type: server
+  criticality: medium
+  required_tags: [production, web]
+"WKS-*":
+  type: workstation
+  criticality: low
+  required_tags: [workstation]
+  naming_pattern: true
+EOF
+limacharlie lookup set --key expected_assets --input-file /tmp/expected-assets.yaml --oid <oid>
 ```
 
 ### Importing from CSV

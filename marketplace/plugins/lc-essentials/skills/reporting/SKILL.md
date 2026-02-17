@@ -695,7 +695,7 @@ if limit_reached:
 ```
 
 ### 9. D&R Rules Inventory
-**CLI**: `limacharlie rule list`
+**CLI**: `limacharlie dr list`
 - **Endpoint**: GET /v1/rules/{oid}?namespace=general
 - **OID Required**: YES
 - **Returns**: Custom D&R rules in general namespace
@@ -1053,7 +1053,7 @@ If user requests HTML output:
 │          - limacharlie sensor list: Endpoint inv  │
 │          - limacharlie sensor list --online: Live │
 │          - limacharlie detection list: Security   │
-│          - limacharlie rule list: Custom rules    │
+│          - limacharlie dr list: Custom rules    │
 │                                                    │
 │        Query Parameters:                          │
 │          - Detection limit: 5,000 per org         │

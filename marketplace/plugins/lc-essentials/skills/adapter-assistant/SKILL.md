@@ -179,19 +179,19 @@ limacharlie org list --output yaml
 
 **List existing External Adapters:**
 ```bash
-limacharlie adapter list --oid <oid> --output yaml
+limacharlie external-adapter list --oid <oid> --output yaml
 ```
 
 **List existing Cloud Sensors:**
 ```bash
-limacharlie cloud-sensor list --oid <oid> --output yaml
+limacharlie cloud-adapter list --oid <oid> --output yaml
 ```
 
 **Get existing configuration (if modifying):**
 ```bash
-limacharlie adapter get <adapter-name> --oid <oid> --output yaml
+limacharlie external-adapter get --key <adapter-name> --oid <oid> --output yaml
 # or for cloud sensors:
-limacharlie cloud-sensor get <sensor-name> --oid <oid> --output yaml
+limacharlie cloud-adapter get --key <sensor-name> --oid <oid> --output yaml
 ```
 
 ### Phase 3: Configuration Generation
@@ -248,7 +248,7 @@ Supported index types: `file_hash`, `file_path`, `file_name`, `domain`, `ip`, `u
 **Validate parsing rules before deployment:**
 
 ```bash
-limacharlie adapter validate-mapping \
+limacharlie usp validate \
   --platform text \
   --mapping '{"parsing_grok": {"message": "%{TIMESTAMP_ISO8601:timestamp} %{WORD:action} ..."}, "event_type_path": "action", "event_time_path": "timestamp"}' \
   --text-input "<sample-log-lines>" \
@@ -275,12 +275,19 @@ Skill("test-limacharlie-adapter")
 
 **Deploy External Adapter:**
 ```bash
-limacharlie adapter set <adapter-name> --config '<full-configuration-json>' --oid <oid> --output yaml
+# Write configuration to a temp file first
+cat > /tmp/adapter-config.yaml << 'EOF'
+<full-configuration-yaml>
+EOF
+limacharlie external-adapter set --key <adapter-name> --input-file /tmp/adapter-config.yaml --oid <oid> --output yaml
 ```
 
-**Deploy Cloud Sensor:**
+**Deploy Cloud Adapter:**
 ```bash
-limacharlie cloud-sensor set <sensor-name> --config '<full-configuration-json>' --oid <oid> --output yaml
+cat > /tmp/cloud-adapter-config.yaml << 'EOF'
+<full-configuration-yaml>
+EOF
+limacharlie cloud-adapter set --key <sensor-name> --input-file /tmp/cloud-adapter-config.yaml --oid <oid> --output yaml
 ```
 
 **For On-prem Adapters**, generate deployment artifacts:
@@ -337,7 +344,7 @@ limacharlie sensor list --selector "iid == \`<installation-key-iid>\`" --oid <oi
 
 1. Check adapter last_error field:
 ```bash
-limacharlie adapter get <adapter-name> --oid <oid> --output yaml
+limacharlie external-adapter get --key <adapter-name> --oid <oid> --output yaml
 ```
 
 2. Check organization errors for adapter issues:
@@ -455,25 +462,25 @@ Task(
 
 4. **Deploy as External Adapter**:
    ```bash
-   limacharlie adapter set firewall-syslog --config '{
-     "adapter_type": "syslog",
-     "port": 514,
-     "is_udp": true,
-     "client_options": {
-       "identity": {"oid": "<oid>", "installation_key": "<iid>"},
-       "platform": "text",
-       "sensor_seed_key": "firewall-logs",
-       "hostname": "firewall-syslog",
-       "mapping": {
-         "parsing_grok": {
-           "message": "<%{INT:priority}>%{SYSLOGTIMESTAMP:timestamp} %{HOSTNAME:host} %{WORD:action} %{WORD:protocol} %{IP:src_ip}:%{NUMBER:src_port} %{IP:dst_ip}:%{NUMBER:dst_port}"
-         },
-         "event_type_path": "action",
-         "event_time_path": "timestamp",
-         "sensor_hostname_path": "host"
-       }
-     }
-   }' --oid <oid> --output yaml
+   cat > /tmp/firewall-adapter.yaml << 'EOF'
+   adapter_type: syslog
+   port: 514
+   is_udp: true
+   client_options:
+     identity:
+       oid: "<oid>"
+       installation_key: "<iid>"
+     platform: text
+     sensor_seed_key: firewall-logs
+     hostname: firewall-syslog
+     mapping:
+       parsing_grok:
+         message: "<%{INT:priority}>%{SYSLOGTIMESTAMP:timestamp} %{HOSTNAME:host} %{WORD:action} %{WORD:protocol} %{IP:src_ip}:%{NUMBER:src_port} %{IP:dst_ip}:%{NUMBER:dst_port}"
+       event_type_path: action
+       event_time_path: timestamp
+       sensor_hostname_path: host
+   EOF
+   limacharlie external-adapter set --key firewall-syslog --input-file /tmp/firewall-adapter.yaml --oid <oid> --output yaml
    ```
 
 ### Example 3: Connect Unknown Product via Webhook
@@ -512,7 +519,7 @@ Task(
 
 1. **Get current configuration**:
    ```bash
-   limacharlie cloud-sensor get azure-event-hub --oid <oid> --output yaml
+   limacharlie cloud-adapter get --key azure-event-hub --oid <oid> --output yaml
    ```
 
 2. **Check for errors** in `last_error` field of `sys_mtd`

@@ -128,7 +128,7 @@ limacharlie org list --output yaml
 Check sensor status if targeting specific sensors:
 
 ```bash
-limacharlie sensor online <sid> --oid <oid> --output yaml
+limacharlie sensor get --sid <sid> --oid <oid> --output yaml
 ```
 
 > **CRITICAL: Filter to Taskable EDR Sensors**
@@ -255,10 +255,16 @@ limacharlie ai generate-detection --description "Match events where investigatio
 limacharlie ai generate-response --description "Report to output 'siem' and add detection 'FLEET_INVENTORY_RESPONSE'" --oid <oid> --output yaml
 ```
 
-**Step 3: Validate the rule:**
+**Step 3: Write to temp files and validate:**
 
 ```bash
-limacharlie rule validate --detect '<detection_yaml>' --respond '<response_yaml>' --oid <oid>
+cat > /tmp/detect.yaml << 'EOF'
+<detection_yaml>
+EOF
+cat > /tmp/respond.yaml << 'EOF'
+<response_yaml>
+EOF
+limacharlie dr validate --detect /tmp/detect.yaml --respond /tmp/respond.yaml --oid <oid>
 ```
 
 **Step 4: Deploy with expiry:**
@@ -269,7 +275,13 @@ date -d '+7 days' +%s
 ```
 
 ```bash
-limacharlie rule create temp-fleet-inventory-handler --detect '<detection_yaml>' --respond '<response_yaml>' --oid <oid>
+cat > /tmp/rule.yaml << 'EOF'
+detect:
+  <detection_yaml>
+respond:
+  <response_yaml>
+EOF
+limacharlie dr set --key temp-fleet-inventory-handler --input-file /tmp/rule.yaml --oid <oid>
 ```
 
 **Step 5: NOW create the reliable task**
@@ -278,16 +290,16 @@ Only after the D&R rule is deployed, create the reliable task (see Step 3B above
 
 ## Monitoring Reliable Tasks
 
-**List pending tasks:**
+**List pending tasks for a sensor:**
 
 ```bash
-limacharlie task reliable-list --oid <oid> --output yaml
+limacharlie task reliable-list --sid <sensor-id> --oid <oid> --output yaml
 ```
 
 **Delete/cancel a task:**
 
 ```bash
-limacharlie task reliable-delete --task-id <task_id> --oid <oid>
+limacharlie task reliable-delete --sid <sensor-id> --task-id <task_id> --oid <oid>
 ```
 
 ## Example Workflows
@@ -297,8 +309,8 @@ limacharlie task reliable-delete --task-id <task_id> --oid <oid>
 User: "Get running processes from sensor abc-123"
 
 ```bash
-# Check if online
-limacharlie sensor online abc-123 --oid c7e8f940-... --output yaml
+# Check sensor status
+limacharlie sensor get --sid abc-123 --oid c7e8f940-... --output yaml
 
 # If online, get processes directly
 limacharlie task send --sid abc-123 --task os_processes --oid c7e8f940-... --output yaml
@@ -309,40 +321,53 @@ limacharlie task send --sid abc-123 --task os_processes --oid c7e8f940-... --out
 User: "Get OS version from all Windows servers when they come online"
 
 ```bash
-# Create reliable task with context for later collection
-limacharlie task reliable-send --task 'os_version' --selector 'plat==windows' --context 'os-inventory-20240120' --oid c7e8f940-... --output yaml
+# List Windows sensors first
+limacharlie sensor list --selector 'plat == windows' --oid c7e8f940-... --filter '[].sid' --output yaml
+
+# Create reliable task per sensor (loop over SIDs)
+for sid in <sid-list>; do
+  limacharlie task reliable-send --sid $sid --command 'os_version' --investigation-id 'os-inventory-20240120' --oid c7e8f940-... --output yaml
+done
 ```
 
 Response to user:
-"Created reliable task to collect OS version from all Windows sensors.
+"Created reliable tasks to collect OS version from all Windows sensors.
 - Online sensors will execute immediately
 - Offline sensors will execute when they reconnect
 - Task will remain active for 1 week (default TTL)
-- Use context 'os-inventory-20240120' to query responses via LCQL"
+- Use investigation ID 'os-inventory-20240120' to query responses via LCQL"
 
 ### Example 3: Incident Response Collection
 
 User: "Run memory collection on all hosts tagged 'incident-response', I need the data sent to our SIEM"
 
-```
+```bash
 # Step 1: Create D&R rule FIRST to forward responses to SIEM
-# (Use detection-engineering skill or manual D&R creation)
-# Rule should match: routing/investigation_id contains "ir-memcollect-001"
-# Response should: report to SIEM output
+# Use AI generation for the rule, then deploy:
+cat > /tmp/ir-rule.yaml << 'EOF'
+detect:
+  op: contains
+  path: routing/investigation_id
+  value: ir-memcollect-001
+respond:
+  - action: report
+    name: IR_MEMCOLLECT_RESPONSE
+    to: siem
+EOF
+limacharlie dr set --key temp-ir-memcollect-handler --input-file /tmp/ir-rule.yaml --oid c7e8f940-...
 
-# Step 1: Create D&R rule FIRST
-limacharlie rule create temp-ir-memcollect-handler \
-  --detect '{"op": "contains", "path": "routing/investigation_id", "value": "ir-memcollect-001"}' \
-  --respond '[{"action": "report", "name": "IR_MEMCOLLECT_RESPONSE", "to": "siem"}]' \
-  --oid c7e8f940-...
+# Step 2: Get sensors tagged 'incident-response'
+limacharlie sensor list --tag incident-response --oid c7e8f940-... --filter '[].sid' --output yaml
 
-# Step 2: THEN create reliable task (rule is now in place to catch responses)
-limacharlie task reliable-send \
-  --task 'mem_map --pid 4' \
-  --selector 'incident-response in tags' \
-  --context 'ir-memcollect-001' \
-  --ttl 172800 \
-  --oid c7e8f940-... --output yaml
+# Step 3: THEN create reliable task per sensor (rule is now in place to catch responses)
+for sid in <sid-list>; do
+  limacharlie task reliable-send \
+    --sid $sid \
+    --command 'mem_map --pid 4' \
+    --investigation-id 'ir-memcollect-001' \
+    --ttl 172800 \
+    --oid c7e8f940-... --output yaml
+done
 ```
 
 ### Example 4: Quick Data Collection with Inline Response

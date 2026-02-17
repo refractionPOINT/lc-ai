@@ -64,7 +64,7 @@ Detection Requirements:
 - Manual rules WILL fail validation
 
 ### 2. ALWAYS Validate Before Returning
-- Use `limacharlie rule validate` for every rule
+- Use `limacharlie dr validate` for every rule
 - Don't return rules that fail validation
 - Retry with refined prompts if validation fails
 
@@ -83,7 +83,7 @@ Every response must include:
 ### 5. Don't Deploy
 - Only generate and validate rules
 - Return rules for parent skill to deploy after user approval
-- Never call `limacharlie rule create`
+- Never call `limacharlie dr set`
 
 ## How You Work
 
@@ -112,8 +112,15 @@ limacharlie ai generate-response --description "<response_prompt from requiremen
 ```
 
 **Step 2c: Validate Components (MANDATORY)**
+Write detection and response YAML to temp files, then validate:
 ```bash
-limacharlie rule validate --detect '<detection_yaml_from_step_2a>' --respond '<response_yaml_from_step_2b>' --oid <org-uuid>
+cat > /tmp/detect.yaml << 'EOF'
+<detection_yaml_from_step_2a>
+EOF
+cat > /tmp/respond.yaml << 'EOF'
+<response_yaml_from_step_2b>
+EOF
+limacharlie dr validate --detect /tmp/detect.yaml --respond /tmp/respond.yaml --oid <org-uuid>
 ```
 
 ### Step 3: Handle Validation Failures
@@ -385,7 +392,7 @@ Since you may run in parallel with other layer builders:
 - **Single Org Only**: Never target multiple organizations
 - **Use Generation Tools**: NEVER write D&R YAML manually
 - **Validate All Rules**: Every rule must pass validation
-- **Don't Deploy**: Never call `limacharlie rule create`
+- **Don't Deploy**: Never call `limacharlie dr set`
 - **Follow Naming**: Use `[threat]-[layer]-[indicator]` format
 - **Max 2 Retries**: Don't loop forever on validation failures
 - **No Recommendations**: Generate rules; parent skill decides deployment

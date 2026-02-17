@@ -101,7 +101,7 @@ limacharlie sensor list --online --oid {oid} --output yaml
 limacharlie detection list --start {start} --end {end} --oid {oid} --output yaml
 
 # Rules
-limacharlie rule list --oid {oid} --output yaml
+limacharlie dr list --oid {oid} --output yaml
 ```
 
 **CRITICAL**: Make ALL CLI calls in a SINGLE message for parallel execution.
@@ -429,7 +429,7 @@ Use the `limacharlie` CLI directly for all operations:
 | `limacharlie sensor list --oid <oid> --output yaml` | All sensors |
 | `limacharlie sensor list --online --oid <oid> --output yaml` | Online SIDs |
 | `limacharlie detection list --start <ts> --end <ts> --oid <oid> --output yaml` | Detections |
-| `limacharlie rule list --oid <oid> --output yaml` | D&R rules |
+| `limacharlie dr list --oid <oid> --output yaml` | D&R rules |
 | `limacharlie output list --oid <oid> --output yaml` | Outputs |
 
 For large results, use `--filter JMESPATH` to select specific fields.

@@ -36,15 +36,15 @@ For command help and discovery: `limacharlie <command> --ai-help`
 | **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
 | **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
-| **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-*` + `limacharlie rule validate` |
+| **D&R Rules** | Write YAML manually | Use `limacharlie ai generate-*` + `limacharlie dr validate` |
 | **Timestamps** | Calculate epoch values | Use `date +%s` or `date -d '7 days ago' +%s` |
 | **OID** | Use org name | Use UUID (call `limacharlie org list` if needed) |
 
 ### D&R Rule Generation (NEVER write manually)
 
 ```
-WRONG: limacharlie rule create <name> --detect '{yaml you wrote}'
-RIGHT: limacharlie ai generate-detection → limacharlie ai generate-response → limacharlie rule validate → limacharlie rule create
+WRONG: limacharlie dr set --key <name> --input-file '{yaml you wrote}'
+RIGHT: limacharlie ai generate-detection → limacharlie ai generate-response → limacharlie dr validate → limacharlie dr set
 ```
 
 LCQL and D&R syntax are validated against organization-specific schemas. Manual syntax WILL fail.
@@ -101,7 +101,7 @@ limacharlie event types --platform windows --oid <oid> --output yaml
 
 For specific event types:
 ```bash
-limacharlie event schema NEW_PROCESS --oid <oid> --output yaml
+limacharlie event schema --event-type NEW_PROCESS --oid <oid> --output yaml
 ```
 
 ### 2.2 LCQL Exploration
@@ -121,7 +121,7 @@ limacharlie search run --query "<generated_query>" --start <ts> --end <ts> --oid
 
 Verify sensors have relevant data:
 ```bash
-limacharlie sensor data-range --sid <sensor-id> --start <epoch> --end <epoch> --oid <oid> --output yaml
+limacharlie event retention --sid <sensor-id> --start <epoch> --end <epoch> --oid <oid> --output yaml
 ```
 
 **Tip**: Use `lookup-lc-doc` skill to understand event types and field paths.
@@ -146,8 +146,17 @@ limacharlie ai generate-response --description "Report the detection with priori
 
 ### 3.3 Validate Before Testing
 
+Write the generated YAML to temp files, then validate:
+
 ```bash
-limacharlie rule validate --detect '<detection_from_step_1>' --respond '<response_from_step_2>' --oid <oid>
+# Write detect/respond YAML to temp files first
+cat > /tmp/detect.yaml << 'EOF'
+<detection_from_step_1>
+EOF
+cat > /tmp/respond.yaml << 'EOF'
+<response_from_step_2>
+EOF
+limacharlie dr validate --detect /tmp/detect.yaml --respond /tmp/respond.yaml --oid <oid>
 ```
 
 Present the generated rule to the user for initial review before testing.
@@ -180,10 +189,20 @@ This is the core iterative loop:
 
 ### 4.1 Unit Testing
 
-Test with crafted sample events:
+Test with crafted sample events. Write the rule and events to temp files first:
 
 ```bash
-limacharlie rule test --detect '<detection>' --respond '<response>' --events '[
+# Write rule file (detect + respond keys)
+cat > /tmp/rule.yaml << 'EOF'
+detect:
+  <detection>
+respond:
+  <response>
+EOF
+
+# Write test events
+cat > /tmp/events.json << 'EOF'
+[
   {
     "routing": {"event_type": "NEW_PROCESS"},
     "event": {
@@ -191,7 +210,10 @@ limacharlie rule test --detect '<detection>' --respond '<response>' --events '[
       "FILE_PATH": "C:\\Windows\\System32\\powershell.exe"
     }
   }
-]' --trace --oid <oid> --output yaml
+]
+EOF
+
+limacharlie dr test --input-file /tmp/rule.yaml --events /tmp/events.json --trace --oid <oid> --output yaml
 ```
 
 **Create test cases**:
@@ -202,14 +224,24 @@ Use `trace: true` to debug why rules match or don't match.
 
 ### 4.2 Historical Replay - Single Org
 
-Test against real historical data:
+Test against real historical data. The rule must be deployed first (use a temporary name), then replayed by name:
 
 ```bash
-# First, estimate volume with dry_run
-limacharlie rule replay --detect '<detection>' --last-seconds 3600 --dry-run --oid <oid> --output yaml
+# Deploy as a temporary rule
+limacharlie dr set --key temp-test-rule --input-file /tmp/rule.yaml --oid <oid>
 
-# Then run actual replay
-limacharlie rule replay --detect '<detection>' --respond '<response>' --last-seconds 3600 --selector 'plat == "windows"' --oid <oid> --output yaml
+# Calculate time range
+start=$(date -d '1 hour ago' +%s)
+end=$(date +%s)
+
+# Estimate volume first
+limacharlie dr replay --name temp-test-rule --start $start --end $end --dry-run --oid <oid> --output yaml
+
+# Run actual replay (optionally with selector or specific sensor)
+limacharlie dr replay --name temp-test-rule --start $start --end $end --selector 'plat == "windows"' --oid <oid> --output yaml
+
+# Clean up temporary rule after testing
+limacharlie dr delete --key temp-test-rule --oid <oid>
 ```
 
 ### 4.3 Historical Replay - Multi-Org (Parallel)
@@ -284,7 +316,15 @@ Examples:
 ### 5.2 Create the Rule
 
 ```bash
-limacharlie rule create apt-x-process-encoded-powershell --detect '<validated_detection>' --respond '<validated_response>' --oid <oid>
+# Write final rule to file
+cat > /tmp/rule.yaml << 'EOF'
+detect:
+  <validated_detection>
+respond:
+  <validated_response>
+EOF
+
+limacharlie dr set --key apt-x-process-encoded-powershell --input-file /tmp/rule.yaml --oid <oid>
 ```
 
 ---

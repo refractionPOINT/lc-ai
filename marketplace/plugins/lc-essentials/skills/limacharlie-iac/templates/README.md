@@ -38,9 +38,9 @@ This repository is designed to work with LimaCharlie's `ext-git-sync` extension.
 ### Manual Deployment
 
 ```bash
-limacharlie configs push \
+limacharlie sync push \
+  --config-file ./orgs/<oid>/index.yaml \
   --oid <oid> \
-  --config ./orgs/<oid>/index.yaml \
   --force \
   --hive-dr-general \
   --hive-fp \
