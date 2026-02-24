@@ -803,7 +803,7 @@ limacharlie api "api/v1/tickets/<ticket_id>/detections?oid={oid}" -X POST --inpu
 
 ### Adding Notes
 
-Use notes to document your investigation process:
+Use notes to document your investigation process. The `content` field supports **Markdown** formatting — use headers, lists, code blocks, and tables for readability.
 
 ```bash
 cat > /tmp/note.yaml << 'EOF'
@@ -932,7 +932,7 @@ Always confirm with user before finalizing:
 
 ### Finalize the Ticket
 
-After user confirmation, update the ticket with summary, conclusion, classification, and resolve it:
+After user confirmation, update the ticket with summary, conclusion, classification, and resolve it. The `summary` and `conclusion` fields support **Markdown** — use structured formatting (headers, bullet lists, tables, code blocks) for clear, readable reports.
 
 ```bash
 cat > /tmp/ticket-finalize.yaml << 'EOF'

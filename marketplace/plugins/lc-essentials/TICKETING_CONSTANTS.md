@@ -81,3 +81,7 @@ Used for entities, telemetry references, and artifacts.
 | `remediation` | Remediation steps taken or recommended |
 | `escalation` | Escalation rationale and context |
 | `handoff` | Shift handoff or analyst transition notes |
+
+## Markdown Support
+
+The `summary`, `conclusion`, and note `content` fields all support **Markdown** formatting. Use headers, bullet lists, tables, and code blocks for structured, readable reports.
