@@ -200,7 +200,19 @@ Most skills require:
 - **OID**: Organization ID (UUID) - get this via `limacharlie org list --output yaml`
 - **Additional parameters**: Sensor IDs, rule names, query parameters, etc.
 
-See [CALLING_API.md](./CALLING_API.md) for details on CLI usage patterns.
+## Important: API Authentication (JWT-based)
+
+LimaCharlie APIs use **JWT tokens**, not direct API keys. You cannot call the REST API by simply passing an API key as a header or query parameter.
+
+**How authentication works:**
+1. You have an **API key** consisting of an **OID + API key** (and optionally a **UID** if it's a User API key)
+2. These credentials must be exchanged for a **JWT** by calling `https://jwt.limacharlie.io`
+3. The JWT is then used as a `Bearer` token in the `Authorization` header for all REST API calls
+4. JWTs are short-lived and must be refreshed periodically
+
+**Do NOT attempt to call `api.limacharlie.io` directly with an API key.** It will not work.
+
+**The `limacharlie` CLI handles all of this automatically.** Always use the CLI (`limacharlie <noun> <verb> --oid <oid> --output yaml`) rather than crafting raw HTTP requests. The CLI manages JWT acquisition, refresh, and all authentication details transparently.
 
 ## Documentation Coverage
 
