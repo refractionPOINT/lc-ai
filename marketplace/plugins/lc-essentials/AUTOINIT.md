@@ -101,6 +101,13 @@ Example:
 
 LimaCharlie APIs use **JWT tokens**, not direct API keys. You cannot call the REST API by passing an API key as a header or query parameter. An API key (OID + API key, plus optional UID for User API keys) must first be exchanged for a JWT via `https://jwt.limacharlie.io`, which is then used as a `Bearer` token. **Do NOT attempt to call `api.limacharlie.io` directly with an API key** - it will not work. The `limacharlie` CLI handles JWT acquisition and refresh automatically.
 
+For raw REST calls, use `limacharlie api` (not `curl`):
+```bash
+limacharlie api orgs/{oid}/sensors --oid <oid> --output yaml
+limacharlie api orgs/{oid}/sensors -X POST -F hostname=test --oid <oid>
+```
+`{oid}` is replaced with the resolved org ID. Supports `-f` (string fields), `-F` (typed fields, `@file`), `--input <file>`, `--target` (`api`|`billing`|`jwt`|`stream`|`downloads`).
+
 ## Required Tool
 
 **ALWAYS use the `limacharlie` CLI via Bash** for all LimaCharlie API operations. Never call MCP tools directly.

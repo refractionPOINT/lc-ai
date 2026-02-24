@@ -214,6 +214,14 @@ LimaCharlie APIs use **JWT tokens**, not direct API keys. You cannot call the RE
 
 **The `limacharlie` CLI handles all of this automatically.** Always use the CLI (`limacharlie <noun> <verb> --oid <oid> --output yaml`) rather than crafting raw HTTP requests. The CLI manages JWT acquisition, refresh, and all authentication details transparently.
 
+**For raw REST API calls**, use `limacharlie api` instead of `curl`. It handles JWT auth automatically:
+```bash
+limacharlie api orgs/{oid}/sensors --oid <oid> --output yaml
+limacharlie api orgs/{oid}/sensors -X POST -F hostname=test --oid <oid>
+limacharlie api --target billing orgs/{oid}/status --oid <oid>
+```
+`{oid}` in the endpoint path is replaced with the resolved org ID. Supports `-f key=value` (string fields), `-F key=value` (typed fields with bool/int coercion and `@file` reads), `--input <file>` for raw bodies, and `--target` to select API host (`api`, `billing`, `jwt`, `stream`, `downloads`).
+
 ## Documentation Coverage
 
 - **Platform Documentation**: Complete LimaCharlie platform docs
