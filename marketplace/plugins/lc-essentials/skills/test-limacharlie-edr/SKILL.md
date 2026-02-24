@@ -282,4 +282,4 @@ limacharlie sensor delete <SENSOR_ID> --oid abc123-def456-...
 
 - `detection-engineering`: For creating D&R rules to test with the sensor
 - `sensor-health`: To check if your test sensor is reporting properly
-- `investigation-creation`: To investigate events from your test sensor
+- `ticket-investigation`: To investigate events from your test sensor

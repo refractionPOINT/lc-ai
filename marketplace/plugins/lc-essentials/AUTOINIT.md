@@ -104,7 +104,18 @@ For raw REST calls not covered by a specific CLI noun/verb, use `limacharlie api
 limacharlie api orgs/{oid}/sensors --oid <oid> --output yaml
 limacharlie api orgs/{oid}/sensors -X POST -F hostname=test --oid <oid>
 ```
-`{oid}` is replaced with the resolved org ID. Supports `-f` (string fields), `-F` (typed fields, `@file`), `--input <file>`, `--target` (`api`|`billing`|`jwt`|`stream`|`downloads`). The CLI handles all authentication automatically.
+`{oid}` is replaced with the resolved org ID. Supports `-f` (string fields), `-F` (typed fields, `@file`), `--input <file>`, `--target` (`api`|`billing`|`jwt`|`stream`|`downloads`|`ticketing`). The CLI handles all authentication automatically.
+
+### Ticketing API
+
+The Ticketing extension (`ext-ticketing`) has its own REST API. Use `--target ticketing`:
+```bash
+limacharlie api "api/v1/tickets?oids={oid}" --target ticketing --oid <oid> --output yaml
+limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" --target ticketing --oid <oid> --output yaml
+limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/update.yaml --target ticketing --oid <oid> --output yaml
+```
+
+The ticketing extension auto-creates tickets from detections. See the `ticket-investigation` skill for the full investigation workflow. OpenAPI spec: `https://ticketing.limacharlie.io/openapi`
 
 ## Required Tool
 

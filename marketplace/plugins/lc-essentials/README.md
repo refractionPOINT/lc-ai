@@ -200,27 +200,15 @@ Most skills require:
 - **OID**: Organization ID (UUID) - get this via `limacharlie org list --output yaml`
 - **Additional parameters**: Sensor IDs, rule names, query parameters, etc.
 
-## Important: API Authentication (JWT-based)
+## Raw REST API Calls
 
-LimaCharlie APIs use **JWT tokens**, not direct API keys. You cannot call the REST API by simply passing an API key as a header or query parameter.
-
-**How authentication works:**
-1. You have an **API key** consisting of an **OID + API key** (and optionally a **UID** if it's a User API key)
-2. These credentials must be exchanged for a **JWT** by calling `https://jwt.limacharlie.io`
-3. The JWT is then used as a `Bearer` token in the `Authorization` header for all REST API calls
-4. JWTs are short-lived and must be refreshed periodically
-
-**Do NOT attempt to call `api.limacharlie.io` directly with an API key.** It will not work.
-
-**The `limacharlie` CLI handles all of this automatically.** Always use the CLI (`limacharlie <noun> <verb> --oid <oid> --output yaml`) rather than crafting raw HTTP requests. The CLI manages JWT acquisition, refresh, and all authentication details transparently.
-
-**For raw REST API calls**, use `limacharlie api` instead of `curl`. It handles JWT auth automatically:
+For raw REST calls not covered by a specific CLI noun/verb, use `limacharlie api` (not `curl`):
 ```bash
 limacharlie api orgs/{oid}/sensors --oid <oid> --output yaml
 limacharlie api orgs/{oid}/sensors -X POST -F hostname=test --oid <oid>
 limacharlie api --target billing orgs/{oid}/status --oid <oid>
 ```
-`{oid}` in the endpoint path is replaced with the resolved org ID. Supports `-f key=value` (string fields), `-F key=value` (typed fields with bool/int coercion and `@file` reads), `--input <file>` for raw bodies, and `--target` to select API host (`api`, `billing`, `jwt`, `stream`, `downloads`).
+`{oid}` in the endpoint path is replaced with the resolved org ID. Supports `-f key=value` (string fields), `-F key=value` (typed fields with bool/int coercion and `@file` reads), `--input <file>` for raw bodies, and `--target` to select API host (`api`, `billing`, `jwt`, `stream`, `downloads`). The CLI handles all authentication automatically.
 
 ## Documentation Coverage
 

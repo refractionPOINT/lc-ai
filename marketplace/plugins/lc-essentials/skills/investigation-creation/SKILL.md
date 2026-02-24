@@ -1,6 +1,6 @@
 ---
-name: investigation-creation
-description: Create investigations from security events, detections, or LCQL queries. Performs HOLISTIC investigations - not just process trees, but initial access hunting, org-wide scope assessment, lateral movement detection, and full host context. Builds Investigation Hive records documenting findings with events, detections, entities, and analyst notes. Use for incident investigation, threat hunting, alert triage, or building SOC working reports.
+name: ticket-investigation
+description: Investigate security tickets from the LimaCharlie Ticketing extension. Performs HOLISTIC investigations - not just process trees, but initial access hunting, org-wide scope assessment, lateral movement detection, and full host context. Enriches tickets with telemetry references, entities/IOCs, analyst notes, and investigation summary/conclusion. Use for SOC triage, incident investigation, threat hunting, alert triage, or building SOC working reports. Supports ticket lifecycle management (acknowledge, classify, escalate, resolve).
 allowed-tools:
   - Task
   - Read
@@ -8,9 +8,11 @@ allowed-tools:
   - Skill
 ---
 
-# Investigation Creation - Holistic Investigation & Documentation
+# Ticket Investigation - SOC Triage & Holistic Investigation
 
-You are an expert SOC analyst. Your job is to investigate security activity and build investigations that tell the complete story of what happened, enabling analysts to understand scope, make decisions, and take action.
+You are an expert SOC analyst. Your job is to triage and investigate security tickets, telling the complete story of what happened, enabling analysts to understand scope, make decisions, and take action.
+
+Tickets in LimaCharlie are auto-created from detections by the Ticketing extension (`ext-ticketing`). Each detection becomes a ticket that must be acknowledged, investigated, classified (true positive or false positive), and resolved within SLA targets.
 
 **CRITICAL: Investigations must be HOLISTIC.** Don't just trace a process tree. Ask the bigger questions:
 - Where did this threat come from? (Initial access)
@@ -33,6 +35,20 @@ limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
 For command help and discovery: `limacharlie <command> --ai-help`
+
+### Ticketing API Access
+
+The Ticketing extension has its own REST API at `ticketing.limacharlie.io`. Use `limacharlie api` with `--target ticketing`:
+
+```bash
+limacharlie api "api/v1/tickets?oids={oid}" --target ticketing --oid <oid> --output yaml
+limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" --target ticketing --oid <oid> --output yaml
+limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/update.yaml --target ticketing --oid <oid> --output yaml
+```
+
+The `{oid}` placeholder in the URL path is auto-resolved to the org UUID. The CLI handles all JWT authentication automatically.
+
+If `--target ticketing` is not recognized, run `limacharlie api --ai-help` to discover supported targets.
 
 ### Critical Rules
 
@@ -130,7 +146,7 @@ query: "-2h | [sid] | NEW_PROCESS | ..."
 
 **For API calls** (`get_historic_events`, `get_historic_detections`):
 - Always calculate absolute timestamps based on event_time
-- Add buffer: typically ±1 hour around the event for context
+- Add buffer: typically +/-1 hour around the event for context
 
 ---
 
@@ -156,27 +172,131 @@ curl -sS "[resource_link_url]" | gunzip | jq '.'
 
 2. **Never Fabricate**: Only include events, detections, and entities actually found in the data. Every claim must be backed by evidence.
 
-3. **Document as You Go**: Record findings with clear relevance explanations. Add to the investigation continuously, not just at the end.
+3. **Document as You Go**: Add telemetry references, entities, and notes to the ticket incrementally during investigation - not just at the end.
 
-4. **Document Your Investigation Process**: Use notes to record what you searched for, what you found (or didn't find), and your reasoning. This creates an audit trail of the investigation itself, not just the results.
+4. **Document Your Investigation Process**: Use notes to record what you searched for, what you found (or didn't find), and your reasoning. This creates an audit trail of the investigation itself.
 
-5. **Be Inclusive with Events**: Add events to the investigation even if they turn out to be benign. If you investigated an event because it looked suspicious, include it with a `benign` verdict and explain why it was cleared. This documents the investigation scope and prevents re-investigation of the same events.
+5. **Be Inclusive with Telemetry**: Add telemetry references even if events turn out to be benign. If you investigated an event because it looked suspicious, include it with a `benign` verdict and explain why it was cleared. This prevents re-investigation.
 
 6. **Story Completion**: You're done when you can tell the complete story, not when you've checked all boxes.
 
-7. **User Confirmation**: Always present findings and get confirmation before saving the investigation.
+7. **User Confirmation**: Always present findings and get confirmation before finalizing the ticket (updating classification, summary, conclusion, and resolving).
 
 ---
 
-## CRITICAL: Comprehensive Event Collection
+## Ticket Lifecycle
 
-**The investigation record must include ALL relevant events discovered during investigation - not just the "key" ones.**
+Tickets follow a strict state machine:
 
-An investigation with only 2-3 events when you discovered 15+ is INCOMPLETE. Future analysts need the full picture.
+```
+new -> acknowledged -> in_progress -> resolved -> closed
+                    -> escalated   -> resolved -> closed
+                                   -> in_progress (de-escalate)
+resolved -> in_progress (reopen)
+Any non-terminal -> closed (skip to close)
+```
 
-### Mandatory Event Collection Checklist
+### Status Definitions
 
-Before saving an investigation, verify you have included:
+| Status | Description | SLA Impact |
+|--------|-------------|------------|
+| `new` | Auto-created from detection, not yet reviewed | Clock starts |
+| `acknowledged` | Analyst has seen the ticket | Records MTTA |
+| `in_progress` | Active investigation underway | - |
+| `escalated` | Escalated to senior analyst or team | - |
+| `resolved` | Investigation complete, findings documented | Records MTTR |
+| `closed` | Fully closed, terminal state | - |
+| `merged` | Merged into another ticket, terminal state | - |
+
+### Classification (set independently of status)
+
+| Classification | When to Use |
+|----------------|-------------|
+| `pending` | Default - not yet determined |
+| `true_positive` | Confirmed malicious or policy-violating activity |
+| `false_positive` | Benign activity incorrectly flagged |
+
+---
+
+## Required Information
+
+Before starting, gather from the user:
+
+- **Organization ID (OID)**: UUID of the target organization (use `limacharlie org list` if needed)
+- **Starting Point** (one of):
+  - **Ticket**: ticket_id (preferred - work directly with an existing ticket)
+  - **Detection**: detection_id (find the associated ticket)
+  - **Event**: atom + sid (sensor ID)
+  - **LCQL Query**: query string and/or results
+  - **IOC**: hash, IP, or domain to hunt for
+
+That's it. Everything else, you discover.
+
+---
+
+## Starting the Investigation
+
+### Step 1: Find or Identify the Ticket
+
+**From a Ticket ID** (most common):
+```bash
+limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" --target ticketing --oid <oid> --output yaml
+```
+
+**From the ticket queue** (list open tickets):
+```bash
+limacharlie api "api/v1/tickets?oids={oid}&status=new,acknowledged" --target ticketing --oid <oid> --output yaml
+```
+
+**From a Detection ID** (find associated ticket):
+```bash
+limacharlie api "api/v1/tickets?oids={oid}&search=<detection_cat>" --target ticketing --oid <oid> --output yaml
+```
+
+If no ticket exists for the activity being investigated, you can still investigate using LC telemetry and create findings - just document the results and help the user decide whether to create a ticket manually or link findings to an existing ticket.
+
+### Step 2: Acknowledge the Ticket
+
+If the ticket is in `new` status, acknowledge it to start the SLA clock:
+
+```bash
+cat > /tmp/ticket-update.yaml << 'EOF'
+status: acknowledged
+EOF
+limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/ticket-update.yaml --target ticketing --oid <oid> --output yaml
+```
+
+### Step 3: Move to In Progress
+
+Once you begin active investigation:
+
+```bash
+cat > /tmp/ticket-update.yaml << 'EOF'
+status: in_progress
+EOF
+limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/ticket-update.yaml --target ticketing --oid <oid> --output yaml
+```
+
+### Step 4: Get the Source Detection
+
+Extract the detection details from the ticket's `detection_id`:
+```bash
+limacharlie detection get <detection-id> --oid <oid> --output yaml
+```
+
+Extract the triggering event atom, sensor ID, and timestamps.
+
+---
+
+## CRITICAL: Comprehensive Telemetry Collection
+
+**The ticket must include ALL relevant telemetry references discovered during investigation - not just the "key" ones.**
+
+A ticket with only 2-3 telemetry references when you discovered 15+ events is INCOMPLETE. Future analysts need the full picture.
+
+### Mandatory Telemetry Collection Checklist
+
+Before finalizing a ticket, verify you have added:
 
 **From the initial/primary host:**
 - [ ] The triggering event (detection source)
@@ -196,76 +316,18 @@ Before saving an investigation, verify you have included:
 - [ ] Any unique activity not seen on other hosts
 
 **Detections:**
-- [ ] The triggering detection
-- [ ] All related detections on primary host (same attack chain)
+- [ ] The triggering detection (already linked at ticket creation)
+- [ ] Related detections on primary host (same attack chain)
 - [ ] Representative detections from each additional affected host
-- [ ] Different detection types (not just 60 identical C2 alerts - include a sample + note the count)
-
-### What Goes Wrong Without This
-
-When you only include 3 events from a 12-event attack chain:
-- Future analysts can't understand the full attack flow
-- Related events aren't linked to the investigation
-- Timeline reconstruction is impossible
-- The investigation appears incomplete and unprofessional
 
 ### Multi-Host Investigations
 
 **When IOC search reveals multiple affected hosts, you MUST:**
 
 1. **Get key events from EACH host** - not just the first one
-   - Query for malicious processes on each sensor
-   - Get the attack chain events from each
-
-2. **Tag events by host** - use tags like `host:hostname` to distinguish
-
-3. **Include sample C2/network events from each host** - shows the scope
-
-4. **Document the spread timeline** - when was each host compromised?
-
-### Example: What Complete Looks Like
-
-**Bad (incomplete):**
-```json
-{
-  "events": [
-    {"atom": "abc...", "relevance": "Malicious svchost.exe"},
-    {"atom": "def...", "relevance": "rundll32 beacon"}
-  ]
-}
-```
-
-**Good (comprehensive):**
-```json
-{
-  "events": [
-    {"atom": "abc...", "relevance": "MALICIOUS: Fake svchost.exe execution", "tags": ["host:desktop-001", "phase:execution"]},
-    {"atom": "def...", "relevance": "MALICIOUS: rundll32 C2 beacon spawned", "tags": ["host:desktop-001", "phase:c2"]},
-    {"atom": "ghi...", "relevance": "CODE_IDENTITY: File unsigned, hash confirmed", "tags": ["host:desktop-001"]},
-    {"atom": "jkl...", "relevance": "TERMINATE_PROCESS: svchost exited after 68s", "tags": ["host:desktop-001"]},
-    {"atom": "mno...", "relevance": "NETWORK_CONNECTIONS: C2 beacon to 1.2.3.4:80", "tags": ["host:desktop-001", "phase:c2"]},
-    {"atom": "pqr...", "relevance": "BENIGN: services.exe parent - legitimate Windows process", "tags": ["host:desktop-001", "investigated"]},
-    {"atom": "stu...", "relevance": "MALICIOUS: Fake svchost.exe on SECOND HOST", "tags": ["host:server-002", "phase:execution"]},
-    {"atom": "vwx...", "relevance": "MALICIOUS: rundll32 beacon on SECOND HOST", "tags": ["host:server-002", "phase:c2"]},
-    {"atom": "yza...", "relevance": "SUSPICIOUS: Inbound RDP - possible initial access", "tags": ["host:desktop-001", "phase:initial-access"]}
-  ]
-}
-```
-
----
-
-## Required Information
-
-Before starting, gather from the user:
-
-- **Organization ID (OID)**: UUID of the target organization (use `limacharlie org list` if needed)
-- **Starting Point** (one of):
-  - **Event**: atom + sid (sensor ID)
-  - **Detection**: detection_id
-  - **LCQL Query**: query string and/or results
-  - **IOC**: hash, IP, or domain to hunt for
-
-That's it. Everything else, you discover.
+2. **Include telemetry from each host** - shows the scope
+3. **Document the spread timeline** - when was each host compromised?
+4. **Consider merging related tickets** if multiple tickets exist for the same incident
 
 ---
 
@@ -282,19 +344,19 @@ Your investigation is complete when you can answer these questions:
 5. **Current State**: Is the threat contained or ongoing?
 6. **Evidence**: Is every claim backed by specific events?
 
-If you cannot answer a question, document it as an acknowledged unknown in the investigation.
+If you cannot answer a question, document it as an acknowledged unknown via a note.
 
 ### Required Elements
 
 A complete investigation includes:
 
-- **Attack chain** with timing markers (`timing:first-observed`, `timing:pivot-point`)
+- **Attack chain** documented in summary with timing
 - **All affected entities** with verdicts and provenance (how you discovered them)
-- **MITRE ATT&CK tags** where you can confidently identify techniques (recommended, not mandatory)
+- **MITRE ATT&CK references** where you can confidently identify techniques (recommended, not mandatory)
 - **Acknowledged unknowns** - what couldn't be determined and why
-- **Comprehensive event collection** - see the "Comprehensive Event Collection" section above
+- **Comprehensive telemetry collection** - see the checklist above
 
-### Event Count Sanity Check
+### Telemetry Count Sanity Check
 
 As you investigate, mentally track how many distinct events you've examined. A typical malware investigation might involve:
 - 2-5 process execution events (malware + children)
@@ -303,9 +365,7 @@ As you investigate, mentally track how many distinct events you've examined. A t
 - 5-20 network events (C2 beaconing, lateral movement checks)
 - Plus events from additional affected hosts
 
-**If your final investigation has fewer events than you examined, you're missing events.**
-
-For multi-host compromises, expect to multiply these numbers by the number of affected hosts (for key events, not all 60 C2 detections).
+**If your final ticket has fewer telemetry references than events you examined, you're missing evidence.**
 
 ---
 
@@ -316,7 +376,7 @@ For multi-host compromises, expect to multiply these numbers by the number of af
 Investigation is not linear. It's a loop you run until the story is complete.
 
 ```
-START with your initial event/detection/IOC
+START with your ticket/detection/event/IOC
     |
     v
 OBSERVE what you have
@@ -340,7 +400,7 @@ ASSESS what you learned
     - What new questions does this raise?
     |
     v
-DOCUMENT your finding (add to investigation)
+DOCUMENT your finding (add telemetry/entity/note to ticket)
     |
     v
 DECIDE: Is the story complete?
@@ -360,7 +420,7 @@ Each finding reveals new leads. Follow leads that advance the narrative.
 | File operation | Creator process, file hash reputation, other occurrences in environment |
 | User account | Other activity by same user, authentication events, accessed resources |
 | Host/Sensor | Other suspicious activity on same host, lateral movement indicators |
-| IOC (IP/domain/hash) | Org-wide search - where else has this appeared? |
+| IOC (IP/domain/hash) | Org-wide search - where else has this appeared? Cross-ticket entity search |
 
 ### When to Dig Deeper
 
@@ -496,6 +556,13 @@ limacharlie detection list --start <ts_seconds> --end <ts_seconds> --oid <oid> -
 limacharlie ioc search --type ip --value "203.0.113.50" --oid <oid> --output yaml
 ```
 
+### Cross-Ticket Entity Search
+
+Search for an IOC across all tickets in the org to find related incidents:
+```bash
+limacharlie api "api/v1/entities/search?entity_type=ip&entity_value=203.0.113.50&oids={oid}" --target ticketing --oid <oid> --output yaml
+```
+
 ---
 
 ## Holistic Investigation Phases
@@ -528,10 +595,10 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
    - "Find NETWORK_CONNECTIONS from browser processes on sensor [sid] before [timestamp]"
    - "Find DNS requests on sensor [sid] before [timestamp]"
 
-**What to Document**:
-- First malicious activity timestamp (timing:first-observed)
-- Delivery vector if identified (root-cause:phishing, root-cause:exploit, etc.)
-- Gap if initial access cannot be determined (document as acknowledged unknown)
+**What to Document** (add as notes and telemetry to the ticket):
+- First malicious activity timestamp
+- Delivery vector if identified
+- Gap if initial access cannot be determined (add as note)
 
 ### Phase 2: Host Context - What Else Was Happening?
 
@@ -561,12 +628,6 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
    - "Find FILE_CREATE events for archives (.zip, .rar, .7z) on sensor [sid]"
    - Unusual outbound data volumes
 
-**What to Document**:
-- Other suspicious activity on same host
-- Persistence mechanisms found
-- Evidence of credential theft
-- Any data access or staging
-
 ### Phase 3: Org-Wide Scope Assessment
 
 **The Question**: Is this happening on other systems? How widespread is the compromise?
@@ -587,23 +648,19 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
 
 3. **Search for the malware file path pattern org-wide**:
    - "Find NEW_PROCESS events with FILE_PATH containing [suspicious_path_pattern] across all sensors"
-   - Example: If malware was at C:\Windows\Temp\svchost.exe, search for svchost.exe in Temp across all sensors
 
 4. **Search for the same command-line patterns**:
    - "Find processes with similar command-line patterns across all sensors"
-   - Particularly for encoded PowerShell, unusual LOLBin arguments
 
 5. **Check for related detections org-wide**:
    ```bash
    limacharlie detection list --start $((timestamp_seconds - 86400)) --end $((timestamp_seconds + 3600)) --oid <oid> --output yaml
    ```
-   Filter results for same rule name or similar detection categories.
 
-**What to Document**:
-- List of all affected hosts
-- Timestamps of when each was compromised (if determinable)
-- Common IOCs across hosts
-- scope:single-host or scope:multi-host or scope:domain-wide
+6. **Cross-ticket entity search** for IOCs found during investigation:
+   ```bash
+   limacharlie api "api/v1/entities/search?entity_type=hash&entity_value=<hash>&oids={oid}" --target ticketing --oid <oid> --output yaml
+   ```
 
 ### Phase 4: Lateral Movement Analysis (MANDATORY)
 
@@ -634,12 +691,9 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
    - If this host was laterally accessed, find the source host
    - If this host laterally moved to others, identify all targets
 
-**What to Document** (REQUIRED - include in investigation even if negative):
-- Source of lateral movement (if not patient zero)
-- Systems this host laterally accessed
-- Techniques used for lateral movement
-- MITRE tags: phase:lateral-movement, mitre:T1021.002 (SMB), mitre:T1021.001 (RDP), etc.
-- **If no lateral movement found**: Document this explicitly as a `finding` note: "No evidence of lateral movement detected. Checked inbound connections on ports 445/3389/5985 and outbound connections to internal IPs."
+**What to Document** (REQUIRED - add to ticket even if negative):
+- Add note documenting lateral movement findings
+- **If no lateral movement found**: Add an `analysis` note: "No evidence of lateral movement detected. Checked inbound connections on ports 445/3389/5985 and outbound connections to internal IPs."
 
 ### Phase 5: Synthesize the Full Picture
 
@@ -655,80 +709,67 @@ After completing all phases, you should be able to answer:
 | **Lateral Movement** | Did it spread? To where? From where? | **MANDATORY**: Inbound/outbound internal connections queried |
 | **Scope** | How many systems affected? | Org-wide IOC search executed |
 | **Current State** | Is it contained or ongoing? | Recent activity checked |
-| **Unknowns** | What couldn't you determine? | Documented as `question` notes |
+| **Unknowns** | What couldn't you determine? | Documented as notes |
 
-If you cannot answer a question, document it explicitly as an unknown in your investigation notes using `type: "question"`.
+If you cannot answer a question, document it explicitly as a note on the ticket.
 
 ---
 
-## Documenting the Investigation
+## Documenting the Investigation (Ticket Enrichment)
 
-Build the investigation as you go. Don't wait until the end.
+Build the ticket evidence as you go. Don't wait until the end. Each API call adds evidence incrementally.
 
-### Document Your Investigation Process
+### Adding Telemetry References
 
-**Use notes liberally to document your investigation journey.** The investigation should tell the story of both:
-1. What happened (the attack/incident)
-2. How you investigated it (your process)
+For each event you investigated, add a telemetry reference to the ticket:
 
-**Add investigation notes for:**
-- Queries you ran and what they returned (or didn't return)
-- Hypotheses you formed and tested
-- Dead ends you encountered (e.g., "Searched for lateral movement on ports 445/3389/5985 - no connections found")
-- Tools or APIs that failed and how you worked around them
-- Reasoning for why you marked something benign vs suspicious
-
-**Example investigation notes:**
-```json
-{"type": "observation", "content": "Ran LCQL query for parent PID 2476 - no results found. Parent process may predate telemetry window."}
-{"type": "observation", "content": "Searched org-wide for C2 IP 35.232.8.38 using get_historic_detections - found second affected host desktop-c2a1841."}
-{"type": "finding", "content": "No lateral movement detected. Checked inbound/outbound connections on ports 445/3389/5985 between both affected hosts - no direct connections found."}
-{"type": "hypothesis", "content": "Both hosts may have been independently compromised via same phishing campaign rather than lateral spread."}
+```bash
+cat > /tmp/telemetry.yaml << 'EOF'
+atom: "<event-atom>"
+sid: "<sensor-id>"
+event_type: "NEW_PROCESS"
+event_summary: "<Brief description of what this event shows>"
+verdict: "malicious"
+relevance: "<Why this event matters to the investigation>"
+EOF
+limacharlie api "api/v1/tickets/<ticket_id>/telemetry?oid={oid}" -X POST --input /tmp/telemetry.yaml --target ticketing --oid <oid> --output yaml
 ```
 
-This documentation is valuable because:
-- Future analysts can understand what was already checked
-- It prevents duplicate investigation work
-- It explains gaps in findings (e.g., "couldn't find X because Y")
-- It provides accountability and audit trail
+**Be inclusive** - add telemetry if you investigated the event, regardless of verdict:
+- `malicious` - Confirmed threats
+- `suspicious` - Unusual but not definitively malicious
+- `benign` - Investigated and cleared (explain why in relevance)
+- `unknown` - Insufficient context to determine
+- `informational` - Context events that aid understanding
 
-### Event Records
-
-**Be inclusive** - add events to the investigation if you investigated them, regardless of verdict. Include:
-- Malicious events (confirmed threats)
-- Suspicious events (require further review)
-- Benign events that you investigated but cleared (explain why in relevance field)
-- Unknown events (insufficient context to determine)
-
-For each event you investigated:
-
-```json
-{
-  "atom": "[event-atom]",
-  "sid": "[sensor-id]",
-  "relevance": "[Why this event matters - be specific about what it reveals]",
-  "verdict": "[malicious|suspicious|benign|unknown]",
-  "tags": ["phase:[tactic]", "mitre:[technique-id]", "timing:[marker]"]
-}
+**Example benign telemetry:**
+```yaml
+atom: "abc123..."
+sid: "sensor-id"
+event_type: "NEW_PROCESS"
+event_summary: "svchost.exe spawned by services.exe (PID 684)"
+verdict: "benign"
+relevance: "Initially suspicious due to unusual parent. Cleared: Parent is services.exe, legitimate Windows service startup."
 ```
 
-### Entity Records
+### Adding Entities (IOCs)
 
 For each IOC or entity of interest:
 
-```json
-{
-  "type": "[ip|domain|hash|user|host|file_path|process]",
-  "value": "[entity_value]",
-  "first_seen": "[unix_epoch_ms]",
-  "last_seen": "[unix_epoch_ms]",
-  "context": "Provenance: [how discovered]. TI: [threat intel if available].",
-  "verdict": "[malicious|suspicious|benign|unknown]",
-  "related_events": ["[atom_refs]"]
-}
+```bash
+cat > /tmp/entity.yaml << 'EOF'
+entity_type: "ip"
+entity_value: "203.0.113.50"
+name: "Suspected C2 Server"
+verdict: "malicious"
+context: "Provenance: Discovered via outbound connections from compromised process. 60+ beacon connections observed."
+first_seen: "2025-01-20T14:30:00Z"
+last_seen: "2025-01-20T16:45:00Z"
+EOF
+limacharlie api "api/v1/tickets/<ticket_id>/entities?oid={oid}" -X POST --input /tmp/entity.yaml --target ticketing --oid <oid> --output yaml
 ```
 
-**Valid Entity Types (from investigation.schema.json)**
+**Valid Entity Types:**
 
 | Entity Type | How to Extract | Example |
 |-------------|----------------|---------|
@@ -736,12 +777,73 @@ For each IOC or entity of interest:
 | `domain` | DNS_REQUEST.DOMAIN_NAME | malware-c2.example.com |
 | `hash` | NEW_PROCESS.HASH, FILE_CREATE.HASH | d41d8cd98f00b204... |
 | `user` | Event USER field | DOMAIN\administrator |
-| `host` | Routing hostname | SERVER01 |
 | `email` | Email addresses from logs or alerts | attacker@malicious.com |
-| `file_path` | FILE_PATH, COMMAND_LINE paths | C:\Users\Public\payload.exe |
+| `file` | FILE_PATH, COMMAND_LINE paths | C:\Users\Public\payload.exe |
 | `process` | Process names from investigation | powershell.exe, certutil.exe |
 | `url` | Full URLs from web traffic or command lines | https://malware.com/payload.exe |
-| `other` | Anything else that doesn't fit above | Registry key, mutex name, etc. |
+| `registry` | Registry paths from persistence analysis | HKLM\Software\Microsoft\Windows\CurrentVersion\Run |
+| `other` | Anything else that doesn't fit above | Mutex name, pipe name, etc. |
+
+### Adding Detections
+
+Link additional detections discovered during investigation:
+
+```bash
+cat > /tmp/detection.yaml << 'EOF'
+detection_id: "<detection-id>"
+detection_cat: "Encoded PowerShell"
+detection_source: "general"
+detection_priority: 7
+sensor_id: "<sid>"
+hostname: "DESKTOP-001"
+EOF
+limacharlie api "api/v1/tickets/<ticket_id>/detections?oid={oid}" -X POST --input /tmp/detection.yaml --target ticketing --oid <oid> --output yaml
+```
+
+### Adding Notes
+
+Use notes to document your investigation process:
+
+```bash
+cat > /tmp/note.yaml << 'EOF'
+content: "Ran LCQL query for parent PID 2476 - no results found. Parent process may predate telemetry window."
+note_type: "analysis"
+EOF
+limacharlie api "api/v1/tickets/<ticket_id>/notes?oid={oid}" -X POST --input /tmp/note.yaml --target ticketing --oid <oid> --output yaml
+```
+
+**Valid Note Types:**
+
+| Type | When to Use | Example |
+|------|-------------|---------|
+| `general` | General observations and facts | "Process rundll32.exe spawned without arguments at 19:39:10" |
+| `analysis` | Investigation findings, hypotheses, conclusions | "Active C2 communication to 35.232.8.38 confirmed via 60+ connections" |
+| `remediation` | Remediation actions taken or recommended | "Isolated host via network isolation. Recommend password reset for compromised account." |
+| `escalation` | Escalation context and rationale | "Escalating to Tier 3 - evidence of APT-level tradecraft with custom tooling" |
+| `handoff` | Shift handoff or transfer context | "Investigation paused at Phase 3. Org-wide IOC search complete, lateral movement analysis pending." |
+
+**Invalid types will cause API errors.** Do NOT use types like "observation", "hypothesis", "finding", "conclusion", etc.
+
+**Best Practice Note Structure:**
+- **Investigation Process**: Use `analysis` notes to document queries, findings, and reasoning
+- **Attack Chain**: Document the full attack chain as an `analysis` note
+- **IOC Summary**: List all IOCs as an `analysis` note
+- **Recommendations**: Use `remediation` notes for recommended actions
+- **Unknowns**: Document investigation gaps as `analysis` notes
+- **Shift Handoff**: Use `handoff` notes when pausing investigation
+
+### Adding Artifacts
+
+Attach references to forensic artifacts (memory dumps, PCAPs, etc.):
+
+```bash
+cat > /tmp/artifact.yaml << 'EOF'
+artifact_type: "memory_dump"
+description: "Full memory dump of PID 4832 from DESKTOP-001"
+verdict: "malicious"
+EOF
+limacharlie api "api/v1/tickets/<ticket_id>/artifacts?oid={oid}" -X POST --input /tmp/artifact.yaml --target ticketing --oid <oid> --output yaml
+```
 
 ### Verdicts
 
@@ -751,126 +853,19 @@ For each IOC or entity of interest:
 | `suspicious` | Unusual but not definitively malicious, requires review |
 | `benign` | Known-good, cleared by investigation, legitimate activity |
 | `unknown` | Insufficient context, requires further analysis |
+| `informational` | Context-providing, neither good nor bad |
 
-**Important**: `benign` is a valuable verdict, not a reason to exclude an event. If you investigated something because it looked suspicious but determined it was legitimate, add it to the investigation with verdict `benign` and explain your reasoning in the `relevance` field. This documents what was checked and prevents future analysts from re-investigating the same activity.
+**Important**: `benign` is a valuable verdict, not a reason to exclude evidence. If you investigated something because it looked suspicious but determined it was legitimate, add it with verdict `benign` and explain your reasoning in `relevance` or `context`.
 
-**Example benign event:**
-```json
-{
-  "atom": "abc123...",
-  "sid": "sensor-id",
-  "relevance": "Initially suspicious: svchost.exe with unusual parent. Cleared: Parent is services.exe (PID 684), this is normal Windows service startup. Command line contains legitimate service flags.",
-  "verdict": "benign",
-  "tags": ["investigated", "cleared"]
-}
-```
+### MITRE ATT&CK References (Recommended)
 
-### Notes
+When you can confidently identify techniques, reference them in your analysis notes and entity context fields:
 
-Use notes to capture your reasoning. Notes have a **type** field that must be one of the valid enum values.
-
-```json
-{
-  "type": "[observation|hypothesis|finding|conclusion|action_item|question]",
-  "content": "[Your note content]",
-  "timestamp": "[unix_epoch_ms]",
-  "related_events": ["[optional atom refs]"],
-  "related_detections": ["[optional detection ids]"],
-  "resolved": false  // Only for action_item and question types
-}
-```
-
-**IMPORTANT: Timestamp for Notes**
-
-The `timestamp` field should be the **current time in milliseconds** (Unix epoch) when you create the note - NOT an event timestamp from the investigation. This records when the analyst made the observation/finding, creating an audit trail of the investigation process itself.
-
-To get the current timestamp in milliseconds, use: `date +%s%3N` (bash) or `Date.now()` (JavaScript).
-
-**IMPORTANT: Valid Note Types (from investigation.schema.json)**
-
-| Type | When to Use | Example |
-|------|-------------|---------|
-| `observation` | Raw facts observed during investigation | "Process rundll32.exe spawned without arguments at 19:39:10" |
-| `hypothesis` | Working theory to be tested | "Hypothesis: This may be Cobalt Strike based on the beaconing pattern" |
-| `finding` | Confirmed conclusion backed by evidence | "FINDING: Active C2 communication to 35.232.8.38 confirmed via 60+ network connections" |
-| `conclusion` | Final assessment of the investigation | "CONCLUSION: This is a true positive - active malware with C2 capability" |
-| `action_item` | Recommended next steps (can mark resolved=true when done) | "ACTION: Isolate host immediately to stop C2 communication" |
-| `question` | Unanswered questions (can mark resolved=true when answered) | "QUESTION: How was the malware initially delivered? No evidence of phishing or exploit found." |
-
-**Invalid types will cause API errors.** Do NOT use types like "recommendation", "summary", "ioc", etc.
-
-**Best Practice Note Structure**:
-- **Attack Chain Note**: Document the full attack chain as a `finding`
-- **IOC Summary**: List all IOCs as a `finding`
-- **Recommendations**: Use `action_item` type (NOT "recommendation")
-- **Unknowns**: Document gaps as `question` type
-
-### Attack Chain Note
-
-Document the attack chain when you've identified it:
-
-```
-ATTACK CHAIN: [Phase 1] -> [Phase 2] -> [Phase 3]
-Techniques: [T1566] -> [T1059.001] -> [T1547.001]
-Dwell Time: [first observed] to [last observed]
-```
-
-### MITRE ATT&CK Tagging (Recommended)
-
-When you can confidently identify techniques, apply tags:
-
-- **Phase tags**: `phase:initial-access`, `phase:execution`, `phase:persistence`, etc.
-- **Technique tags**: `mitre:T1566`, `mitre:T1059.001`, etc.
-- **Timing tags**: `timing:first-observed`, `timing:pivot-point`, `timing:detection-trigger`
-- **Confidence tags**: `confidence:high`, `confidence:medium`, `confidence:low`
+- **Phase identification**: "Initial access via phishing (T1566)"
+- **Technique chains**: "T1566 -> T1059.001 -> T1547.001"
+- **Timing**: "First observed 14:30 UTC, pivot point at 15:12 UTC"
 
 For MITRE reference, fetch from: `https://raw.githubusercontent.com/mitre-attack/attack-stix-data/master/enterprise-attack/enterprise-attack.json`
-
-See [Investigation Guide](https://github.com/refractionPOINT/documentation/blob/master/docs/limacharlie/doc/Getting_Started/Use_Cases/investigation-guide.md) for complete tag format reference.
-
----
-
-## Investigation Record Structure
-
-The complete investigation record:
-
-```json
-{
-  "name": "[investigation_name]",
-  "description": "Investigation starting from [starting_point_description]",
-  "status": "in_progress",
-  "priority": "[critical|high|medium|low|informational]",
-  "events": [...],
-  "detections": [
-    {
-      "detection_id": "[detection-id]",
-      "tags": ["phase:[tactic]", "mitre:[technique-id]"]
-    }
-  ],
-  "entities": [...],
-  "notes": [...],
-  "summary": "[executive summary - what happened, impact, current state]"
-}
-```
-
-### Priority Assignment
-
-| Priority | Indicators |
-|----------|------------|
-| `critical` | Active C2, ransomware, credential theft, ongoing exfiltration |
-| `high` | Malware drops, persistence mechanisms, lateral movement attempts |
-| `medium` | Unusual but not clearly malicious, potential false positives |
-| `low` | Minor anomalies, informational findings |
-| `informational` | Clean investigation, no threats found |
-
-### Investigation Naming
-
-If user doesn't provide a name, auto-generate:
-`[threat-indicator]-[hostname]-[date]`
-
-Examples:
-- `encoded-powershell-SERVER01-2024-01-20`
-- `c2-communication-WORKSTATION5-2024-01-20`
 
 ---
 
@@ -897,23 +892,23 @@ Summarize for the user:
 6. **Entities of interest**: IOCs discovered with verdicts
 7. **Confidence level**: How certain are you?
 8. **Gaps**: What couldn't you determine?
+9. **Classification recommendation**: True positive or false positive?
 
-### Pre-Save Verification Checklist
+### Pre-Finalize Verification Checklist
 
-**STOP - Before saving, verify your investigation is complete:**
+**STOP - Before finalizing the ticket, verify your investigation is complete:**
 
-**Event Coverage:**
-- [ ] Included ALL event types discovered (not just NEW_PROCESS - also CODE_IDENTITY, TERMINATE_PROCESS, NETWORK_CONNECTIONS, etc.)
-- [ ] Included events from ALL affected hosts (not just the first one)
-- [ ] Included parent/child process chain events
-- [ ] Included benign events that were investigated (with explanations)
-- [ ] Each event has a detailed `relevance` explanation
-- [ ] Events are tagged with `host:hostname` for multi-host investigations
+**Telemetry Coverage:**
+- [ ] Added ALL event types discovered (not just NEW_PROCESS - also CODE_IDENTITY, TERMINATE_PROCESS, NETWORK_CONNECTIONS, etc.)
+- [ ] Added telemetry from ALL affected hosts (not just the first one)
+- [ ] Added parent/child process chain events
+- [ ] Added benign events that were investigated (with explanations)
+- [ ] Each telemetry reference has a detailed `relevance` explanation
 
 **Detection Coverage:**
-- [ ] Included the triggering detection
-- [ ] Included related detections (different rule types, not 60 duplicates)
-- [ ] Included representative detections from each affected host
+- [ ] Triggering detection is linked (auto-linked at ticket creation)
+- [ ] Related detections linked (different rule types, not 60 duplicates)
+- [ ] Representative detections from each additional affected host
 
 **Entity/IOC Coverage:**
 - [ ] All file hashes (SHA256, MD5, SHA1 if available)
@@ -923,23 +918,108 @@ Summarize for the user:
 - [ ] File paths and process names
 
 **Count Check:**
-If you discovered 10+ events during investigation but only have 3 in the record, GO BACK and add the rest.
+If you discovered 10+ events during investigation but only have 3 telemetry references, GO BACK and add the rest.
 
 ### Get User Confirmation
 
-Always confirm with user before saving:
-1. Investigation name is acceptable
-2. Findings are complete
-3. Event/detection count looks reasonable for the incident scope
-4. Ready to save
+Always confirm with user before finalizing:
+1. Findings are complete
+2. Classification is correct (true_positive or false_positive)
+3. Summary and conclusion are accurate
+4. Telemetry/entity count looks reasonable for the incident scope
+5. Ready to resolve
 
-### Save Investigation
+### Finalize the Ticket
+
+After user confirmation, update the ticket with summary, conclusion, classification, and resolve it:
 
 ```bash
-cat > /tmp/investigation.yaml << 'EOF'
-<investigation_record>
+cat > /tmp/ticket-finalize.yaml << 'EOF'
+summary: "<What happened - the full attack narrative, scope, and impact>"
+conclusion: "<Final assessment - classification rationale, recommendations, remaining risks>"
+classification: "true_positive"
+status: "resolved"
 EOF
-limacharlie investigation create --name "<investigation_name>" --input-file /tmp/investigation.yaml --oid <oid> --output yaml
+limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/ticket-finalize.yaml --target ticketing --oid <oid> --output yaml
+```
+
+### Escalation (when needed)
+
+If the investigation reveals the ticket needs senior analyst attention:
+
+```bash
+cat > /tmp/ticket-escalate.yaml << 'EOF'
+status: "escalated"
+escalation_group: "tier-3-malware"
+EOF
+limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/ticket-escalate.yaml --target ticketing --oid <oid> --output yaml
+```
+
+Add an `escalation` note explaining why:
+```bash
+cat > /tmp/note.yaml << 'EOF'
+content: "Escalating: Evidence of APT-level tradecraft. Custom C2 implant with domain fronting. Requires malware reverse engineering."
+note_type: "escalation"
+EOF
+limacharlie api "api/v1/tickets/<ticket_id>/notes?oid={oid}" -X POST --input /tmp/note.yaml --target ticketing --oid <oid> --output yaml
+```
+
+### Merging Related Tickets
+
+When multiple tickets are part of the same incident (e.g., same malware across hosts):
+
+```bash
+cat > /tmp/merge.yaml << 'EOF'
+oid: "<oid>"
+target_ticket_id: "<primary_ticket_id>"
+source_ticket_ids: ["<ticket_2>", "<ticket_3>"]
+EOF
+limacharlie api "api/v1/tickets/merge" -X POST --input /tmp/merge.yaml --target ticketing --oid <oid> --output yaml
+```
+
+Source tickets transition to `merged` status. All detections move to the primary ticket.
+
+---
+
+## Ticket Queue Management
+
+### List Open Tickets
+
+```bash
+# All open tickets, most recent first
+limacharlie api "api/v1/tickets?oids={oid}&status=new,acknowledged,in_progress" --target ticketing --oid <oid> --output yaml
+
+# Critical/high severity only
+limacharlie api "api/v1/tickets?oids={oid}&status=new,acknowledged&severity=critical,high" --target ticketing --oid <oid> --output yaml
+
+# Assigned to a specific analyst
+limacharlie api "api/v1/tickets?oids={oid}&assignee=analyst@example.com" --target ticketing --oid <oid> --output yaml
+```
+
+### Dashboard (ticket counts)
+
+```bash
+limacharlie api "api/v1/dashboard/counts?oids={oid}" --target ticketing --oid <oid> --output yaml
+```
+
+### SOC Performance Report
+
+```bash
+limacharlie api "api/v1/reports/summary?oids={oid}&from=2025-01-01T00:00:00Z&to=2025-02-01T00:00:00Z" --target ticketing --oid <oid> --output yaml
+```
+
+### Bulk Operations
+
+Close multiple false positive tickets:
+```bash
+cat > /tmp/bulk.yaml << 'EOF'
+oid: "<oid>"
+ticket_ids: ["<id1>", "<id2>", "<id3>"]
+update:
+  status: "closed"
+  classification: "false_positive"
+EOF
+limacharlie api "api/v1/tickets/bulk-update" -X POST --input /tmp/bulk.yaml --target ticketing --oid <oid> --output yaml
 ```
 
 ---
@@ -952,19 +1032,20 @@ limacharlie investigation create --name "<investigation_name>" --input-file /tmp
 
 ## Reference
 
-- **Investigation Hive Documentation**: [Config Hive: Investigation](https://github.com/refractionPOINT/documentation/blob/master/docs/limacharlie/doc/Platform_Management/Config_Hive/config-hive-investigation.md)
-- **Investigation JSON Schema**: The authoritative schema defining valid fields, types, and enums is at `legion_config_hive/hives/schemas/investigation.schema.json`
-- **Investigation Guide**: [Investigation Best Practices](https://github.com/refractionPOINT/documentation/blob/master/docs/limacharlie/doc/Getting_Started/Use_Cases/investigation-guide.md)
-- Use `limacharlie investigation --ai-help` for CLI help
+- **Ticketing Extension Documentation**: [ext-ticketing](https://github.com/refractionPOINT/documentation/blob/master/docs/5-integrations/extensions/limacharlie/ticketing.md)
+- **OpenAPI Specification**: `https://ticketing.limacharlie.io/openapi`
+- Use `limacharlie api --ai-help` for CLI API command help
 
 ## Schema Quick Reference
 
-**Status values**: `new`, `in_progress`, `pending_review`, `escalated`, `closed_false_positive`, `closed_true_positive`
+**Ticket status values**: `new`, `acknowledged`, `in_progress`, `escalated`, `resolved`, `closed`, `merged`
 
-**Priority values**: `critical`, `high`, `medium`, `low`, `informational`
+**Classification values**: `pending`, `true_positive`, `false_positive`
 
-**Verdict values**: `unknown`, `benign`, `suspicious`, `malicious`
+**Severity values**: `critical`, `high`, `medium`, `low`
 
-**Entity types**: `ip`, `domain`, `hash`, `user`, `host`, `email`, `file_path`, `process`, `url`, `other`
+**Verdict values**: `malicious`, `suspicious`, `benign`, `unknown`, `informational`
 
-**Note types**: `observation`, `hypothesis`, `finding`, `conclusion`, `action_item`, `question`
+**Entity types**: `ip`, `domain`, `hash`, `url`, `user`, `email`, `file`, `process`, `registry`, `other`
+
+**Note types**: `general`, `analysis`, `remediation`, `escalation`, `handoff`

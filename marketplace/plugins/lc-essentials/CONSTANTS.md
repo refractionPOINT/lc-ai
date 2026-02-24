@@ -126,6 +126,10 @@ Example:
   Display: $253.42
 ```
 
+## Ticketing Extension (`ext-ticketing`)
+
+See [TICKETING_CONSTANTS.md](./TICKETING_CONSTANTS.md) for ticket status, severity, classification, entity types, verdicts, and note types.
+
 ## UUID Format
 
 Organization ID (OID) and Sensor ID (SID) must be UUID format:

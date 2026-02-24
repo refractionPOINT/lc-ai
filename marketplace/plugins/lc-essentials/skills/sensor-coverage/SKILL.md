@@ -1053,11 +1053,11 @@ Skill(skill="lc-essentials:sensor-health")
 Skill(skill="lc-essentials:reporting")
 ```
 
-### investigation-creation
+### ticket-investigation
 **Use when**: Investigating specific problematic sensors.
 
 ```
-Skill(skill="lc-essentials:investigation-creation")
+Skill(skill="lc-essentials:ticket-investigation")
 ```
 
 ### detection-engineering
