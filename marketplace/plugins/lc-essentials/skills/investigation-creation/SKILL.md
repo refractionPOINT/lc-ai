@@ -55,6 +55,7 @@ If `--target ticketing` is not recognized, run `limacharlie api --ai-help` to di
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
+| **`limacharlie api`** | Use for endpoints with a CLI noun (sensors, extensions, hive...) | Only for endpoints with NO CLI noun (e.g. ticketing) |
 | **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
 | **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |

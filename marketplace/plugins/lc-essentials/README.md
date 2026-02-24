@@ -200,15 +200,15 @@ Most skills require:
 - **OID**: Organization ID (UUID) - get this via `limacharlie org list --output yaml`
 - **Additional parameters**: Sensor IDs, rule names, query parameters, etc.
 
-## Raw REST API Calls
+## Raw REST API Calls (`limacharlie api`)
 
-For raw REST calls not covered by a specific CLI noun/verb, use `limacharlie api` (not `curl`):
+`limacharlie api` is an escape hatch for endpoints that have no dedicated CLI command. **Do NOT use it for operations that already have a CLI noun/verb** (e.g., use `limacharlie sensor list`, not `limacharlie api orgs/{oid}/sensors`). Always try `limacharlie <noun> --ai-help` first.
+
 ```bash
-limacharlie api orgs/{oid}/sensors --oid <oid> --output yaml
-limacharlie api orgs/{oid}/sensors -X POST -F hostname=test --oid <oid>
-limacharlie api --target billing orgs/{oid}/status --oid <oid>
+limacharlie api <endpoint> --oid <oid> --output yaml
+limacharlie api "api/v1/tickets?oids={oid}" --target ticketing --oid <oid> --output yaml
 ```
-`{oid}` in the endpoint path is replaced with the resolved org ID. Supports `-f key=value` (string fields), `-F key=value` (typed fields with bool/int coercion and `@file` reads), `--input <file>` for raw bodies, and `--target` to select API host (`api`, `billing`, `jwt`, `stream`, `downloads`). The CLI handles all authentication automatically.
+`{oid}` in the endpoint path is replaced with the resolved org ID. Supports `-f key=value` (string fields), `-F key=value` (typed fields with bool/int coercion and `@file` reads), `--input <file>` for raw bodies, and `--target` to select API host (`api`, `billing`, `jwt`, `stream`, `downloads`, `ticketing`). The CLI handles all authentication automatically.
 
 ## Documentation Coverage
 

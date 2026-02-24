@@ -97,18 +97,24 @@ Example:
   Display: $253.42
 ```
 
-## Raw REST API Calls
+## Raw REST API Calls (`limacharlie api`)
 
-For raw REST calls not covered by a specific CLI noun/verb, use `limacharlie api` (not `curl`):
+**`limacharlie api` is an escape hatch** for endpoints that have no dedicated CLI command. Do NOT use it for operations that already have a CLI noun/verb.
+
+- **WRONG**: `limacharlie api orgs/{oid}/sensors --oid <oid>` (use `limacharlie sensor list --oid <oid>`)
+- **WRONG**: `limacharlie api orgs/{oid}/extensions --oid <oid>` (use `limacharlie extension list --oid <oid>`)
+- **CORRECT**: `limacharlie api "api/v1/tickets?oids={oid}" --target ticketing --oid <oid>` (no CLI noun for ticketing)
+
+**Always try `limacharlie <noun> --ai-help` first.** Only fall back to `limacharlie api` when no CLI command exists.
+
 ```bash
-limacharlie api orgs/{oid}/sensors --oid <oid> --output yaml
-limacharlie api orgs/{oid}/sensors -X POST -F hostname=test --oid <oid>
+limacharlie api <endpoint> --oid <oid> --output yaml
 ```
-`{oid}` is replaced with the resolved org ID. Supports `-f` (string fields), `-F` (typed fields, `@file`), `--input <file>`, `--target` (`api`|`billing`|`jwt`|`stream`|`downloads`|`ticketing`). The CLI handles all authentication automatically.
+`{oid}` in the path is replaced with the resolved org ID. Supports `-f` (string fields), `-F` (typed fields, `@file`), `--input <file>`, `--target` (`api`|`billing`|`jwt`|`stream`|`downloads`|`ticketing`). The CLI handles all authentication automatically.
 
 ### Ticketing API
 
-The Ticketing extension (`ext-ticketing`) has its own REST API. Use `--target ticketing`:
+The Ticketing extension (`ext-ticketing`) has its own REST API with no dedicated CLI noun. Use `--target ticketing`:
 ```bash
 limacharlie api "api/v1/tickets?oids={oid}" --target ticketing --oid <oid> --output yaml
 limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" --target ticketing --oid <oid> --output yaml
