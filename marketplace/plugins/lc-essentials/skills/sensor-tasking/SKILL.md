@@ -352,8 +352,9 @@ User: "Run memory collection on all hosts tagged 'incident-response', I need the
 limacharlie ai generate-detection --description "Match events where investigation_id contains 'ir-memcollect-001'" --oid c7e8f940-... --output yaml
 limacharlie ai generate-response --description "Report to output 'siem' and add detection 'IR_MEMCOLLECT_RESPONSE'" --oid c7e8f940-... --output yaml
 # Write generated YAML to files, validate, then deploy:
-limacharlie dr validate --detection-file /tmp/detect.yaml --response-file /tmp/respond.yaml --oid c7e8f940-... --output yaml
-limacharlie dr set --key temp-ir-memcollect-handler --detection-file /tmp/detect.yaml --response-file /tmp/respond.yaml --oid c7e8f940-...
+limacharlie dr validate --detect /tmp/detect.yaml --respond /tmp/respond.yaml --oid c7e8f940-... --output yaml
+# Combine into single rule file with detect/respond keys, then set:
+limacharlie dr set --key temp-ir-memcollect-handler --input-file /tmp/ir-rule.yaml --oid c7e8f940-...
 
 # Step 2: Get sensors tagged 'incident-response'
 limacharlie sensor list --tag incident-response --oid c7e8f940-... --filter '[].sid' --output yaml
