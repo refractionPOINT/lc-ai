@@ -89,7 +89,7 @@ limacharlie org list --output yaml
 List all VQL artifacts available for collection (built-in and external from triage.velocidex.com):
 
 ```bash
-limacharlie extension request --extension ext-velociraptor --action list_artifacts --oid <oid> --output yaml
+limacharlie extension request --name ext-velociraptor --action list_artifacts --oid <oid> --output yaml
 ```
 
 ### Step 3: View Artifact Definition
@@ -97,10 +97,8 @@ limacharlie extension request --extension ext-velociraptor --action list_artifac
 Before collecting, view an artifact's YAML to understand its parameters:
 
 ```bash
-cat > /tmp/vr-show.yaml << 'EOF'
-artifact_name: Windows.System.Drivers
-EOF
-limacharlie extension request --extension ext-velociraptor --action show_artifact --input /tmp/vr-show.yaml --oid <oid> --output yaml
+limacharlie extension request --name ext-velociraptor --action show_artifact \
+  --data '{"artifact_name": "Windows.System.Drivers"}' --oid <oid> --output yaml
 ```
 
 ### Step 4: Launch a Collection
@@ -108,26 +106,17 @@ limacharlie extension request --extension ext-velociraptor --action show_artifac
 Collect from a single sensor:
 
 ```bash
-cat > /tmp/vr-collect.yaml << 'EOF'
-artifact_list:
-  - Windows.System.Drivers
-sid: <sensor-id>
-EOF
-limacharlie extension request --extension ext-velociraptor --action collect --input /tmp/vr-collect.yaml --oid <oid> --output yaml
+limacharlie extension request --name ext-velociraptor --action collect \
+  --data '{"artifact_list": ["Windows.System.Drivers"], "sid": "<sensor-id>"}' \
+  --oid <oid> --output yaml
 ```
 
 Collect from multiple sensors using a selector:
 
 ```bash
-cat > /tmp/vr-collect.yaml << 'EOF'
-artifact_list:
-  - Windows.KapeFiles.Targets
-sensor_selector: "plat == windows"
-args: "KapeTriage=Y"
-collection_ttl: 3600
-retention_ttl: 7
-EOF
-limacharlie extension request --extension ext-velociraptor --action collect --input /tmp/vr-collect.yaml --oid <oid> --output yaml
+limacharlie extension request --name ext-velociraptor --action collect \
+  --data '{"artifact_list": ["Windows.KapeFiles.Targets"], "sensor_selector": "plat == windows", "args": "KapeTriage=Y", "collection_ttl": 3600, "retention_ttl": 7}' \
+  --oid <oid> --output yaml
 ```
 
 ### Step 5: Find Collection Results (Raw Artifacts)

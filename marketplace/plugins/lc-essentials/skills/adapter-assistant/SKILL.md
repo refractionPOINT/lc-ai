@@ -248,10 +248,18 @@ Supported index types: `file_hash`, `file_path`, `file_name`, `domain`, `ip`, `u
 **Validate parsing rules before deployment:**
 
 ```bash
+# Write adapter config with mapping and sample data to a YAML file:
+cat > /tmp/usp-test.yaml << 'EOF'
+parsing_grok:
+  message: "%{TIMESTAMP_ISO8601:timestamp} %{WORD:action} ..."
+event_type_path: action
+event_time_path: timestamp
+sample_data:
+  - "2024-01-15T10:30:00Z LOGIN user@example.com"
+EOF
 limacharlie usp validate \
   --platform text \
-  --mapping '{"parsing_grok": {"message": "%{TIMESTAMP_ISO8601:timestamp} %{WORD:action} ..."}, "event_type_path": "action", "event_time_path": "timestamp"}' \
-  --input-file /tmp/sample-logs.txt \
+  --input-file /tmp/usp-test.yaml \
   --oid <oid> --output yaml
 ```
 
