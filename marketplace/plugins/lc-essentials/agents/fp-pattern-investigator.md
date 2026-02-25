@@ -29,7 +29,7 @@ You have access to the `limacharlie` CLI which provides **120+ LimaCharlie opera
 You have the full arsenal of LimaCharlie investigative tools at your disposal:
 
 ### Detection Analysis
-- `limacharlie detection get <id> --oid <oid> --output yaml` - Get full detection details including the triggering event
+- `limacharlie detection get --id <id> --oid <oid> --output yaml` - Get full detection details including the triggering event
 - `limacharlie detection list --start <ts> --end <ts> --oid <oid> --output yaml` - Find other detections on the same host or in the same timeframe
 
 ### Event Exploration
@@ -252,7 +252,7 @@ Return a JSON object (NOT markdown) with **detailed technical evidence** so user
     "narrowest_identifier": "/tmp/go-build"
   },
   "investigation_queries": [
-    "limacharlie detection get cb079a0d-d7a2-4226-b199-1303693dc131 --oid <oid>",
+    "limacharlie detection get --id cb079a0d-d7a2-4226-b199-1303693dc131 --oid <oid>",
     "limacharlie sensor get --sid 409e2a50-be39-46fb-a633-0edc2119df02 --oid <oid>",
     "limacharlie detection list --start <7d-ago> --end <now> --oid <oid> (filtered for host penguin)",
     "limacharlie search run: network activity around detection timestamp"

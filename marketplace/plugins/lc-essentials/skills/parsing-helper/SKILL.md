@@ -276,14 +276,17 @@ date -u +%s
 Use `validate_usp_mapping` to test the Grok pattern against sample data:
 
 ```bash
-limacharlie usp validate --oid <SELECTED_ORG_ID> --platform text --mapping '{
-  "parsing_grok": {
-    "message": "%{SYSLOGTIMESTAMP:date} %{HOSTNAME:host} %{WORD:service}\\[%{INT:pid}\\]: %{GREEDYDATA:msg}"
-  },
-  "event_type_path": "service",
-  "event_time_path": "date",
-  "sensor_hostname_path": "host"
-}' --text-input "<SAMPLE_LOG_LINES>" --output yaml
+# Write adapter config with mapping and sample data to a YAML file:
+cat > /tmp/usp-test.yaml << 'EOF'
+parsing_grok:
+  message: "%{SYSLOGTIMESTAMP:date} %{HOSTNAME:host} %{WORD:service}\\[%{INT:pid}\\]: %{GREEDYDATA:msg}"
+event_type_path: service
+event_time_path: date
+sensor_hostname_path: host
+sample_data:
+  - "<SAMPLE_LOG_LINES>"
+EOF
+limacharlie usp validate --oid <SELECTED_ORG_ID> --platform text --input-file /tmp/usp-test.yaml --output yaml
 ```
 
 > **Note**: The `mapping` object should have `parsing_grok`, `event_type_path`, `event_time_path`, and `sensor_hostname_path` at the same level - NOT nested under a `parsing` key.
