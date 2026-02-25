@@ -263,7 +263,7 @@ ps aux | grep "[l]c_sensor" || echo "Sensor stopped"
 
 3. Optionally, delete the sensor from LimaCharlie:
 ```bash
-limacharlie sensor delete <SENSOR_ID> --oid abc123-def456-...
+limacharlie sensor delete --sid <SENSOR_ID> --confirm --oid abc123-def456-...
 ```
 
 ## Additional Notes

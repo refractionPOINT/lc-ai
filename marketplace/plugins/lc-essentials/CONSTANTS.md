@@ -31,14 +31,24 @@ Platform codes are returned as `uint32` in sensor info responses.
 | Office365 | `office365` | 0xE0000000 | 3758096384 |
 | Sophos | `sophos` | 0xF0000000 | 4026531840 |
 | Crowdstrike | `crowdstrike` | 0x01000000 | 16777216 |
+| Xml | `xml` | 0x02000000 | 33554432 |
+| WEL | `wel` | 0x03000000 | 50331648 |
 | MS Defender | `msdefender` | 0x04000000 | 67108864 |
 | Duo | `duo` | 0x05000000 | 83886080 |
 | Okta | `okta` | 0x06000000 | 100663296 |
 | SentinelOne | `sentinel_one` | 0x07000000 | 117440512 |
 | GitHub | `github` | 0x08000000 | 134217728 |
 | Slack | `slack` | 0x09000000 | 150994944 |
+| CEF | `cef` | 0x0A000000 | 167772160 |
+| LCEvent | `lc_event` | 0x0B000000 | 184549376 |
 | Azure AD | `azure_ad` | 0x0C000000 | 201326592 |
 | Azure Monitor | `azure_monitor` | 0x0D000000 | 218103808 |
+| CanaryToken | `canary_token` | 0x0E000000 | 234881024 |
+| GuardDuty | `guard_duty` | 0x0F000000 | 251658240 |
+| ITGlue | `itglue` | 0x11000000 | 285212672 |
+| K8sPods | `k8s_pods` | 0x12000000 | 301989888 |
+| Zeek | `zeek` | 0x13000000 | 318767104 |
+| Mac Unified Logging | `mac_unified_logging` | 0x14000000 | 335544320 |
 
 ## Architecture Codes
 

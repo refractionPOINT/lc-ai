@@ -485,7 +485,9 @@ end=$(date +%s)
 ```
 
 ```bash
-limacharlie search run --query "event sid = '<sensor-id>'" --start $start --end $end --oid <org-id> --filter "[:10]" --output yaml
+# Generate LCQL query first - never write LCQL manually
+limacharlie ai generate-query --prompt "Find events from sensor <sensor-id> in the last 5 minutes, limit 10" --oid <org-id> --output yaml
+limacharlie search run --query "<generated-query>" --start $start --end $end --oid <org-id> --output yaml
 ```
 
 #### Cloud Adapter Verification
@@ -600,7 +602,7 @@ Generate a comprehensive Markdown report:
 ### Check Sensor Status
 ```bash
 # Using LimaCharlie CLI
-limacharlie sensor list --org [OID] --tag auto-onboarded
+limacharlie sensor list --oid [OID] --tag auto-onboarded --output yaml
 ```
 
 ### Troubleshooting

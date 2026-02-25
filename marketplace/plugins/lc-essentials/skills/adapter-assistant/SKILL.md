@@ -251,7 +251,7 @@ Supported index types: `file_hash`, `file_path`, `file_name`, `domain`, `ip`, `u
 limacharlie usp validate \
   --platform text \
   --mapping '{"parsing_grok": {"message": "%{TIMESTAMP_ISO8601:timestamp} %{WORD:action} ..."}, "event_type_path": "action", "event_time_path": "timestamp"}' \
-  --text-input "<sample-log-lines>" \
+  --input-file /tmp/sample-logs.txt \
   --oid <oid> --output yaml
 ```
 

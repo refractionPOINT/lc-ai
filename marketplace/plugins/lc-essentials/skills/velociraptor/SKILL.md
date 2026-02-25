@@ -89,7 +89,7 @@ limacharlie org list --output yaml
 List all VQL artifacts available for collection (built-in and external from triage.velocidex.com):
 
 ```bash
-limacharlie velociraptor list-artifacts --oid <oid> --output yaml
+limacharlie extension request --extension ext-velociraptor --action list_artifacts --oid <oid> --output yaml
 ```
 
 ### Step 3: View Artifact Definition
@@ -97,7 +97,10 @@ limacharlie velociraptor list-artifacts --oid <oid> --output yaml
 Before collecting, view an artifact's YAML to understand its parameters:
 
 ```bash
-limacharlie velociraptor show-artifact Windows.System.Drivers --oid <oid> --output yaml
+cat > /tmp/vr-show.yaml << 'EOF'
+artifact_name: Windows.System.Drivers
+EOF
+limacharlie extension request --extension ext-velociraptor --action show_artifact --input /tmp/vr-show.yaml --oid <oid> --output yaml
 ```
 
 ### Step 4: Launch a Collection
@@ -105,19 +108,26 @@ limacharlie velociraptor show-artifact Windows.System.Drivers --oid <oid> --outp
 Collect from a single sensor:
 
 ```bash
-limacharlie velociraptor collect --sid <sensor-id> --artifact Windows.System.Drivers --oid <oid> --output yaml
+cat > /tmp/vr-collect.yaml << 'EOF'
+artifact_list:
+  - Windows.System.Drivers
+sid: <sensor-id>
+EOF
+limacharlie extension request --extension ext-velociraptor --action collect --input /tmp/vr-collect.yaml --oid <oid> --output yaml
 ```
 
 Collect from multiple sensors using a selector:
 
 ```bash
-limacharlie velociraptor collect \
-  --selector "plat == windows" \
-  --artifact Windows.KapeFiles.Targets \
-  --args "KapeTriage=Y" \
-  --collection-ttl 3600 \
-  --retention-ttl 7 \
-  --oid <oid> --output yaml
+cat > /tmp/vr-collect.yaml << 'EOF'
+artifact_list:
+  - Windows.KapeFiles.Targets
+sensor_selector: "plat == windows"
+args: "KapeTriage=Y"
+collection_ttl: 3600
+retention_ttl: 7
+EOF
+limacharlie extension request --extension ext-velociraptor --action collect --input /tmp/vr-collect.yaml --oid <oid> --output yaml
 ```
 
 ### Step 5: Find Collection Results (Raw Artifacts)
@@ -131,7 +141,7 @@ limacharlie artifact list --type velociraptor --sid <sensor-id> --oid <oid> --ou
 Download an artifact:
 
 ```bash
-limacharlie artifact get <artifact-id> --url-only --oid <oid> --output yaml
+limacharlie artifact download --id <artifact-id> --oid <oid> --output yaml
 ```
 
 ### Step 6: Query Processed Events
@@ -276,4 +286,4 @@ date -d '7 days ago' +%s        # 7 days ago
 
 - [Velociraptor Extension Documentation](https://github.com/refractionPOINT/documentation/blob/master/docs/limacharlie/doc/Add-Ons/Extensions/Third-Party_Extensions/ext-velociraptor.md)
 - [Velociraptor to BigQuery Tutorial](https://github.com/refractionPOINT/documentation/blob/master/docs/limacharlie/doc/Add-Ons/Extensions/Tutorials/velociraptor-to-bigquery.md)
-- Use `limacharlie velociraptor --ai-help` for CLI help
+- Use `limacharlie extension request --ai-help` for CLI help

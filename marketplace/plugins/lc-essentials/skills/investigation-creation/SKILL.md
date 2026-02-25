@@ -282,7 +282,7 @@ limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/tic
 
 Extract the detection details from the ticket's `detection_id`:
 ```bash
-limacharlie detection get <detection-id> --oid <oid> --output yaml
+limacharlie detection get --id <detection-id> --oid <oid> --output yaml
 ```
 
 Extract the triggering event atom, sensor ID, and timestamps.
@@ -478,7 +478,7 @@ limacharlie event get --sid <sid> --atom <atom> --oid <oid> --output yaml
 
 **From a Detection**:
 ```bash
-limacharlie detection get <detection-id> --oid <oid> --output yaml
+limacharlie detection get --id <detection-id> --oid <oid> --output yaml
 ```
 Extract the triggering event atom, sensor ID, and timestamps.
 

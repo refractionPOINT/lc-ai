@@ -153,26 +153,26 @@ limacharlie sensor get --sid <sid> --oid <oid> --output yaml
 
 For immediate data collection from a small number of online sensors (up to 5), use direct tasking functions with parallel execution.
 
-**Available Direct Task Functions** (return response inline):
+**Available Direct Task Commands** (return response inline via `limacharlie task send --sid <sid> --task <command>`):
 
-| Function | Description | Common Use |
-|----------|-------------|------------|
-| `get_processes` | Running processes | Process investigation |
-| `get_process_modules` | Loaded modules | Malware analysis |
-| `get_network_connections` | Active connections | C2 hunting |
-| `get_os_version` | OS details | Asset inventory |
-| `get_users` | System users | Account enumeration |
-| `get_services` | Windows services | Persistence check |
-| `get_drivers` | Loaded drivers | Rootkit detection |
-| `get_autoruns` | Persistence mechanisms | Malware persistence |
-| `get_packages` | Installed packages | Software inventory |
-| `get_registry_keys` | Registry values | Config/persistence |
-| `dir_list` | Directory listing | File investigation |
+| Task Command | Description | Common Use |
+|--------------|-------------|------------|
+| `os_processes` | Running processes | Process investigation |
+| `os_kill_process` | Kill a process | Incident response |
+| `os_modules --pid [pid]` | Loaded modules | Malware analysis |
+| `netstat` | Active connections | C2 hunting |
+| `os_version` | OS details | Asset inventory |
+| `os_users` | System users | Account enumeration |
+| `os_services` | Windows services | Persistence check |
+| `os_drivers` | Loaded drivers | Rootkit detection |
+| `os_autoruns` | Persistence mechanisms | Malware persistence |
+| `os_packages` | Installed packages | Software inventory |
+| `reg_list [path]` | Registry values | Config/persistence |
+| `dir_list [path]` | Directory listing | File investigation |
 | `find_strings` | String search | Memory forensics |
-| `yara_scan_process` | YARA scan process | Malware detection |
-| `yara_scan_file` | YARA scan file | File analysis |
-| `yara_scan_directory` | YARA scan directory | Bulk scanning |
-| `yara_scan_memory` | YARA scan memory | Memory malware |
+| `yara_scan --pid [pid]` | YARA scan process | Malware detection |
+| `yara_scan --filePath [path]` | YARA scan file | File analysis |
+| `yara_scan --dirPath [path]` | YARA scan directory | Bulk scanning |
 
 **Example - Get processes from a sensor:**
 
@@ -193,14 +193,19 @@ For more than 5 sensors, offline sensors, or fleet-wide operations, use reliable
 **Create a reliable task:**
 
 ```bash
-limacharlie task reliable-send --task 'os_version' --selector 'plat==windows' --context 'fleet-inventory-2024-01' --ttl 86400 --oid <oid> --output yaml
+# reliable-send is per-sensor; first list matching sensors, then loop
+limacharlie sensor list --selector 'plat==windows' --oid <oid> --filter '[].sid' --output yaml
+
+for sid in <sid-list>; do
+  limacharlie task reliable-send --sid $sid --command 'os_version' --investigation-id 'fleet-inventory-2024-01' --ttl 86400 --oid <oid> --output yaml
+done
 ```
 
 **Key Parameters:**
-- `task`: The command to execute (e.g., `os_version`, `mem_map --pid 4`, `run --shell-command whoami`)
-- `selector`: Sensor selector expression (e.g., `plat==windows`, `production in tags`, `sid=='abc-123'`)
-- `context`: Identifier that appears in `routing/investigation_id` of responses (for collection)
-- `ttl`: Time-to-live in seconds (default: 604800 = 1 week)
+- `--sid`: Target sensor ID (reliable-send operates per-sensor)
+- `--command`: The command to execute (e.g., `os_version`, `mem_map --pid 4`, `run --shell-command whoami`)
+- `--investigation-id`: Identifier that appears in `routing/investigation_id` of responses (for collection)
+- `--ttl`: Time-to-live in seconds (default: 604800 = 1 week)
 
 **Available Task Commands:**
 
@@ -343,18 +348,12 @@ User: "Run memory collection on all hosts tagged 'incident-response', I need the
 
 ```bash
 # Step 1: Create D&R rule FIRST to forward responses to SIEM
-# Use AI generation for the rule, then deploy:
-cat > /tmp/ir-rule.yaml << 'EOF'
-detect:
-  op: contains
-  path: routing/investigation_id
-  value: ir-memcollect-001
-respond:
-  - action: report
-    name: IR_MEMCOLLECT_RESPONSE
-    to: siem
-EOF
-limacharlie dr set --key temp-ir-memcollect-handler --input-file /tmp/ir-rule.yaml --oid c7e8f940-...
+# Use AI generation for the detection and response, then deploy:
+limacharlie ai generate-detection --description "Match events where investigation_id contains 'ir-memcollect-001'" --oid c7e8f940-... --output yaml
+limacharlie ai generate-response --description "Report to output 'siem' and add detection 'IR_MEMCOLLECT_RESPONSE'" --oid c7e8f940-... --output yaml
+# Write generated YAML to files, validate, then deploy:
+limacharlie dr validate --detection-file /tmp/detect.yaml --response-file /tmp/respond.yaml --oid c7e8f940-... --output yaml
+limacharlie dr set --key temp-ir-memcollect-handler --detection-file /tmp/detect.yaml --response-file /tmp/respond.yaml --oid c7e8f940-...
 
 # Step 2: Get sensors tagged 'incident-response'
 limacharlie sensor list --tag incident-response --oid c7e8f940-... --filter '[].sid' --output yaml

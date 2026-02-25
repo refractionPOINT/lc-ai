@@ -348,7 +348,7 @@ Each agent collects:
 - `limacharlie task send --task os_packages` - Installed software inventory
 - `limacharlie task send --task os_services` - Running services
 - `limacharlie task send --task os_autoruns` - Persistence mechanisms
-- `limacharlie task send --task os_netstat` - Active connections
+- `limacharlie task send --task netstat` - Active connections
 
 ### Phase 5: Compliance Check (NEW)
 
@@ -364,7 +364,7 @@ Expected assets can come from:
 #### 5.2 Check for Expected Assets Lookup
 
 ```bash
-limacharlie lookup get expected_assets --oid <oid> --output yaml
+limacharlie lookup get --key expected_assets --oid <oid> --output yaml
 ```
 
 #### 5.3 Expected Assets Format
@@ -948,7 +948,7 @@ Remediation Steps:
 4. Verify sensor hasn't been resource-limited
 5. Consider sensor restart or reinstall
 6. Tag for tracking:
-   - limacharlie tag add {sid} silent-investigation --ttl 604800 --oid <oid>
+   - limacharlie tag add --sid {sid} --tag silent-investigation --ttl 604800 --oid <oid>
 ```
 
 ### Playbook: Missing Expected Asset (NEW)
@@ -977,9 +977,9 @@ Remediation Steps:
    - Verify sensor service status
    - Consider sensor reinstallation
 4. If decommissioned:
-   - Remove sensor: limacharlie sensor delete {sid} --oid <oid>
+   - Remove sensor: limacharlie sensor delete --sid {sid} --confirm --oid <oid>
 5. Tag for tracking:
-   - limacharlie tag add {sid} stale-30d-review --ttl 604800 --oid <oid>
+   - limacharlie tag add --sid {sid} --tag stale-30d-review --ttl 604800 --oid <oid>
 ```
 
 ### Playbook: New Asset Detected (Shadow IT)
@@ -992,10 +992,10 @@ Remediation Steps:
 2. Verify hostname matches naming convention
 3. Check installation key used
 4. If legitimate:
-   - Apply department tags: limacharlie tag add {sid} {dept} --oid <oid>
+   - Apply department tags: limacharlie tag add --sid {sid} --tag {dept} --oid <oid>
 5. If unauthorized:
    - Investigate device ownership
-   - Consider isolation: limacharlie endpoint-policy isolate {sid} --oid <oid>
+   - Consider isolation: limacharlie endpoint-policy isolate --sid {sid} --oid <oid>
 ```
 
 ### Playbook: Platform Degradation (Multi-Org)

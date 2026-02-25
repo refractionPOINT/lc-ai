@@ -1,6 +1,6 @@
 # LimaCharlie Essentials Plugin
 
-Essential LimaCharlie skills for CLI-based API access, sensor management, detection engineering, and security operations. Includes 124 comprehensive skills covering core operations, historical data, forensics, detection rules, threat intelligence analysis, MSSP multi-tenant reporting, configuration management, and administration.
+Essential LimaCharlie skills for CLI-based API access, sensor management, detection engineering, and security operations. Covers core operations, historical data, forensics, detection rules, threat intelligence analysis, MSSP multi-tenant reporting, configuration management, and administration.
 
 ## Important: Organization ID (OID) Requirements
 
@@ -17,7 +17,7 @@ This skill returns a mapping of organization names to their UUIDs, which you'll 
 
 **Exception - Skills that don't require a specific OID:**
 
-A small number of skills operate at the user-level or global level and **do not require a specific organization ID**. For these skills, **omit the `oid` parameter` when calling the API:
+A small number of skills operate at the user-level or global level and **do not require a specific organization ID**. For these skills, **omit the `oid` parameter** when calling the API:
 
 - **`list-user-orgs`** - Lists all organizations you have access to (user-level operation)
 - **`create-org`** - Creates a new organization (user-level operation)
@@ -47,7 +47,7 @@ Always verify the sensor type before attempting system-level queries. EDR sensor
 
 ## What It Does
 
-This plugin provides 124 comprehensive skills:
+This plugin provides comprehensive skills:
 
 ### Skills Organized by Category
 
@@ -219,8 +219,4 @@ limacharlie api "api/v1/tickets?oids={oid}" --target ticketing --oid <oid> --out
 
 ## Skills Summary
 
-See [SKILLS_SUMMARY.md](./SKILLS_SUMMARY.md) for a complete list of all 121 skills with descriptions.
-
-## API Calling Guide
-
-See [CALLING_API.md](./CALLING_API.md) for comprehensive documentation on making direct API calls to LimaCharlie.
+All skills are documented in individual `SKILL.md` files under the `skills/` directory.
