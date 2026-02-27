@@ -10,25 +10,27 @@ See [CONSTANTS.md](./CONSTANTS.md) for the authoritative source of all LimaCharl
 
 - **WRONG**: `limacharlie api orgs/{oid}/sensors --oid <oid>` (use `limacharlie sensor list --oid <oid>`)
 - **WRONG**: `limacharlie api orgs/{oid}/extensions --oid <oid>` (use `limacharlie extension list --oid <oid>`)
-- **CORRECT**: `limacharlie api "api/v1/tickets?oids={oid}" --target ticketing --oid <oid>` (no CLI noun for ticketing)
 
 **Always try `limacharlie <noun> --ai-help` first.** Only fall back to `limacharlie api` when no CLI command exists.
 
 ```bash
 limacharlie api <endpoint> --oid <oid> --output yaml
 ```
-`{oid}` in the path is replaced with the resolved org ID. Supports `-f` (string fields), `-F` (typed fields, `@file`), `--input <file>`, `--target` (`api`|`billing`|`jwt`|`stream`|`downloads`|`ticketing`). The CLI handles all authentication automatically.
+`{oid}` in the path is replaced with the resolved org ID. Supports `-f` (string fields), `-F` (typed fields, `@file`), `--input <file>`, `--target` (`api`|`billing`|`jwt`|`stream`|`downloads`). The CLI handles all authentication automatically.
 
-### Ticketing API
+### Ticketing CLI
 
-The Ticketing extension (`ext-ticketing`) has its own REST API with no dedicated CLI noun. Use `--target ticketing`:
+The Ticketing extension (`ext-ticketing`) has first-class CLI support via `limacharlie ticket`:
 ```bash
-limacharlie api "api/v1/tickets?oids={oid}" --target ticketing --oid <oid> --output yaml
-limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" --target ticketing --oid <oid> --output yaml
-limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/update.yaml --target ticketing --oid <oid> --output yaml
+limacharlie ticket list --oid <oid> --output yaml
+limacharlie ticket get --id <ticket_id> --oid <oid> --output yaml
+limacharlie ticket update --id <ticket_id> --status acknowledged --oid <oid> --output yaml
+limacharlie ticket add-note --id <ticket_id> --content "Note" --type analysis --oid <oid> --output yaml
+limacharlie ticket entity add --ticket <ticket_id> --type ip --value "10.0.0.1" --verdict malicious --oid <oid> --output yaml
+limacharlie ticket telemetry add --ticket <ticket_id> --atom <atom> --sid <sid> --event-type NEW_PROCESS --oid <oid> --output yaml
 ```
 
-The ticketing extension auto-creates tickets from detections. See the `ticket-investigation` skill for the full investigation workflow. OpenAPI spec: `https://ticketing.limacharlie.io/openapi`
+The ticketing extension auto-creates tickets from detections. Use `limacharlie ticket --ai-help` for full command reference. See the `ticket-investigation` skill for the full investigation workflow.
 
 ## Required Tool
 

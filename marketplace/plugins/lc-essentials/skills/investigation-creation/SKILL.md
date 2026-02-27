@@ -36,26 +36,25 @@ limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 
 For command help and discovery: `limacharlie <command> --ai-help`
 
-### Ticketing API Access
+### Ticketing CLI Commands
 
-The Ticketing extension has its own REST API at `ticketing.limacharlie.io`. Use `limacharlie api` with `--target ticketing`:
+The Ticketing extension has first-class CLI support via `limacharlie ticket`:
 
 ```bash
-limacharlie api "api/v1/tickets?oids={oid}" --target ticketing --oid <oid> --output yaml
-limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" --target ticketing --oid <oid> --output yaml
-limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/update.yaml --target ticketing --oid <oid> --output yaml
+limacharlie ticket list --oid <oid> --output yaml
+limacharlie ticket get --id <ticket_id> --oid <oid> --output yaml
+limacharlie ticket update --id <ticket_id> --status acknowledged --oid <oid> --output yaml
+limacharlie ticket add-note --id <ticket_id> --content "Note text" --type analysis --oid <oid> --output yaml
 ```
 
-The `{oid}` placeholder in the URL path is auto-resolved to the org UUID. The CLI handles all JWT authentication automatically.
-
-If `--target ticketing` is not recognized, run `limacharlie api --ai-help` to discover supported targets.
+Use `limacharlie ticket --ai-help` for full command discovery.
 
 ### Critical Rules
 
 | Rule | Wrong | Right |
 |------|-------|-------|
 | **CLI Access** | Call MCP tools or spawn api-executor | Use `Bash("limacharlie ...")` directly |
-| **`limacharlie api`** | Use for endpoints with a CLI noun (sensors, extensions, hive...) | Only for endpoints with NO CLI noun (e.g. ticketing) |
+| **`limacharlie api`** | Use for endpoints with a CLI noun (sensors, extensions, hive...) | Only for endpoints with NO CLI noun |
 | **Output Format** | `--output json` | `--output yaml` (more token-efficient) |
 | **Filter Output** | Pipe to jq/yq | Use `--filter JMESPATH` to select fields |
 | **LCQL Queries** | Write query syntax manually | Use `limacharlie ai generate-query` first |
@@ -241,17 +240,17 @@ That's it. Everything else, you discover.
 
 **From a Ticket ID** (most common):
 ```bash
-limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" --target ticketing --oid <oid> --output yaml
+limacharlie ticket get --id <ticket_id> --oid <oid> --output yaml
 ```
 
 **From the ticket queue** (list open tickets):
 ```bash
-limacharlie api "api/v1/tickets?oids={oid}&status=new,acknowledged" --target ticketing --oid <oid> --output yaml
+limacharlie ticket list --status new --status acknowledged --oid <oid> --output yaml
 ```
 
 **From a Detection ID** (find associated ticket):
 ```bash
-limacharlie api "api/v1/tickets?oids={oid}&search=<detection_cat>" --target ticketing --oid <oid> --output yaml
+limacharlie ticket list --search <detection_cat> --oid <oid> --output yaml
 ```
 
 If no ticket exists for the activity being investigated, you can still investigate using LC telemetry and create findings - just document the results and help the user decide whether to create a ticket manually or link findings to an existing ticket.
@@ -261,10 +260,7 @@ If no ticket exists for the activity being investigated, you can still investiga
 If the ticket is in `new` status, acknowledge it to start the SLA clock:
 
 ```bash
-cat > /tmp/ticket-update.yaml << 'EOF'
-status: acknowledged
-EOF
-limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/ticket-update.yaml --target ticketing --oid <oid> --output yaml
+limacharlie ticket update --id <ticket_id> --status acknowledged --oid <oid> --output yaml
 ```
 
 ### Step 3: Move to In Progress
@@ -272,10 +268,7 @@ limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/tic
 Once you begin active investigation:
 
 ```bash
-cat > /tmp/ticket-update.yaml << 'EOF'
-status: in_progress
-EOF
-limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/ticket-update.yaml --target ticketing --oid <oid> --output yaml
+limacharlie ticket update --id <ticket_id> --status in_progress --oid <oid> --output yaml
 ```
 
 ### Step 4: Get the Source Detection
@@ -561,7 +554,7 @@ limacharlie ioc search --type ip --value "203.0.113.50" --oid <oid> --output yam
 
 Search for an IOC across all tickets in the org to find related incidents:
 ```bash
-limacharlie api "api/v1/entities/search?entity_type=ip&entity_value=203.0.113.50&oids={oid}" --target ticketing --oid <oid> --output yaml
+limacharlie ticket entity search --type ip --value "203.0.113.50" --oid <oid> --output yaml
 ```
 
 ---
@@ -660,7 +653,7 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
 
 6. **Cross-ticket entity search** for IOCs found during investigation:
    ```bash
-   limacharlie api "api/v1/entities/search?entity_type=hash&entity_value=<hash>&oids={oid}" --target ticketing --oid <oid> --output yaml
+   limacharlie ticket entity search --type hash --value "<hash>" --oid <oid> --output yaml
    ```
 
 ### Phase 4: Lateral Movement Analysis (MANDATORY)
@@ -725,15 +718,13 @@ Build the ticket evidence as you go. Don't wait until the end. Each API call add
 For each event you investigated, add a telemetry reference to the ticket:
 
 ```bash
-cat > /tmp/telemetry.yaml << 'EOF'
-atom: "<event-atom>"
-sid: "<sensor-id>"
-event_type: "NEW_PROCESS"
-event_summary: "<Brief description of what this event shows>"
-verdict: "malicious"
-relevance: "<Why this event matters to the investigation>"
-EOF
-limacharlie api "api/v1/tickets/<ticket_id>/telemetry?oid={oid}" -X POST --input /tmp/telemetry.yaml --target ticketing --oid <oid> --output yaml
+limacharlie ticket telemetry add --ticket <ticket_id> \
+    --atom "<event-atom>" --sid "<sensor-id>" \
+    --event-type "NEW_PROCESS" \
+    --event-summary "Brief description of what this event shows" \
+    --verdict malicious \
+    --relevance "Why this event matters to the investigation" \
+    --oid <oid> --output yaml
 ```
 
 **Be inclusive** - add telemetry if you investigated the event, regardless of verdict:
@@ -744,13 +735,14 @@ limacharlie api "api/v1/tickets/<ticket_id>/telemetry?oid={oid}" -X POST --input
 - `informational` - Context events that aid understanding
 
 **Example benign telemetry:**
-```yaml
-atom: "abc123..."
-sid: "sensor-id"
-event_type: "NEW_PROCESS"
-event_summary: "svchost.exe spawned by services.exe (PID 684)"
-verdict: "benign"
-relevance: "Initially suspicious due to unusual parent. Cleared: Parent is services.exe, legitimate Windows service startup."
+```bash
+limacharlie ticket telemetry add --ticket <ticket_id> \
+    --atom "abc123..." --sid "sensor-id" \
+    --event-type "NEW_PROCESS" \
+    --event-summary "svchost.exe spawned by services.exe (PID 684)" \
+    --verdict benign \
+    --relevance "Initially suspicious due to unusual parent. Cleared: Parent is services.exe, legitimate Windows service startup." \
+    --oid <oid> --output yaml
 ```
 
 ### Adding Entities (IOCs)
@@ -758,16 +750,14 @@ relevance: "Initially suspicious due to unusual parent. Cleared: Parent is servi
 For each IOC or entity of interest:
 
 ```bash
-cat > /tmp/entity.yaml << 'EOF'
-entity_type: "ip"
-entity_value: "203.0.113.50"
-name: "Suspected C2 Server"
-verdict: "malicious"
-context: "Provenance: Discovered via outbound connections from compromised process. 60+ beacon connections observed."
-first_seen: "2025-01-20T14:30:00Z"
-last_seen: "2025-01-20T16:45:00Z"
-EOF
-limacharlie api "api/v1/tickets/<ticket_id>/entities?oid={oid}" -X POST --input /tmp/entity.yaml --target ticketing --oid <oid> --output yaml
+limacharlie ticket entity add --ticket <ticket_id> \
+    --type ip --value "203.0.113.50" \
+    --name "Suspected C2 Server" \
+    --verdict malicious \
+    --context "Provenance: Discovered via outbound connections from compromised process. 60+ beacon connections observed." \
+    --first-seen "2025-01-20T14:30:00Z" \
+    --last-seen "2025-01-20T16:45:00Z" \
+    --oid <oid> --output yaml
 ```
 
 **Valid Entity Types:**
@@ -790,27 +780,29 @@ limacharlie api "api/v1/tickets/<ticket_id>/entities?oid={oid}" -X POST --input 
 Link additional detections discovered during investigation:
 
 ```bash
-cat > /tmp/detection.yaml << 'EOF'
-detection_id: "<detection-id>"
-detection_cat: "Encoded PowerShell"
-detection_source: "general"
-detection_priority: 7
-sensor_id: "<sid>"
-hostname: "DESKTOP-001"
-EOF
-limacharlie api "api/v1/tickets/<ticket_id>/detections?oid={oid}" -X POST --input /tmp/detection.yaml --target ticketing --oid <oid> --output yaml
+limacharlie ticket detection add --ticket <ticket_id> \
+    --detection-id "<detection-id>" \
+    --detection-cat "Encoded PowerShell" \
+    --detection-source "general" \
+    --detection-priority 7 \
+    --sensor-id "<sid>" \
+    --hostname "DESKTOP-001" \
+    --oid <oid> --output yaml
 ```
 
 ### Adding Notes
 
-Use notes to document your investigation process. The `content` field supports **Markdown** formatting — use headers, lists, code blocks, and tables for readability.
+Use notes to document your investigation process. Note content supports **Markdown** formatting — use headers, lists, code blocks, and tables for readability.
 
 ```bash
-cat > /tmp/note.yaml << 'EOF'
-content: "Ran LCQL query for parent PID 2476 - no results found. Parent process may predate telemetry window."
-note_type: "analysis"
-EOF
-limacharlie api "api/v1/tickets/<ticket_id>/notes?oid={oid}" -X POST --input /tmp/note.yaml --target ticketing --oid <oid> --output yaml
+limacharlie ticket add-note --id <ticket_id> --type analysis \
+    --content "Ran LCQL query for parent PID 2476 - no results found. Parent process may predate telemetry window." \
+    --oid <oid> --output yaml
+```
+
+For long notes, use `--input-file` to read content from a file:
+```bash
+limacharlie ticket add-note --id <ticket_id> --type analysis --input-file /tmp/note.md --oid <oid> --output yaml
 ```
 
 **Valid Note Types:**
@@ -838,12 +830,11 @@ limacharlie api "api/v1/tickets/<ticket_id>/notes?oid={oid}" -X POST --input /tm
 Attach references to forensic artifacts (memory dumps, PCAPs, etc.):
 
 ```bash
-cat > /tmp/artifact.yaml << 'EOF'
-artifact_type: "memory_dump"
-description: "Full memory dump of PID 4832 from DESKTOP-001"
-verdict: "malicious"
-EOF
-limacharlie api "api/v1/tickets/<ticket_id>/artifacts?oid={oid}" -X POST --input /tmp/artifact.yaml --target ticketing --oid <oid> --output yaml
+limacharlie ticket artifact add --ticket <ticket_id> \
+    --type "memory_dump" \
+    --description "Full memory dump of PID 4832 from DESKTOP-001" \
+    --verdict malicious \
+    --oid <oid> --output yaml
 ```
 
 ### Verdicts
@@ -935,13 +926,12 @@ Always confirm with user before finalizing:
 After user confirmation, update the ticket with summary, conclusion, classification, and resolve it. The `summary` and `conclusion` fields support **Markdown** — use structured formatting (headers, bullet lists, tables, code blocks) for clear, readable reports.
 
 ```bash
-cat > /tmp/ticket-finalize.yaml << 'EOF'
-summary: "<What happened - the full attack narrative, scope, and impact>"
-conclusion: "<Final assessment - classification rationale, recommendations, remaining risks>"
-classification: "true_positive"
-status: "resolved"
-EOF
-limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/ticket-finalize.yaml --target ticketing --oid <oid> --output yaml
+limacharlie ticket update --id <ticket_id> \
+    --summary "What happened - the full attack narrative, scope, and impact" \
+    --conclusion "Final assessment - classification rationale, recommendations, remaining risks" \
+    --classification true_positive \
+    --status resolved \
+    --oid <oid> --output yaml
 ```
 
 ### Escalation (when needed)
@@ -949,20 +939,16 @@ limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/tic
 If the investigation reveals the ticket needs senior analyst attention:
 
 ```bash
-cat > /tmp/ticket-escalate.yaml << 'EOF'
-status: "escalated"
-escalation_group: "tier-3-malware"
-EOF
-limacharlie api "api/v1/tickets/<ticket_id>?oid={oid}" -X PATCH --input /tmp/ticket-escalate.yaml --target ticketing --oid <oid> --output yaml
+limacharlie ticket update --id <ticket_id> \
+    --status escalated --escalation-group "tier-3-malware" \
+    --oid <oid> --output yaml
 ```
 
 Add an `escalation` note explaining why:
 ```bash
-cat > /tmp/note.yaml << 'EOF'
-content: "Escalating: Evidence of APT-level tradecraft. Custom C2 implant with domain fronting. Requires malware reverse engineering."
-note_type: "escalation"
-EOF
-limacharlie api "api/v1/tickets/<ticket_id>/notes?oid={oid}" -X POST --input /tmp/note.yaml --target ticketing --oid <oid> --output yaml
+limacharlie ticket add-note --id <ticket_id> --type escalation \
+    --content "Escalating: Evidence of APT-level tradecraft. Custom C2 implant with domain fronting. Requires malware reverse engineering." \
+    --oid <oid> --output yaml
 ```
 
 ### Merging Related Tickets
@@ -970,12 +956,9 @@ limacharlie api "api/v1/tickets/<ticket_id>/notes?oid={oid}" -X POST --input /tm
 When multiple tickets are part of the same incident (e.g., same malware across hosts):
 
 ```bash
-cat > /tmp/merge.yaml << 'EOF'
-oid: "<oid>"
-target_ticket_id: "<primary_ticket_id>"
-source_ticket_ids: ["<ticket_2>", "<ticket_3>"]
-EOF
-limacharlie api "api/v1/tickets/merge" -X POST --input /tmp/merge.yaml --target ticketing --oid <oid> --output yaml
+limacharlie ticket merge --target <primary_ticket_id> \
+    --sources <ticket_2>,<ticket_3> \
+    --oid <oid> --output yaml
 ```
 
 Source tickets transition to `merged` status. All detections move to the primary ticket.
@@ -988,39 +971,34 @@ Source tickets transition to `merged` status. All detections move to the primary
 
 ```bash
 # All open tickets, most recent first
-limacharlie api "api/v1/tickets?oids={oid}&status=new,acknowledged,in_progress" --target ticketing --oid <oid> --output yaml
+limacharlie ticket list --status new --status acknowledged --status in_progress --oid <oid> --output yaml
 
 # Critical/high severity only
-limacharlie api "api/v1/tickets?oids={oid}&status=new,acknowledged&severity=critical,high" --target ticketing --oid <oid> --output yaml
+limacharlie ticket list --status new --status acknowledged --severity critical --severity high --oid <oid> --output yaml
 
 # Assigned to a specific analyst
-limacharlie api "api/v1/tickets?oids={oid}&assignee=analyst@example.com" --target ticketing --oid <oid> --output yaml
+limacharlie ticket list --assignee analyst@example.com --oid <oid> --output yaml
 ```
 
 ### Dashboard (ticket counts)
 
 ```bash
-limacharlie api "api/v1/dashboard/counts?oids={oid}" --target ticketing --oid <oid> --output yaml
+limacharlie ticket dashboard --oid <oid> --output yaml
 ```
 
 ### SOC Performance Report
 
 ```bash
-limacharlie api "api/v1/reports/summary?oids={oid}&from=2025-01-01T00:00:00Z&to=2025-02-01T00:00:00Z" --target ticketing --oid <oid> --output yaml
+limacharlie ticket report --from 2025-01-01T00:00:00Z --to 2025-02-01T00:00:00Z --oid <oid> --output yaml
 ```
 
 ### Bulk Operations
 
 Close multiple false positive tickets:
 ```bash
-cat > /tmp/bulk.yaml << 'EOF'
-oid: "<oid>"
-ticket_ids: ["<id1>", "<id2>", "<id3>"]
-update:
-  status: "closed"
-  classification: "false_positive"
-EOF
-limacharlie api "api/v1/tickets/bulk-update" -X POST --input /tmp/bulk.yaml --target ticketing --oid <oid> --output yaml
+limacharlie ticket bulk-update --ids <id1>,<id2>,<id3> \
+    --status closed --classification false_positive \
+    --oid <oid> --output yaml
 ```
 
 ---
@@ -1035,7 +1013,7 @@ limacharlie api "api/v1/tickets/bulk-update" -X POST --input /tmp/bulk.yaml --ta
 
 - **Ticketing Extension Documentation**: [ext-ticketing](https://github.com/refractionPOINT/documentation/blob/master/docs/5-integrations/extensions/limacharlie/ticketing.md)
 - **OpenAPI Specification**: `https://ticketing.limacharlie.io/openapi`
-- Use `limacharlie api --ai-help` for CLI API command help
+- Use `limacharlie ticket --ai-help` for ticketing CLI command help
 
 ## Schema Quick Reference
 
