@@ -38,14 +38,20 @@ The ticketing extension auto-creates tickets from detections. Use `limacharlie t
 
 ## CLI Bootstrap
 
-On first use, verify the CLI is available and authenticated:
+The `limacharlie` CLI is **automatically installed** on session start via the SessionStart hook.
+If auto-install fails (shown as a yellow warning), guide the user to install manually:
+```bash
+pipx install limacharlie   # preferred (isolated environment)
+uv tool install limacharlie # alternative (fast, isolated)
+pip install --user limacharlie # fallback
+```
 
-1. Check CLI installed: `limacharlie --version`
-2. Check auth: `limacharlie auth whoami --output yaml`
-3. If no auth: guide user through `limacharlie auth login`
-4. List orgs: `limacharlie org list --output yaml`
-5. Require user to specify target org(s)
-6. Check SOPs: `limacharlie sop list --oid <oid> --output yaml`
+On first use, verify authentication:
+1. Check auth: `limacharlie auth whoami --output yaml`
+2. If no auth: guide user through `limacharlie auth login`
+3. List orgs: `limacharlie org list --output yaml`
+4. Require user to specify target org(s)
+5. Check SOPs: `limacharlie sop list --oid <oid> --output yaml`
 
 ## Critical Rules
 

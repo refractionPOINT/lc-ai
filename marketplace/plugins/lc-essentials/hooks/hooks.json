@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"const{execFileSync:xf,execSync:xs}=require('child_process'),{existsSync:ex,appendFileSync:af}=require('fs'),{homedir:hd,platform:pf}=require('os'),{join:j,dirname:dn}=require('path'),w=pf()==='win32',h=hd(),ef=process.env.CLAUDE_ENV_FILE||'';function fb(n){try{return xf(w?'where':'which',[n],{encoding:'utf8',timeout:5e3}).trim().split('\\n')[0]}catch{}for(const d of[j(h,'.local','bin'),j(h,'.uv','bin'),...(w?[j(h,'AppData','Roaming','Python','Scripts')]:[])]) {const c=j(d,w?n+'.exe':n);if(ex(c))return c}return null}function gv(b){try{return xf(b,['--version'],{encoding:'utf8',timeout:5e3}).trim()}catch{return'unknown'}}function ti(){for(const m of[{t:'uv',c:'uv tool install limacharlie'},{t:'pipx',c:'pipx install limacharlie'},{t:'pip',c:'pip install --user limacharlie'},{t:'pip3',c:'pip3 install --user limacharlie'}]){if(!fb(m.t))continue;try{xs(m.c,{encoding:'utf8',timeout:12e4,stdio:'pipe'});const b=fb('limacharlie');if(b)return{method:m.t,bin:b}}catch{}}return null}function ep(bp){if(!ef||!bp)return;const d=dn(bp);if(!(process.env.PATH||'').split(w?';':':').includes(d))af(ef,'export PATH=\\\"'+d+':$PATH\\\"\\n')}function out(sm,ctx){process.stdout.write(JSON.stringify({hookSpecificOutput:{hookEventName:'SessionStart',additionalContext:ctx},...(sm?{systemMessage:sm}:{})}))}let b=fb('limacharlie');if(b){ep(b);out('','limacharlie CLI is available ('+gv(b)+').');process.exit(0)}const py=fb('python3')||fb('python');if(!py){out('\\x1b[33m[lc-essentials] Python 3 not found. Install Python 3.9+ then run: pip install limacharlie\\x1b[0m','ERROR: limacharlie CLI is NOT installed. Python 3 is not available. The user must install Python 3.9+ and then run pip install limacharlie.');process.exit(0)}const r=ti();if(r){ep(r.bin);out('\\x1b[32m[lc-essentials] Installed limacharlie CLI ('+gv(r.bin)+') via '+r.method+'\\x1b[0m','limacharlie CLI was auto-installed ('+gv(r.bin)+') via '+r.method+' and is ready to use.')}else{out('\\x1b[33m[lc-essentials] Could not auto-install limacharlie CLI. Run: pip install limacharlie\\x1b[0m','WARNING: limacharlie CLI is NOT installed. Auto-install failed. The user must run: pip install limacharlie OR pipx install limacharlie OR uv tool install limacharlie.')}process.exit(0)\"",
+            "timeout": 120,
+            "statusMessage": "Checking limacharlie CLI..."
+          }
+        ]
+      }
+    ]
+  }
+}
