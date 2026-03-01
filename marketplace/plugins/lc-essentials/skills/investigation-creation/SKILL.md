@@ -42,9 +42,9 @@ The Ticketing extension has first-class CLI support via `limacharlie ticket`:
 
 ```bash
 limacharlie ticket list --oid <oid> --output yaml
-limacharlie ticket get --id <ticket_id> --oid <oid> --output yaml
-limacharlie ticket update --id <ticket_id> --status acknowledged --oid <oid> --output yaml
-limacharlie ticket add-note --id <ticket_id> --content "Note text" --type analysis --oid <oid> --output yaml
+limacharlie ticket get --id <ticket_number> --oid <oid> --output yaml
+limacharlie ticket update --id <ticket_number> --status acknowledged --oid <oid> --output yaml
+limacharlie ticket add-note --id <ticket_number> --content "Note text" --type analysis --oid <oid> --output yaml
 ```
 
 Use `limacharlie ticket --ai-help` for full command discovery.
@@ -224,7 +224,7 @@ Before starting, gather from the user:
 
 - **Organization ID (OID)**: UUID of the target organization (use `limacharlie org list` if needed)
 - **Starting Point** (one of):
-  - **Ticket**: ticket_id (preferred - work directly with an existing ticket)
+  - **Ticket**: ticket_number (preferred - work directly with an existing ticket)
   - **Detection**: detection_id (find the associated ticket)
   - **Event**: atom + sid (sensor ID)
   - **LCQL Query**: query string and/or results
@@ -238,9 +238,9 @@ That's it. Everything else, you discover.
 
 ### Step 1: Find or Identify the Ticket
 
-**From a Ticket ID** (most common):
+**From a Ticket Number** (most common):
 ```bash
-limacharlie ticket get --id <ticket_id> --oid <oid> --output yaml
+limacharlie ticket get --id <ticket_number> --oid <oid> --output yaml
 ```
 
 **From the ticket queue** (list open tickets):
@@ -260,7 +260,7 @@ If no ticket exists for the activity being investigated, you can still investiga
 If the ticket is in `new` status, acknowledge it to start the SLA clock:
 
 ```bash
-limacharlie ticket update --id <ticket_id> --status acknowledged --oid <oid> --output yaml
+limacharlie ticket update --id <ticket_number> --status acknowledged --oid <oid> --output yaml
 ```
 
 ### Step 3: Move to In Progress
@@ -268,7 +268,7 @@ limacharlie ticket update --id <ticket_id> --status acknowledged --oid <oid> --o
 Once you begin active investigation:
 
 ```bash
-limacharlie ticket update --id <ticket_id> --status in_progress --oid <oid> --output yaml
+limacharlie ticket update --id <ticket_number> --status in_progress --oid <oid> --output yaml
 ```
 
 ### Step 4: Get the Source Detection
@@ -718,7 +718,7 @@ Build the ticket evidence as you go. Don't wait until the end. Each API call add
 For each event you investigated, add a telemetry reference to the ticket:
 
 ```bash
-limacharlie ticket telemetry add --ticket <ticket_id> \
+limacharlie ticket telemetry add --ticket <ticket_number> \
     --atom "<event-atom>" --sid "<sensor-id>" \
     --event-type "NEW_PROCESS" \
     --event-summary "Brief description of what this event shows" \
@@ -736,7 +736,7 @@ limacharlie ticket telemetry add --ticket <ticket_id> \
 
 **Example benign telemetry:**
 ```bash
-limacharlie ticket telemetry add --ticket <ticket_id> \
+limacharlie ticket telemetry add --ticket <ticket_number> \
     --atom "abc123..." --sid "sensor-id" \
     --event-type "NEW_PROCESS" \
     --event-summary "svchost.exe spawned by services.exe (PID 684)" \
@@ -750,7 +750,7 @@ limacharlie ticket telemetry add --ticket <ticket_id> \
 For each IOC or entity of interest:
 
 ```bash
-limacharlie ticket entity add --ticket <ticket_id> \
+limacharlie ticket entity add --ticket <ticket_number> \
     --type ip --value "203.0.113.50" \
     --name "Suspected C2 Server" \
     --verdict malicious \
@@ -780,7 +780,7 @@ limacharlie ticket entity add --ticket <ticket_id> \
 Link additional detections discovered during investigation:
 
 ```bash
-limacharlie ticket detection add --ticket <ticket_id> \
+limacharlie ticket detection add --ticket <ticket_number> \
     --detection-id "<detection-id>" \
     --detection-cat "Encoded PowerShell" \
     --detection-source "general" \
@@ -795,14 +795,14 @@ limacharlie ticket detection add --ticket <ticket_id> \
 Use notes to document your investigation process. Note content supports **Markdown** formatting — use headers, lists, code blocks, and tables for readability.
 
 ```bash
-limacharlie ticket add-note --id <ticket_id> --type analysis \
+limacharlie ticket add-note --id <ticket_number> --type analysis \
     --content "Ran LCQL query for parent PID 2476 - no results found. Parent process may predate telemetry window." \
     --oid <oid> --output yaml
 ```
 
 For long notes, use `--input-file` to read content from a file:
 ```bash
-limacharlie ticket add-note --id <ticket_id> --type analysis --input-file /tmp/note.md --oid <oid> --output yaml
+limacharlie ticket add-note --id <ticket_number> --type analysis --input-file /tmp/note.md --oid <oid> --output yaml
 ```
 
 **Valid Note Types:**
@@ -830,7 +830,7 @@ limacharlie ticket add-note --id <ticket_id> --type analysis --input-file /tmp/n
 Attach references to forensic artifacts (memory dumps, PCAPs, etc.):
 
 ```bash
-limacharlie ticket artifact add --ticket <ticket_id> \
+limacharlie ticket artifact add --ticket <ticket_number> \
     --type "memory_dump" \
     --description "Full memory dump of PID 4832 from DESKTOP-001" \
     --verdict malicious \
@@ -926,7 +926,7 @@ Always confirm with user before finalizing:
 After user confirmation, update the ticket with summary, conclusion, classification, and resolve it. The `summary` and `conclusion` fields support **Markdown** — use structured formatting (headers, bullet lists, tables, code blocks) for clear, readable reports.
 
 ```bash
-limacharlie ticket update --id <ticket_id> \
+limacharlie ticket update --id <ticket_number> \
     --summary "What happened - the full attack narrative, scope, and impact" \
     --conclusion "Final assessment - classification rationale, recommendations, remaining risks" \
     --classification true_positive \
@@ -939,14 +939,14 @@ limacharlie ticket update --id <ticket_id> \
 If the investigation reveals the ticket needs senior analyst attention:
 
 ```bash
-limacharlie ticket update --id <ticket_id> \
+limacharlie ticket update --id <ticket_number> \
     --status escalated --escalation-group "tier-3-malware" \
     --oid <oid> --output yaml
 ```
 
 Add an `escalation` note explaining why:
 ```bash
-limacharlie ticket add-note --id <ticket_id> --type escalation \
+limacharlie ticket add-note --id <ticket_number> --type escalation \
     --content "Escalating: Evidence of APT-level tradecraft. Custom C2 implant with domain fronting. Requires malware reverse engineering." \
     --oid <oid> --output yaml
 ```
@@ -956,8 +956,8 @@ limacharlie ticket add-note --id <ticket_id> --type escalation \
 When multiple tickets are part of the same incident (e.g., same malware across hosts):
 
 ```bash
-limacharlie ticket merge --target <primary_ticket_id> \
-    --sources <ticket_2>,<ticket_3> \
+limacharlie ticket merge --target <primary_ticket_number> \
+    --sources <ticket_number_2>,<ticket_number_3> \
     --oid <oid> --output yaml
 ```
 
@@ -997,17 +997,17 @@ limacharlie ticket report --from 2025-01-01T00:00:00Z --to 2025-02-01T00:00:00Z 
 Export all ticket data (metadata, detections, entities, telemetry, artifacts) as a single JSON object, or to a directory with the actual detection records, telemetry events, and artifact binaries:
 ```bash
 # JSON to stdout
-limacharlie ticket export --id <ticket_id> --oid <oid> --output yaml
+limacharlie ticket export --id <ticket_number> --oid <oid> --output yaml
 
 # Full data export to a directory
-limacharlie ticket export --id <ticket_id> --with-data ./ticket-export --oid <oid>
+limacharlie ticket export --id <ticket_number> --with-data ./ticket-export --oid <oid>
 ```
 
 ### Bulk Operations
 
 Close multiple false positive tickets:
 ```bash
-limacharlie ticket bulk-update --ids <id1>,<id2>,<id3> \
+limacharlie ticket bulk-update --numbers <num1>,<num2>,<num3> \
     --status closed --classification false_positive \
     --oid <oid> --output yaml
 ```

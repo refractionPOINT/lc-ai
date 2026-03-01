@@ -23,13 +23,13 @@ limacharlie api <endpoint> --oid <oid> --output yaml
 The Ticketing extension (`ext-ticketing`) has first-class CLI support via `limacharlie ticket`:
 ```bash
 limacharlie ticket list --oid <oid> --output yaml
-limacharlie ticket get --id <ticket_id> --oid <oid> --output yaml
-limacharlie ticket update --id <ticket_id> --status acknowledged --oid <oid> --output yaml
-limacharlie ticket add-note --id <ticket_id> --content "Note" --type analysis --oid <oid> --output yaml
-limacharlie ticket entity add --ticket <ticket_id> --type ip --value "10.0.0.1" --verdict malicious --oid <oid> --output yaml
-limacharlie ticket telemetry add --ticket <ticket_id> --atom <atom> --sid <sid> --event-type NEW_PROCESS --oid <oid> --output yaml
-limacharlie ticket export --id <ticket_id> --oid <oid> --output yaml
-limacharlie ticket export --id <ticket_id> --with-data ./ticket-export --oid <oid>
+limacharlie ticket get --id <ticket_number> --oid <oid> --output yaml
+limacharlie ticket update --id <ticket_number> --status acknowledged --oid <oid> --output yaml
+limacharlie ticket add-note --id <ticket_number> --content "Note" --type analysis --oid <oid> --output yaml
+limacharlie ticket entity add --ticket <ticket_number> --type ip --value "10.0.0.1" --verdict malicious --oid <oid> --output yaml
+limacharlie ticket telemetry add --ticket <ticket_number> --atom <atom> --sid <sid> --event-type NEW_PROCESS --oid <oid> --output yaml
+limacharlie ticket export --id <ticket_number> --oid <oid> --output yaml
+limacharlie ticket export --id <ticket_number> --with-data ./ticket-export --oid <oid>
 ```
 
 The ticketing extension auto-creates tickets from detections. Use `limacharlie ticket --ai-help` for full command reference. See the `ticket-investigation` skill for the full investigation workflow.

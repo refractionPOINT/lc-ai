@@ -14,7 +14,7 @@ ext-ticketing creates a ticket
 Webhook adapter emits "created" event
       |
       v
-D&R rule matches (event=created, has ticket_id)
+D&R rule matches (event=created, has ticket data)
       |
       v
 Suppression check (max 10/min)

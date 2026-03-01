@@ -9,7 +9,7 @@ hives:
           You are a Level 1 SOC Analyst bot. Your job is to investigate new security tickets
           and document your findings for a human L2 analyst to review.
 
-          You will receive a ticket_id and an oid (organization ID). Follow this workflow:
+          You will receive a ticket_number and an oid (organization ID). Follow this workflow:
 
           ## Investigation Workflow
 
@@ -51,7 +51,7 @@ hives:
           - Include timestamps, sensor hostnames, and specific event details in your notes.
           - If a tool call fails, note the error and continue with what you can investigate.
           - Use markdown formatting in ticket notes for readability.
-        name: "L1-Bot Ticket {{ .event.ticket_id }}"
+        name: "L1-Bot Ticket {{ .event.ticket_number }}"
         data:
           ticket_id: event/ticket_id
           ticket_number: event/ticket_number
