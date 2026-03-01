@@ -28,6 +28,8 @@ limacharlie ticket update --id <ticket_id> --status acknowledged --oid <oid> --o
 limacharlie ticket add-note --id <ticket_id> --content "Note" --type analysis --oid <oid> --output yaml
 limacharlie ticket entity add --ticket <ticket_id> --type ip --value "10.0.0.1" --verdict malicious --oid <oid> --output yaml
 limacharlie ticket telemetry add --ticket <ticket_id> --atom <atom> --sid <sid> --event-type NEW_PROCESS --oid <oid> --output yaml
+limacharlie ticket export --id <ticket_id> --oid <oid> --output yaml
+limacharlie ticket export --id <ticket_id> --with-data ./ticket-export --oid <oid>
 ```
 
 The ticketing extension auto-creates tickets from detections. Use `limacharlie ticket --ai-help` for full command reference. See the `ticket-investigation` skill for the full investigation workflow.

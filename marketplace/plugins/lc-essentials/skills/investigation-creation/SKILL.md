@@ -992,6 +992,17 @@ limacharlie ticket dashboard --oid <oid> --output yaml
 limacharlie ticket report --from 2025-01-01T00:00:00Z --to 2025-02-01T00:00:00Z --oid <oid> --output yaml
 ```
 
+### Export a Ticket
+
+Export all ticket data (metadata, detections, entities, telemetry, artifacts) as a single JSON object, or to a directory with the actual detection records, telemetry events, and artifact binaries:
+```bash
+# JSON to stdout
+limacharlie ticket export --id <ticket_id> --oid <oid> --output yaml
+
+# Full data export to a directory
+limacharlie ticket export --id <ticket_id> --with-data ./ticket-export --oid <oid>
+```
+
 ### Bulk Operations
 
 Close multiple false positive tickets:
