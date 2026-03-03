@@ -41,25 +41,103 @@ Session terminates (one_shot)
 - An Anthropic API key
 - A LimaCharlie API key with appropriate permissions
 
-## Setup
+## Installation
 
-1. **Edit secrets** - Replace the placeholder values in `hives/secret.yaml`:
-   - `REPLACE_WITH_YOUR_ANTHROPIC_API_KEY` with your Anthropic API key
-   - `REPLACE_WITH_YOUR_LIMACHARLIE_API_KEY` with your LimaCharlie API key
+### Option A: Using the lc-essentials Plugin (Recommended)
 
-2. **Apply the IaC files** using the LimaCharlie CLI:
-   ```bash
-   limacharlie sync push --oid <your-oid> --dir ./hives
-   ```
+If you have the [lc-essentials](../../marketplace/plugins/lc-essentials/) Claude Code plugin installed, simply ask:
 
-3. **Verify deployment**:
-   ```bash
-   # Check the AI agent definition
-   limacharlie hive get ai_agent l1-bot --oid <your-oid>
+> "Install the l1-bot agent in my org"
 
-   # Check the D&R rule
-   limacharlie dr get l1-bot-ticket-triage --oid <your-oid>
-   ```
+The plugin's `lc-agent-management` skill will handle subscribing to extensions, creating API keys, setting secrets, and pushing all hive configurations for you.
+
+### Option B: Manual Setup
+
+#### 1. Subscribe to Required Extensions
+
+```bash
+# Subscribe to the AI agent engine
+limacharlie extension subscribe --name ext-ai-agent-engine --oid <your-oid>
+
+# Subscribe to ticketing (if not already)
+limacharlie extension subscribe --name ext-ticketing --oid <your-oid>
+```
+
+Make sure `ext-ticketing` is also **configured** with your ticketing preferences (see [ext-ticketing docs](https://doc.limacharlie.io/docs/extensions/ext-ticketing)).
+
+#### 2. Create a LimaCharlie API Key
+
+Create a dedicated API key for the bot:
+
+```bash
+limacharlie api-key create \
+  --name "l1-bot-api-key" \
+  --permissions "sensor.list,sensor.get,sensor.task,dr.list,org.get,hive.get" \
+  --oid <your-oid> \
+  --output yaml
+```
+
+**Save the key value** - it is only shown once.
+
+#### 3. Set Secrets
+
+Store both API keys as secrets in LimaCharlie:
+
+```bash
+# Store the LimaCharlie API key
+limacharlie secret set --key lc-api-key --oid <your-oid> <<< '{"secret": "<your-lc-api-key>"}'
+
+# Store your Anthropic API key
+limacharlie secret set --key anthropic-key --oid <your-oid> <<< '{"secret": "<your-anthropic-api-key>"}'
+```
+
+#### 4. Push the Hive Configurations
+
+Deploy the AI agent definition and D&R rule (**do not push `secret.yaml`**, secrets were set in step 3):
+
+```bash
+limacharlie sync push --oid <your-oid> --dir ./hives --hive-ai-agent --hive-dr-general
+```
+
+#### 5. Verify Deployment
+
+```bash
+# Check the AI agent definition
+limacharlie hive get --hive-name ai_agent --key l1-bot --oid <your-oid> --output yaml
+
+# Check the D&R rule
+limacharlie hive list --hive-name dr-general --oid <your-oid> --output yaml
+
+# Check secrets exist
+limacharlie secret list --oid <your-oid> --output yaml
+
+# Check for errors
+limacharlie org errors --oid <your-oid> --output yaml
+```
+
+## Uninstalling
+
+### Option A: Using the lc-essentials Plugin
+
+> "Remove the l1-bot agent from my org"
+
+### Option B: Manual Removal
+
+```bash
+# Remove the D&R rule
+limacharlie hive delete --hive-name dr-general --key l1-bot-ticket-triage --confirm --oid <your-oid>
+
+# Remove the AI agent definition
+limacharlie hive delete --hive-name ai_agent --key l1-bot --confirm --oid <your-oid>
+
+# Optionally remove secrets (only if no other agents use them)
+limacharlie secret delete --key anthropic-key --confirm --oid <your-oid>
+limacharlie secret delete --key lc-api-key --confirm --oid <your-oid>
+
+# Optionally delete the API key
+limacharlie api-key list --oid <your-oid> --output yaml
+limacharlie api-key delete --key-hash <hash-of-l1-bot-api-key> --confirm --oid <your-oid>
+```
 
 ## Investigation Workflow
 
