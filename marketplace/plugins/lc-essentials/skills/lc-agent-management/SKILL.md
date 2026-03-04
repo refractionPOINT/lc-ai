@@ -93,7 +93,6 @@ limacharlie extension subscribe --name <extension-name> --oid <oid>
 ```
 
 Common extensions for agents:
-- `ext-ai-agent-engine` - Required for all AI agents
 - `ext-ticketing` - Required for ticket-based agents
 
 Check if already subscribed first:
@@ -264,7 +263,6 @@ Automated Level 1 SOC analyst that investigates new security tickets and documen
 
 ### Required Extensions
 - `ext-ticketing` - Must be subscribed AND configured
-- `ext-ai-agent-engine` - Must be subscribed
 
 ### Required Secrets
 | Secret Key | Description |

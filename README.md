@@ -122,13 +122,13 @@ See `marketplace/plugins/lc-essentials/SKILLS_SUMMARY.md` for a complete list of
 
 ## LimaCharlie Agents (lc-agents)
 
-The `lc-agents/` directory contains autonomous AI agents that run inside LimaCharlie organizations using the `ext-ai-agent-engine` extension. These are **not** Claude Code sub-agents — they are standalone AI agents deployed as LimaCharlie IaC.
+The `lc-agents/` directory contains autonomous AI agents that run inside LimaCharlie organizations. These are **not** Claude Code sub-agents — they are standalone AI agents deployed as LimaCharlie IaC.
 
 ### Available Agents
 
 | Agent | Description |
 |-------|-------------|
-| [l1-bot](lc-agents/l1-bot/) | Automated L1 SOC analyst that investigates new tickets and documents findings for L2 review |
+| [l1-bot](lc-agents/investigation/l1-bot/) | Automated L1 SOC analyst that investigates new tickets and documents findings for L2 review |
 
 ### Installing Agents
 
@@ -143,9 +143,10 @@ The `lc-agents/` directory contains autonomous AI agents that run inside LimaCha
 ├── .claude-plugin/              # Marketplace configuration
 │   └── marketplace.json         # Marketplace definition
 ├── lc-agents/                   # Autonomous AI agents (LimaCharlie IaC)
-│   └── l1-bot/                  # L1 SOC analyst bot
-│       ├── README.md            # Setup and usage docs
-│       └── hives/               # Hive YAML configs to deploy
+│   └── investigation/           # Investigation agents
+│       └── l1-bot/              # L1 SOC analyst bot
+│           ├── README.md        # Setup and usage docs
+│           └── hives/           # Hive YAML configs to deploy
 ├── marketplace/                 # Claude Code marketplace
 │   └── plugins/
 │       └── lc-essentials/       # Main LimaCharlie plugin
