@@ -58,7 +58,7 @@ hives:
           oid: routing/oid
           severity: event/metadata/severity
           detection_cat: event/metadata/detection_cat
-        model: claude-sonnet-4-20250514
+        model: opus
         max_turns: 30
         max_budget_usd: 2.0
         ttl_seconds: 600

@@ -288,7 +288,7 @@ When `ext-ticketing` creates a ticket, it emits a `created` event. The D&R rule 
 ### Configuration
 | Parameter | Value |
 |-----------|-------|
-| Model | `claude-sonnet-4-20250514` |
+| Model | `opus` |
 | Max turns | 30 |
 | Budget cap | $2.00 per investigation |
 | Timeout | 600 seconds |

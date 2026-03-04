@@ -63,7 +63,7 @@ When a new ticket is created, the bot:
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
-| `model` | `claude-sonnet-4-20250514` | Claude model used for investigation |
+| `model` | `opus` | Claude model used for investigation |
 | `max_turns` | `30` | Maximum CLI tool calls per investigation |
 | `max_budget_usd` | `2.0` | Cost cap per investigation session |
 | `ttl_seconds` | `600` | Hard timeout (10 minutes) |
