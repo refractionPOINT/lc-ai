@@ -45,6 +45,9 @@ limacharlie ticket list --oid <oid> --output yaml
 limacharlie ticket get --id <ticket_number> --oid <oid> --output yaml
 limacharlie ticket update --id <ticket_number> --status acknowledged --oid <oid> --output yaml
 limacharlie ticket add-note --id <ticket_number> --content "Note text" --type analysis --oid <oid> --output yaml
+limacharlie ticket tag set --id <ticket_number> --tag <tag> --oid <oid> --output yaml
+limacharlie ticket tag add --id <ticket_number> --tag <tag> --oid <oid> --output yaml
+limacharlie ticket tag remove --id <ticket_number> --tag <tag> --oid <oid> --output yaml
 ```
 
 Use `limacharlie ticket --ai-help` for full command discovery.
@@ -817,6 +820,21 @@ limacharlie ticket add-note --id <ticket_number> --type analysis --input-file /t
 
 **Invalid types will cause API errors.** Do NOT use types like "observation", "hypothesis", "finding", "conclusion", etc.
 
+### Adding Tags
+
+Use tags to classify the ticket type and organize workflow. Add tags as you learn more during the investigation.
+
+**When to tag:**
+
+- **After classifying the ticket type**: Add tags describing the threat category (e.g., `phishing`, `ransomware`, `credential-theft`, `lateral-movement`, `cryptominer`)
+- **For workflow organization**: Add tags indicating next steps or status (e.g., `needs-escalation`, `false-positive-candidate`, `awaiting-response`, `containment-complete`)
+
+```bash
+# Add classification tags after identifying the threat type
+limacharlie ticket tag add --id <ticket_number> --tag phishing --oid <oid> --output yaml
+limacharlie ticket tag add --id <ticket_number> --tag needs-escalation --oid <oid> --output yaml
+```
+
 **Best Practice Note Structure:**
 - **Investigation Process**: Use `analysis` notes to document queries, findings, and reasoning
 - **Attack Chain**: Document the full attack chain as an `analysis` note
@@ -1039,3 +1057,5 @@ limacharlie ticket bulk-update --numbers <num1>,<num2>,<num3> \
 **Entity types**: `ip`, `domain`, `hash`, `url`, `user`, `email`, `file`, `process`, `registry`, `other`
 
 **Note types**: `general`, `analysis`, `remediation`, `escalation`, `handoff`
+
+**Tag management**: `limacharlie ticket tag set/add/remove --id <number> --tag <tag> --oid <oid>`

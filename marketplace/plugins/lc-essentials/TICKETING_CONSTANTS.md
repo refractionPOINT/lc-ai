@@ -82,6 +82,20 @@ Used for entities, telemetry references, and artifacts.
 | `escalation` | Escalation rationale and context |
 | `handoff` | Shift handoff or analyst transition notes |
 
+## Tags
+
+Tickets support arbitrary string tags for custom categorization.
+
+| Constraint | Value |
+|-----------|-------|
+| Max tag length | 128 characters |
+| Max tags per ticket | 50 |
+| Case sensitivity | Case-preserved, case-insensitive dedup |
+| Allowed characters | Any printable character (no control chars) |
+
+Tags are managed via the `update` endpoint by replacing the full tag array.
+Filtering by tag is supported in the list endpoint with `--tag` flag.
+
 ## Markdown Support
 
 The `summary`, `conclusion`, and note `content` fields all support **Markdown** formatting. Use headers, bullet lists, tables, and code blocks for structured, readable reports.
