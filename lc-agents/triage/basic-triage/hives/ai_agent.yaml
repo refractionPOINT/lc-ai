@@ -86,10 +86,8 @@ hives:
           - Timestamps in detection data are in MILLISECONDS (13 digits). API parameters need SECONDS (10 digits) - divide by 1000.
         name: "Basic Triage - {{ .event.cat }}"
         data:
-          oid: routing.oid
-          sid: routing.sid
-          cat: event.cat
-          detect_id: event.detect_id
+          detect: detect
+          routing: routing
         model: sonnet
         max_turns: 30
         max_budget_usd: 0.50

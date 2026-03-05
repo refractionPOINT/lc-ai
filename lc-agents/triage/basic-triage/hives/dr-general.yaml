@@ -10,11 +10,6 @@ hives:
         respond:
           - action: start ai agent
             definition: hive://ai_agent/basic-triage
-            data:
-              oid: "{{ .routing.oid }}"
-              sid: "{{ .routing.sid }}"
-              cat: "{{ .cat }}"
-              detect_id: "{{ .detect_id }}"
             suppression:
               is_global: true
               keys:
