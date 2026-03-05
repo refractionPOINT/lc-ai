@@ -42,7 +42,14 @@ Session terminates (one_shot)
 
 - [ext-ticketing](https://doc.limacharlie.io/docs/extensions/ext-ticketing) extension subscribed and configured
 - An Anthropic API key
-- A LimaCharlie API key with appropriate permissions
+- A LimaCharlie API key with the following permissions:
+
+| Permission | Why |
+|-----------|-----|
+| `org.get` | Basic org context for CLI commands |
+| `insight.det.get` | List and read detections from the sensor |
+| `investigation.get` | List and read tickets |
+| `investigation.set` | Create tickets, update status, add notes, link detections |
 
 ## Installation
 

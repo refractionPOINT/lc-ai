@@ -38,7 +38,19 @@ Session terminates (one_shot)
 
 - [ext-ticketing](https://doc.limacharlie.io/docs/extensions/ext-ticketing) extension subscribed and configured
 - An Anthropic API key
-- A LimaCharlie API key with appropriate permissions
+- A LimaCharlie API key with the following permissions:
+
+| Permission | Why |
+|-----------|-----|
+| `org.get` | Basic org context for CLI commands |
+| `sensor.list` | List sensors in the organization |
+| `sensor.get` | Get detailed sensor information |
+| `sensor.task` | Task sensors for timeline, process trees, network data |
+| `dr.list` | List D&R rules to understand detection context |
+| `insight.det.get` | List and read detections |
+| `insight.evt.get` | Access event data for IOC searches and timeline queries |
+| `investigation.get` | List and read tickets |
+| `investigation.set` | Update tickets, add notes, entities, telemetry, classify |
 
 ## Installation
 
