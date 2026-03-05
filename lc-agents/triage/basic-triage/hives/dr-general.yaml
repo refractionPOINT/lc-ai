@@ -4,9 +4,9 @@ hives:
     basic-triage-on-detect:
       data:
         detect:
-          event: _detect
+          target: detection
           op: exists
-          path: event/detect
+          path: /
         respond:
           - action: start ai agent
             definition: hive://ai_agent/basic-triage
