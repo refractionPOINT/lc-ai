@@ -10,12 +10,6 @@ hives:
         respond:
           - action: start ai agent
             definition: hive://ai_agent/l1-bot
-            data:
-              oid: "{{ .routing.oid }}"
-              ticket_id: "{{ .event.ticket_id }}"
-              ticket_number: "{{ .event.ticket_number }}"
-              severity: "{{ .event.metadata.severity }}"
-              detection_cat: "{{ .event.metadata.detection_cat }}"
             suppression:
               is_global: true
               keys:

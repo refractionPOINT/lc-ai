@@ -53,11 +53,11 @@ hives:
           - Use markdown formatting in ticket notes for readability.
         name: "L1-Bot Ticket {{ .event.ticket_number }}"
         data:
-          ticket_id: event/ticket_id
-          ticket_number: event/ticket_number
-          oid: routing/oid
-          severity: event/metadata/severity
-          detection_cat: event/metadata/detection_cat
+          ticket_id: event.ticket_id
+          ticket_number: event.ticket_number
+          oid: routing.oid
+          severity: event.metadata.severity
+          detection_cat: event.metadata.detection_cat
         model: opus
         max_turns: 30
         max_budget_usd: 2.0
