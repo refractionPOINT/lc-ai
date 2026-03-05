@@ -91,7 +91,7 @@ hives:
           cat: event/cat
           detect_id: event/detect_id
         model: sonnet
-        max_turns: 15
+        max_turns: 30
         max_budget_usd: 0.50
         ttl_seconds: 300
         one_shot: true
