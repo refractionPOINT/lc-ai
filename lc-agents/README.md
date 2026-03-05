@@ -7,6 +7,7 @@ Autonomous AI agents that run inside LimaCharlie organizations. Each agent is de
 | Category | Description |
 |----------|-------------|
 | [investigation](investigation/) | Agents that investigate and triage security events |
+| [triage](triage/) | Agents that evaluate and route new detections |
 
 ## Structure
 

@@ -1,0 +1,22 @@
+version: 3
+hives:
+  dr-general:
+    basic-triage-on-detect:
+      data:
+        detect:
+          event: _detect
+          op: exists
+          path: event/detect
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/basic-triage
+            suppression:
+              is_global: true
+              keys:
+                - basic-triage-rate-limit
+              max_count: 20
+              period: 1m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags: []
