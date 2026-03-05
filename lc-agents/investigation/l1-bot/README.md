@@ -51,6 +51,7 @@ Session terminates (one_shot)
 | `insight.evt.get` | Access event data for IOC searches and timeline queries |
 | `investigation.get` | List and read tickets |
 | `investigation.set` | Update tickets, add notes, entities, telemetry, classify |
+| `ai_agent.operate` | Allow the agent to run AI agent sessions |
 
 ## Installation
 

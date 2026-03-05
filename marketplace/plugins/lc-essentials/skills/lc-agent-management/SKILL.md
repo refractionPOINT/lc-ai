@@ -111,7 +111,7 @@ Offer to create the API key for the user automatically:
 ```bash
 limacharlie api-key create \
   --name "<agent-name>-api-key" \
-  --permissions "sensor.list,sensor.get,sensor.task,dr.list,dr.set,org.get,hive.get" \
+  --permissions "sensor.list,sensor.get,sensor.task,dr.list,dr.set,org.get,hive.get,ai_agent.operate" \
   --oid <oid> \
   --output yaml
 ```
@@ -273,7 +273,7 @@ Automated Level 1 SOC analyst that investigates new security tickets and documen
 ### Recommended API Key Permissions
 For the `lc-api-key`, create with these permissions:
 ```
-sensor.list,sensor.get,sensor.task,dr.list,org.get,hive.get
+sensor.list,sensor.get,sensor.task,dr.list,org.get,hive.get,ai_agent.operate
 ```
 
 ### Hive Entries Created
