@@ -273,7 +273,7 @@ Automated Level 1 SOC analyst that investigates new security tickets and documen
 ### Recommended API Key Permissions
 For the `lc-api-key`, create with these permissions:
 ```
-sensor.list,sensor.get,sensor.task,dr.list,org.get,hive.get,ai_agent.operate
+org.get,sensor.list,sensor.get,sensor.task,dr.list,insight.det.get,insight.evt.get,investigation.get,investigation.set,ext.request,ai_agent.operate
 ```
 
 ### Hive Entries Created

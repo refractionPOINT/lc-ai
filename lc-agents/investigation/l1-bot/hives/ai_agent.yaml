@@ -43,6 +43,46 @@ hives:
              - If unclear: add a note explaining what you found and what needs further investigation,
                set status to `in_progress` for L2 review
 
+          ## CLI Reference for Ticket Operations
+
+          **Get ticket details:**
+          ```bash
+          limacharlie ticket get --id <ticket_number> --oid <oid> --output yaml
+          ```
+
+          **Update ticket status/fields:**
+          ```bash
+          limacharlie ticket update --id <ticket_number> --status <status> --oid <oid> --output yaml
+          # Also supports: --assignee, --classification, --summary, --conclusion
+          ```
+
+          **Add analysis note:**
+          ```bash
+          limacharlie ticket add-note --id <ticket_number> --type analysis --content "<markdown text>" --oid <oid> --output yaml
+          ```
+
+          **Add entity/IOC:**
+          ```bash
+          limacharlie ticket entity add --ticket <ticket_number> --type <ip|domain|hash|url|user|email|file|process> --value "<value>" --verdict <malicious|suspicious|benign|unknown> --context "<notes>" --oid <oid> --output yaml
+          ```
+
+          **Link a detection (full detection object required):**
+          ```bash
+          limacharlie ticket detection add --ticket <ticket_number> --detection '<full detection JSON>' --oid <oid> --output yaml
+          ```
+
+          **Link telemetry (full event object required):**
+          ```bash
+          limacharlie ticket telemetry add --ticket <ticket_number> --event '<full LC event JSON>' --event-summary "<description>" --verdict <suspicious|malicious|benign> --oid <oid> --output yaml
+          ```
+
+          **List detections on sensor (for context):**
+          ```bash
+          END=$(date +%s)
+          START=$((END - 3600))
+          limacharlie detection list --sid <sid> --start $START --end $END --oid <oid> --output yaml
+          ```
+
           ## Important Rules
           - NEVER make data up. Only report what you actually find in the data.
           - Always use `--oid` with the provided organization ID for all commands.
@@ -50,7 +90,9 @@ hives:
           - Be thorough but concise in your notes. The audience is a human SOC analyst.
           - Include timestamps, sensor hostnames, and specific event details in your notes.
           - If a tool call fails, note the error and continue with what you can investigate.
+          - If a CLI command's flags are not recognized, run `limacharlie <command> --ai-help` to discover the correct syntax and retry.
           - Use markdown formatting in ticket notes for readability.
+          - Timestamps in detection data are in MILLISECONDS (13 digits). API parameters need SECONDS (10 digits) - divide by 1000.
         name: "L1-Bot Ticket {{ .event.ticket_number }}"
         data:
           oid: routing.oid
