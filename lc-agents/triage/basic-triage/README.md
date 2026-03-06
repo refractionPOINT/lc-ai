@@ -50,6 +50,7 @@ Session terminates (one_shot)
 | `insight.det.get` | List and read detections from the sensor |
 | `investigation.get` | List and read tickets |
 | `investigation.set` | Create tickets, update status, add notes, link detections |
+| `ext.request` | Invoke the ext-ticketing extension to create/update tickets |
 | `ai_agent.operate` | Allow the agent to run AI agent sessions |
 
 ## Installation

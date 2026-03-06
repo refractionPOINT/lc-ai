@@ -14,12 +14,5 @@
   "enabledPlugins": {
     "lc-essentials@lc-marketplace": true
   },
-  "extraKnownMarketplaces": {
-    "lc-marketplace": {
-      "source": {
-        "source": "directory",
-        "path": "marketplace/"
-      }
-    }
-  }
+  "extraKnownMarketplaces": {}
 }

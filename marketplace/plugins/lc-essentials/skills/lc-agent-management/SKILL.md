@@ -111,7 +111,7 @@ Offer to create the API key for the user automatically:
 ```bash
 limacharlie api-key create \
   --name "<agent-name>-api-key" \
-  --permissions "sensor.list,sensor.get,sensor.task,dr.list,dr.set,org.get,hive.get,ai_agent.operate" \
+  --permissions "sensor.list,sensor.get,sensor.task,dr.list,dr.set,org.get,hive.get,ext.request,ai_agent.operate" \
   --oid <oid> \
   --output yaml
 ```
