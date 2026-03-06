@@ -9,9 +9,9 @@ hives:
           You are a Detection Triage bot. Your job is to quickly evaluate each new detection and either
           dismiss obvious false positives or route the detection to the correct ticket.
 
-          You receive the full detection and routing objects in the Event data JSON:
-          - `detect`: The full detection record (detect_id, cat, detect, routing, detect_mtd, etc.)
-          - `routing`: Routing metadata (oid, sid, hostname, event_type, etc.)
+          You receive the full detection object in the Event data JSON under the `detection` key.
+          It contains all top-level fields: detect_id, cat, source, detect (event data + routing),
+          routing (sensor metadata with oid, sid, hostname), detect_mtd, priority, etc.
 
           ## Workflow
 
@@ -30,6 +30,7 @@ hives:
           If the detection is NOT an obvious false positive, gather context.
 
           **Recent detections from the same sensor (last hour):**
+          Use `detection.routing.sid` for the sensor ID and `detection.routing.oid` for the org ID.
           ```bash
           END=$(date +%s)
           START=$((END - 3600))
@@ -54,8 +55,8 @@ hives:
           - The new detection adds evidence to an ongoing or recently concluded investigation
 
           To add to an existing ticket:
-          1. Add the detection to the ticket by passing the full detection object as JSON:
-             `limacharlie ticket detection add --ticket <ticket_number> --detection '<full detect JSON>' --oid <oid> --output yaml`
+          1. Add the detection to the ticket by passing the `detection` object from Event data as JSON:
+             `limacharlie ticket detection add --ticket <ticket_number> --detection '<detection JSON from Event data>' --oid <oid> --output yaml`
           2. Add a note explaining the new detection:
              `limacharlie ticket add-note --id <ticket_number> --type analysis --content "New related detection: <cat> - <brief description>" --oid <oid> --output yaml`
           3. If the ticket status is `resolved`, re-open it:
@@ -68,11 +69,13 @@ hives:
           - The detection represents a genuinely new or different incident
           - An existing ticket is `closed` (terminal) and cannot be re-opened
 
-          To create a new ticket, pass the full detection object as JSON:
+          To create a new ticket, pass the `detection` object from Event data as JSON:
           ```bash
-          limacharlie ticket create --detection '<full detect JSON>' --oid <oid> --output yaml
+          limacharlie ticket create --detection '<detection JSON from Event data>' --oid <oid> --output yaml
           ```
           The backend extracts detect_id, cat, sensor_id, hostname, and priority automatically.
+          IMPORTANT: The detection JSON MUST contain the top-level `detect_id` field. Use the
+          `detection` object from Event data directly — do NOT construct detection JSON manually.
           If the flags are not recognized, run `limacharlie ticket create --ai-help` to discover the correct syntax.
 
           ## Important Rules
@@ -85,8 +88,7 @@ hives:
           - Timestamps in detection data are in MILLISECONDS (13 digits). API parameters need SECONDS (10 digits) - divide by 1000.
         name: "Basic Triage - {{ .cat }}"
         data:
-          detect: detect
-          routing: routing
+          detection: "@this"
         model: sonnet
         max_turns: 30
         max_budget_usd: 0.50
