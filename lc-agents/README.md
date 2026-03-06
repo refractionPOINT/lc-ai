@@ -22,6 +22,34 @@ Each agent directory contains:
     └── secret.yaml    # Placeholder secrets (not deployed directly)
 ```
 
+## Data Extraction Patterns
+
+The `data` field in `ai_agent.yaml` maps names to [GJSON](https://github.com/tidwall/gjson) paths evaluated against the event that triggered the D&R rule. Extracted values are appended to the agent's prompt as JSON.
+
+### Passing the full detection object
+
+When an agent triggers on detections (`target: detection`), use `@this` to pass the **entire** detection object — including top-level fields like `detect_id`, `cat`, `source`, `routing`, and `detect_mtd`:
+
+```yaml
+data:
+  detection: "@this"
+```
+
+Do **not** use `detect: detect` — that only extracts the inner `detect` field (event payload + event routing) and omits top-level fields like `detect_id`. This causes problems when the agent needs to pass the detection to ticketing commands that require `detect_id`.
+
+### Extracting specific fields
+
+For events where only specific fields are needed (e.g., ticket webhook events):
+
+```yaml
+data:
+  oid: routing.oid
+  ticket_id: event.ticket_id
+  ticket_number: event.ticket_number
+```
+
+Paths use GJSON dot notation (not slash-separated).
+
 ## Installation
 
 Use the `lc-agent-management` skill from the [lc-essentials](../marketplace/plugins/lc-essentials/) plugin to install and remove agents.

@@ -11,7 +11,7 @@ Detection fires (D&R rule reports)
 _detect event emitted
       |
       v
-D&R rule matches (event=_detect, has detect data)
+D&R rule matches (target=detection)
       |
       v
 Suppression check (max 20/min)
@@ -67,6 +67,10 @@ Use the `lc-agent-management` skill to install and manage this agent. See the [l
 | `ttl_seconds` | `300` | Hard timeout (5 minutes) |
 | `one_shot` | `true` | Session terminates after completing |
 | Suppression | `20/min` | Maximum AI agent invocations per minute (global) |
+
+## Data Extraction
+
+The agent uses `detection: "@this"` to receive the **full detection object** (including `detect_id`, `cat`, `routing`, etc.) rather than just the inner `detect` field. This is required because ticketing commands need the top-level `detect_id` to properly link detections. See [Agent Data Extraction Patterns](../../README.md#data-extraction-patterns).
 
 ## Files
 
