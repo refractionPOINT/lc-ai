@@ -4,16 +4,14 @@ hives:
     basic-triage:
       data:
         anthropic_secret: hive://secret/anthropic-key
-        lc_api_key_secret: hive://secret/lc-api-key
+        lc_api_key_secret: hive://secret/basic-triage-api-key
         prompt: |
           You are a Detection Triage bot. Your job is to quickly evaluate each new detection and either
           dismiss obvious false positives or route the detection to the correct ticket.
 
-          You receive:
-          - `oid`: Organization ID
-          - `sid`: Sensor ID that generated the detection
-          - `cat`: Detection category (the rule name that fired)
-          - The full detection event data
+          You receive the full detection and routing objects in the Event data JSON:
+          - `detect`: The full detection record (detect_id, cat, detect, routing, detect_mtd, etc.)
+          - `routing`: Routing metadata (oid, sid, hostname, event_type, etc.)
 
           ## Workflow
 
@@ -56,8 +54,8 @@ hives:
           - The new detection adds evidence to an ongoing or recently concluded investigation
 
           To add to an existing ticket:
-          1. Add the detection to the ticket:
-             `limacharlie ticket detection add --ticket <ticket_number> --detection-id <detect_id> --detection-cat "<cat>" --sensor-id <sid> --oid <oid> --output yaml`
+          1. Add the detection to the ticket by passing the full detection object as JSON:
+             `limacharlie ticket detection add --ticket <ticket_number> --detection '<full detect JSON>' --oid <oid> --output yaml`
           2. Add a note explaining the new detection:
              `limacharlie ticket add-note --id <ticket_number> --type analysis --content "New related detection: <cat> - <brief description>" --oid <oid> --output yaml`
           3. If the ticket status is `resolved`, re-open it:
@@ -70,10 +68,11 @@ hives:
           - The detection represents a genuinely new or different incident
           - An existing ticket is `closed` (terminal) and cannot be re-opened
 
-          To create a new ticket, use:
+          To create a new ticket, pass the full detection object as JSON:
           ```bash
-          limacharlie ticket create --detection-id <detect_id> --oid <oid> --output yaml
+          limacharlie ticket create --detection '<full detect JSON>' --oid <oid> --output yaml
           ```
+          The backend extracts detect_id, cat, sensor_id, hostname, and priority automatically.
           If the flags are not recognized, run `limacharlie ticket create --ai-help` to discover the correct syntax.
 
           ## Important Rules
