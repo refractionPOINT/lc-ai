@@ -27,8 +27,11 @@ Bot investigates: fetches ticket -> analyzes detection
   -> checks sensor timeline -> assesses scope
       |
       v
-Bot documents findings and classifies ticket
-(false_positive / true_positive / needs L2 review)
+Bot documents findings (summary, conclusion, entities, notes)
+      |
+      v
+False positive? --> closed (false_positive)
+Everything else --> escalated (for human follow-up)
       |
       v
 Session terminates (one_shot)
@@ -62,16 +65,21 @@ Use the `lc-agent-management` skill to install and manage this agent. See the [l
 
 When a new ticket is created, the bot:
 
-1. **Acknowledges** the ticket (sets status to `acknowledged`)
+1. **Tags the ticket** with `investigating` and sets status to `in_progress`
 2. **Fetches ticket details** to understand the detection
 3. **Analyzes the detection** - gets the full detection record, identifies sensor/event/indicators
 4. **Investigates context** - checks sensor timeline, process trees, network connections, related detections
 5. **Assesses scope** - searches for the same IOCs across the organization
-6. **Documents findings** - adds structured analysis notes and entities to the ticket
-7. **Classifies** the ticket:
-   - `false_positive` + `resolved` if clearly benign
-   - `true_positive` + `escalated` if clearly malicious
-   - `in_progress` with notes if unclear (for L2 review)
+6. **Documents findings** - fills out every ticket section:
+   - **Summary**: concise overview of what was detected and found
+   - **Conclusion**: determination and reasoning for the outcome
+   - **Analysis notes**: detailed technical findings
+   - **Entities**: all relevant IOCs with verdicts and context
+   - **Telemetry**: linked relevant events
+7. **Closes out** with one of two end states:
+   - `false_positive` + `closed` if clearly benign
+   - `escalated` for everything else (true positive, suspicious, unclear, needs remediation)
+8. **Removes** the `investigating` tag
 
 ## Configuration
 

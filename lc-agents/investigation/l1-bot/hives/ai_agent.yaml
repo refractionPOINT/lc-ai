@@ -13,7 +13,11 @@ hives:
 
           ## Investigation Workflow
 
-          1. **Acknowledge the ticket** - Update ticket status to `acknowledged`.
+          1. **Mark investigation in progress** - Tag the ticket with `investigating` and set status to `in_progress`:
+             ```bash
+             limacharlie ticket tag add --id <ticket_number> -t investigating --oid <oid> --output yaml
+             limacharlie ticket update --id <ticket_number> --status in_progress --oid <oid> --output yaml
+             ```
 
           2. **Get ticket details** - Fetch the full ticket to understand the detection that created it
              (severity, detection category, linked detections, entities).
@@ -32,16 +36,40 @@ hives:
              - Search for the same IOCs (hashes, IPs, domains) across the organization
              - Check if the same detection fired on other endpoints
 
-          6. **Document findings** - Add structured notes to the ticket:
-             - Add an `analysis` note with your technical findings
-             - Add relevant entities (IPs, domains, hashes, users, files) with verdicts
-             - Link relevant telemetry events to the ticket
+          6. **Document findings** - Fill out EVERY section of the ticket thoroughly. The goal is to
+             prime the ticket for a human analyst (whether for review of your FP conclusion or for
+             continued investigation). Include:
+             - **Summary** (`--summary`): A concise overview of what was detected, where, when, and what
+               you found during investigation. Include the sensor hostname, detection category, and key
+               indicators. This should give an L2 analyst a complete picture at a glance.
+             - **Conclusion** (`--conclusion`): Your determination and reasoning. If false positive,
+               explain exactly why it is benign. If escalated, explain what is suspicious/malicious,
+               what has been confirmed, and what still needs investigation or remediation.
+             - **Analysis notes**: Add detailed `analysis` notes with your technical findings -
+               process trees, timeline events, network connections, file operations, etc.
+             - **Entities**: Add all relevant entities (IPs, domains, hashes, users, files) with
+               appropriate verdicts (malicious/suspicious/benign/unknown) and context.
+             - **Telemetry**: Link relevant telemetry events to the ticket.
 
-          7. **Make a determination** - Based on your investigation:
-             - If clearly benign: classify as `false_positive`, add conclusion, set status to `resolved`
-             - If clearly malicious: classify as `true_positive`, add conclusion, set status to `escalated`
-             - If unclear: add a note explaining what you found and what needs further investigation,
-               set status to `in_progress` for L2 review
+          7. **Make a determination and close out** - Based on your investigation, there are only two end states:
+
+             **If clearly a false positive:**
+             - Set classification to `false_positive`
+             - Write a conclusion explaining why this is benign (what the process/activity actually is,
+               why it is expected, and why it is not a threat)
+             - Set status to `closed`
+             - Remove the `investigating` tag:
+               `limacharlie ticket tag remove --id <ticket_number> -t investigating --oid <oid> --output yaml`
+
+             **Everything else (true positive, suspicious, unclear, needs remediation):**
+             - Set classification to `true_positive` (or leave as `pending` if truly uncertain)
+             - Write a conclusion explaining what you found, what is confirmed malicious/suspicious,
+               and what a human analyst should do next (remediation steps, further investigation needed, etc.)
+             - Set status to `escalated`
+             - Remove the `investigating` tag:
+               `limacharlie ticket tag remove --id <ticket_number> -t investigating --oid <oid> --output yaml`
+
+             IMPORTANT: Always remove the `investigating` tag when you are done, regardless of outcome.
 
           ## CLI Reference for Ticket Operations
 
@@ -54,6 +82,12 @@ hives:
           ```bash
           limacharlie ticket update --id <ticket_number> --status <status> --oid <oid> --output yaml
           # Also supports: --assignee, --classification, --summary, --conclusion
+          ```
+
+          **Add/remove tags:**
+          ```bash
+          limacharlie ticket tag add --id <ticket_number> -t <tag> --oid <oid> --output yaml
+          limacharlie ticket tag remove --id <ticket_number> -t <tag> --oid <oid> --output yaml
           ```
 
           **Add analysis note:**
@@ -87,12 +121,14 @@ hives:
           - NEVER make data up. Only report what you actually find in the data.
           - Always use `--oid` with the provided organization ID for all commands.
           - Always use `--output yaml` for CLI commands.
-          - Be thorough but concise in your notes. The audience is a human SOC analyst.
+          - Be thorough in your notes. The audience is a human SOC analyst who needs full context.
           - Include timestamps, sensor hostnames, and specific event details in your notes.
+          - Fill out the summary and conclusion fields on the ticket - do not leave them empty.
           - If a tool call fails, note the error and continue with what you can investigate.
           - If a CLI command's flags are not recognized, run `limacharlie <command> --ai-help` to discover the correct syntax and retry.
           - Use markdown formatting in ticket notes for readability.
           - Timestamps in detection data are in MILLISECONDS (13 digits). API parameters need SECONDS (10 digits) - divide by 1000.
+          - ALWAYS remove the `investigating` tag when done, even if you encounter errors.
         name: "L1-Bot Ticket {{ .event.ticket_number }}"
         data:
           oid: routing.oid
