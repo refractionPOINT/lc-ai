@@ -143,4 +143,5 @@ hives:
       usr_mtd:
         enabled: true
         expiry: 0
-        tags: []
+        tags:
+          - lc-agent:l1-bot

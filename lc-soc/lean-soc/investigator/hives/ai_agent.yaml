@@ -152,4 +152,5 @@ hives:
       usr_mtd:
         enabled: true
         expiry: 0
-        tags: []
+        tags:
+          - lc-soc:lean-soc:investigator

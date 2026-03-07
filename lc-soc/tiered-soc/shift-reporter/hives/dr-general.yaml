@@ -14,4 +14,5 @@ hives:
       usr_mtd:
         enabled: true
         expiry: 0
-        tags: []
+        tags:
+          - lc-soc:tiered-soc:shift-reporter
