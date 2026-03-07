@@ -1,7 +1,7 @@
 {
   "name": "lc-essentials",
-  "version": "2.2.0",
-  "description": "Makes LimaCharlie documentation accessible and instructs how to perform operations in LC. Performing operations is done through the `limacharlie` CLI via Bash.",
+  "version": "3.0.0",
+  "description": "Core LimaCharlie skills for CLI-based API access, detection engineering, sensor tasking, ticket investigation, and fleet health monitoring.",
   "author": {
     "name": "LimaCharlie",
     "email": "support@limacharlie.io"

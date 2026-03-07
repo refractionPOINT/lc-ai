@@ -140,6 +140,46 @@ Example:
 
 See [TICKETING_CONSTANTS.md](./TICKETING_CONSTANTS.md) for ticket status, severity, classification, entity types, verdicts, and note types.
 
+## Sensor Selector Reference
+
+Sensor selectors use [bexpr](https://github.com/hashicorp/go-bexpr) syntax to filter sensors. Use `*` to match all sensors.
+
+### Available Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `sid` | string | Sensor ID (UUID) |
+| `oid` | string | Organization ID (UUID) |
+| `iid` | string | Installation Key ID (UUID) |
+| `plat` | string | Platform name |
+| `ext_plat` | string | Extended platform (for multi-platform adapters) |
+| `arch` | string | Architecture |
+| `hostname` | string | Sensor hostname |
+| `ext_ip` | string | External IP address |
+| `int_ip` | string | Internal IP address |
+| `mac_addr` | string | MAC address |
+| `did` | string | Device ID |
+| `enroll` | int | Enrollment timestamp |
+| `alive` | int | Last seen timestamp |
+| `is_del` | bool | Sensor is deleted |
+| `isolated` | bool | Sensor is network isolated |
+| `should_isolate` | bool | Sensor should be isolated |
+| `kernel` | bool | Kernel mode enabled |
+| `sealed` | bool | Sensor is sealed |
+| `should_seal` | bool | Sensor should be sealed |
+| `tags` | string[] | Sensor tags (use `in` operator) |
+
+### Example Selectors
+
+```
+plat == windows                           # All Windows sensors
+plat == windows and arch == x64           # 64-bit Windows only
+plat == linux and hostname contains "web" # Linux with "web" in hostname
+"prod" in tags                            # Sensors tagged "prod"
+plat == windows and not isolated          # Non-isolated Windows
+ext_plat == windows                       # Carbon Black/Crowdstrike reporting Windows endpoints
+```
+
 ## UUID Format
 
 Organization ID (OID) and Sensor ID (SID) must be UUID format:

@@ -112,29 +112,9 @@ LCQL uses unique pipe-based syntax validated against org-specific schemas. **LLM
 - If estimate > 0, ask user to approve before running
 - Only proceed after user confirmation
 
-If a user asks for "example LCQL queries" or "LCQL syntax", explain that LCQL is org-specific and use the generate command to demonstrate with their actual schema - never fabricate examples.
+If a user asks for "example LCQL queries" or "LCQL syntax", explain that LCQL is org-specific and use the generate command to demonstrate with their actual schema — never fabricate examples.
 
-**Before generating queries:**
-- Consider calling `limacharlie event types --oid <oid> --output yaml` to understand available event types and fields in the org
-- This helps generate more accurate queries targeting actual data that exists
-
-**After query execution:**
-- If results are empty or unexpected, consider:
-  - Wrong time range (data may not exist in that window)
-  - Wrong event type for the data source
-  - Field names that exist but aren't populated for this org
-- Ask the user for clarification rather than assuming the query is correct
-
-**On validation failure:**
-- Do NOT attempt to fix the query manually - you will make it worse
-- If original natural language request is available:
-  - Re-call the generate command with the original request plus the validation error message
-  - Ask it to avoid the specific syntax issue
-- If original natural language request is NOT available (user-provided query, saved query, etc.):
-  - Ask the user to describe what they're trying to accomplish in plain language
-  - Use their description to call the generate command fresh
-- Validate the new query again
-- If validation fails 3 times, report the issue to the user rather than continuing to retry
+Consider calling `limacharlie event types --oid <oid> --output yaml` before generating queries to understand available event types. On validation failure, re-call the generate command with the error message — never fix queries manually. After 3 failures, report the issue to the user.
 
 ### 7. Never Generate D&R Rules Manually
 
@@ -155,21 +135,7 @@ date -d '7 days ago' +%s           # 7 days ago
 date -d '2025-01-15 00:00:00 UTC' +%s  # Specific date
 ```
 
-**Validation before API calls:**
-1. Run bash to get timestamps FIRST, capture the actual values
-2. Verify: historical timestamps must be in the past (less than current time)
-3. Verify: time ranges must have `start_time < end_time`
-4. Show calculated values in your reasoning before making API calls
-
-**Example workflow:**
-```
-# Get timestamps
-now=$(date +%s)           # e.g., 1737312000
-start=$(date -d '24 hours ago' +%s)  # e.g., 1737225600
-
-# Verify before API call
-# now=1737312000, start=1737225600, start < now check
-```
+Always run bash to get timestamps FIRST, verify `start_time < end_time` and that historical timestamps are in the past, then use the captured values in API calls.
 
 ### 9. OID is UUID, NOT Organization Name
 
@@ -209,67 +175,14 @@ Before running LimaCharlie operations:
 **During operations** if an SOP description sounds like it applies to the current operation, call `limacharlie sop get --key <name> --oid <oid> --output yaml` to get the actual procedure.
 **Take into account** the contents of the fetched SOP, if a match is found, announce: "Following SOP: [sop-name] - [description]"
 
-### Example Workflow
+## Sensor Selectors
 
-1. User signals intent to work on org 123
-2. LLM lists SOPs on org 123: "malware-response" => description: "Standard procedure for malware incidents"
-3. User asks to investigate a malware alert on org 123
-4. LLM announces: "Following SOP: malware-response - Standard procedure for malware incidents"
-5. LLM recognizes the "malware-response" SOP relates to this and loads the full procedure
-6. LLM follows the documented steps from the loaded SOP content
+Sensor selectors use [bexpr](https://github.com/hashicorp/go-bexpr) syntax. Use `*` to match all sensors. See [CONSTANTS.md](./CONSTANTS.md) for the full field reference, platform values, and examples.
 
-## Sensor Selector Reference
+## Extensions
 
-Sensor selectors use [bexpr](https://github.com/hashicorp/go-bexpr) syntax to filter sensors. Use `*` to match all sensors.
+Not all extensions have a configuration. To check subscriptions: `limacharlie extension list --oid <oid> --output yaml`.
 
-### Available Fields
+## Billing, Features and Functionality
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `sid` | string | Sensor ID (UUID) |
-| `oid` | string | Organization ID (UUID) |
-| `iid` | string | Installation Key ID (UUID) |
-| `plat` | string | Platform name (see values below) |
-| `ext_plat` | string | Extended platform (for multi-platform adapters like Carbon Black) |
-| `arch` | string | Architecture (see values below) |
-| `hostname` | string | Sensor hostname |
-| `ext_ip` | string | External IP address |
-| `int_ip` | string | Internal IP address |
-| `mac_addr` | string | MAC address |
-| `did` | string | Device ID |
-| `enroll` | int | Enrollment timestamp |
-| `alive` | int | Last seen timestamp |
-| `is_del` | bool | Sensor is deleted |
-| `isolated` | bool | Sensor is network isolated |
-| `should_isolate` | bool | Sensor should be isolated |
-| `kernel` | bool | Kernel mode enabled |
-| `sealed` | bool | Sensor is sealed |
-| `should_seal` | bool | Sensor should be sealed |
-| `tags` | string[] | Sensor tags (use `in` operator) |
-
-### Platform Values (`plat`, `ext_plat`)
-
-**EDR Platforms:** `windows`, `linux`, `macos`, `ios`, `android`, `chrome`, `vpn`
-
-**Adapter/USP Platforms:** `text`, `json`, `gcp`, `aws`, `carbon_black`, `1password`, `office365`, `sophos`, `crowdstrike`, `msdefender`, `sentinel_one`, `okta`, `duo`, `github`, `slack`, `azure_ad`, `azure_monitor`, `entraid`, `zeek`, `cef`, `wel`, `xml`, `guard_duty`, `k8s_pods`, `wiz`, `proofpoint`, `box`, `cylance`, `fortigate`, `netscaler`, `paloalto_fw`, `iis`, `trend_micro`, `trend_worryfree`, `bitwarden`, `mimecast`, `hubspot`, `zendesk`, `pandadoc`, `falconcloud`, `sublime`, `itglue`, `canary_token`, `lc_event`, `email`, `mac_unified_logging`, `azure_event_hub_namespace`, `azure_key_vault`, `azure_kubernetes_service`, `azure_network_security_group`, `azure_sql_audit`
-
-### Architecture Values (`arch`)
-
-`x86`, `x64`, `arm`, `arm64`, `alpine64`, `chromium`, `wireguard`, `arml`, `usp_adapter`
-
-### Example Selectors
-
-```
-plat == windows                           # All Windows sensors
-plat == windows and arch == x64           # 64-bit Windows only
-plat == linux and hostname contains "web" # Linux with "web" in hostname
-"prod" in tags                            # Sensors tagged "prod"
-plat == windows and not isolated          # Non-isolated Windows
-ext_plat == windows                       # Carbon Black/Crowdstrike reporting Windows endpoints
-```
-
-### Extensions
-Not all extensions have a configuration, to determine if an extension is subscribed to, use `limacharlie extension list --oid <oid> --output yaml`.
-
-### Billing, Features and Functionality
-Don't assume you know anything about how LimaCharlie is billed, pricing structure, features etc. Use the documentation to ground your information: https://github.com/refractionPOINT/documentation/tree/master/docs/limacharlie/doc
+Don't assume you know anything about LimaCharlie billing, pricing, or features. Use the documentation: https://github.com/refractionPOINT/documentation/tree/master/docs/limacharlie/doc
