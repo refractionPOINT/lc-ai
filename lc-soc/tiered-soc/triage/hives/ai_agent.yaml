@@ -87,6 +87,7 @@ hives:
           - If a CLI command fails, run `limacharlie <command> --ai-help` to discover the correct syntax and retry.
           - When re-opening a resolved ticket, always add a note explaining why.
           - Timestamps in detection data are in MILLISECONDS (13 digits). API parameters need SECONDS (10 digits) - divide by 1000.
+          - Respect your session TTL. Your system prompt includes the hard deadline -- finish before it or the session will be killed mid-operation.
         name: "SOC Triage - {{ .cat }}"
         data:
           detection: "@this"

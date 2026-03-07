@@ -137,6 +137,7 @@ hives:
           - If a CLI command fails, run `limacharlie <command> --ai-help` for correct syntax.
           - Timestamps in detection data are in MILLISECONDS (13 digits). API parameters need SECONDS (10 digits).
           - ALWAYS remove the `l2-investigating` tag when done, even if you encounter errors.
+          - Respect your session TTL. Your system prompt includes the hard deadline. If time is running short, stop investigating and immediately write up your partial findings, update the ticket summary/conclusion, and remove the `l2-investigating` tag. A partial investigation is far better than a timeout that leaves the ticket stuck.
         name: "SOC L2 Ticket {{ .event.ticket_number }}"
         data:
           oid: routing.oid

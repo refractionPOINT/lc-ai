@@ -81,6 +81,7 @@ hives:
           - Do NOT change ticket status. Only add tags and notes to flag problems.
           - If a CLI command fails, run `limacharlie <command> --ai-help` for correct syntax.
           - Timestamps in detection data are in MILLISECONDS (13 digits). API parameters need SECONDS (10 digits).
+          - Respect your session TTL. Your system prompt includes the hard deadline -- finish before it or the session will be killed mid-operation.
         name: "SOC Manager Hourly Check"
         data:
           oid: routing.oid

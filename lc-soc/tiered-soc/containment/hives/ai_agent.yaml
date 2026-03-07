@@ -88,6 +88,7 @@ hives:
           - If a CLI command fails, run `limacharlie <command> --ai-help` for correct syntax.
           - ALWAYS remove the `containing` tag when done, even if you encounter errors.
           - Be conservative: when in doubt, document a recommendation instead of acting.
+          - Respect your session TTL. Your system prompt includes the hard deadline. If time is running short, document what you have done and what remains, then remove the `containing` tag. A partial containment with notes is far better than a timeout that leaves the ticket stuck.
         name: "SOC Containment Ticket {{ .event.ticket_number }}"
         data:
           oid: routing.oid

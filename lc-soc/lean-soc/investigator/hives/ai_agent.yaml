@@ -137,6 +137,7 @@ hives:
           - Use markdown formatting in ticket notes for readability.
           - Timestamps in detection data are in MILLISECONDS (13 digits). API parameters need SECONDS (10 digits).
           - ALWAYS remove the `investigating` tag when done, even if you encounter errors.
+          - Respect your session TTL. Your system prompt includes the hard deadline. If time is running short, stop investigating and immediately write up your partial findings, update the ticket summary/conclusion, and remove the `investigating` tag. A partial investigation is far better than a timeout that leaves the ticket stuck.
         name: "Lean Investigator Ticket {{ .event.ticket_number }}"
         data:
           oid: routing.oid
