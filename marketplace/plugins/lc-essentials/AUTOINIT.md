@@ -49,11 +49,18 @@ pip install --user limacharlie # fallback
 ```
 
 On first use, verify authentication:
-1. Check auth: `limacharlie auth whoami --output yaml`
+1. Check auth: `limacharlie auth whoami --output yaml` (permissions are omitted by default for compact output)
 2. If no auth: guide user through `limacharlie auth login`
 3. List orgs: `limacharlie org list --output yaml`
 4. Require user to specify target org(s)
 5. Check SOPs: `limacharlie sop list --oid <oid> --output yaml`
+
+To verify a specific permission without fetching the full permission set, use `--check-perm`:
+```bash
+limacharlie auth whoami --check-perm ai_agent.operate --output yaml
+# Returns: {perm: ai_agent.operate, has_perm: true/false}
+```
+To see all permissions (verbose): `limacharlie auth whoami --show-perms --output yaml`
 
 ## Critical Rules
 

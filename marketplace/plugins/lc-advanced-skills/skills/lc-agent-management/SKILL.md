@@ -85,6 +85,14 @@ Verify with:
 limacharlie org list --output yaml
 ```
 
+### Step 2b: Verify Permissions
+
+Before proceeding, verify the current credentials have the `ai_agent.operate` permission (required for all agent deployments):
+```bash
+limacharlie auth whoami --check-perm ai_agent.operate --output yaml
+```
+If `has_perm: false`, stop and inform the user their API key or user account lacks this permission.
+
 ### Step 3: Subscribe to Required Extensions
 
 Check the agent's README for required extensions. Subscribe to each:
