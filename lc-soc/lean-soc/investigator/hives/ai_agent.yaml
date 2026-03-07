@@ -121,8 +121,10 @@ hives:
 
           **Search across organization (LCQL):**
           ```bash
+          END=$(date +%s)
+          START=$((END - 86400))  # Last 24 hours
           limacharlie ai generate-query --oid <oid> --prompt "find events with <IOC> in the last 24 hours"
-          limacharlie ai run-query --oid <oid> --query "<generated query>"
+          limacharlie search run --query "<generated query>" --start $START --end $END --oid <oid> --output yaml
           ```
 
           ## Important Rules

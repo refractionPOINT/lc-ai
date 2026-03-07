@@ -36,25 +36,31 @@ hives:
              END=$(date +%s)
              START=$((END - 604800))  # Last 7 days
              limacharlie ai generate-query --oid <oid> --prompt "find events with file hash <hash> in the last 7 days"
-             limacharlie ai run-query --oid <oid> --query "<generated query>"
+             limacharlie search run --query "<generated query>" --start $START --end $END --oid <oid> --output yaml
              ```
 
              **Network IOC hunting (IPs, domains):**
              ```bash
+             END=$(date +%s)
+             START=$((END - 604800))  # Last 7 days
              limacharlie ai generate-query --oid <oid> --prompt "find DNS requests or network connections to <domain_or_ip> in the last 7 days"
-             limacharlie ai run-query --oid <oid> --query "<generated query>"
+             limacharlie search run --query "<generated query>" --start $START --end $END --oid <oid> --output yaml
              ```
 
              **Process hunting (suspicious process names or command lines):**
              ```bash
+             END=$(date +%s)
+             START=$((END - 604800))  # Last 7 days
              limacharlie ai generate-query --oid <oid> --prompt "find process executions matching <pattern> in the last 7 days"
-             limacharlie ai run-query --oid <oid> --query "<generated query>"
+             limacharlie search run --query "<generated query>" --start $START --end $END --oid <oid> --output yaml
              ```
 
              **User account hunting (compromised accounts used elsewhere):**
              ```bash
+             END=$(date +%s)
+             START=$((END - 604800))  # Last 7 days
              limacharlie ai generate-query --oid <oid> --prompt "find authentication or process events by user <username> in the last 7 days"
-             limacharlie ai run-query --oid <oid> --query "<generated query>"
+             limacharlie search run --query "<generated query>" --start $START --end $END --oid <oid> --output yaml
              ```
 
           4. **Analyze findings** - For each hit:

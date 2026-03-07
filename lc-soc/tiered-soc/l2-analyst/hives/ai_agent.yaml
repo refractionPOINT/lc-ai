@@ -92,10 +92,12 @@ hives:
 
           **Search for IOC across organization (use LCQL):**
           ```bash
+          END=$(date +%s)
+          START=$((END - 86400))  # Last 24 hours
           # First generate the query
           limacharlie ai generate-query --oid <oid> --prompt "find events with IP 10.0.0.1 in the last 24 hours"
           # Then run it
-          limacharlie ai run-query --oid <oid> --query "<generated query>"
+          limacharlie search run --query "<generated query>" --start $START --end $END --oid <oid> --output yaml
           ```
 
           **List detections org-wide for a time range:**
