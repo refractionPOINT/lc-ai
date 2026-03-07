@@ -1,11 +1,13 @@
 ---
 name: lc-agent-management
 description: |
-  Install and remove autonomous LimaCharlie AI agents (lc-agents) in an organization.
-  Handles subscribing to required extensions, creating API keys, setting secrets,
-  and pushing hive configurations. Use when user wants to deploy an lc-agent like
-  "l1-bot" to their org, or remove a previously installed agent. Examples: "install
-  the l1-bot agent", "deploy l1-bot to my org", "remove the l1-bot agent".
+  Install and remove autonomous LimaCharlie AI agents (lc-agents) and full AI SOC
+  definitions (lc-soc) in an organization. Handles subscribing to required extensions,
+  creating API keys, setting secrets, and pushing hive configurations.
+  Use when user wants to deploy an lc-agent like "l1-bot", or install an entire
+  SOC like "lean-soc" or "tiered-soc" to their org, or remove a previously installed
+  agent or SOC. Examples: "install the l1-bot agent", "deploy lean-soc to my org",
+  "install the tiered SOC", "remove the l1-bot agent", "uninstall lean-soc".
 allowed-tools:
   - Read
   - Bash
@@ -16,7 +18,7 @@ allowed-tools:
 
 # LimaCharlie Agent Management
 
-You help users install and remove autonomous AI agents (lc-agents) in their LimaCharlie organizations.
+You help users install and remove autonomous AI agents (lc-agents) and full AI SOC definitions (lc-soc) in their LimaCharlie organizations.
 
 ---
 
@@ -47,11 +49,24 @@ For command help and discovery: `limacharlie <command> --ai-help`
 
 ## Available Agents
 
-Agents are defined in the `lc-agents/` directory of the lc-ai repository. Each agent has:
+Individual agents are defined in the `lc-agents/` directory of the lc-ai repository. Each agent has:
 - A `README.md` describing what it does and its prerequisites
 - A `hives/` directory containing the IaC YAML files to deploy
 
 To discover available agents, list the directories under `lc-agents/` in the lc-ai repository.
+
+## Available SOCs
+
+Full SOC definitions are in the `lc-soc/` directory. Each SOC is a coordinated set of agents that work together:
+
+| SOC | Agents | Description |
+|-----|--------|-------------|
+| `lean-soc` | 4 agents | Minimal SOC: triage, investigator, responder, reporter |
+| `tiered-soc` | 8 agents | Full L1/L2/L3 SOC: triage, l1-investigator, l2-analyst, malware-analyst, containment, threat-hunter, soc-manager, shift-reporter |
+
+Each SOC has a top-level `README.md` describing its architecture, cost profile, and tradeoffs. Each agent within the SOC has its own `README.md` with specific API key permissions.
+
+To discover available SOCs, list the directories under `lc-soc/` in the lc-ai repository.
 
 ---
 
@@ -205,6 +220,134 @@ Summarize what was installed:
 
 ---
 
+## Install a SOC
+
+When the user asks to install/deploy a full SOC (lean-soc or tiered-soc), follow these steps. A SOC is a coordinated set of agents that must all be deployed together.
+
+### Step 1: Read the SOC Definition
+
+Read the SOC's top-level `README.md` and every agent's `README.md` within it:
+
+```bash
+# Find the lc-soc directory
+find / -path "*/lc-ai/lc-soc" -type d 2>/dev/null | head -1
+```
+
+Read the SOC README for the architecture overview, installation order, and agent list. Then read each agent's README for its specific API key permissions.
+
+### Step 2: Get the Target OID
+
+Ask the user which organization to install into, or use the OID they provided.
+```bash
+limacharlie org list --output yaml
+```
+
+### Step 2b: Verify Permissions
+
+```bash
+limacharlie auth whoami --check-perm ai_agent.operate --output yaml
+```
+
+### Step 3: Subscribe to Required Extensions
+
+All SOC agents require `ext-ticketing`:
+```bash
+limacharlie extension subscribe --name ext-ticketing --oid <oid>
+```
+
+Check if already subscribed first:
+```bash
+limacharlie extension list --oid <oid> --output yaml
+```
+
+### Step 4: Set Up the Anthropic Secret
+
+The Anthropic API key is shared across all agents in the SOC. Ask the user for it and store it once:
+
+```bash
+limacharlie secret set --key anthropic-key --oid <oid> <<< '{"secret": "<user-provided-key>"}'
+```
+
+Check if it already exists (from a previous agent install):
+```bash
+limacharlie secret list --oid <oid> --output yaml
+```
+
+If it already exists, ask the user if they want to reuse it or update it.
+
+### Step 5: Create Per-Agent API Keys and Secrets
+
+**Each agent gets its own API key** with least-privilege permissions from its README. Create them all, storing each immediately since the key is only shown once.
+
+For each agent in the SOC's installation order:
+
+```bash
+# Create the API key with agent-specific permissions
+limacharlie api-key create \
+  --name "<agent-key-name>" \
+  --permissions "<comma-separated-permissions-from-readme>" \
+  --oid <oid> \
+  --output yaml
+```
+
+**Capture the key value** from the output and immediately store it as a secret:
+
+```bash
+limacharlie secret set --key <agent-secret-name> --oid <oid> <<< '{"secret": "<the-api-key-value>"}'
+```
+
+The secret name must match what the agent's `ai_agent.yaml` references in its `lc_api_key_secret` field (e.g., `hive://secret/lean-triage-api-key` means the secret key is `lean-triage-api-key`).
+
+### Step 6: Push All Hive Configurations
+
+Push each agent's hive configs using `sync push`. Process each agent's `hives/` directory:
+
+```bash
+# For each agent in the SOC, push its ai_agent.yaml
+limacharlie sync push \
+  --config-file <path-to-agent>/hives/ai_agent.yaml \
+  --hive-ai-agent \
+  --oid <oid>
+
+# And its dr-general.yaml
+limacharlie sync push \
+  --config-file <path-to-agent>/hives/dr-general.yaml \
+  --hive-dr-general \
+  --oid <oid>
+```
+
+**Do NOT push secret.yaml files** -- secrets were already set in Steps 4-5 with actual values.
+
+Follow the SOC's documented installation order (typically: triage first, then investigators, then responders/hunters, then scheduled agents).
+
+### Step 7: Verify Installation
+
+```bash
+# Verify all AI agent definitions
+limacharlie hive list --hive-name ai_agent --oid <oid> --output yaml
+
+# Verify all D&R rules
+limacharlie hive list --hive-name dr-general --oid <oid> --output yaml
+
+# Verify secrets exist
+limacharlie secret list --oid <oid> --output yaml
+
+# Check for org errors
+limacharlie org errors --oid <oid> --output yaml
+```
+
+### Step 8: Report to User
+
+Summarize:
+- Which SOC was installed and how many agents
+- All API keys created (names and permissions)
+- All secrets stored
+- All hive entries pushed (ai_agent + dr-general per agent)
+- The agent pipeline flow (how agents trigger each other)
+- Estimated cost profile (from the SOC README)
+
+---
+
 ## Remove an Agent
 
 When the user asks to remove/uninstall an agent:
@@ -264,6 +407,49 @@ Summarize what was removed and what was left in place (with reasons).
 
 ---
 
+## Remove a SOC
+
+When the user asks to remove/uninstall an entire SOC:
+
+### Step 1: Read the SOC Definition
+
+Read the SOC's README and all agent hive files to know what was deployed.
+
+### Step 2: Remove All Hive Entries
+
+Delete every AI agent definition and D&R rule for the SOC. Use the tags on hive records to identify all components (e.g., `lc-soc:lean-soc:*` tags):
+
+```bash
+# For each agent in the SOC:
+limacharlie hive delete --hive-name ai_agent --key <agent-name> --confirm --oid <oid>
+limacharlie hive delete --hive-name dr-general --key <dr-rule-name> --confirm --oid <oid>
+```
+
+### Step 3: Clean Up Secrets (Optional)
+
+Ask the user if they want to remove per-agent API key secrets:
+
+```bash
+# For each agent secret:
+limacharlie secret delete --key <agent-api-key-secret> --confirm --oid <oid>
+```
+
+**Warn**: The `anthropic-key` secret may be shared with other agents or SOCs. Only delete if the user confirms no other agents depend on it.
+
+### Step 4: Clean Up API Keys (Optional)
+
+```bash
+limacharlie api-key list --oid <oid> --output yaml
+# Delete each agent's API key by hash
+limacharlie api-key delete --key-hash <hash> --confirm --oid <oid>
+```
+
+### Step 5: Report to User
+
+Summarize what was removed (agent definitions, D&R rules, secrets, API keys) and what was left in place.
+
+---
+
 ## Agent Reference: l1-bot
 
 ### Description
@@ -302,3 +488,145 @@ When `ext-ticketing` creates a ticket, it emits a `created` event. The D&R rule 
 | Timeout | 600 seconds |
 | Mode | One-shot (terminates after completion) |
 | Suppression | Max 10 invocations per minute |
+
+---
+
+## SOC Reference: lean-soc
+
+### Description
+Minimal 4-agent SOC for maximum autonomy with minimum complexity. Handles the complete alert lifecycle: triage, investigation, containment, and reporting.
+
+### Required Extensions
+- `ext-ticketing` - Must be subscribed AND configured
+
+### Agents and API Keys
+
+Install in this order. Each agent needs its own API key with the listed permissions.
+
+#### 1. triage
+- **Secret name**: `lean-triage-api-key`
+- **API key name**: `lean-triage`
+- **Permissions**: `org.get,insight.det.get,investigation.get,investigation.set,ext.request,ai_agent.operate`
+- **Hive entries**: `ai_agent/lean-triage` + `dr-general/lean-triage-on-detect`
+
+#### 2. investigator
+- **Secret name**: `lean-investigator-api-key`
+- **API key name**: `lean-investigator`
+- **Permissions**: `org.get,sensor.list,sensor.get,sensor.task,dr.list,insight.det.get,insight.evt.get,investigation.get,investigation.set,ext.request,ai_agent.operate`
+- **Hive entries**: `ai_agent/lean-investigator` + `dr-general/lean-investigator-on-ticket-created`
+
+#### 3. responder
+- **Secret name**: `lean-responder-api-key`
+- **API key name**: `lean-responder`
+- **Permissions**: `org.get,sensor.list,sensor.get,sensor.task,investigation.get,investigation.set,ext.request,ai_agent.operate,lookup.set`
+- **Hive entries**: `ai_agent/lean-responder` + `dr-general/lean-responder-on-tag`
+
+#### 4. reporter
+- **Secret name**: `lean-reporter-api-key`
+- **API key name**: `lean-reporter`
+- **Permissions**: `org.get,investigation.get,investigation.set,ext.request,ai_agent.operate`
+- **Hive entries**: `ai_agent/lean-reporter` + `dr-general/lean-reporter-daily`
+
+### Agent Pipeline
+
+```
+Detection → triage (dismiss FP or create ticket)
+         → investigator (full investigation on ticket created)
+         → responder (containment on needs-containment tag)
+         → reporter (daily health check + metrics)
+```
+
+### Cost Profile
+
+| Scenario | Cost |
+|----------|------|
+| FP at triage | ~$0.10 |
+| FP after investigation | ~$1.10 |
+| TP with containment | ~$2.10 |
+| Daily overhead | ~$1.00/day |
+
+---
+
+## SOC Reference: tiered-soc
+
+### Description
+Full-featured 8-agent SOC modeled after traditional L1/L2/L3 structure with specialist agents for malware analysis and threat hunting.
+
+### Required Extensions
+- `ext-ticketing` - Must be subscribed AND configured
+
+### Agents and API Keys
+
+Install in this order. Each agent needs its own API key with the listed permissions.
+
+#### 1. triage
+- **Secret name**: `soc-triage-api-key`
+- **API key name**: `soc-triage`
+- **Permissions**: `org.get,insight.det.get,investigation.get,investigation.set,ext.request,ai_agent.operate`
+- **Hive entries**: `ai_agent/soc-triage` + `dr-general/soc-triage-on-detect`
+
+#### 2. l1-investigator
+- **Secret name**: `soc-l1-investigator-api-key`
+- **API key name**: `soc-l1-investigator`
+- **Permissions**: `org.get,sensor.list,sensor.get,sensor.task,dr.list,insight.det.get,insight.evt.get,investigation.get,investigation.set,ext.request,ai_agent.operate`
+- **Hive entries**: `ai_agent/soc-l1-investigator` + `dr-general/soc-l1-on-ticket-created`
+
+#### 3. l2-analyst
+- **Secret name**: `soc-l2-analyst-api-key`
+- **API key name**: `soc-l2-analyst`
+- **Permissions**: `org.get,sensor.list,sensor.get,sensor.task,dr.list,insight.det.get,insight.evt.get,investigation.get,investigation.set,ext.request,ai_agent.operate`
+- **Hive entries**: `ai_agent/soc-l2-analyst` + `dr-general/soc-l2-on-ticket-escalated`
+
+#### 4. malware-analyst
+- **Secret name**: `soc-malware-analyst-api-key`
+- **API key name**: `soc-malware-analyst`
+- **Permissions**: `org.get,sensor.list,sensor.get,insight.det.get,investigation.get,investigation.set,ext.request,ai_agent.operate`
+- **Hive entries**: `ai_agent/soc-malware-analyst` + `dr-general/soc-malware-on-tag`
+
+#### 5. containment
+- **Secret name**: `soc-containment-api-key`
+- **API key name**: `soc-containment`
+- **Permissions**: `org.get,sensor.list,sensor.get,sensor.task,investigation.get,investigation.set,ext.request,ai_agent.operate,lookup.set`
+- **Hive entries**: `ai_agent/soc-containment` + `dr-general/soc-containment-on-tag`
+
+#### 6. threat-hunter
+- **Secret name**: `soc-threat-hunter-api-key`
+- **API key name**: `soc-threat-hunter`
+- **Permissions**: `org.get,sensor.list,sensor.get,sensor.task,insight.det.get,insight.evt.get,investigation.get,investigation.set,ext.request,ai_agent.operate`
+- **Hive entries**: `ai_agent/soc-threat-hunter` + `dr-general/soc-threat-hunter-on-tag`
+
+#### 7. soc-manager
+- **Secret name**: `soc-manager-api-key`
+- **API key name**: `soc-manager`
+- **Permissions**: `org.get,investigation.get,investigation.set,ext.request,ai_agent.operate`
+- **Hive entries**: `ai_agent/soc-manager` + `dr-general/soc-manager-hourly`
+
+#### 8. shift-reporter
+- **Secret name**: `soc-shift-reporter-api-key`
+- **API key name**: `soc-shift-reporter`
+- **Permissions**: `org.get,investigation.get,investigation.set,ext.request,ai_agent.operate`
+- **Hive entries**: `ai_agent/soc-shift-reporter` + `dr-general/soc-shift-reporter-daily`
+
+### Agent Pipeline
+
+```
+Detection → triage (dismiss FP or create ticket)
+         → l1-investigator (investigate, tag needs-malware-analysis or escalate)
+         → malware-analyst (binary forensics on needs-malware-analysis tag)
+         → l2-analyst (deep analysis on escalation)
+         → containment (isolate/block on needs-containment tag)
+         → threat-hunter (org-wide hunt on needs-threat-hunt tag)
+         → soc-manager (hourly SLA monitoring + stale ticket cleanup)
+         → shift-reporter (daily metrics report)
+```
+
+### Cost Profile
+
+| Scenario | Cost |
+|----------|------|
+| FP at triage | ~$0.10 |
+| FP after L1 | ~$0.60 |
+| TP through L2 | ~$2.60 |
+| TP with malware analysis | ~$7.60 |
+| TP with containment + hunt | ~$8.60 |
+| Daily overhead | ~$13.00/day |
