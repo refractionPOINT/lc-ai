@@ -5,7 +5,7 @@ hives:
       data:
         detect:
           event: tags_updated
-          op: contains
+          op: is
           path: event/metadata/new_tags
           value: needs-threat-hunt
         respond:
