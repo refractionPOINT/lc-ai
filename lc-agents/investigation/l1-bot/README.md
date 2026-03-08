@@ -20,6 +20,9 @@ D&R rule matches (event=created, has ticket data)
 Suppression check (max 10/min)
       |
       v
+Debounce check (one active session at a time)
+      |
+      v
 AI agent session starts with ticket context
       |
       v
@@ -90,6 +93,7 @@ When a new ticket is created, the bot:
 | `max_budget_usd` | `2.0` | Cost cap per investigation session |
 | `ttl_seconds` | `600` | Hard timeout (10 minutes) |
 | `one_shot` | `true` | Session terminates after completing |
+| `debounce_key` | `l1-bot` | Serializes sessions: only one investigation runs at a time, pending requests re-fire on completion |
 | Suppression | `10/min` | Maximum AI agent invocations per minute (global) |
 
 ## Files

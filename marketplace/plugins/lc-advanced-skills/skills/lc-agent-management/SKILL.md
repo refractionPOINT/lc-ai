@@ -469,5 +469,6 @@ When `ext-ticketing` creates a ticket, it emits a `created` event. The D&R rule 
 | Budget cap | $2.00 per investigation |
 | Timeout | 600 seconds |
 | Mode | One-shot (terminates after completion) |
+| Debounce | `l1-bot` (one active session at a time, pending requests re-fire on completion) |
 | Suppression | Max 10 invocations per minute |
 

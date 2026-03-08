@@ -50,6 +50,19 @@ data:
 
 Paths use GJSON dot notation (not slash-separated).
 
+## Session Serialization (Debounce)
+
+The `debounce_key` field in `ai_agent.yaml` serializes sessions so only one runs at a time per key. When multiple events trigger the same agent concurrently, the first creates a session and subsequent requests are queued. When the active session ends, the most recent queued request is automatically re-fired.
+
+```yaml
+data:
+  debounce_key: l1-bot
+```
+
+This is useful for agents that should process events sequentially rather than in parallel (e.g., a triage bot investigating tickets one at a time). The key supports Go template syntax for dynamic values (e.g., `triage-{{.sid}}`).
+
+Unlike D&R suppression which silently drops excess requests, debounce guarantees the latest request will eventually be processed.
+
 ## Installation
 
 Use the `lc-agent-management` skill from the [lc-essentials](../marketplace/plugins/lc-essentials/) plugin to install and remove agents.

@@ -75,7 +75,8 @@ Several mechanisms prevent infinite loops:
 2. **Status progression** -- status only moves forward through the lifecycle
 3. **Idempotent keys** -- D&R suppression keys prevent duplicate sessions per ticket
 4. **Rate limiting** -- suppression on all D&R rules caps agent spawning
-5. **SOC Manager** -- detects stale lock tags and cleans them up (Tiered SOC only)
+5. **Debounce** -- `debounce_key` serializes sessions so only one runs at a time per key, with pending requests re-fired on completion (unlike suppression which drops excess requests)
+6. **SOC Manager** -- detects stale lock tags and cleans them up (Tiered SOC only)
 
 ## Prerequisites
 
