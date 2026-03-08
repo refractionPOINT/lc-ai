@@ -1,0 +1,24 @@
+version: 3
+hives:
+  dr-general:
+    soc-threat-hunter-on-tag:
+      data:
+        detect:
+          event: tags_updated
+          op: contains
+          path: event/metadata/new_tags
+          value: needs-threat-hunt
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/soc-threat-hunter
+            suppression:
+              is_global: true
+              keys:
+                - "soc-hunt-{{ .event.ticket_id }}"
+              max_count: 1
+              period: 30m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-soc:tiered-soc:threat-hunter

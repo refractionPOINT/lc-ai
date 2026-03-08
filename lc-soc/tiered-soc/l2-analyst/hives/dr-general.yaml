@@ -1,0 +1,23 @@
+version: 3
+hives:
+  dr-general:
+    soc-l2-on-ticket-escalated:
+      data:
+        detect:
+          event: escalated
+          op: exists
+          path: event/ticket_id
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/soc-l2-analyst
+            suppression:
+              is_global: true
+              keys:
+                - "soc-l2-{{ .event.ticket_id }}"
+              max_count: 1
+              period: 30m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-soc:tiered-soc:l2-analyst

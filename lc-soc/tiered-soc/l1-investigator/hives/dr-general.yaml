@@ -1,0 +1,23 @@
+version: 3
+hives:
+  dr-general:
+    soc-l1-on-ticket-created:
+      data:
+        detect:
+          event: created
+          op: exists
+          path: event/ticket_id
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/soc-l1-investigator
+            suppression:
+              is_global: true
+              keys:
+                - soc-l1-rate-limit
+              max_count: 10
+              period: 1m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-soc:tiered-soc:l1-investigator
