@@ -134,6 +134,7 @@ hives:
           oid: routing.oid
           ticket_id: event.ticket_id
           ticket_number: event.ticket_number
+        debounce_key: l1-bot
         model: opus
         max_turns: 30
         max_budget_usd: 2.0
