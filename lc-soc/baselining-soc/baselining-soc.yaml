@@ -1,0 +1,16 @@
+version: 3
+include:
+  - bulk-triage/hives/ai_agent.yaml
+  - bulk-triage/hives/dr-general.yaml
+  - l2-analyst/hives/ai_agent.yaml
+  - l2-analyst/hives/dr-general.yaml
+  - malware-analyst/hives/ai_agent.yaml
+  - malware-analyst/hives/dr-general.yaml
+  - containment/hives/ai_agent.yaml
+  - containment/hives/dr-general.yaml
+  - threat-hunter/hives/ai_agent.yaml
+  - threat-hunter/hives/dr-general.yaml
+  - soc-manager/hives/ai_agent.yaml
+  - soc-manager/hives/dr-general.yaml
+  - shift-reporter/hives/ai_agent.yaml
+  - shift-reporter/hives/dr-general.yaml

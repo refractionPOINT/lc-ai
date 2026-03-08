@@ -40,6 +40,7 @@ This event-driven architecture means agents are:
 |-----|--------|----------|---------------------|
 | [Tiered SOC](tiered-soc/) | 8 | Full-featured orgs wanting defense-in-depth | $0.10 - $7.60 |
 | [Lean SOC](lean-soc/) | 4 | Smaller orgs or getting started fast | $0.10 - $2.10 |
+| [Baselining SOC](baselining-soc/) | 7 | New orgs with noisy detections, deploy before Tiered SOC | ~$5.00/hour (bulk) |
 
 ## Inter-Agent Communication
 
@@ -76,7 +77,7 @@ Several mechanisms prevent infinite loops:
 3. **Idempotent keys** -- D&R suppression keys prevent duplicate sessions per ticket
 4. **Rate limiting** -- suppression on all D&R rules caps agent spawning
 5. **Debounce** -- `debounce_key` serializes sessions so only one runs at a time per key, with pending requests re-fired on completion (unlike suppression which drops excess requests)
-6. **SOC Manager** -- detects stale lock tags and cleans them up (Tiered SOC only)
+6. **SOC Manager** -- detects stale lock tags and cleans them up (Tiered and Baselining SOCs)
 
 ## Prerequisites
 
