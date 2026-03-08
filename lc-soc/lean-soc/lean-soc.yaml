@@ -1,0 +1,10 @@
+version: 3
+include:
+  - triage/hives/ai_agent.yaml
+  - triage/hives/dr-general.yaml
+  - investigator/hives/ai_agent.yaml
+  - investigator/hives/dr-general.yaml
+  - responder/hives/ai_agent.yaml
+  - responder/hives/dr-general.yaml
+  - reporter/hives/ai_agent.yaml
+  - reporter/hives/dr-general.yaml

@@ -165,33 +165,17 @@ If the agent requires additional secrets, ask the user for the values.
 
 ### Step 5: Push the Hive Configurations
 
-Use `limacharlie sync push` to deploy the agent's hive configurations:
+Each agent has a root IaC file (e.g., `basic-triage.yaml`) that uses `include:` to pull in all its hive configs. Push it with a single command:
 
 ```bash
 limacharlie sync push \
-  --oid <oid> \
-  --dir <path-to-agent-hives-dir> \
+  --config-file <path-to-agent>/<agent-name>.yaml \
   --hive-ai-agent \
-  --hive-dr-general
-```
-
-Include the relevant `--hive-*` flags based on what the agent's YAML files define. Look at the top-level keys in each YAML file to determine which hive types are used.
-
-Alternatively, push individual hive entries:
-
-```bash
-# Push AI agent definition
-limacharlie hive import \
-  --hive-name ai_agent \
-  --input-file <path-to-ai_agent.yaml-content> \
-  --oid <oid>
-
-# Push D&R rules
-limacharlie hive import \
-  --hive-name dr-general \
-  --input-file <path-to-dr-general.yaml-content> \
+  --hive-dr-general \
   --oid <oid>
 ```
+
+The root file uses the sync `include:` mechanism to merge all per-agent hive YAMLs automatically. Use `--dry-run` first to preview changes.
 
 **Do NOT push secret.yaml** - secrets were already set in Step 4 with the actual values.
 
@@ -304,25 +288,19 @@ The secret name must match what the agent's `ai_agent.yaml` references in its `l
 
 ### Step 6: Push All Hive Configurations
 
-Push each agent's hive configs using `sync push`. Process each agent's `hives/` directory:
+Each SOC has a root IaC file (e.g., `lean-soc.yaml`) that uses `include:` to pull in all agent hive configs. Push the entire SOC with a single command:
 
 ```bash
-# For each agent in the SOC, push its ai_agent.yaml
 limacharlie sync push \
-  --config-file <path-to-agent>/hives/ai_agent.yaml \
+  --config-file <path-to-soc>/<soc-name>.yaml \
   --hive-ai-agent \
-  --oid <oid>
-
-# And its dr-general.yaml
-limacharlie sync push \
-  --config-file <path-to-agent>/hives/dr-general.yaml \
   --hive-dr-general \
   --oid <oid>
 ```
 
-**Do NOT push secret.yaml files** -- secrets were already set in Steps 4-5 with actual values.
+The root file uses the sync `include:` mechanism to merge all per-agent hive YAMLs automatically. Use `--dry-run` first to preview changes.
 
-Follow the SOC's documented installation order (typically: triage first, then investigators, then responders/hunters, then scheduled agents).
+**Do NOT push secret.yaml files** -- secrets were already set in Steps 4-5 with actual values.
 
 ### Step 7: Verify Installation
 
