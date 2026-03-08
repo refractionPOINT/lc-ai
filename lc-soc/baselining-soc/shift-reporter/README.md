@@ -81,7 +81,7 @@ Create an API key named `soc-shift-reporter` with these permissions:
 | `investigation.get` | List tickets, read dashboard, get report summary |
 | `investigation.set` | Create report ticket, add notes |
 | `ext.request` | Invoke extensions |
-| `dr-fp.get` | List FP rules for baselining progress reporting |
+| `fp.ctrl` | List FP rules for baselining progress reporting |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration

@@ -59,8 +59,7 @@ Create an API key named `soc-bulk-triage` with these permissions:
 | `investigation.get` | List and read existing tickets |
 | `investigation.set` | Create tickets, add detections, add notes |
 | `ext.request` | Invoke ext-ticketing extension |
-| `dr-fp.set` | Create FP rules |
-| `dr-fp.get` | List and read existing FP rules |
+| `fp.ctrl` | Create, list, and manage FP rules |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration
