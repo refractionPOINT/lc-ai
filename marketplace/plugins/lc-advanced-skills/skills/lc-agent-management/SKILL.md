@@ -139,10 +139,12 @@ limacharlie api-key create \
   --output yaml
 ```
 
-**IMPORTANT**: The secret key is only shown once at creation. Capture it and immediately store it:
+**IMPORTANT**: The secret key is only shown once at creation. Capture it and immediately store it.
+
+Secrets are hive records and **must be created with `enabled: true`** to be usable. Use `hive set` with the full record format to ensure this:
 
 ```bash
-limacharlie secret set --key lc-api-key --oid <oid> <<< '{"secret": "<the-api-key-value>"}'
+echo '{"data": {"secret": "<the-api-key-value>"}, "usr_mtd": {"enabled": true}}' | limacharlie hive set --hive-name secret --key lc-api-key --oid <oid>
 ```
 
 Adjust permissions based on what the agent needs. For ticket-based agents, also include permissions for ticketing operations.
@@ -152,7 +154,7 @@ Adjust permissions based on what the agent needs. For ticket-based agents, also 
 Ask the user for their Anthropic API key. Then store it:
 
 ```bash
-limacharlie secret set --key anthropic-key --oid <oid> <<< '{"secret": "<user-provided-key>"}'
+echo '{"data": {"secret": "<user-provided-key>"}, "usr_mtd": {"enabled": true}}' | limacharlie hive set --hive-name secret --key anthropic-key --oid <oid>
 ```
 
 **NEVER** generate, guess, or fabricate API keys. The user must provide their own Anthropic key.
@@ -262,10 +264,12 @@ limacharlie extension list --oid <oid> --output yaml
 
 ### Step 4: Set Up the Anthropic Secret
 
-The Anthropic API key is shared across all agents in the SOC. Ask the user for it and store it once:
+The Anthropic API key is shared across all agents in the SOC. Ask the user for it and store it once.
+
+Secrets are hive records and **must be created with `enabled: true`** to be usable:
 
 ```bash
-limacharlie secret set --key anthropic-key --oid <oid> <<< '{"secret": "<user-provided-key>"}'
+echo '{"data": {"secret": "<user-provided-key>"}, "usr_mtd": {"enabled": true}}' | limacharlie hive set --hive-name secret --key anthropic-key --oid <oid>
 ```
 
 Check if it already exists (from a previous agent install):
@@ -290,10 +294,10 @@ limacharlie api-key create \
   --output yaml
 ```
 
-**Capture the key value** from the output and immediately store it as a secret:
+**Capture the key value** from the output and immediately store it as a secret (must be `enabled: true`):
 
 ```bash
-limacharlie secret set --key <agent-secret-name> --oid <oid> <<< '{"secret": "<the-api-key-value>"}'
+echo '{"data": {"secret": "<the-api-key-value>"}, "usr_mtd": {"enabled": true}}' | limacharlie hive set --hive-name secret --key <agent-secret-name> --oid <oid>
 ```
 
 The secret name must match what the agent's `ai_agent.yaml` references in its `lc_api_key_secret` field (e.g., `hive://secret/lean-triage-api-key` means the secret key is `lean-triage-api-key`).
