@@ -1,6 +1,6 @@
-# LimaCharlie AI SOC
+# LimaCharlie AI SOC as Code
 
-Fully autonomous Security Operations Centers powered by AI agents that coordinate through LimaCharlie's ticketing system and D&R rules.
+Fully autonomous Security Operations Centers defined as code -- AI agents coordinated through LimaCharlie's ticketing system and D&R rules, deployed and versioned like any other Infrastructure as Code.
 
 Each SOC is a self-contained collection of AI agents that work together to detect, triage, investigate, contain, and report on security threats -- without human intervention for routine operations.
 

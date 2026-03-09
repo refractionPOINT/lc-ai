@@ -1,6 +1,6 @@
 # Tiered SOC
 
-A full-featured AI Security Operations Center modeled after the traditional L1/L2/L3 SOC structure. Eight specialized agents form a coordinated pipeline that handles the complete alert lifecycle -- from initial detection through investigation, containment, threat hunting, and daily reporting.
+A full-featured AI SOC as Code modeled after the traditional L1/L2/L3 SOC structure. Eight specialized agents form a coordinated pipeline that handles the complete alert lifecycle -- from initial detection through investigation, containment, threat hunting, and daily reporting.
 
 ## Architecture
 

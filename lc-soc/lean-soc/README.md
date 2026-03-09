@@ -1,6 +1,6 @@
 # Lean SOC
 
-A minimal AI Security Operations Center built for maximum autonomy with minimum complexity. Four agents handle the complete alert lifecycle -- triage, investigation, containment, and reporting -- without the overhead of specialized tiers.
+A minimal AI SOC as Code built for maximum autonomy with minimum complexity. Four agents handle the complete alert lifecycle -- triage, investigation, containment, and reporting -- without the overhead of specialized tiers.
 
 ## Architecture
 

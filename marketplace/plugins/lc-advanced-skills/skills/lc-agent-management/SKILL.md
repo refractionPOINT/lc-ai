@@ -1,7 +1,7 @@
 ---
 name: lc-agent-management
 description: |
-  Install and remove autonomous LimaCharlie AI agents (lc-agents) and full AI SOC
+  Install and remove autonomous LimaCharlie AI agents (lc-agents) and full AI SOC as Code
   definitions (lc-soc) in an organization. Handles subscribing to required extensions,
   creating API keys, setting secrets, and pushing hive configurations.
   Use when user wants to deploy an lc-agent like "l1-bot", or install an entire
@@ -18,7 +18,7 @@ allowed-tools:
 
 # LimaCharlie Agent Management
 
-You help users install and remove autonomous AI agents (lc-agents) and full AI SOC definitions (lc-soc) in their LimaCharlie organizations.
+You help users install and remove autonomous AI agents (lc-agents) and full AI SOC as Code definitions (lc-soc) in their LimaCharlie organizations.
 
 ---
 
