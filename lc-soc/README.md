@@ -1,4 +1,4 @@
-# LimaCharlie AI SOC as Code
+# LimaCharlie Agentic SOC as Code
 
 Fully autonomous Security Operations Centers defined as code -- AI agents coordinated through LimaCharlie's ticketing system and D&R rules, deployed and versioned like any other Infrastructure as Code.
 

@@ -1,6 +1,6 @@
 # Baselining SOC
 
-An AI SOC as Code designed for **newly onboarded organizations** that generate a high volume of false positive detections. Instead of triaging every detection individually in real-time, it processes detections in hourly batches and aggressively creates narrow FP rules to reduce noise. Once the detection volume is manageable, migrate to the [Tiered SOC](../tiered-soc/) for real-time per-detection handling.
+An Agentic SOC as Code designed for **newly onboarded organizations** that generate a high volume of false positive detections. Instead of triaging every detection individually in real-time, it processes detections in hourly batches and aggressively creates narrow FP rules to reduce noise. Once the detection volume is manageable, migrate to the [Tiered SOC](../tiered-soc/) for real-time per-detection handling.
 
 ## Architecture
 
