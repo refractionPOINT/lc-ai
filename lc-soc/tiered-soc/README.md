@@ -60,6 +60,27 @@ A full-featured Agentic SOC as Code modeled after the traditional L1/L2/L3 SOC s
                      +----------------+
 ```
 
+```mermaid
+flowchart TD
+    det[EDR Detection] --> triage["TRIAGE<br/>sonnet, $0.50"]
+    triage -->|Obvious FP| dismissed["Dismissed<br/>(no ticket, ~$0.10)"]
+    triage -->|creates ticket| l1["L1 INVESTIGATOR<br/>opus, $2.00"]
+    l1 -->|FP confirmed| closed["Closed<br/>(false_positive, ~$0.60)"]
+    l1 -->|"tag: needs-malware-analysis"| malware["MALWARE ANALYST<br/>opus, $5.00"]
+    malware -->|findings on ticket| l2
+    l1 -->|"status: escalated"| l2["L2 ANALYST<br/>opus, $5.00"]
+    l2 -->|"tag: needs-containment"| containment["CONTAINMENT<br/>sonnet, $1.00"]
+    l2 -->|"tag: needs-threat-hunt"| hunter["THREAT HUNTER<br/>opus, $5.00"]
+    l2 --> resolved[Resolved]
+    containment --> containActions[Actions documented on ticket]
+    hunter --> newTickets[New tickets for lateral findings]
+
+    schedule1["Every 1 hour"] --> socmgr["SOC MANAGER<br/>sonnet, $0.50"]
+    socmgr --> sla[SLA monitoring, stale ticket cleanup]
+    schedule2["Every 24 hours"] --> shift["SHIFT REPORTER<br/>sonnet, $1.00"]
+    shift --> daily[Daily SOC metrics report]
+```
+
 ## Why This Structure
 
 The tiered model mirrors how elite human SOCs operate, but at machine speed:

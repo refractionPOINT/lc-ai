@@ -43,6 +43,20 @@ A minimal Agentic SOC as Code built for maximum autonomy with minimum complexity
                      +----------+
 ```
 
+```mermaid
+flowchart TD
+    det[EDR Detection] --> triage["TRIAGE<br/>sonnet, $0.50"]
+    triage -->|Obvious FP| dismissed["Dismissed<br/>(no ticket, ~$0.10)"]
+    triage -->|creates ticket| inv["INVESTIGATOR<br/>opus, $5.00<br/>(combined L1 + L2)"]
+    inv -->|FP confirmed| closed["Closed<br/>(false_positive, ~$1.10)"]
+    inv -->|"tag: needs-containment"| resp["RESPONDER<br/>sonnet, $1.00"]
+    resp --> actions[Actions documented on ticket]
+    inv -->|Resolved/Escalated| human["Human review<br/>(with full documentation)"]
+
+    schedule["Every 24 hours"] --> reporter["REPORTER<br/>sonnet, $1.00"]
+    reporter --> metrics[SOC metrics + SLA monitoring]
+```
+
 ## Why This Structure
 
 The lean model optimizes for simplicity and cost:

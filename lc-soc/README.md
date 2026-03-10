@@ -27,6 +27,15 @@ Agent B reads ticket, does work, updates ticket
 ... cycle continues ...
 ```
 
+```mermaid
+flowchart TD
+    A["Agent A updates ticket<br/>(status/tags/notes)"] --> B["ext-ticketing emits<br/>webhook audit event"]
+    B --> C["D&R rule matches<br/>event type + metadata"]
+    C --> D["D&R rule triggers Agent B<br/>via 'start ai agent'"]
+    D --> E["Agent B reads ticket,<br/>does work, updates ticket"]
+    E -->|"cycle continues"| A
+```
+
 This event-driven architecture means agents are:
 
 - **Loosely coupled** -- each agent has a single responsibility and doesn't know about other agents' internals
