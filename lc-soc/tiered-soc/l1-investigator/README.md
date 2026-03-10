@@ -4,43 +4,19 @@ The workhorse of the SOC. When Triage creates a ticket, the L1 Investigator pick
 
 ## What It Does
 
-```
-Ticket created (webhook event)
-      |
-      v
-Tag ticket: "investigating"
-Set status: in_progress
-      |
-      v
-Fetch ticket --> Analyze detection --> Check timeline
-      |
-      v
-Look for related activity:
-  - Process trees
-  - Network connections
-  - File operations
-  - Other detections on same sensor
-      |
-      v
-Assess scope:
-  - Same IOCs on other sensors?
-  - Same detection elsewhere?
-      |
-      v
-Document EVERYTHING:
-  - Summary, Conclusion, Notes
-  - Entities (IOCs with verdicts)
-  - Telemetry references
-      |
-      +--- Suspicious binary? --> tag: needs-malware-analysis
-      |
-      +--- False positive? --> closed (false_positive)
-      |
-      +--- Everything else --> escalated (triggers L2)
-      |
-      v
-Remove "investigating" tag
-Session terminates
+```mermaid
+flowchart TD
+    trigger["Ticket created<br/>(webhook event)"] --> tag["Tag: investigating<br/>Status: in_progress"]
+    tag --> fetch["Fetch ticket → Analyze detection → Check timeline"]
+    fetch --> related["Look for related activity:<br/>Process trees, network connections,<br/>file operations, other detections"]
+    related --> scope["Assess scope:<br/>Same IOCs on other sensors?<br/>Same detection elsewhere?"]
+    scope --> doc["Document EVERYTHING:<br/>Summary, Conclusion, Notes,<br/>Entities, Telemetry references"]
+    doc -->|Suspicious binary?| malware["tag: needs-malware-analysis"]
+    doc -->|False positive?| closed["closed (false_positive)"]
+    doc -->|Everything else| escalated["escalated (triggers L2)"]
+    malware --> cleanup["Remove 'investigating' tag<br/>Session terminates"]
+    closed --> cleanup
+    escalated --> cleanup
 ```
 
 ## Downstream Signaling

@@ -4,31 +4,12 @@ Runs once per day to generate a comprehensive SOC report. In addition to the sta
 
 ## What It Does
 
-```
-Schedule: every 24 hours
-      |
-      v
-Gather metrics:
-  - Dashboard counts (current backlog)
-  - Report summary (MTTA, MTTR, volume)
-  - Recently closed tickets (outcomes)
-  - Open tickets (current state)
-  - FP rules (new rules in last 24h)
-      |
-      v
-Create report ticket
-      |
-      v
-Add structured notes:
-  - Executive summary (key metrics table)
-  - Notable incidents (critical/high TPs)
-  - FP rule activity (new rules, total active, baselining progress)
-  - Trends and recommendations (including migration readiness)
-      |
-      v
-Tag: soc-report, daily-report, baseline-report
-Close report ticket
-Session terminates
+```mermaid
+flowchart TD
+    trigger["Schedule: every 24 hours"] --> gather["Gather metrics:<br/>Dashboard counts, MTTA/MTTR,<br/>closed/open tickets,<br/>FP rules (new in last 24h)"]
+    gather --> create[Create report ticket]
+    create --> notes["Add structured notes:<br/>Executive summary, notable incidents,<br/>FP rule activity & baselining progress,<br/>trends & recommendations (migration readiness)"]
+    notes --> done["Tag: soc-report, daily-report, baseline-report<br/>Close report ticket<br/>Session terminates"]
 ```
 
 ## Report Contents

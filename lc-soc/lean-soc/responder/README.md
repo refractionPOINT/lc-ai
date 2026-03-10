@@ -4,31 +4,15 @@ Takes action on confirmed threats. When the Investigator tags a ticket with `nee
 
 ## What It Does
 
-```
-Tag: needs-containment (webhook event)
-      |
-      v
-Tag: containing (remove needs-containment)
-      |
-      v
-Review ticket for:
-  - Affected sensors
-  - Malicious IOCs (entities with malicious verdict)
-  - Recommended actions from Investigator
-      |
-      v
-Severity check:
-      |
-      +--- CRITICAL + confirmed --> AUTO-CONTAIN
-      |    - Isolate sensors
-      |    - Block IOCs in lookups
-      |
-      +--- Other severity -------> RECOMMEND ONLY
-           - Document actions for human
-      |
-      v
-Tag: contained, resolve ticket
-Session terminates
+```mermaid
+flowchart TD
+    trigger["Tag: needs-containment<br/>(webhook event)"] --> tag["Tag: containing<br/>(remove needs-containment)"]
+    tag --> review["Review ticket:<br/>Affected sensors, malicious IOCs,<br/>investigator recommendations"]
+    review --> severity{Severity check}
+    severity -->|"CRITICAL + confirmed"| auto["AUTO-CONTAIN<br/>Isolate sensors, block IOCs"]
+    severity -->|Other severity| recommend["RECOMMEND ONLY<br/>Document actions for human"]
+    auto --> done["Tag: contained<br/>Resolve ticket, session terminates"]
+    recommend --> done
 ```
 
 ## Safety Guardrails

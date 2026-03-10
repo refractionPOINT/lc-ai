@@ -4,38 +4,17 @@ The sole investigator in the Lean SOC. Combines L1 and L2 analyst roles into a s
 
 ## What It Does
 
-```
-Ticket created (webhook event)
-      |
-      v
-Tag: "investigating", status: in_progress
-      |
-      v
-Full investigation:
-  1. Analyze the detection
-  2. Check sensor timeline and process trees
-  3. Look for related activity (network, files, registry)
-  4. Hunt for same IOCs on other sensors
-  5. Assess lateral movement
-  6. Root cause analysis (if malicious)
-  7. MITRE ATT&CK mapping
-      |
-      v
-Document EVERYTHING:
-  - Summary, Conclusion, Notes
-  - Entities (IOCs with verdicts)
-  - Telemetry references
-      |
-      +--- Confirmed malicious? --> tag: needs-containment
-      |                             status: escalated
-      |
-      +--- False positive? -------> closed (false_positive)
-      |
-      +--- Uncertain? ------------> escalated (for human review)
-      |
-      v
-Remove "investigating" tag
-Session terminates
+```mermaid
+flowchart TD
+    trigger["Ticket created<br/>(webhook event)"] --> tag["Tag: investigating<br/>Status: in_progress"]
+    tag --> investigation["Full investigation:<br/>1. Analyze detection<br/>2. Sensor timeline & process trees<br/>3. Related activity (network, files, registry)<br/>4. IOC hunting on other sensors<br/>5. Lateral movement assessment<br/>6. Root cause analysis<br/>7. MITRE ATT&CK mapping"]
+    investigation --> doc["Document EVERYTHING:<br/>Summary, Conclusion, Notes,<br/>Entities, Telemetry references"]
+    doc -->|Confirmed malicious?| contain["tag: needs-containment<br/>status: escalated"]
+    doc -->|False positive?| closed["closed (false_positive)"]
+    doc -->|Uncertain?| escalated["escalated (for human review)"]
+    contain --> cleanup["Remove 'investigating' tag<br/>Session terminates"]
+    closed --> cleanup
+    escalated --> cleanup
 ```
 
 ## Why One Investigator Instead of L1 + L2

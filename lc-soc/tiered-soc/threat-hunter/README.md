@@ -4,40 +4,15 @@ The proactive arm of the SOC. When L2 confirms malicious IOCs and tags a ticket 
 
 ## What It Does
 
-```
-Tag: needs-threat-hunt (webhook event)
-      |
-      v
-Tag: hunting (remove needs-threat-hunt)
-      |
-      v
-Collect confirmed IOCs from ticket:
-  - Hashes, IPs, domains, file paths
-  - User accounts, process names
-  - Registry keys, mutex names
-      |
-      v
-Hunt org-wide (last 7 days):
-  - Hash hunting (same files on other sensors)
-  - Network IOC hunting (DNS/connections to same infra)
-  - Process hunting (same execution patterns)
-  - User hunting (compromised accounts elsewhere)
-      |
-      v
-Analyze each hit:
-  - Same incident or new compromise?
-  - What's the context on that endpoint?
-  - Is the endpoint compromised?
-      |
-      v
-Document findings on source ticket
-      |
-      +--- New compromised endpoint? --> Create new ticket
-      |    (picked up by L1 automatically)
-      |
-      v
-Tag: hunted (remove hunting)
-Session terminates
+```mermaid
+flowchart TD
+    trigger["Tag: needs-threat-hunt<br/>(webhook event)"] --> tag["Tag: hunting<br/>(remove needs-threat-hunt)"]
+    tag --> collect["Collect confirmed IOCs:<br/>Hashes, IPs, domains, paths,<br/>users, processes, registry, mutexes"]
+    collect --> hunt["Hunt org-wide (last 7 days):<br/>Hash, network, process,<br/>user hunting"]
+    hunt --> analyze["Analyze each hit:<br/>Same incident or new compromise?<br/>Context? Compromised?"]
+    analyze --> doc[Document findings on source ticket]
+    doc -->|New compromised endpoint?| newticket["Create new ticket<br/>(picked up by L1 automatically)"]
+    doc --> done["Tag: hunted (remove hunting)<br/>Session terminates"]
 ```
 
 ## Why Threat Hunting Matters

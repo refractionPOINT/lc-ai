@@ -4,34 +4,12 @@ Pulls double duty: performs SOC health monitoring (stale tickets, SLA violations
 
 ## What It Does
 
-```
-Schedule: every 24 hours
-      |
-      v
-PART 1: Health Check
-  - Find stale lock tags (investigating/containing stuck > 30min)
-  - Remove stale tags, add notes
-  - Check for SLA violations
-  - Tag SLA-breached tickets
-      |
-      v
-PART 2: Daily Report
-  - Gather metrics (MTTA, MTTR, volume, FP/TP rates)
-  - Get dashboard counts
-  - Review closed/open tickets
-      |
-      v
-Create report ticket with:
-  - Health check results
-  - Key metrics table
-  - Severity breakdown
-  - Notable incidents
-  - Recommendations
-      |
-      v
-Tag: soc-report, daily-report
-Close report ticket
-Session terminates
+```mermaid
+flowchart TD
+    trigger["Schedule: every 24 hours"] --> health["PART 1: Health Check<br/>Find stale lock tags > 30min,<br/>remove stale tags, check SLA violations"]
+    health --> report["PART 2: Daily Report<br/>Gather metrics (MTTA, MTTR, volume),<br/>dashboard counts, review tickets"]
+    report --> create["Create report ticket:<br/>Health check results, metrics table,<br/>severity breakdown, notable incidents,<br/>recommendations"]
+    create --> done["Tag: soc-report, daily-report<br/>Close report ticket<br/>Session terminates"]
 ```
 
 ## Why Combined

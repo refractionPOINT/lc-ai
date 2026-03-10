@@ -4,26 +4,13 @@ The first line of defense. Every detection that fires in the organization passes
 
 ## What It Does
 
-```
-Detection fires
-      |
-      v
-Quick FP check -- obvious nonsense?
-      |           |
-     YES          NO
-      |           |
-      v           v
-   STOP     Check context:
-   (~$0.10)   - Other recent detections on same sensor?
-              - Existing tickets for this sensor?
-              |
-              v
-            Route to ticket:
-              - Add to existing ticket (related activity)
-              - OR create a new ticket (new incident)
-              |
-              v
-            Session terminates
+```mermaid
+flowchart TD
+    det[Detection fires] --> fpcheck{"Quick FP check<br/>obvious nonsense?"}
+    fpcheck -->|YES| stop["STOP<br/>(~$0.10)"]
+    fpcheck -->|NO| context["Check context:<br/>Other recent detections?<br/>Existing tickets for this sensor?"]
+    context --> route["Route to ticket:<br/>Add to existing (related activity)<br/>OR create new ticket (new incident)"]
+    route --> done[Session terminates]
 ```
 
 ## Why Sonnet

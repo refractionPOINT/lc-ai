@@ -4,36 +4,15 @@ Takes action on confirmed threats. When L2 tags a ticket with `needs-containment
 
 ## What It Does
 
-```
-Tag: needs-containment (webhook event)
-      |
-      v
-Tag: containing (remove needs-containment)
-      |
-      v
-Review ticket:
-  - What's the threat?
-  - Which sensors are affected?
-  - What IOCs have malicious verdicts?
-  - What did L2 recommend?
-      |
-      v
-Severity check:
-      |
-      +--- CRITICAL + confirmed -----> AUTO-CONTAIN
-      |    malicious                     - Isolate sensors
-      |                                  - Block IOCs in lookups
-      |                                  - Document every action
-      |
-      +--- HIGH/MEDIUM/uncertain ----> RECOMMEND ONLY
-           classification                - Document what SHOULD be done
-                                         - Flag for human review
-      |
-      v
-Document actions as remediation note
-Tag: contained (remove containing)
-Resolve ticket (if fully contained)
-Session terminates
+```mermaid
+flowchart TD
+    trigger["Tag: needs-containment<br/>(webhook event)"] --> tag["Tag: containing<br/>(remove needs-containment)"]
+    tag --> review["Review ticket:<br/>Threat, affected sensors,<br/>malicious IOCs, L2 recommendations"]
+    review --> severity{Severity check}
+    severity -->|"CRITICAL +<br/>confirmed malicious"| auto["AUTO-CONTAIN<br/>Isolate sensors, block IOCs,<br/>document every action"]
+    severity -->|"HIGH/MEDIUM/<br/>uncertain"| recommend["RECOMMEND ONLY<br/>Document what SHOULD be done,<br/>flag for human review"]
+    auto --> done["Document actions as remediation note<br/>Tag: contained (remove containing)<br/>Resolve ticket, session terminates"]
+    recommend --> done
 ```
 
 ## Containment Actions

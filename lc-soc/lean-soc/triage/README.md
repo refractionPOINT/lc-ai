@@ -4,18 +4,11 @@ The first line of defense. Every detection passes through this agent for a quick
 
 ## What It Does
 
-```
-Detection fires
-      |
-      v
-Quick FP check -- obvious nonsense?
-      |           |
-     YES          NO
-      |           |
-      v           v
-   STOP     Gather context, route to ticket
-   (~$0.10)   - Add to existing ticket (related)
-              - OR create new ticket
+```mermaid
+flowchart TD
+    det[Detection fires] --> fpcheck{"Quick FP check<br/>obvious nonsense?"}
+    fpcheck -->|YES| stop["STOP<br/>(~$0.10)"]
+    fpcheck -->|NO| route["Gather context, route to ticket:<br/>Add to existing (related)<br/>OR create new ticket"]
 ```
 
 ## Why Sonnet

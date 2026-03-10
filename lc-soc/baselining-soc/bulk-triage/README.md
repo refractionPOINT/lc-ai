@@ -4,35 +4,19 @@ The core agent of the Baselining SOC. Instead of triaging individual detections 
 
 ## What It Does
 
-```
-Schedule: 1h_per_org
-      |
-      v
-List all detections from last hour
-      |
-      v
-List existing FP rules (avoid duplicates)
-      |
-      v
-Group detections by category + pattern
-      |
-      v
-For each group:
-      |
-      +--- Clearly benign? -----> Create narrow FP rule
-      |                            (limacharlie fp set)
-      |
-      +--- Suspicious/malicious? -> Create ticket
-                                     + set status: escalated
-                                     (triggers L2 Analyst)
-      |
-      +--- Suspicious binary? --> tag: needs-malware-analysis
-      |
-      v
-Output summary (rules created, tickets created)
-      |
-      v
-Session terminates (one_shot)
+```mermaid
+flowchart TD
+    trigger["Schedule: 1h_per_org"] --> list["List all detections from last hour"]
+    list --> fp["List existing FP rules (avoid duplicates)"]
+    fp --> group["Group detections by category + pattern"]
+    group --> each{For each group}
+    each -->|Clearly benign?| fprule["Create narrow FP rule<br/>(limacharlie fp set)"]
+    each -->|"Suspicious/malicious?"| ticket["Create ticket + status: escalated<br/>(triggers L2 Analyst)"]
+    each -->|Suspicious binary?| malware["tag: needs-malware-analysis"]
+    fprule --> summary["Output summary<br/>(rules created, tickets created)"]
+    ticket --> summary
+    malware --> summary
+    summary --> done["Session terminates (one_shot)"]
 ```
 
 ## Why Opus

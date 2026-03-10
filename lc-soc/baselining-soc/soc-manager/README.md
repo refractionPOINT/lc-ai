@@ -4,37 +4,18 @@ The self-healing mechanism of the SOC. Runs every hour to catch operational issu
 
 ## What It Does
 
-```
-Schedule: every 1 hour
-      |
-      v
-Check for stale lock tags:
-  - "l2-investigating" stuck > 30 min?
-  - "analyzing" stuck > 30 min?
-  - "containing" stuck > 30 min?
-  - "hunting" stuck > 30 min?
-      |
-      +--- Found stale tags --> Remove tag, add note
-      |
-      v
-Check for SLA violations:
-  - Critical tickets in "new" > 15 min?
-  - High tickets in "new" > 30 min?
-  - Medium tickets in "new" > 60 min?
-  - Low tickets in "new" > 120 min?
-      |
-      +--- SLA breached --> Tag: sla-breached, add escalation note
-      |
-      v
-Check for abandoned tickets:
-  - In-progress with no updates > 4 hours?
-  - Escalated with no updates > 4 hours?
-      |
-      +--- Abandoned --> Add escalation note
-      |
-      v
-Output summary
-Session terminates
+```mermaid
+flowchart TD
+    trigger["Schedule: every 1 hour"] --> stale["Check stale lock tags:<br/>l2-investigating, analyzing,<br/>containing, hunting<br/>stuck > 30 min?"]
+    stale -->|Found stale tags| remove[Remove tag, add note]
+    stale --> sla["Check SLA violations:<br/>Critical > 15min, High > 30min,<br/>Medium > 60min, Low > 120min"]
+    remove --> sla
+    sla -->|SLA breached| breach["Tag: sla-breached,<br/>add escalation note"]
+    sla --> abandoned["Check abandoned tickets:<br/>In-progress/escalated<br/>no updates > 4 hours?"]
+    breach --> abandoned
+    abandoned -->|Abandoned| escalate[Add escalation note]
+    abandoned --> done["Output summary<br/>Session terminates"]
+    escalate --> done
 ```
 
 ## Why This Exists
