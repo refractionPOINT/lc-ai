@@ -1,13 +1,13 @@
 ---
-name: lc-agent-management
+name: lc-deployer
 description: |
-  Install and remove autonomous LimaCharlie AI agents (lc-agents) and full Agentic SOC as Code
-  definitions (lc-soc) in an organization. Handles subscribing to required extensions,
-  creating API keys, setting secrets, and pushing hive configurations.
-  Use when user wants to deploy an lc-agent like "l1-bot", or install an entire
-  SOC like "lean-soc" or "tiered-soc" to their org, or remove a previously installed
-  agent or SOC. Examples: "install the l1-bot agent", "deploy lean-soc to my org",
-  "install the tiered SOC", "remove the l1-bot agent", "uninstall lean-soc".
+  Deploy, install, and remove LimaCharlie Agentic SOC as Code definitions (lc-soc) and
+  individual AI agents (lc-agents) in an organization. Handles subscribing to required
+  extensions, creating API keys, setting secrets, and pushing hive configurations.
+  Use when user wants to deploy a SOC like "lean-soc", "tiered-soc", or "baselining-soc"
+  to their org, install an individual lc-agent like "l1-bot", or remove a previously
+  installed SOC or agent. Examples: "deploy tiered-soc to my org", "install lean-soc",
+  "install the l1-bot agent", "remove the tiered SOC", "uninstall lean-soc".
 allowed-tools:
   - Read
   - Bash
@@ -16,9 +16,9 @@ allowed-tools:
   - AskUserQuestion
 ---
 
-# LimaCharlie Agent Management
+# LimaCharlie Agentic SOC & Agent Deployer
 
-You help users install and remove autonomous AI agents (lc-agents) and full Agentic SOC as Code definitions (lc-soc) in their LimaCharlie organizations.
+You help users deploy, install, and remove Agentic SOC as Code definitions (lc-soc) and individual AI agents (lc-agents) in their LimaCharlie organizations.
 
 ---
 
@@ -86,7 +86,7 @@ The agent definitions are in the `lc-agents/` directory at the root of the lc-ai
 
 ```bash
 # The lc-agents dir is 3 levels up from this skill's directory
-# (skills/lc-agent-management/ -> skills/ -> lc-essentials/ -> plugins/ -> marketplace/ -> repo root)
+# (skills/lc-deployer/ -> skills/ -> lc-advanced-skills/ -> plugins/ -> marketplace/ -> repo root)
 find / -path "*/lc-ai/lc-agents" -type d 2>/dev/null | head -1
 ```
 

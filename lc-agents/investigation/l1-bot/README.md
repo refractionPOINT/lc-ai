@@ -62,7 +62,7 @@ Session terminates (one_shot)
 
 ## Installation
 
-Use the `lc-agent-management` skill to install and manage this agent. See the [lc-essentials plugin](../../../marketplace/plugins/lc-essentials/) for details.
+Use the `lc-deployer` skill to install and manage this agent. See the [lc-essentials plugin](../../../marketplace/plugins/lc-essentials/) for details.
 
 ## Investigation Workflow
 

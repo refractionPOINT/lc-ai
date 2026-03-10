@@ -89,6 +89,6 @@ All SOCs require:
 
 ## Installation
 
-Use the `lc-agent-management` skill from the [lc-essentials](../marketplace/plugins/lc-essentials/) plugin to install SOC agents.
+Use the `lc-deployer` skill from the [lc-essentials](../marketplace/plugins/lc-essentials/) plugin to deploy SOC definitions and agents.
 
 Each SOC's README contains the full list of agents and their installation order.

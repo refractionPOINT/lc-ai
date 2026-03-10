@@ -65,4 +65,4 @@ Unlike D&R suppression which silently drops excess requests, debounce guarantees
 
 ## Installation
 
-Use the `lc-agent-management` skill from the [lc-essentials](../marketplace/plugins/lc-essentials/) plugin to install and remove agents.
+Use the `lc-deployer` skill from the [lc-essentials](../marketplace/plugins/lc-essentials/) plugin to install and remove agents.

@@ -132,7 +132,7 @@ The `lc-agents/` directory contains autonomous AI agents that run inside LimaCha
 
 ### Installing Agents
 
-**With the lc-essentials plugin** (recommended): Ask Claude Code to "install the l1-bot agent in my org" — the `lc-agent-management` skill handles everything automatically.
+**With the lc-essentials plugin** (recommended): Ask Claude Code to "install the l1-bot agent in my org" — the `lc-deployer` skill handles everything automatically.
 
 **Manually**: See each agent's README for step-by-step instructions.
 
