@@ -4,62 +4,6 @@ A full-featured Agentic SOC as Code modeled after the traditional L1/L2/L3 SOC s
 
 ## Architecture
 
-```
-                                TIERED SOC
- ============================================================================
-
-  EDR Detection
-       |
-       v
-  +---------+    Obvious FP? -----> Dismissed (no ticket, ~$0.10)
-  | TRIAGE  |    sonnet, $0.50
-  +---------+
-       |
-       | creates ticket
-       v
-  +------------------+
-  | L1 INVESTIGATOR  |    opus, $2.00
-  +------------------+
-       |
-       +--- FP confirmed ---------> Closed (false_positive, ~$0.60)
-       |
-       +--- tag: needs-malware ---> +-----------------+
-       |    analysis                | MALWARE ANALYST  |  opus, $5.00
-       |                            +-----------------+
-       |                                 |
-       |                                 | findings on ticket
-       |                                 v
-       +--- status: escalated ----> +------------+
-                                    | L2 ANALYST  |  opus, $5.00
-                                    +------------+
-                                         |
-          +------------------------------+-----------------------------+
-          |                              |                             |
-          v                              v                             v
-   tag: needs-containment         tag: needs-threat-hunt          Resolved
-          |                              |
-          v                              v
-   +--------------+              +----------------+
-   | CONTAINMENT  | sonnet,$1.00 | THREAT HUNTER  |  opus, $5.00
-   +--------------+              +----------------+
-          |                              |
-          v                              v
-   Actions documented             New tickets for
-   on ticket                      lateral findings
-
- ============================================================================
-  SCHEDULED AGENTS (independent of alert pipeline)
- ============================================================================
-
-   Every 1 hour:     +-------------+   SLA monitoring, stale ticket cleanup
-                     | SOC MANAGER  |   sonnet, $0.50
-                     +-------------+
-
-   Every 24 hours:   +----------------+   Daily SOC metrics report
-                     | SHIFT REPORTER  |   sonnet, $1.00
-                     +----------------+
-```
-
 ```mermaid
 flowchart TD
     det[EDR Detection] --> triage["TRIAGE<br/>sonnet, $0.50"]

@@ -4,45 +4,6 @@ A minimal Agentic SOC as Code built for maximum autonomy with minimum complexity
 
 ## Architecture
 
-```
-                                 LEAN SOC
- ============================================================================
-
-  EDR Detection
-       |
-       v
-  +---------+    Obvious FP? -----> Dismissed (no ticket, ~$0.10)
-  | TRIAGE  |    sonnet, $0.50
-  +---------+
-       |
-       | creates ticket
-       v
-  +---------------+
-  | INVESTIGATOR  |    opus, $5.00
-  +---------------+    (combined L1 + L2)
-       |
-       +--- FP confirmed -----------> Closed (false_positive, ~$1.10)
-       |
-       +--- tag: needs-containment --> +-----------+
-       |                               | RESPONDER  |  sonnet, $1.00
-       |                               +-----------+
-       |                                    |
-       |                                    v
-       |                              Actions documented
-       |                              on ticket
-       |
-       +--- Resolved/Escalated ------> Human review
-                                        (with full documentation)
-
- ============================================================================
-  SCHEDULED AGENT
- ============================================================================
-
-   Every 24 hours:   +----------+   SOC metrics + SLA monitoring
-                     | REPORTER  |   sonnet, $1.00
-                     +----------+
-```
-
 ```mermaid
 flowchart TD
     det[EDR Detection] --> triage["TRIAGE<br/>sonnet, $0.50"]

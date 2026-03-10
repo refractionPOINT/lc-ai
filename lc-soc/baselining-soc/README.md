@@ -4,63 +4,6 @@ An Agentic SOC as Code designed for **newly onboarded organizations** that gener
 
 ## Architecture
 
-```
-                             BASELINING SOC
- ============================================================================
-
-  EDR Detections accumulate over 1 hour
-       |
-       v (schedule: 1h_per_org)
-  +-------------+
-  | BULK TRIAGE |    opus, $5.00, debounce_key: soc-bulk-triage
-  +-------------+
-       |
-       +--- FP pattern identified -----> Create FP rule
-       |    (limacharlie fp set)          (at least 2 conditions)
-       |
-       +--- Suspicious binary? --------> tag: needs-malware-analysis
-       |                                       |
-       |                                       v
-       |                                 +-----------------+
-       |                                 | MALWARE ANALYST  |  opus, $5.00
-       |                                 +-----------------+
-       |                                       |
-       |                                       | findings on ticket
-       |                                       v
-       +--- True positive? --> creates ticket, status: escalated
-                                    |
-                                    v
-                               +------------+
-                               | L2 ANALYST  |  opus, $5.00
-                               +------------+
-                                    |
-          +-------------------------+----------------------------+
-          |                         |                            |
-          v                         v                            v
-   tag: needs-containment    tag: needs-threat-hunt          Resolved
-          |                         |
-          v                         v
-   +--------------+          +----------------+
-   | CONTAINMENT  | son,$1   | THREAT HUNTER  |  opus, $5.00
-   +--------------+          +----------------+
-          |                         |
-          v                         v
-   Actions documented          New tickets for
-   on ticket                   lateral findings
-
- ============================================================================
-  SCHEDULED AGENTS (independent of alert pipeline)
- ============================================================================
-
-   Every 1 hour:     +-------------+   SLA monitoring, stale ticket cleanup
-                     | SOC MANAGER  |   sonnet, $0.50
-                     +-------------+
-
-   Every 24 hours:   +----------------+   Daily metrics + FP baselining report
-                     | SHIFT REPORTER  |   sonnet, $1.00
-                     +----------------+
-```
-
 ```mermaid
 flowchart TD
     det["EDR Detections<br/>accumulate over 1 hour"] -->|"schedule: 1h_per_org"| bulk["BULK TRIAGE<br/>opus, $5.00<br/>debounce_key: soc-bulk-triage"]
