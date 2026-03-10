@@ -1,7 +1,7 @@
 {
   "name": "lc-essentials",
   "version": "3.0.0",
-  "description": "Core LimaCharlie skills for CLI-based API access, detection engineering, sensor tasking, ticket investigation, and fleet health monitoring.",
+  "description": "Core LimaCharlie skills for CLI-based API access, detection engineering, sensor tasking, case investigation, and fleet health monitoring.",
   "author": {
     "name": "LimaCharlie",
     "email": "support@limacharlie.io"

@@ -15,7 +15,7 @@ LimaCharlie EDR agents only run on **Windows, Linux, macOS, and Chrome OS**. Clo
 ## Skills
 
 - **lookup-lc-doc** - Search LimaCharlie documentation
-- **investigation-creation** - Investigate security tickets (SOC triage, incident response)
+- **investigation-creation** - Investigate security cases (SOC triage, incident response)
 - **detection-engineering** - Create and test D&R rules
 - **detection-tuner** - Tune noisy alerts with FP rules
 - **sensor-tasking** - Send live response commands to sensors

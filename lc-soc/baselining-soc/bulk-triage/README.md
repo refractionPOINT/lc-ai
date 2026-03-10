@@ -11,10 +11,10 @@ flowchart TD
     fp --> group["Group detections by category + pattern"]
     group --> each{For each group}
     each -->|Clearly benign?| fprule["Create narrow FP rule<br/>(limacharlie fp set)"]
-    each -->|"Suspicious/malicious?"| ticket["Create ticket + status: escalated<br/>(triggers L2 Analyst)"]
+    each -->|"Suspicious/malicious?"| case["Create case + status: escalated<br/>(triggers L2 Analyst)"]
     each -->|Suspicious binary?| malware["tag: needs-malware-analysis"]
-    fprule --> summary["Output summary<br/>(rules created, tickets created)"]
-    ticket --> summary
+    fprule --> summary["Output summary<br/>(rules created, cases created)"]
+    case --> summary
     malware --> summary
     summary --> done["Session terminates (one_shot)"]
 ```
@@ -40,9 +40,9 @@ Create an API key named `soc-bulk-triage` with these permissions:
 | `dr.list` | List D&R rules for detection context |
 | `insight.det.get` | List and read detections (primary input) |
 | `insight.evt.get` | Access event data for IOC searches |
-| `investigation.get` | List and read existing tickets |
-| `investigation.set` | Create tickets, add detections, add notes |
-| `ext.request` | Invoke ext-ticketing extension |
+| `investigation.get` | List and read existing cases |
+| `investigation.set` | Create cases, add detections, add notes |
+| `ext.request` | Invoke ext-cases extension |
 | `fp.ctrl` | Create, list, and manage FP rules |
 | `ai_agent.operate` | Allow the agent to run |
 

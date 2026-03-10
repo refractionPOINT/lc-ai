@@ -1,15 +1,15 @@
 # L2 Analyst - Deep Investigation and Scope Assessment
 
-The senior analyst. Only sees tickets that the Bulk Triage agent has escalated as suspicious or malicious. Goes deep: lateral movement hunting, root cause analysis, full scope assessment, and MITRE ATT&CK mapping. Decides whether to trigger containment, threat hunting, or malware analysis downstream.
+The senior analyst. Only sees cases that the Bulk Triage agent has escalated as suspicious or malicious. Goes deep: lateral movement hunting, root cause analysis, full scope assessment, and MITRE ATT&CK mapping. Decides whether to trigger containment, threat hunting, or malware analysis downstream.
 
 ## What It Does
 
 ```mermaid
 flowchart TD
-    trigger["Ticket escalated<br/>(webhook event)"] --> tag["Tag: l2-investigating"]
+    trigger["Case escalated<br/>(webhook event)"] --> tag["Tag: l2-investigating"]
     tag --> review["Review Bulk Triage findings<br/>(DO NOT repeat triage work)"]
     review --> deep["Deep investigation:<br/>Lateral movement, root cause,<br/>credential compromise, full scope,<br/>C2 patterns, MITRE ATT&CK"]
-    deep --> update["Update ticket with full picture:<br/>Summary, IOCs, attack timeline"]
+    deep --> update["Update case with full picture:<br/>Summary, IOCs, attack timeline"]
     update -->|Needs containment?| contain["tag: needs-containment"]
     update -->|Needs org-wide hunt?| hunt["tag: needs-threat-hunt"]
     update -->|Needs binary forensics?| malware["tag: needs-malware-analysis"]
@@ -41,8 +41,8 @@ Create an API key named `soc-l2-analyst` with these permissions:
 | `dr.list` | List D&R rules for context |
 | `insight.det.get` | List and read detections org-wide |
 | `insight.evt.get` | Access event data for IOC searches |
-| `investigation.get` | Read tickets |
-| `investigation.set` | Update tickets, add notes, entities, telemetry |
+| `investigation.get` | Read cases |
+| `investigation.set` | Update cases, add notes, entities, telemetry |
 | `ext.request` | Invoke extensions |
 | `ai_agent.operate` | Allow the agent to run |
 
@@ -55,10 +55,10 @@ Create an API key named `soc-l2-analyst` with these permissions:
 | `max_budget_usd` | `5.0` | Higher budget for thorough analysis |
 | `ttl_seconds` | `900` | 15 minute hard timeout |
 | `one_shot` | `true` | Terminates after completing |
-| Suppression | `1 per ticket/30min` | Max one L2 session per ticket per 30 minutes |
+| Suppression | `1 per case/30min` | Max one L2 session per case per 30 minutes |
 
 ## Files
 
 - `hives/ai_agent.yaml` - Agent definition with deep investigation prompt
-- `hives/dr-general.yaml` - D&R rule: triggers on ticket `escalated` webhook event
+- `hives/dr-general.yaml` - D&R rule: triggers on case `escalated` webhook event
 - `hives/secret.yaml` - Placeholder secrets

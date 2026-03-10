@@ -136,9 +136,9 @@ Example:
   Display: $253.42
 ```
 
-## Ticketing Extension (`ext-ticketing`)
+## Cases Extension (`ext-cases`)
 
-See [TICKETING_CONSTANTS.md](./TICKETING_CONSTANTS.md) for ticket status, severity, classification, entity types, verdicts, and note types.
+See [CASES_CONSTANTS.md](./CASES_CONSTANTS.md) for case status, severity, classification, entity types, verdicts, and note types.
 
 ## Sensor Selector Reference
 

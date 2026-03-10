@@ -116,7 +116,7 @@ limacharlie extension subscribe --name <extension-name> --oid <oid>
 ```
 
 Common extensions for agents:
-- `ext-ticketing` - Required for ticket-based agents
+- `ext-cases` - Required for case-based agents
 
 Check if already subscribed first:
 ```bash
@@ -147,7 +147,7 @@ Secrets are hive records and **must be created with `enabled: true`** to be usab
 echo '{"data": {"secret": "<the-api-key-value>"}, "usr_mtd": {"enabled": true}}' | limacharlie hive set --hive-name secret --key lc-api-key --oid <oid>
 ```
 
-Adjust permissions based on what the agent needs. For ticket-based agents, also include permissions for ticketing operations.
+Adjust permissions based on what the agent needs. For case-based agents, also include permissions for cases operations.
 
 #### Anthropic API Key (`anthropic-key`)
 
@@ -236,9 +236,9 @@ limacharlie auth whoami --check-perm ai_agent.operate --output yaml
 
 ### Step 3: Subscribe to Required Extensions
 
-All SOC agents require `ext-ticketing`:
+All SOC agents require `ext-cases`:
 ```bash
-limacharlie extension subscribe --name ext-ticketing --oid <oid>
+limacharlie extension subscribe --name ext-cases --oid <oid>
 ```
 
 Check if already subscribed first:
@@ -435,10 +435,10 @@ Summarize what was removed (agent definitions, D&R rules, secrets, API keys) and
 ## Agent Reference: l1-bot
 
 ### Description
-Automated Level 1 SOC analyst that investigates new security tickets and documents findings for L2 review.
+Automated Level 1 SOC analyst that investigates new security cases and documents findings for L2 review.
 
 ### Required Extensions
-- `ext-ticketing` - Must be subscribed AND configured
+- `ext-cases` - Must be subscribed AND configured
 
 ### Required Secrets
 | Secret Key | Description |
@@ -456,10 +456,10 @@ org.get,sensor.list,sensor.get,sensor.task,dr.list,insight.det.get,insight.evt.g
 | Hive | Key | Description |
 |------|-----|-------------|
 | `ai_agent` | `l1-bot` | AI agent definition with investigation prompt |
-| `dr-general` | `l1-bot-ticket-triage` | D&R rule triggering bot on ticket creation |
+| `dr-general` | `l1-bot-case-triage` | D&R rule triggering bot on case creation |
 
 ### How It's Triggered
-When `ext-ticketing` creates a ticket, it emits a `created` event. The D&R rule matches events with a `ticket_id` field and starts the AI agent session with ticket context.
+When `ext-cases` creates a case, it emits a `created` event. The D&R rule matches events with a `case_id` field and starts the AI agent session with case context.
 
 ### Configuration
 | Parameter | Value |

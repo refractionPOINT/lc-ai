@@ -1,13 +1,13 @@
 # L1 Investigator - Systematic Evidence Gathering
 
-The workhorse of the SOC. When Triage creates a ticket, the L1 Investigator picks it up and performs a systematic investigation: pulling timelines, analyzing process trees, checking for IOCs, assessing scope, and documenting everything.
+The workhorse of the SOC. When Triage creates a case, the L1 Investigator picks it up and performs a systematic investigation: pulling timelines, analyzing process trees, checking for IOCs, assessing scope, and documenting everything.
 
 ## What It Does
 
 ```mermaid
 flowchart TD
-    trigger["Ticket created<br/>(webhook event)"] --> tag["Tag: investigating<br/>Status: in_progress"]
-    tag --> fetch["Fetch ticket → Analyze detection → Check timeline"]
+    trigger["Case created<br/>(webhook event)"] --> tag["Tag: investigating<br/>Status: in_progress"]
+    tag --> fetch["Fetch case → Analyze detection → Check timeline"]
     fetch --> related["Look for related activity:<br/>Process trees, network connections,<br/>file operations, other detections"]
     related --> scope["Assess scope:<br/>Same IOCs on other sensors?<br/>Same detection elsewhere?"]
     scope --> doc["Document EVERYTHING:<br/>Summary, Conclusion, Notes,<br/>Entities, Telemetry references"]
@@ -21,7 +21,7 @@ flowchart TD
 
 ## Downstream Signaling
 
-The L1 Investigator communicates with other SOC agents through ticket tags:
+The L1 Investigator communicates with other SOC agents through case tags:
 
 | Tag Added | Triggers | When |
 |-----------|----------|------|
@@ -41,8 +41,8 @@ Create an API key named `soc-l1-investigator` with these permissions:
 | `dr.list` | List D&R rules for detection context |
 | `insight.det.get` | List and read detections |
 | `insight.evt.get` | Access event data for IOC searches |
-| `investigation.get` | Read tickets |
-| `investigation.set` | Update tickets, add notes, entities, telemetry |
+| `investigation.get` | Read cases |
+| `investigation.set` | Update cases, add notes, entities, telemetry |
 | `ext.request` | Invoke extensions |
 | `ai_agent.operate` | Allow the agent to run |
 
@@ -60,5 +60,5 @@ Create an API key named `soc-l1-investigator` with these permissions:
 ## Files
 
 - `hives/ai_agent.yaml` - Agent definition with investigation prompt
-- `hives/dr-general.yaml` - D&R rule: triggers on ticket `created` webhook event
+- `hives/dr-general.yaml` - D&R rule: triggers on case `created` webhook event
 - `hives/secret.yaml` - Placeholder secrets

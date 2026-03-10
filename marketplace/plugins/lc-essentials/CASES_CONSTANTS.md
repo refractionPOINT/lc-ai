@@ -1,18 +1,18 @@
-# Ticketing Extension Constants (`ext-ticketing`)
+# Cases Extension Constants (`ext-cases`)
 
-**Source:** [ext-ticketing/internal/ticketing/](https://github.com/refractionPOINT/ext-ticketing)
+**Source:** [ext-cases/internal/cases/](https://github.com/refractionPOINT/ext-cases)
 
-## Ticket Status
+## Case Status
 
 | Status | Description |
 |--------|-------------|
-| `new` | Ticket just created (auto from detection) |
-| `acknowledged` | Analyst has seen the ticket |
+| `new` | Case just created (auto from detection) |
+| `acknowledged` | Analyst has seen the case |
 | `in_progress` | Active investigation underway |
 | `escalated` | Escalated to senior analyst or team |
 | `resolved` | Investigation complete, findings documented |
 | `closed` | Final state, no further action |
-| `merged` | Merged into another ticket (terminal) |
+| `merged` | Merged into another case (terminal) |
 
 ## Status Transitions (State Machine)
 
@@ -84,12 +84,12 @@ Used for entities, telemetry references, and artifacts.
 
 ## Tags
 
-Tickets support arbitrary string tags for custom categorization.
+Cases support arbitrary string tags for custom categorization.
 
 | Constraint | Value |
 |-----------|-------|
 | Max tag length | 128 characters |
-| Max tags per ticket | 50 |
+| Max tags per case | 50 |
 | Case sensitivity | Case-preserved, case-insensitive dedup |
 | Allowed characters | Any printable character (no control chars) |
 

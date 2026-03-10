@@ -1,12 +1,12 @@
 version: 3
 hives:
   dr-general:
-    l1-bot-ticket-triage:
+    l1-bot-case-triage:
       data:
         detect:
           event: created
           op: exists
-          path: event/ticket_id
+          path: event/case_id
         respond:
           - action: start ai agent
             definition: hive://ai_agent/l1-bot

@@ -14,7 +14,7 @@ hives:
             suppression:
               is_global: true
               keys:
-                - "lean-responder-{{ .event.ticket_id }}"
+                - "lean-responder-{{ .event.case_id }}"
               max_count: 1
               period: 30m
       usr_mtd:

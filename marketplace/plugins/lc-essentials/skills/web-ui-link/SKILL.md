@@ -77,7 +77,7 @@ These routes require an Organization ID (OID).
 | YARA Rules | `/orgs/{oid}/yara-rules` | yara, malware rules |
 | Artifacts | `/orgs/{oid}/artifacts` | collected artifacts, evidence |
 | Investigations | `/orgs/{oid}/investigations` | cases, incidents, timelines, investigations |
-| Ticketing | `/add-ons/extension-detail/ext-ticketing` | tickets, triage, SOC queue, SLA |
+| Cases | `/add-ons/extension-detail/ext-cases` | cases, triage, SOC queue, SLA |
 | Extensions | `/orgs/{oid}/extensions` | add-ons, subscriptions |
 | External Adapters | `/orgs/{oid}/external-adapters` | adapters, data ingestion |
 | Installation Keys | `/orgs/{oid}/installation-keys` | install keys, deployment keys |

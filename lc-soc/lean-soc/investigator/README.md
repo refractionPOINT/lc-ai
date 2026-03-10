@@ -6,7 +6,7 @@ The sole investigator in the Lean SOC. Combines L1 and L2 analyst roles into a s
 
 ```mermaid
 flowchart TD
-    trigger["Ticket created<br/>(webhook event)"] --> tag["Tag: investigating<br/>Status: in_progress"]
+    trigger["Case created<br/>(webhook event)"] --> tag["Tag: investigating<br/>Status: in_progress"]
     tag --> investigation["Full investigation:<br/>1. Analyze detection<br/>2. Sensor timeline & process trees<br/>3. Related activity (network, files, registry)<br/>4. IOC hunting on other sensors<br/>5. Lateral movement assessment<br/>6. Root cause analysis<br/>7. MITRE ATT&CK mapping"]
     investigation --> doc["Document EVERYTHING:<br/>Summary, Conclusion, Notes,<br/>Entities, Telemetry references"]
     doc -->|Confirmed malicious?| contain["tag: needs-containment<br/>status: escalated"]
@@ -44,8 +44,8 @@ Create an API key named `lean-investigator` with:
 | `dr.list` | List D&R rules for detection context |
 | `insight.det.get` | List and read detections |
 | `insight.evt.get` | Access event data for IOC searches |
-| `investigation.get` | Read tickets |
-| `investigation.set` | Update tickets, add notes, entities, telemetry |
+| `investigation.get` | Read cases |
+| `investigation.set` | Update cases, add notes, entities, telemetry |
 | `ext.request` | Invoke extensions |
 | `ai_agent.operate` | Allow the agent to run |
 
@@ -62,5 +62,5 @@ Create an API key named `lean-investigator` with:
 ## Files
 
 - `hives/ai_agent.yaml` - Agent definition with combined L1+L2 prompt
-- `hives/dr-general.yaml` - D&R rule: triggers on ticket `created` webhook event
+- `hives/dr-general.yaml` - D&R rule: triggers on case `created` webhook event
 - `hives/secret.yaml` - Placeholder secrets

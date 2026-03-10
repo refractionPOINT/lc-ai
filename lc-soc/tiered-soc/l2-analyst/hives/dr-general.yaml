@@ -1,19 +1,19 @@
 version: 3
 hives:
   dr-general:
-    soc-l2-on-ticket-escalated:
+    soc-l2-on-case-escalated:
       data:
         detect:
           event: escalated
           op: exists
-          path: event/ticket_id
+          path: event/case_id
         respond:
           - action: start ai agent
             definition: hive://ai_agent/soc-l2-analyst
             suppression:
               is_global: true
               keys:
-                - "soc-l2-{{ .event.ticket_id }}"
+                - "soc-l2-{{ .event.case_id }}"
               max_count: 1
               period: 30m
       usr_mtd:

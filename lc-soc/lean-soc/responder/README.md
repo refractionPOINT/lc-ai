@@ -1,17 +1,17 @@
 # Responder - Automated Threat Containment
 
-Takes action on confirmed threats. When the Investigator tags a ticket with `needs-containment`, this agent isolates sensors and blocks IOCs. Auto-contains critical threats; documents recommendations for everything else.
+Takes action on confirmed threats. When the Investigator tags a case with `needs-containment`, this agent isolates sensors and blocks IOCs. Auto-contains critical threats; documents recommendations for everything else.
 
 ## What It Does
 
 ```mermaid
 flowchart TD
     trigger["Tag: needs-containment<br/>(webhook event)"] --> tag["Tag: containing<br/>(remove needs-containment)"]
-    tag --> review["Review ticket:<br/>Affected sensors, malicious IOCs,<br/>investigator recommendations"]
+    tag --> review["Review case:<br/>Affected sensors, malicious IOCs,<br/>investigator recommendations"]
     review --> severity{Severity check}
     severity -->|"CRITICAL + confirmed"| auto["AUTO-CONTAIN<br/>Isolate sensors, block IOCs"]
     severity -->|Other severity| recommend["RECOMMEND ONLY<br/>Document actions for human"]
-    auto --> done["Tag: contained<br/>Resolve ticket, session terminates"]
+    auto --> done["Tag: contained<br/>Resolve case, session terminates"]
     recommend --> done
 ```
 
@@ -32,8 +32,8 @@ Create an API key named `lean-responder` with:
 | `sensor.list` | List sensors |
 | `sensor.get` | Get sensor details |
 | `sensor.task` | Isolate sensors |
-| `investigation.get` | Read tickets |
-| `investigation.set` | Update tickets, add notes |
+| `investigation.get` | Read cases |
+| `investigation.set` | Update cases, add notes |
 | `ext.request` | Invoke extensions |
 | `ai_agent.operate` | Allow the agent to run |
 | `lookup.set` | Add IOCs to block lookups |
@@ -45,7 +45,7 @@ Create an API key named `lean-responder` with:
 | `model` | `sonnet` |
 | `max_budget_usd` | `1.0` |
 | `ttl_seconds` | `300` (5m) |
-| Suppression | `1 per ticket/30min` |
+| Suppression | `1 per case/30min` |
 
 ## Files
 

@@ -1,12 +1,12 @@
 version: 3
 hives:
   dr-general:
-    soc-l1-on-ticket-created:
+    soc-l1-on-case-created:
       data:
         detect:
           event: created
           op: exists
-          path: event/ticket_id
+          path: event/case_id
         respond:
           - action: start ai agent
             definition: hive://ai_agent/soc-l1-investigator
