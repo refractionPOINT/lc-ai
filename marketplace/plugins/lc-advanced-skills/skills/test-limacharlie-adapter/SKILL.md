@@ -410,5 +410,5 @@ limacharlie sensor delete --sid <SENSOR_ID> --oid abc123-def456-...
 - `parsing-helper`: **Used in Phase 2** to generate and validate Grok parsing patterns for your log data
 - `detection-engineering`: For creating D&R rules to test with the adapter
 - `sensor-health`: To check if your test adapter is reporting properly
-- `ticket-investigation`: To investigate events from your test adapter
+- `case-investigation`: To investigate events from your test adapter
 - `test-limacharlie-edr`: For testing the EDR sensor instead of log adapters

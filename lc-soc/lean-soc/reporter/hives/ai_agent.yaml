@@ -16,27 +16,27 @@ hives:
 
           ### Part 1: Health Check
 
-          1. **Check for stale investigations** - Find tickets with lock tags that have been stuck:
+          1. **Check for stale investigations** - Find cases with lock tags that have been stuck:
              ```bash
-             limacharlie ticket list --status in_progress --oid <oid> --output yaml
-             limacharlie ticket list --status escalated --oid <oid> --output yaml
+             limacharlie case list --status in_progress --oid <oid> --output yaml
+             limacharlie case list --status escalated --oid <oid> --output yaml
              ```
-             Look for tickets with `investigating` or `containing` tags present for > 30 minutes.
+             Look for cases with `investigating` or `containing` tags present for > 30 minutes.
              If found, remove the stale tag and add a note:
              ```bash
-             limacharlie ticket tag remove --id <ticket_number> -t <stale_tag> --oid <oid> --output yaml
-             limacharlie ticket add-note --id <ticket_number> --type analysis --content "SOC Reporter: Removed stale '<stale_tag>' tag (agent timed out). May need manual review." --oid <oid> --output yaml
+             limacharlie case tag remove --id <case_number> -t <stale_tag> --oid <oid> --output yaml
+             limacharlie case add-note --id <case_number> --type analysis --content "SOC Reporter: Removed stale '<stale_tag>' tag (agent timed out). May need manual review." --oid <oid> --output yaml
              ```
 
-          2. **Check for SLA violations** - Look at tickets in `new` status that haven't been picked up:
+          2. **Check for SLA violations** - Look at cases in `new` status that haven't been picked up:
              ```bash
-             limacharlie ticket list --status new --oid <oid> --output yaml
-             limacharlie ticket dashboard --oid <oid> --output yaml
+             limacharlie case list --status new --oid <oid> --output yaml
+             limacharlie case dashboard --oid <oid> --output yaml
              ```
-             For tickets exceeding SLA (critical > 15min, high > 30min, medium > 60min, low > 120min):
+             For cases exceeding SLA (critical > 15min, high > 30min, medium > 60min, low > 120min):
              ```bash
-             limacharlie ticket tag add --id <ticket_number> -t sla-breached --oid <oid> --output yaml
-             limacharlie ticket add-note --id <ticket_number> --type escalation --content "SOC Reporter: SLA breach detected. Needs attention." --oid <oid> --output yaml
+             limacharlie case tag add --id <case_number> -t sla-breached --oid <oid> --output yaml
+             limacharlie case add-note --id <case_number> --type escalation --content "SOC Reporter: SLA breach detected. Needs attention." --oid <oid> --output yaml
              ```
 
           ### Part 2: Daily Report
@@ -45,15 +45,15 @@ hives:
              ```bash
              END=$(date -u +%Y-%m-%dT%H:%M:%SZ)
              START=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)
-             limacharlie ticket report-summary --from "$START" --to "$END" --oid <oid> --output yaml
-             limacharlie ticket dashboard --oid <oid> --output yaml
-             limacharlie ticket list --status closed --oid <oid> --output yaml
-             limacharlie ticket list --status resolved --oid <oid> --output yaml
+             limacharlie case report-summary --from "$START" --to "$END" --oid <oid> --output yaml
+             limacharlie case dashboard --oid <oid> --output yaml
+             limacharlie case list --status closed --oid <oid> --output yaml
+             limacharlie case list --status resolved --oid <oid> --output yaml
              ```
 
-          4. **Create report ticket**:
+          4. **Create report case**:
              ```bash
-             limacharlie ticket create --severity low --oid <oid> --output yaml
+             limacharlie case create --severity low --oid <oid> --output yaml
              ```
 
              Add the report as a note (type: analysis):
@@ -63,14 +63,14 @@ hives:
              ### Health Check
              - Stale tags cleaned: <N>
              - SLA breaches detected: <N>
-             - Abandoned tickets flagged: <N>
+             - Abandoned cases flagged: <N>
 
              ### Key Metrics (Last 24 Hours)
              | Metric | Value |
              |--------|-------|
-             | Total Tickets Created | <N> |
-             | Tickets Closed (FP) | <N> |
-             | Tickets Closed (TP) | <N> |
+             | Total Cases Created | <N> |
+             | Cases Closed (FP) | <N> |
+             | Cases Closed (TP) | <N> |
              | Open Backlog | <N> |
              | Mean Time to Acknowledge | <duration> |
              | Mean Time to Resolve | <duration> |
@@ -90,11 +90,11 @@ hives:
              <detection tuning suggestions, emerging patterns>
              ```
 
-          5. **Close report ticket**:
+          5. **Close report case**:
              ```bash
-             limacharlie ticket update --id <ticket_number> --summary "SOC Daily Report - <date>" --conclusion "Automated daily report." --classification false_positive --status closed --oid <oid> --output yaml
-             limacharlie ticket tag add --id <ticket_number> -t soc-report --oid <oid> --output yaml
-             limacharlie ticket tag add --id <ticket_number> -t daily-report --oid <oid> --output yaml
+             limacharlie case update --id <case_number> --summary "SOC Daily Report - <date>" --conclusion "Automated daily report." --classification false_positive --status closed --oid <oid> --output yaml
+             limacharlie case tag add --id <case_number> -t soc-report --oid <oid> --output yaml
+             limacharlie case tag add --id <case_number> -t daily-report --oid <oid> --output yaml
              ```
 
           ## Important Rules

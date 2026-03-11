@@ -1,19 +1,19 @@
 # LimaCharlie Agentic SOC as Code
 
-Fully autonomous Security Operations Centers defined as code -- AI agents coordinated through LimaCharlie's ticketing system and D&R rules, deployed and versioned like any other Infrastructure as Code.
+Fully autonomous Security Operations Centers defined as code -- AI agents coordinated through LimaCharlie's cases system and D&R rules, deployed and versioned like any other Infrastructure as Code.
 
 Each SOC is a self-contained collection of AI agents that work together to detect, triage, investigate, contain, and report on security threats -- without human intervention for routine operations.
 
 ## How It Works
 
-Unlike standalone agents that operate independently, SOC agents form a **coordinated pipeline**. They communicate through the ticketing system: when one agent updates a ticket (changes status, adds a tag, writes a note), the ext-ticketing webhook emits an audit event that D&R rules match on to trigger the next agent in the chain.
+Unlike standalone agents that operate independently, SOC agents form a **coordinated pipeline**. They communicate through the cases system: when one agent updates a case (changes status, adds a tag, writes a note), the ext-cases webhook emits an audit event that D&R rules match on to trigger the next agent in the chain.
 
 ```mermaid
 flowchart TD
-    A["Agent A updates ticket<br/>(status/tags/notes)"] --> B["ext-ticketing emits<br/>webhook audit event"]
+    A["Agent A updates case<br/>(status/tags/notes)"] --> B["ext-cases emits<br/>webhook audit event"]
     B --> C["D&R rule matches<br/>event type + metadata"]
     C --> D["D&R rule triggers Agent B<br/>via 'start ai agent'"]
-    D --> E["Agent B reads ticket,<br/>does work, updates ticket"]
+    D --> E["Agent B reads case,<br/>does work, updates case"]
     E -->|"cycle continues"| A
 ```
 
@@ -21,7 +21,7 @@ This event-driven architecture means agents are:
 
 - **Loosely coupled** -- each agent has a single responsibility and doesn't know about other agents' internals
 - **Independently deployable** -- add or remove agents without changing the others
-- **Observable** -- the ticket audit trail is the complete activity log
+- **Observable** -- the case audit trail is the complete activity log
 - **Cost-controlled** -- rate limiting via D&R suppression prevents runaway costs
 
 ## Available SOCs
@@ -36,17 +36,17 @@ This event-driven architecture means agents are:
 
 Agents signal each other through two mechanisms:
 
-### 1. Ticket Status Changes
+### 1. Case Status Changes
 
 Status transitions emit specific event types that D&R rules match on:
 
 | Status Transition | Event Type | Typical Use |
 |-------------------|------------|-------------|
-| New ticket created | `created` | Trigger investigation |
-| Ticket escalated | `escalated` | Trigger deep analysis |
-| Ticket resolved | `resolved` | Trigger verification |
+| New case created | `created` | Trigger investigation |
+| Case escalated | `escalated` | Trigger deep analysis |
+| Case resolved | `resolved` | Trigger verification |
 
-### 2. Ticket Tags
+### 2. Case Tags
 
 Tags are the primary signaling mechanism between agents. When an agent adds a tag, a `tags_updated` event fires with `metadata.new_tags` containing the updated tag list:
 
@@ -64,7 +64,7 @@ Several mechanisms prevent infinite loops:
 
 1. **Tag discipline** -- agents remove trigger tags after processing and add completion tags (e.g., `needs-malware-analysis` -> `malware-analyzed`)
 2. **Status progression** -- status only moves forward through the lifecycle
-3. **Idempotent keys** -- D&R suppression keys prevent duplicate sessions per ticket
+3. **Idempotent keys** -- D&R suppression keys prevent duplicate sessions per case
 4. **Rate limiting** -- suppression on all D&R rules caps agent spawning
 5. **Debounce** -- `debounce_key` serializes sessions so only one runs at a time per key, with pending requests re-fired on completion (unlike suppression which drops excess requests)
 6. **SOC Manager** -- detects stale lock tags and cleans them up (Tiered and Baselining SOCs)
@@ -73,7 +73,7 @@ Several mechanisms prevent infinite loops:
 
 All SOCs require:
 
-- [ext-ticketing](https://doc.limacharlie.io/docs/extensions/ext-ticketing) extension subscribed and configured
+- [ext-cases](https://doc.limacharlie.io/docs/extensions/ext-cases) extension subscribed and configured
 - An Anthropic API key (shared across all agents in a SOC)
 - Per-agent LimaCharlie API keys with minimal permissions (documented per agent)
 

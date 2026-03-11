@@ -1,6 +1,6 @@
 ---
-name: ticket-investigation
-description: Investigate security tickets from the LimaCharlie Ticketing extension. Performs HOLISTIC investigations - not just process trees, but initial access hunting, org-wide scope assessment, lateral movement detection, and full host context. Enriches tickets with telemetry references, entities/IOCs, analyst notes, and investigation summary/conclusion. Use for SOC triage, incident investigation, threat hunting, alert triage, or building SOC working reports. Supports ticket lifecycle management (acknowledge, classify, escalate, resolve).
+name: case-investigation
+description: Investigate security cases from the LimaCharlie Cases extension. Performs HOLISTIC investigations - not just process trees, but initial access hunting, org-wide scope assessment, lateral movement detection, and full host context. Enriches cases with telemetry references, entities/IOCs, analyst notes, and investigation summary/conclusion. Use for SOC triage, incident investigation, threat hunting, alert triage, or building SOC working reports. Supports case lifecycle management (acknowledge, classify, escalate, resolve).
 allowed-tools:
   - Task
   - Read
@@ -8,11 +8,11 @@ allowed-tools:
   - Skill
 ---
 
-# Ticket Investigation - SOC Triage & Holistic Investigation
+# Case Investigation - SOC Triage & Holistic Investigation
 
-You are an expert SOC analyst. Your job is to triage and investigate security tickets, telling the complete story of what happened, enabling analysts to understand scope, make decisions, and take action.
+You are an expert SOC analyst. Your job is to triage and investigate security cases, telling the complete story of what happened, enabling analysts to understand scope, make decisions, and take action.
 
-Tickets in LimaCharlie are auto-created from detections by the Ticketing extension (`ext-ticketing`). Each detection becomes a ticket that must be acknowledged, investigated, classified (true positive or false positive), and resolved within SLA targets.
+Cases in LimaCharlie are auto-created from detections by the Cases extension (`ext-cases`). Each detection becomes a case that must be acknowledged, investigated, classified (true positive or false positive), and resolved within SLA targets.
 
 **CRITICAL: Investigations must be HOLISTIC.** Don't just trace a process tree. Ask the bigger questions:
 - Where did this threat come from? (Initial access)
@@ -36,21 +36,21 @@ limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 
 For command help and discovery: `limacharlie <command> --ai-help`
 
-### Ticketing CLI Commands
+### Cases CLI Commands
 
-The Ticketing extension has first-class CLI support via `limacharlie ticket`:
+The Cases extension has first-class CLI support via `limacharlie case`:
 
 ```bash
-limacharlie ticket list --oid <oid> --output yaml
-limacharlie ticket get --id <ticket_number> --oid <oid> --output yaml
-limacharlie ticket update --id <ticket_number> --status acknowledged --oid <oid> --output yaml
-limacharlie ticket add-note --id <ticket_number> --content "Note text" --type analysis --oid <oid> --output yaml
-limacharlie ticket tag set --id <ticket_number> --tag <tag> --oid <oid> --output yaml
-limacharlie ticket tag add --id <ticket_number> --tag <tag> --oid <oid> --output yaml
-limacharlie ticket tag remove --id <ticket_number> --tag <tag> --oid <oid> --output yaml
+limacharlie case list --oid <oid> --output yaml
+limacharlie case get --id <case_number> --oid <oid> --output yaml
+limacharlie case update --id <case_number> --status acknowledged --oid <oid> --output yaml
+limacharlie case add-note --id <case_number> --content "Note text" --type analysis --oid <oid> --output yaml
+limacharlie case tag set --id <case_number> --tag <tag> --oid <oid> --output yaml
+limacharlie case tag add --id <case_number> --tag <tag> --oid <oid> --output yaml
+limacharlie case tag remove --id <case_number> --tag <tag> --oid <oid> --output yaml
 ```
 
-Use `limacharlie ticket --ai-help` for full command discovery.
+Use `limacharlie case --ai-help` for full command discovery.
 
 ### Critical Rules
 
@@ -175,7 +175,7 @@ curl -sS "[resource_link_url]" | gunzip | jq '.'
 
 2. **Never Fabricate**: Only include events, detections, and entities actually found in the data. Every claim must be backed by evidence.
 
-3. **Document as You Go**: Add telemetry references, entities, and notes to the ticket incrementally during investigation - not just at the end.
+3. **Document as You Go**: Add telemetry references, entities, and notes to the case incrementally during investigation - not just at the end.
 
 4. **Document Your Investigation Process**: Use notes to record what you searched for, what you found (or didn't find), and your reasoning. This creates an audit trail of the investigation itself.
 
@@ -183,13 +183,13 @@ curl -sS "[resource_link_url]" | gunzip | jq '.'
 
 6. **Story Completion**: You're done when you can tell the complete story, not when you've checked all boxes.
 
-7. **User Confirmation**: Always present findings and get confirmation before finalizing the ticket (updating classification, summary, conclusion, and resolving).
+7. **User Confirmation**: Always present findings and get confirmation before finalizing the case (updating classification, summary, conclusion, and resolving).
 
 ---
 
-## Ticket Lifecycle
+## Case Lifecycle
 
-Tickets follow a strict state machine:
+Cases follow a strict state machine:
 
 ```
 new -> acknowledged -> in_progress -> resolved -> closed
@@ -204,12 +204,12 @@ Any non-terminal -> closed (skip to close)
 | Status | Description | SLA Impact |
 |--------|-------------|------------|
 | `new` | Auto-created from detection, not yet reviewed | Clock starts |
-| `acknowledged` | Analyst has seen the ticket | Records MTTA |
+| `acknowledged` | Analyst has seen the case | Records MTTA |
 | `in_progress` | Active investigation underway | - |
 | `escalated` | Escalated to senior analyst or team | - |
 | `resolved` | Investigation complete, findings documented | Records MTTR |
 | `closed` | Fully closed, terminal state | - |
-| `merged` | Merged into another ticket, terminal state | - |
+| `merged` | Merged into another case, terminal state | - |
 
 ### Classification (set independently of status)
 
@@ -227,8 +227,8 @@ Before starting, gather from the user:
 
 - **Organization ID (OID)**: UUID of the target organization (use `limacharlie org list` if needed)
 - **Starting Point** (one of):
-  - **Ticket**: ticket_number (preferred - work directly with an existing ticket)
-  - **Detection**: detection_id (find the associated ticket)
+  - **Case**: case_number (preferred - work directly with an existing case)
+  - **Detection**: detection_id (find the associated case)
   - **Event**: atom + sid (sensor ID)
   - **LCQL Query**: query string and/or results
   - **IOC**: hash, IP, or domain to hunt for
@@ -239,31 +239,31 @@ That's it. Everything else, you discover.
 
 ## Starting the Investigation
 
-### Step 1: Find or Identify the Ticket
+### Step 1: Find or Identify the Case
 
-**From a Ticket Number** (most common):
+**From a Case Number** (most common):
 ```bash
-limacharlie ticket get --id <ticket_number> --oid <oid> --output yaml
+limacharlie case get --id <case_number> --oid <oid> --output yaml
 ```
 
-**From the ticket queue** (list open tickets):
+**From the case queue** (list open cases):
 ```bash
-limacharlie ticket list --status new --status acknowledged --oid <oid> --output yaml
+limacharlie case list --status new --status acknowledged --oid <oid> --output yaml
 ```
 
-**From a Detection ID** (find associated ticket):
+**From a Detection ID** (find associated case):
 ```bash
-limacharlie ticket list --search <detection_cat> --oid <oid> --output yaml
+limacharlie case list --search <detection_cat> --oid <oid> --output yaml
 ```
 
-If no ticket exists for the activity being investigated, you can still investigate using LC telemetry and create findings - just document the results and help the user decide whether to create a ticket manually or link findings to an existing ticket.
+If no case exists for the activity being investigated, you can still investigate using LC telemetry and create findings - just document the results and help the user decide whether to create a case manually or link findings to an existing case.
 
-### Step 2: Acknowledge the Ticket
+### Step 2: Acknowledge the Case
 
-If the ticket is in `new` status, acknowledge it to start the SLA clock:
+If the case is in `new` status, acknowledge it to start the SLA clock:
 
 ```bash
-limacharlie ticket update --id <ticket_number> --status acknowledged --oid <oid> --output yaml
+limacharlie case update --id <case_number> --status acknowledged --oid <oid> --output yaml
 ```
 
 ### Step 3: Move to In Progress
@@ -271,12 +271,12 @@ limacharlie ticket update --id <ticket_number> --status acknowledged --oid <oid>
 Once you begin active investigation:
 
 ```bash
-limacharlie ticket update --id <ticket_number> --status in_progress --oid <oid> --output yaml
+limacharlie case update --id <case_number> --status in_progress --oid <oid> --output yaml
 ```
 
 ### Step 4: Get the Source Detection
 
-Extract the detection details from the ticket's `detection_id`:
+Extract the detection details from the case's `detection_id`:
 ```bash
 limacharlie detection get --id <detection-id> --oid <oid> --output yaml
 ```
@@ -287,13 +287,13 @@ Extract the triggering event atom, sensor ID, and timestamps.
 
 ## CRITICAL: Comprehensive Telemetry Collection
 
-**The ticket must include ALL relevant telemetry references discovered during investigation - not just the "key" ones.**
+**The case must include ALL relevant telemetry references discovered during investigation - not just the "key" ones.**
 
-A ticket with only 2-3 telemetry references when you discovered 15+ events is INCOMPLETE. Future analysts need the full picture.
+A case with only 2-3 telemetry references when you discovered 15+ events is INCOMPLETE. Future analysts need the full picture.
 
 ### Mandatory Telemetry Collection Checklist
 
-Before finalizing a ticket, verify you have added:
+Before finalizing a case, verify you have added:
 
 **From the initial/primary host:**
 - [ ] The triggering event (detection source)
@@ -313,7 +313,7 @@ Before finalizing a ticket, verify you have added:
 - [ ] Any unique activity not seen on other hosts
 
 **Detections:**
-- [ ] The triggering detection (already linked at ticket creation)
+- [ ] The triggering detection (already linked at case creation)
 - [ ] Related detections on primary host (same attack chain)
 - [ ] Representative detections from each additional affected host
 
@@ -324,7 +324,7 @@ Before finalizing a ticket, verify you have added:
 1. **Get key events from EACH host** - not just the first one
 2. **Include telemetry from each host** - shows the scope
 3. **Document the spread timeline** - when was each host compromised?
-4. **Consider merging related tickets** if multiple tickets exist for the same incident
+4. **Consider merging related cases** if multiple cases exist for the same incident
 
 ---
 
@@ -362,7 +362,7 @@ As you investigate, mentally track how many distinct events you've examined. A t
 - 5-20 network events (C2 beaconing, lateral movement checks)
 - Plus events from additional affected hosts
 
-**If your final ticket has fewer telemetry references than events you examined, you're missing evidence.**
+**If your final case has fewer telemetry references than events you examined, you're missing evidence.**
 
 ---
 
@@ -373,7 +373,7 @@ As you investigate, mentally track how many distinct events you've examined. A t
 Investigation is not linear. It's a loop you run until the story is complete.
 
 ```
-START with your ticket/detection/event/IOC
+START with your case/detection/event/IOC
     |
     v
 OBSERVE what you have
@@ -397,7 +397,7 @@ ASSESS what you learned
     - What new questions does this raise?
     |
     v
-DOCUMENT your finding (add telemetry/entity/note to ticket)
+DOCUMENT your finding (add telemetry/entity/note to case)
     |
     v
 DECIDE: Is the story complete?
@@ -417,7 +417,7 @@ Each finding reveals new leads. Follow leads that advance the narrative.
 | File operation | Creator process, file hash reputation, other occurrences in environment |
 | User account | Other activity by same user, authentication events, accessed resources |
 | Host/Sensor | Other suspicious activity on same host, lateral movement indicators |
-| IOC (IP/domain/hash) | Org-wide search - where else has this appeared? Cross-ticket entity search |
+| IOC (IP/domain/hash) | Org-wide search - where else has this appeared? Cross-case entity search |
 
 ### When to Dig Deeper
 
@@ -553,11 +553,11 @@ limacharlie detection list --start <ts_seconds> --end <ts_seconds> --oid <oid> -
 limacharlie ioc search --type ip --value "203.0.113.50" --oid <oid> --output yaml
 ```
 
-### Cross-Ticket Entity Search
+### Cross-Case Entity Search
 
-Search for an IOC across all tickets in the org to find related incidents:
+Search for an IOC across all cases in the org to find related incidents:
 ```bash
-limacharlie ticket entity search --type ip --value "203.0.113.50" --oid <oid> --output yaml
+limacharlie case entity search --type ip --value "203.0.113.50" --oid <oid> --output yaml
 ```
 
 ---
@@ -592,7 +592,7 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
    - "Find NETWORK_CONNECTIONS from browser processes on sensor [sid] before [timestamp]"
    - "Find DNS requests on sensor [sid] before [timestamp]"
 
-**What to Document** (add as notes and telemetry to the ticket):
+**What to Document** (add as notes and telemetry to the case):
 - First malicious activity timestamp
 - Delivery vector if identified
 - Gap if initial access cannot be determined (add as note)
@@ -654,9 +654,9 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
    limacharlie detection list --start $((timestamp_seconds - 86400)) --end $((timestamp_seconds + 3600)) --oid <oid> --output yaml
    ```
 
-6. **Cross-ticket entity search** for IOCs found during investigation:
+6. **Cross-case entity search** for IOCs found during investigation:
    ```bash
-   limacharlie ticket entity search --type hash --value "<hash>" --oid <oid> --output yaml
+   limacharlie case entity search --type hash --value "<hash>" --oid <oid> --output yaml
    ```
 
 ### Phase 4: Lateral Movement Analysis (MANDATORY)
@@ -688,7 +688,7 @@ Don't stop at the suspicious process - trace backwards to find the entry point.
    - If this host was laterally accessed, find the source host
    - If this host laterally moved to others, identify all targets
 
-**What to Document** (REQUIRED - add to ticket even if negative):
+**What to Document** (REQUIRED - add to case even if negative):
 - Add note documenting lateral movement findings
 - **If no lateral movement found**: Add an `analysis` note: "No evidence of lateral movement detected. Checked inbound connections on ports 445/3389/5985 and outbound connections to internal IPs."
 
@@ -708,20 +708,20 @@ After completing all phases, you should be able to answer:
 | **Current State** | Is it contained or ongoing? | Recent activity checked |
 | **Unknowns** | What couldn't you determine? | Documented as notes |
 
-If you cannot answer a question, document it explicitly as a note on the ticket.
+If you cannot answer a question, document it explicitly as a note on the case.
 
 ---
 
-## Documenting the Investigation (Ticket Enrichment)
+## Documenting the Investigation (Case Enrichment)
 
-Build the ticket evidence as you go. Don't wait until the end. Each API call adds evidence incrementally.
+Build the case evidence as you go. Don't wait until the end. Each API call adds evidence incrementally.
 
 ### Adding Telemetry References
 
-For each event you investigated, add a telemetry reference to the ticket:
+For each event you investigated, add a telemetry reference to the case:
 
 ```bash
-limacharlie ticket telemetry add --ticket <ticket_number> \
+limacharlie case telemetry add --case <case_number> \
     --atom "<event-atom>" --sid "<sensor-id>" \
     --event-type "NEW_PROCESS" \
     --event-summary "Brief description of what this event shows" \
@@ -739,7 +739,7 @@ limacharlie ticket telemetry add --ticket <ticket_number> \
 
 **Example benign telemetry:**
 ```bash
-limacharlie ticket telemetry add --ticket <ticket_number> \
+limacharlie case telemetry add --case <case_number> \
     --atom "abc123..." --sid "sensor-id" \
     --event-type "NEW_PROCESS" \
     --event-summary "svchost.exe spawned by services.exe (PID 684)" \
@@ -753,7 +753,7 @@ limacharlie ticket telemetry add --ticket <ticket_number> \
 For each IOC or entity of interest:
 
 ```bash
-limacharlie ticket entity add --ticket <ticket_number> \
+limacharlie case entity add --case <case_number> \
     --type ip --value "203.0.113.50" \
     --name "Suspected C2 Server" \
     --verdict malicious \
@@ -783,7 +783,7 @@ limacharlie ticket entity add --ticket <ticket_number> \
 Link additional detections discovered during investigation:
 
 ```bash
-limacharlie ticket detection add --ticket <ticket_number> \
+limacharlie case detection add --case <case_number> \
     --detection-id "<detection-id>" \
     --detection-cat "Encoded PowerShell" \
     --detection-source "general" \
@@ -798,14 +798,14 @@ limacharlie ticket detection add --ticket <ticket_number> \
 Use notes to document your investigation process. Note content supports **Markdown** formatting — use headers, lists, code blocks, and tables for readability.
 
 ```bash
-limacharlie ticket add-note --id <ticket_number> --type analysis \
+limacharlie case add-note --id <case_number> --type analysis \
     --content "Ran LCQL query for parent PID 2476 - no results found. Parent process may predate telemetry window." \
     --oid <oid> --output yaml
 ```
 
 For long notes, use `--input-file` to read content from a file:
 ```bash
-limacharlie ticket add-note --id <ticket_number> --type analysis --input-file /tmp/note.md --oid <oid> --output yaml
+limacharlie case add-note --id <case_number> --type analysis --input-file /tmp/note.md --oid <oid> --output yaml
 ```
 
 **Valid Note Types:**
@@ -822,17 +822,17 @@ limacharlie ticket add-note --id <ticket_number> --type analysis --input-file /t
 
 ### Adding Tags
 
-Use tags to classify the ticket type and organize workflow. Add tags as you learn more during the investigation.
+Use tags to classify the case type and organize workflow. Add tags as you learn more during the investigation.
 
 **When to tag:**
 
-- **After classifying the ticket type**: Add tags describing the threat category (e.g., `phishing`, `ransomware`, `credential-theft`, `lateral-movement`, `cryptominer`)
+- **After classifying the case type**: Add tags describing the threat category (e.g., `phishing`, `ransomware`, `credential-theft`, `lateral-movement`, `cryptominer`)
 - **For workflow organization**: Add tags indicating next steps or status (e.g., `needs-escalation`, `false-positive-candidate`, `awaiting-response`, `containment-complete`)
 
 ```bash
 # Add classification tags after identifying the threat type
-limacharlie ticket tag add --id <ticket_number> --tag phishing --oid <oid> --output yaml
-limacharlie ticket tag add --id <ticket_number> --tag needs-escalation --oid <oid> --output yaml
+limacharlie case tag add --id <case_number> --tag phishing --oid <oid> --output yaml
+limacharlie case tag add --id <case_number> --tag needs-escalation --oid <oid> --output yaml
 ```
 
 **Best Practice Note Structure:**
@@ -848,7 +848,7 @@ limacharlie ticket tag add --id <ticket_number> --tag needs-escalation --oid <oi
 Attach references to forensic artifacts (memory dumps, PCAPs, etc.):
 
 ```bash
-limacharlie ticket artifact add --ticket <ticket_number> \
+limacharlie case artifact add --case <case_number> \
     --type "memory_dump" \
     --description "Full memory dump of PID 4832 from DESKTOP-001" \
     --verdict malicious \
@@ -906,7 +906,7 @@ Summarize for the user:
 
 ### Pre-Finalize Verification Checklist
 
-**STOP - Before finalizing the ticket, verify your investigation is complete:**
+**STOP - Before finalizing the case, verify your investigation is complete:**
 
 **Telemetry Coverage:**
 - [ ] Added ALL event types discovered (not just NEW_PROCESS - also CODE_IDENTITY, TERMINATE_PROCESS, NETWORK_CONNECTIONS, etc.)
@@ -916,7 +916,7 @@ Summarize for the user:
 - [ ] Each telemetry reference has a detailed `relevance` explanation
 
 **Detection Coverage:**
-- [ ] Triggering detection is linked (auto-linked at ticket creation)
+- [ ] Triggering detection is linked (auto-linked at case creation)
 - [ ] Related detections linked (different rule types, not 60 duplicates)
 - [ ] Representative detections from each additional affected host
 
@@ -939,12 +939,12 @@ Always confirm with user before finalizing:
 4. Telemetry/entity count looks reasonable for the incident scope
 5. Ready to resolve
 
-### Finalize the Ticket
+### Finalize the Case
 
-After user confirmation, update the ticket with summary, conclusion, classification, and resolve it. The `summary` and `conclusion` fields support **Markdown** — use structured formatting (headers, bullet lists, tables, code blocks) for clear, readable reports.
+After user confirmation, update the case with summary, conclusion, classification, and resolve it. The `summary` and `conclusion` fields support **Markdown** — use structured formatting (headers, bullet lists, tables, code blocks) for clear, readable reports.
 
 ```bash
-limacharlie ticket update --id <ticket_number> \
+limacharlie case update --id <case_number> \
     --summary "What happened - the full attack narrative, scope, and impact" \
     --conclusion "Final assessment - classification rationale, recommendations, remaining risks" \
     --classification true_positive \
@@ -954,78 +954,78 @@ limacharlie ticket update --id <ticket_number> \
 
 ### Escalation (when needed)
 
-If the investigation reveals the ticket needs senior analyst attention:
+If the investigation reveals the case needs senior analyst attention:
 
 ```bash
-limacharlie ticket update --id <ticket_number> \
+limacharlie case update --id <case_number> \
     --status escalated --escalation-group "tier-3-malware" \
     --oid <oid> --output yaml
 ```
 
 Add an `escalation` note explaining why:
 ```bash
-limacharlie ticket add-note --id <ticket_number> --type escalation \
+limacharlie case add-note --id <case_number> --type escalation \
     --content "Escalating: Evidence of APT-level tradecraft. Custom C2 implant with domain fronting. Requires malware reverse engineering." \
     --oid <oid> --output yaml
 ```
 
-### Merging Related Tickets
+### Merging Related Cases
 
-When multiple tickets are part of the same incident (e.g., same malware across hosts):
+When multiple cases are part of the same incident (e.g., same malware across hosts):
 
 ```bash
-limacharlie ticket merge --target <primary_ticket_number> \
-    --sources <ticket_number_2>,<ticket_number_3> \
+limacharlie case merge --target <primary_case_number> \
+    --sources <case_number_2>,<case_number_3> \
     --oid <oid> --output yaml
 ```
 
-Source tickets transition to `merged` status. All detections move to the primary ticket.
+Source cases transition to `merged` status. All detections move to the primary case.
 
 ---
 
-## Ticket Queue Management
+## Case Queue Management
 
-### List Open Tickets
+### List Open Cases
 
 ```bash
-# All open tickets, most recent first
-limacharlie ticket list --status new --status acknowledged --status in_progress --oid <oid> --output yaml
+# All open cases, most recent first
+limacharlie case list --status new --status acknowledged --status in_progress --oid <oid> --output yaml
 
 # Critical/high severity only
-limacharlie ticket list --status new --status acknowledged --severity critical --severity high --oid <oid> --output yaml
+limacharlie case list --status new --status acknowledged --severity critical --severity high --oid <oid> --output yaml
 
 # Assigned to a specific analyst
-limacharlie ticket list --assignee analyst@example.com --oid <oid> --output yaml
+limacharlie case list --assignee analyst@example.com --oid <oid> --output yaml
 ```
 
-### Dashboard (ticket counts)
+### Dashboard (case counts)
 
 ```bash
-limacharlie ticket dashboard --oid <oid> --output yaml
+limacharlie case dashboard --oid <oid> --output yaml
 ```
 
 ### SOC Performance Report
 
 ```bash
-limacharlie ticket report --from 2025-01-01T00:00:00Z --to 2025-02-01T00:00:00Z --oid <oid> --output yaml
+limacharlie case report --from 2025-01-01T00:00:00Z --to 2025-02-01T00:00:00Z --oid <oid> --output yaml
 ```
 
-### Export a Ticket
+### Export a Case
 
-Export all ticket data (metadata, detections, entities, telemetry, artifacts) as a single JSON object, or to a directory with the actual detection records, telemetry events, and artifact binaries:
+Export all case data (metadata, detections, entities, telemetry, artifacts) as a single JSON object, or to a directory with the actual detection records, telemetry events, and artifact binaries:
 ```bash
 # JSON to stdout
-limacharlie ticket export --id <ticket_number> --oid <oid> --output yaml
+limacharlie case export --id <case_number> --oid <oid> --output yaml
 
 # Full data export to a directory
-limacharlie ticket export --id <ticket_number> --with-data ./ticket-export --oid <oid>
+limacharlie case export --id <case_number> --with-data ./case-export --oid <oid>
 ```
 
 ### Bulk Operations
 
-Close multiple false positive tickets:
+Close multiple false positive cases:
 ```bash
-limacharlie ticket bulk-update --numbers <num1>,<num2>,<num3> \
+limacharlie case bulk-update --numbers <num1>,<num2>,<num3> \
     --status closed --classification false_positive \
     --oid <oid> --output yaml
 ```
@@ -1040,13 +1040,13 @@ limacharlie ticket bulk-update --numbers <num1>,<num2>,<num3> \
 
 ## Reference
 
-- **Ticketing Extension Documentation**: [ext-ticketing](https://github.com/refractionPOINT/documentation/blob/master/docs/5-integrations/extensions/limacharlie/ticketing.md)
-- **OpenAPI Specification**: `https://ticketing.limacharlie.io/openapi`
-- Use `limacharlie ticket --ai-help` for ticketing CLI command help
+- **Cases Extension Documentation**: [ext-cases](https://github.com/refractionPOINT/documentation/blob/master/docs/5-integrations/extensions/limacharlie/cases.md)
+- **OpenAPI Specification**: `https://cases.limacharlie.io/openapi`
+- Use `limacharlie case --ai-help` for cases CLI command help
 
 ## Schema Quick Reference
 
-**Ticket status values**: `new`, `acknowledged`, `in_progress`, `escalated`, `resolved`, `closed`, `merged`
+**Case status values**: `new`, `acknowledged`, `in_progress`, `escalated`, `resolved`, `closed`, `merged`
 
 **Classification values**: `pending`, `true_positive`, `false_positive`
 
@@ -1058,4 +1058,4 @@ limacharlie ticket bulk-update --numbers <num1>,<num2>,<num3> \
 
 **Note types**: `general`, `analysis`, `remediation`, `escalation`, `handoff`
 
-**Tag management**: `limacharlie ticket tag set/add/remove --id <number> --tag <tag> --oid <oid>`
+**Tag management**: `limacharlie case tag set/add/remove --id <number> --tag <tag> --oid <oid>`

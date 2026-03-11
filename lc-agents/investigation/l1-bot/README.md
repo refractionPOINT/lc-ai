@@ -1,6 +1,6 @@
-# L1 Bot - Automated Ticket Triage
+# L1 Bot - Automated Case Triage
 
-An AI-powered Level 1 SOC analyst that automatically investigates new security tickets and documents findings for human L2 analysts to review.
+An AI-powered Level 1 SOC analyst that automatically investigates new security cases and documents findings for human L2 analysts to review.
 
 ## How It Works
 
@@ -8,13 +8,13 @@ An AI-powered Level 1 SOC analyst that automatically investigates new security t
 Detection fires
       |
       v
-ext-ticketing creates a ticket
+ext-cases creates a case
       |
       v
 Webhook adapter emits "created" event
       |
       v
-D&R rule matches (event=created, has ticket data)
+D&R rule matches (event=created, has case data)
       |
       v
 Suppression check (max 10/min)
@@ -23,10 +23,10 @@ Suppression check (max 10/min)
 Debounce check (one active session at a time)
       |
       v
-AI agent session starts with ticket context
+AI agent session starts with case context
       |
       v
-Bot investigates: fetches ticket -> analyzes detection
+Bot investigates: fetches case -> analyzes detection
   -> checks sensor timeline -> assesses scope
       |
       v
@@ -42,7 +42,7 @@ Session terminates (one_shot)
 
 ## Prerequisites
 
-- [ext-ticketing](https://doc.limacharlie.io/docs/extensions/ext-ticketing) extension subscribed and configured
+- [ext-cases](https://doc.limacharlie.io/docs/extensions/ext-cases) extension subscribed and configured
 - An Anthropic API key
 - A LimaCharlie API key with the following permissions:
 
@@ -55,9 +55,9 @@ Session terminates (one_shot)
 | `dr.list` | List D&R rules to understand detection context |
 | `insight.det.get` | List and read detections |
 | `insight.evt.get` | Access event data for IOC searches and timeline queries |
-| `investigation.get` | List and read tickets |
-| `investigation.set` | Update tickets, add notes, entities, telemetry, classify |
-| `ext.request` | Make requests to extensions (e.g. ext-ticketing) |
+| `investigation.get` | List and read cases |
+| `investigation.set` | Update cases, add notes, entities, telemetry, classify |
+| `ext.request` | Make requests to extensions (e.g. ext-cases) |
 | `ai_agent.operate` | Allow the agent to run AI agent sessions |
 
 ## Installation
@@ -66,14 +66,14 @@ Use the `lc-deployer` skill to install and manage this agent. See the [lc-essent
 
 ## Investigation Workflow
 
-When a new ticket is created, the bot:
+When a new case is created, the bot:
 
-1. **Tags the ticket** with `investigating` and sets status to `in_progress`
-2. **Fetches ticket details** to understand the detection
+1. **Tags the case** with `investigating` and sets status to `in_progress`
+2. **Fetches case details** to understand the detection
 3. **Analyzes the detection** - gets the full detection record, identifies sensor/event/indicators
 4. **Investigates context** - checks sensor timeline, process trees, network connections, related detections
 5. **Assesses scope** - searches for the same IOCs across the organization
-6. **Documents findings** - fills out every ticket section:
+6. **Documents findings** - fills out every case section:
    - **Summary**: concise overview of what was detected and found
    - **Conclusion**: determination and reasoning for the outcome
    - **Analysis notes**: detailed technical findings
@@ -99,5 +99,5 @@ When a new ticket is created, the bot:
 ## Files
 
 - `hives/ai_agent.yaml` - AI agent definition with investigation prompt
-- `hives/dr-general.yaml` - D&R rule triggering the bot on ticket creation
+- `hives/dr-general.yaml` - D&R rule triggering the bot on case creation
 - `hives/secret.yaml` - Placeholder secrets (Anthropic key, LC API key)

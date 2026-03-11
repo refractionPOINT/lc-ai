@@ -128,7 +128,7 @@ The `lc-agents/` directory contains autonomous AI agents that run inside LimaCha
 
 | Agent | Description |
 |-------|-------------|
-| [l1-bot](lc-agents/investigation/l1-bot/) | Automated L1 SOC analyst that investigates new tickets and documents findings for L2 review |
+| [l1-bot](lc-agents/investigation/l1-bot/) | Automated L1 SOC analyst that investigates new cases and documents findings for L2 review |
 
 ### Installing Agents
 

@@ -1,6 +1,6 @@
 # SOC Manager - Operational Health Monitor
 
-The self-healing mechanism of the SOC. Runs every hour to catch operational issues: stale investigations where agents timed out, SLA violations where tickets were missed, and abandoned tickets that need human attention.
+The self-healing mechanism of the SOC. Runs every hour to catch operational issues: stale investigations where agents timed out, SLA violations where cases were missed, and abandoned cases that need human attention.
 
 ## What It Does
 
@@ -11,7 +11,7 @@ flowchart TD
     stale --> sla["Check SLA violations:<br/>Critical > 15min, High > 30min,<br/>Medium > 60min, Low > 120min"]
     remove --> sla
     sla -->|SLA breached| breach["Tag: sla-breached,<br/>add escalation note"]
-    sla --> abandoned["Check abandoned tickets:<br/>In-progress/escalated<br/>no updates > 4 hours?"]
+    sla --> abandoned["Check abandoned cases:<br/>In-progress/escalated<br/>no updates > 4 hours?"]
     breach --> abandoned
     abandoned -->|Abandoned| escalate[Add escalation note]
     abandoned --> done["Output summary<br/>Session terminates"]
@@ -20,9 +20,9 @@ flowchart TD
 
 ## Why This Exists
 
-AI agents can fail silently. If an L2 investigation times out at the 15-minute TTL, the `l2-investigating` tag stays on the ticket forever, and no other agent will pick it up (they see the lock tag and assume someone's working on it). The SOC Manager breaks these deadlocks by cleaning up stale tags after 30 minutes.
+AI agents can fail silently. If an L2 investigation times out at the 15-minute TTL, the `l2-investigating` tag stays on the case forever, and no other agent will pick it up (they see the lock tag and assume someone's working on it). The SOC Manager breaks these deadlocks by cleaning up stale tags after 30 minutes.
 
-It also catches tickets that fall through the cracks -- for example, if the D&R suppression rate limit was hit during an alert storm and some tickets were never picked up.
+It also catches cases that fall through the cracks -- for example, if the D&R suppression rate limit was hit during an alert storm and some cases were never picked up.
 
 ## Design Philosophy
 
@@ -32,8 +32,8 @@ The SOC Manager **monitors** but does not **investigate**. It:
 - Adds notes (documenting what it found)
 
 It does NOT:
-- Change ticket status
-- Close or resolve tickets
+- Change case status
+- Close or resolve cases
 - Perform any investigation work
 
 ## API Key Permissions
@@ -43,7 +43,7 @@ Create an API key named `soc-manager` with these permissions:
 | Permission | Why |
 |-----------|-----|
 | `org.get` | Basic org context |
-| `investigation.get` | List and read tickets, check dashboard |
+| `investigation.get` | List and read cases, check dashboard |
 | `investigation.set` | Add tags, notes to flag issues |
 | `ext.request` | Invoke extensions |
 | `ai_agent.operate` | Allow the agent to run |
@@ -53,7 +53,7 @@ Create an API key named `soc-manager` with these permissions:
 | Parameter | Value | Description |
 |-----------|-------|-------------|
 | `model` | `sonnet` | Health checks don't need deep reasoning |
-| `max_turns` | `30` | Enough to check all ticket states |
+| `max_turns` | `30` | Enough to check all case states |
 | `max_budget_usd` | `0.50` | Low budget -- mostly listing and tagging |
 | `ttl_seconds` | `300` | 5 minute hard timeout |
 | `one_shot` | `true` | Terminates after completing |

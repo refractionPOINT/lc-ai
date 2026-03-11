@@ -8,7 +8,7 @@ The first line of defense. Every detection passes through this agent for a quick
 flowchart TD
     det[Detection fires] --> fpcheck{"Quick FP check<br/>obvious nonsense?"}
     fpcheck -->|YES| stop["STOP<br/>(~$0.10)"]
-    fpcheck -->|NO| route["Gather context, route to ticket:<br/>Add to existing (related)<br/>OR create new ticket"]
+    fpcheck -->|NO| route["Gather context, route to case:<br/>Add to existing (related)<br/>OR create new case"]
 ```
 
 ## Why Sonnet
@@ -23,9 +23,9 @@ Create an API key named `lean-triage` with:
 |-----------|-----|
 | `org.get` | Basic org context |
 | `insight.det.get` | List recent detections |
-| `investigation.get` | List existing tickets |
-| `investigation.set` | Create tickets, add detections/notes |
-| `ext.request` | Invoke ext-ticketing |
+| `investigation.get` | List existing cases |
+| `investigation.set` | Create cases, add detections/notes |
+| `ext.request` | Invoke ext-cases |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration

@@ -988,7 +988,7 @@ Issue: New sensor {hostname} enrolled {hours}h ago
 Risk Score: {score} (High)
 
 Remediation Steps:
-1. Cross-reference with IT deployment tickets
+1. Cross-reference with IT deployment cases
 2. Verify hostname matches naming convention
 3. Check installation key used
 4. If legitimate:
@@ -1053,11 +1053,11 @@ Skill(skill="lc-essentials:sensor-health")
 Skill(skill="lc-essentials:reporting")
 ```
 
-### ticket-investigation
+### case-investigation
 **Use when**: Investigating specific problematic sensors.
 
 ```
-Skill(skill="lc-essentials:ticket-investigation")
+Skill(skill="lc-essentials:case-investigation")
 ```
 
 ### detection-engineering

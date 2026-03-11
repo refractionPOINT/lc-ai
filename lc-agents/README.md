@@ -35,17 +35,17 @@ data:
   detection: "@this"
 ```
 
-Do **not** use `detect: detect` — that only extracts the inner `detect` field (event payload + event routing) and omits top-level fields like `detect_id`. This causes problems when the agent needs to pass the detection to ticketing commands that require `detect_id`.
+Do **not** use `detect: detect` — that only extracts the inner `detect` field (event payload + event routing) and omits top-level fields like `detect_id`. This causes problems when the agent needs to pass the detection to cases commands that require `detect_id`.
 
 ### Extracting specific fields
 
-For events where only specific fields are needed (e.g., ticket webhook events):
+For events where only specific fields are needed (e.g., case webhook events):
 
 ```yaml
 data:
   oid: routing.oid
-  ticket_id: event.ticket_id
-  ticket_number: event.ticket_number
+  case_id: event.case_id
+  case_number: event.case_number
 ```
 
 Paths use GJSON dot notation (not slash-separated).
@@ -59,7 +59,7 @@ data:
   debounce_key: l1-bot
 ```
 
-This is useful for agents that should process events sequentially rather than in parallel (e.g., a triage bot investigating tickets one at a time). The key supports Go template syntax for dynamic values (e.g., `triage-{{.sid}}`).
+This is useful for agents that should process events sequentially rather than in parallel (e.g., a triage bot investigating cases one at a time). The key supports Go template syntax for dynamic values (e.g., `triage-{{.sid}}`).
 
 Unlike D&R suppression which silently drops excess requests, debounce guarantees the latest request will eventually be processed.
 

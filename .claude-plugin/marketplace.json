@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "lc-essentials",
-      "description": "Core LimaCharlie skills for CLI-based API access, detection engineering, sensor tasking, ticket investigation, and fleet health monitoring.",
+      "description": "Core LimaCharlie skills for CLI-based API access, detection engineering, sensor tasking, case investigation, and fleet health monitoring.",
       "source": "./marketplace/plugins/lc-essentials",
       "version": "3.0.0",
       "author": {

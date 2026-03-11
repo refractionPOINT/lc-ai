@@ -1,17 +1,17 @@
 # Containment - Automated Threat Response
 
-Takes action on confirmed threats. When L2 tags a ticket with `needs-containment`, this agent isolates compromised sensors and blocks malicious IOCs. For critical severity threats, it acts automatically. For everything else, it documents recommended actions for human review.
+Takes action on confirmed threats. When L2 tags a case with `needs-containment`, this agent isolates compromised sensors and blocks malicious IOCs. For critical severity threats, it acts automatically. For everything else, it documents recommended actions for human review.
 
 ## What It Does
 
 ```mermaid
 flowchart TD
     trigger["Tag: needs-containment<br/>(webhook event)"] --> tag["Tag: containing<br/>(remove needs-containment)"]
-    tag --> review["Review ticket:<br/>Threat, affected sensors,<br/>malicious IOCs, L2 recommendations"]
+    tag --> review["Review case:<br/>Threat, affected sensors,<br/>malicious IOCs, L2 recommendations"]
     review --> severity{Severity check}
     severity -->|"CRITICAL +<br/>confirmed malicious"| auto["AUTO-CONTAIN<br/>Isolate sensors, block IOCs,<br/>document every action"]
     severity -->|"HIGH/MEDIUM/<br/>uncertain"| recommend["RECOMMEND ONLY<br/>Document what SHOULD be done,<br/>flag for human review"]
-    auto --> done["Document actions as remediation note<br/>Tag: contained (remove containing)<br/>Resolve ticket, session terminates"]
+    auto --> done["Document actions as remediation note<br/>Tag: contained (remove containing)<br/>Resolve case, session terminates"]
     recommend --> done
 ```
 
@@ -28,9 +28,9 @@ flowchart TD
 
 ## Safety Guardrails
 
-- Only auto-contains **CRITICAL severity** tickets with confirmed malicious IOCs
-- HIGH/MEDIUM/LOW severity tickets get **documented recommendations only**
-- Every action is logged as a ticket note **before** execution
+- Only auto-contains **CRITICAL severity** cases with confirmed malicious IOCs
+- HIGH/MEDIUM/LOW severity cases get **documented recommendations only**
+- Every action is logged as a case note **before** execution
 - Conservative by default: when in doubt, recommend instead of acting
 
 ## API Key Permissions
@@ -43,8 +43,8 @@ Create an API key named `soc-containment` with these permissions:
 | `sensor.list` | List sensors for isolation |
 | `sensor.get` | Get sensor details |
 | `sensor.task` | Isolate sensors |
-| `investigation.get` | Read tickets |
-| `investigation.set` | Update tickets, add notes |
+| `investigation.get` | Read cases |
+| `investigation.set` | Update cases, add notes |
 | `ext.request` | Invoke extensions |
 | `ai_agent.operate` | Allow the agent to run |
 | `lookup.set` | Add IOCs to block lookup tables |
@@ -58,7 +58,7 @@ Create an API key named `soc-containment` with these permissions:
 | `max_budget_usd` | `1.0` | Low budget -- mostly executing commands |
 | `ttl_seconds` | `300` | 5 minute hard timeout |
 | `one_shot` | `true` | Terminates after completing |
-| Suppression | `1 per ticket/30min` | Max one containment per ticket per 30 minutes |
+| Suppression | `1 per case/30min` | Max one containment per case per 30 minutes |
 
 ## Files
 

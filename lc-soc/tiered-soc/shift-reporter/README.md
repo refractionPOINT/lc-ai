@@ -1,15 +1,15 @@
 # Shift Reporter - Daily SOC Metrics
 
-Runs once per day to generate a comprehensive SOC report. Gathers metrics from the ticketing system, compiles a structured summary of the last 24 hours, and creates a report ticket that a human SOC manager can review each morning.
+Runs once per day to generate a comprehensive SOC report. Gathers metrics from the cases system, compiles a structured summary of the last 24 hours, and creates a report case that a human SOC manager can review each morning.
 
 ## What It Does
 
 ```mermaid
 flowchart TD
-    trigger["Schedule: every 24 hours"] --> gather["Gather metrics:<br/>Dashboard counts, MTTA/MTTR,<br/>closed tickets, open tickets"]
-    gather --> create[Create report ticket]
+    trigger["Schedule: every 24 hours"] --> gather["Gather metrics:<br/>Dashboard counts, MTTA/MTTR,<br/>closed cases, open cases"]
+    gather --> create[Create report case]
     create --> notes["Add structured notes:<br/>Executive summary, notable incidents,<br/>trends and recommendations"]
-    notes --> done["Tag: soc-report, daily-report<br/>Close report ticket<br/>Session terminates"]
+    notes --> done["Tag: soc-report, daily-report<br/>Close report case<br/>Session terminates"]
 ```
 
 ## Report Contents
@@ -17,7 +17,7 @@ flowchart TD
 The daily report covers:
 
 **Key Metrics:**
-- Total alerts processed, tickets created/closed
+- Total alerts processed, cases created/closed
 - False positive vs true positive breakdown
 - Mean Time to Acknowledge (MTTA)
 - Mean Time to Resolve (MTTR)
@@ -28,7 +28,7 @@ The daily report covers:
 - Critical and high severity true positives
 - Containment actions taken
 - Threat hunts conducted
-- Tickets still requiring human attention
+- Cases still requiring human attention
 
 **Trends and Recommendations:**
 - Detection categories with highest volume
@@ -38,10 +38,10 @@ The daily report covers:
 
 ## Finding Reports
 
-Reports are created as tickets tagged with `soc-report` and `daily-report`, then immediately closed. To find them:
+Reports are created as cases tagged with `soc-report` and `daily-report`, then immediately closed. To find them:
 
 ```bash
-limacharlie ticket list --tag soc-report --oid <oid> --output yaml
+limacharlie case list --tag soc-report --oid <oid> --output yaml
 ```
 
 ## API Key Permissions
@@ -51,8 +51,8 @@ Create an API key named `soc-shift-reporter` with these permissions:
 | Permission | Why |
 |-----------|-----|
 | `org.get` | Basic org context |
-| `investigation.get` | List tickets, read dashboard, get report summary |
-| `investigation.set` | Create report ticket, add notes |
+| `investigation.get` | List cases, read dashboard, get report summary |
+| `investigation.set` | Create report case, add notes |
 | `ext.request` | Invoke extensions |
 | `ai_agent.operate` | Allow the agent to run |
 

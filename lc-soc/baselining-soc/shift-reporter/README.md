@@ -1,15 +1,15 @@
 # Shift Reporter - Daily SOC & Baselining Metrics
 
-Runs once per day to generate a comprehensive SOC report. In addition to the standard metrics (ticket volume, MTTA/MTTR, severity breakdown), it reports on FP rule activity -- the primary output of the Baselining SOC -- and assesses whether the organization is ready to migrate to the Tiered SOC.
+Runs once per day to generate a comprehensive SOC report. In addition to the standard metrics (case volume, MTTA/MTTR, severity breakdown), it reports on FP rule activity -- the primary output of the Baselining SOC -- and assesses whether the organization is ready to migrate to the Tiered SOC.
 
 ## What It Does
 
 ```mermaid
 flowchart TD
-    trigger["Schedule: every 24 hours"] --> gather["Gather metrics:<br/>Dashboard counts, MTTA/MTTR,<br/>closed/open tickets,<br/>FP rules (new in last 24h)"]
-    gather --> create[Create report ticket]
+    trigger["Schedule: every 24 hours"] --> gather["Gather metrics:<br/>Dashboard counts, MTTA/MTTR,<br/>closed/open cases,<br/>FP rules (new in last 24h)"]
+    gather --> create[Create report case]
     create --> notes["Add structured notes:<br/>Executive summary, notable incidents,<br/>FP rule activity & baselining progress,<br/>trends & recommendations (migration readiness)"]
-    notes --> done["Tag: soc-report, daily-report, baseline-report<br/>Close report ticket<br/>Session terminates"]
+    notes --> done["Tag: soc-report, daily-report, baseline-report<br/>Close report case<br/>Session terminates"]
 ```
 
 ## Report Contents
@@ -17,7 +17,7 @@ flowchart TD
 The daily report covers:
 
 **Key Metrics:**
-- Total alerts processed, tickets created/closed
+- Total alerts processed, cases created/closed
 - False positive vs true positive breakdown
 - Mean Time to Acknowledge (MTTA)
 - Mean Time to Resolve (MTTR)
@@ -29,7 +29,7 @@ The daily report covers:
 - Critical and high severity true positives
 - Containment actions taken
 - Threat hunts conducted
-- Tickets still requiring human attention
+- Cases still requiring human attention
 
 **FP Rule Activity:**
 - New FP rules created in the last 24 hours (names, categories, conditions)
@@ -46,10 +46,10 @@ The daily report covers:
 
 ## Finding Reports
 
-Reports are created as tickets tagged with `soc-report`, `daily-report`, and `baseline-report`, then immediately closed. To find them:
+Reports are created as cases tagged with `soc-report`, `daily-report`, and `baseline-report`, then immediately closed. To find them:
 
 ```bash
-limacharlie ticket list --tag baseline-report --oid <oid> --output yaml
+limacharlie case list --tag baseline-report --oid <oid> --output yaml
 ```
 
 ## API Key Permissions
@@ -59,8 +59,8 @@ Create an API key named `soc-shift-reporter` with these permissions:
 | Permission | Why |
 |-----------|-----|
 | `org.get` | Basic org context |
-| `investigation.get` | List tickets, read dashboard, get report summary |
-| `investigation.set` | Create report ticket, add notes |
+| `investigation.get` | List cases, read dashboard, get report summary |
+| `investigation.set` | Create report case, add notes |
 | `ext.request` | Invoke extensions |
 | `fp.ctrl` | List FP rules for baselining progress reporting |
 | `ai_agent.operate` | Allow the agent to run |

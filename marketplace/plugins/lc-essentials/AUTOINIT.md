@@ -18,21 +18,21 @@ limacharlie api <endpoint> --oid <oid> --output yaml
 ```
 `{oid}` in the path is replaced with the resolved org ID. Supports `-f` (string fields), `-F` (typed fields, `@file`), `--input <file>`, `--target` (`api`|`billing`|`jwt`|`stream`|`downloads`). The CLI handles all authentication automatically.
 
-### Ticketing CLI
+### Cases CLI
 
-The Ticketing extension (`ext-ticketing`) has first-class CLI support via `limacharlie ticket`:
+The Cases extension (`ext-cases`) has first-class CLI support via `limacharlie case`:
 ```bash
-limacharlie ticket list --oid <oid> --output yaml
-limacharlie ticket get --id <ticket_number> --oid <oid> --output yaml
-limacharlie ticket update --id <ticket_number> --status acknowledged --oid <oid> --output yaml
-limacharlie ticket add-note --id <ticket_number> --content "Note" --type analysis --oid <oid> --output yaml
-limacharlie ticket entity add --ticket <ticket_number> --type ip --value "10.0.0.1" --verdict malicious --oid <oid> --output yaml
-limacharlie ticket telemetry add --ticket <ticket_number> --atom <atom> --sid <sid> --event-type NEW_PROCESS --oid <oid> --output yaml
-limacharlie ticket export --id <ticket_number> --oid <oid> --output yaml
-limacharlie ticket export --id <ticket_number> --with-data ./ticket-export --oid <oid>
+limacharlie case list --oid <oid> --output yaml
+limacharlie case get --id <case_number> --oid <oid> --output yaml
+limacharlie case update --id <case_number> --status acknowledged --oid <oid> --output yaml
+limacharlie case add-note --id <case_number> --content "Note" --type analysis --oid <oid> --output yaml
+limacharlie case entity add --case <case_number> --type ip --value "10.0.0.1" --verdict malicious --oid <oid> --output yaml
+limacharlie case telemetry add --case <case_number> --atom <atom> --sid <sid> --event-type NEW_PROCESS --oid <oid> --output yaml
+limacharlie case export --id <case_number> --oid <oid> --output yaml
+limacharlie case export --id <case_number> --with-data ./case-export --oid <oid>
 ```
 
-The ticketing extension auto-creates tickets from detections. Use `limacharlie ticket --ai-help` for full command reference. See the `ticket-investigation` skill for the full investigation workflow.
+The cases extension auto-creates cases from detections. Use `limacharlie case --ai-help` for full command reference. See the `case-investigation` skill for the full investigation workflow.
 
 ## Required Tool
 

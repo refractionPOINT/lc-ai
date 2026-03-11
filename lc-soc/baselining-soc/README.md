@@ -9,16 +9,16 @@ flowchart TD
     det["EDR Detections<br/>accumulate over 1 hour"] -->|"schedule: 1h_per_org"| bulk["BULK TRIAGE<br/>opus, $5.00<br/>debounce_key: soc-bulk-triage"]
     bulk -->|FP pattern identified| fprule["Create FP rule<br/>(at least 2 conditions)"]
     bulk -->|Suspicious binary?| malware["MALWARE ANALYST<br/>opus, $5.00"]
-    malware -->|findings on ticket| l2
-    bulk -->|"True positive? →<br/>creates ticket, status: escalated"| l2["L2 ANALYST<br/>opus, $5.00"]
+    malware -->|findings on case| l2
+    bulk -->|"True positive? →<br/>creates case, status: escalated"| l2["L2 ANALYST<br/>opus, $5.00"]
     l2 -->|"tag: needs-containment"| containment["CONTAINMENT<br/>sonnet, $1.00"]
     l2 -->|"tag: needs-threat-hunt"| hunter["THREAT HUNTER<br/>opus, $5.00"]
     l2 --> resolved[Resolved]
-    containment --> containActions[Actions documented on ticket]
-    hunter --> newTickets[New tickets for lateral findings]
+    containment --> containActions[Actions documented on case]
+    hunter --> newCases[New cases for lateral findings]
 
     schedule1["Every 1 hour"] --> socmgr["SOC MANAGER<br/>sonnet, $0.50"]
-    socmgr --> sla[SLA monitoring, stale ticket cleanup]
+    socmgr --> sla[SLA monitoring, stale case cleanup]
     schedule2["Every 24 hours"] --> shift["SHIFT REPORTER<br/>sonnet, $1.00"]
     shift --> daily["Daily metrics + FP baselining report"]
 ```
@@ -28,8 +28,8 @@ flowchart TD
 | Aspect | Baselining SOC | Tiered SOC |
 |--------|---------------|------------|
 | **Entry point** | Hourly bulk triage (schedule event) | Per-detection triage (real-time) |
-| **Primary output** | FP rules to reduce noise | Investigated tickets |
-| **FP handling** | Creates FP rules via `limacharlie fp set` | Dismisses FPs as ticket closures |
+| **Primary output** | FP rules to reduce noise | Investigated cases |
+| **FP handling** | Creates FP rules via `limacharlie fp set` | Dismisses FPs as case closures |
 | **Model for triage** | Opus (needs strong reasoning for rule creation) | Sonnet (fast classification) |
 | **Triage cost** | ~$5.00/hour (bulk) | ~$0.10/detection |
 | **Best for** | Noisy new orgs, first days/weeks | Stable orgs with tuned detections |
@@ -66,11 +66,11 @@ The bulk triage is more expensive per-run than per-detection triage, but process
 | Agent | Role | Model | Budget | TTL | Trigger |
 |-------|------|-------|--------|-----|---------|
 | [bulk-triage](bulk-triage/) | Process all detections hourly, create FP rules, escalate TPs | opus | $5.00 | 15m | Schedule: every 1h |
-| [l2-analyst](l2-analyst/) | Deep investigation, scope assessment, lateral movement | opus | $5.00 | 15m | Ticket escalated |
+| [l2-analyst](l2-analyst/) | Deep investigation, scope assessment, lateral movement | opus | $5.00 | 15m | Case escalated |
 | [malware-analyst](malware-analyst/) | Deep binary forensics via LCRE/Ghidra | opus | $5.00 | 15m | Tag: needs-malware-analysis |
 | [containment](containment/) | Isolate sensors, block IOCs | sonnet | $1.00 | 5m | Tag: needs-containment |
 | [threat-hunter](threat-hunter/) | Hunt IOCs from confirmed incidents org-wide | opus | $5.00 | 15m | Tag: needs-threat-hunt |
-| [soc-manager](soc-manager/) | SLA monitoring, stale ticket cleanup | sonnet | $0.50 | 5m | Schedule: every 1h |
+| [soc-manager](soc-manager/) | SLA monitoring, stale case cleanup | sonnet | $0.50 | 5m | Schedule: every 1h |
 | [shift-reporter](shift-reporter/) | Daily SOC summary with FP baselining metrics | sonnet | $1.00 | 5m | Schedule: every 24h |
 
 ## Installation Order

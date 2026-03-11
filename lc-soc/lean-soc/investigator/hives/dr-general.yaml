@@ -1,12 +1,12 @@
 version: 3
 hives:
   dr-general:
-    lean-investigator-on-ticket-created:
+    lean-investigator-on-case-created:
       data:
         detect:
           event: created
           op: exists
-          path: event/ticket_id
+          path: event/case_id
         respond:
           - action: start ai agent
             definition: hive://ai_agent/lean-investigator
