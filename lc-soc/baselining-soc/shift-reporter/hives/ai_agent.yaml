@@ -4,7 +4,7 @@ hives:
     soc-shift-reporter:
       data:
         anthropic_secret: hive://secret/anthropic-key
-        lc_api_key_secret: hive://secret/soc-shift-reporter-api-key
+        lc_api_key_secret: hive://secret/soc-shift-reporter
         prompt: |
           You are the Shift Reporter in an automated Baselining SOC pipeline. You run once per day to
           generate a comprehensive SOC summary report. Your report should give a human SOC manager
@@ -147,4 +147,4 @@ hives:
         expiry: 0
         tags:
           - lc-soc:baselining-soc:shift-reporter
-          - lc-soc:api-key:soc-shift-reporter-api-key
+          - lc-soc:api-key:soc-shift-reporter

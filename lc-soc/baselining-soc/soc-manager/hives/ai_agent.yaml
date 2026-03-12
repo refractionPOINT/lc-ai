@@ -4,7 +4,7 @@ hives:
     soc-manager:
       data:
         anthropic_secret: hive://secret/anthropic-key
-        lc_api_key_secret: hive://secret/soc-manager-api-key
+        lc_api_key_secret: hive://secret/soc-manager
         prompt: |
           You are the SOC Manager agent in an automated SOC pipeline. You run every hour to monitor
           the health of the SOC itself -- checking for stale cases, SLA violations, stuck agents,
@@ -96,4 +96,4 @@ hives:
         expiry: 0
         tags:
           - lc-soc:baselining-soc:soc-manager
-          - lc-soc:api-key:soc-manager-api-key
+          - lc-soc:api-key:soc-manager

@@ -4,7 +4,7 @@ hives:
     soc-containment:
       data:
         anthropic_secret: hive://secret/anthropic-key
-        lc_api_key_secret: hive://secret/soc-containment-api-key
+        lc_api_key_secret: hive://secret/soc-containment
         prompt: |
           You are the Containment agent in an automated SOC pipeline. You take action on confirmed
           threats by isolating compromised sensors, blocking malicious IOCs, and documenting all
@@ -105,4 +105,4 @@ hives:
         expiry: 0
         tags:
           - lc-soc:baselining-soc:containment
-          - lc-soc:api-key:soc-containment-api-key
+          - lc-soc:api-key:soc-containment

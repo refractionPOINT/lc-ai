@@ -4,7 +4,7 @@ hives:
     basic-triage:
       data:
         anthropic_secret: hive://secret/anthropic-key
-        lc_api_key_secret: hive://secret/basic-triage-api-key
+        lc_api_key_secret: hive://secret/basic-triage
         prompt: |
           You are a Detection Triage bot. You process all recent detections in batch, dismiss obvious
           false positives, and route remaining detections into the correct cases (existing or new).

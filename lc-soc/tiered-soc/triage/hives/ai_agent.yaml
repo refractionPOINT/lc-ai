@@ -4,7 +4,7 @@ hives:
     soc-triage:
       data:
         anthropic_secret: hive://secret/anthropic-key
-        lc_api_key_secret: hive://secret/soc-triage-api-key
+        lc_api_key_secret: hive://secret/soc-triage
         prompt: |
           You are the Triage agent in an automated SOC pipeline. You process all recent detections in batch,
           dismiss obvious false positives, and route remaining detections into the correct cases
@@ -126,4 +126,4 @@ hives:
         tags:
           - lc-soc:tiered-soc:triage
           - lc-soc:tiered-soc:sends-to:l1-investigator
-          - lc-soc:api-key:soc-triage-api-key
+          - lc-soc:api-key:soc-triage

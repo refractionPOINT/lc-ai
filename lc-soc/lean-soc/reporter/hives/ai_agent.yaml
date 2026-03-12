@@ -4,7 +4,7 @@ hives:
     lean-reporter:
       data:
         anthropic_secret: hive://secret/anthropic-key
-        lc_api_key_secret: hive://secret/lean-reporter-api-key
+        lc_api_key_secret: hive://secret/lean-reporter
         prompt: |
           You are the Reporter in a lean automated SOC. You run once per day to generate a SOC
           summary report AND check for operational health issues. You combine the roles of a SOC
@@ -119,4 +119,4 @@ hives:
         expiry: 0
         tags:
           - lc-soc:lean-soc:reporter
-          - lc-soc:api-key:lean-reporter-api-key
+          - lc-soc:api-key:lean-reporter

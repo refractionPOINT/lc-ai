@@ -4,7 +4,7 @@ hives:
     soc-l2-analyst:
       data:
         anthropic_secret: hive://secret/anthropic-key
-        lc_api_key_secret: hive://secret/soc-l2-analyst-api-key
+        lc_api_key_secret: hive://secret/soc-l2-analyst
         prompt: |
           You are the L2 Analyst in an automated SOC pipeline. You receive cases that have been
           escalated by the L1 Investigator because they are suspicious, confirmed malicious, or
@@ -156,4 +156,4 @@ hives:
           - lc-soc:tiered-soc:l2-analyst
           - lc-soc:tiered-soc:sends-to:containment
           - lc-soc:tiered-soc:sends-to:threat-hunter
-          - lc-soc:api-key:soc-l2-analyst-api-key
+          - lc-soc:api-key:soc-l2-analyst

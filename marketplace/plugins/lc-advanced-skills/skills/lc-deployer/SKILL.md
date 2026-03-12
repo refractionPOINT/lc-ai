@@ -77,11 +77,11 @@ Every `ai_agent` hive record in a SOC carries two kinds of tags:
 |----------|--------|---------|
 | **Identity** | `lc-soc:<soc-name>:<role>` | `lc-soc:tiered-soc:l1-investigator` |
 | **Relationship** | `lc-soc:<soc-name>:sends-to:<target-role>` | `lc-soc:tiered-soc:sends-to:l2-analyst` |
-| **API Key** | `lc-soc:api-key:<secret-name>` | `lc-soc:api-key:soc-l1-investigator-api-key` |
+| **API Key** | `lc-soc:api-key:<agent-name>` | `lc-soc:api-key:soc-l1-investigator` |
 
 - The **identity tag** names the agent's role within the SOC.
 - Each **`sends-to` tag** declares a directed edge: this agent's output feeds `<target-role>` (via D&R trigger, case escalation, or data dependency).
-- The **`api-key` tag** names the secret (in `hive://secret/`) that holds this agent's LimaCharlie API key. This is SOC-independent: shared agents carry one `api-key` tag regardless of how many SOCs reference them.
+- The **`api-key` tag** names the agent whose LimaCharlie API key secret is in `hive://secret/<agent-name>`. The secret name matches the agent's hive key. This is SOC-independent: shared agents carry one `api-key` tag regardless of how many SOCs reference them.
 - Schedule-only agents with no downstream consumers (reporter, soc-manager, shift-reporter) have an identity tag but no `sends-to` tags.
 - Terminal agents (responder, containment) also have no `sends-to` tags.
 
@@ -148,13 +148,13 @@ limacharlie extension list --oid <oid> --output yaml
 
 Each agent has a `secret.yaml` defining required secrets. For each secret:
 
-#### LimaCharlie API Key (`lc-api-key`)
+#### LimaCharlie API Key
 
 Offer to create the API key for the user automatically:
 
 ```bash
 limacharlie api-key create \
-  --name "<agent-name>-api-key" \
+  --name "<agent-name>" \
   --permissions "sensor.list,sensor.get,sensor.task,dr.list,dr.set,org.get,hive.get,ext.request,ai_agent.operate" \
   --oid <oid> \
   --output yaml
@@ -165,7 +165,7 @@ limacharlie api-key create \
 Secrets are hive records and **must be created with `enabled: true`** to be usable. Use `hive set` with the full record format to ensure this:
 
 ```bash
-echo '{"data": {"secret": "<the-api-key-value>"}, "usr_mtd": {"enabled": true}}' | limacharlie hive set --hive-name secret --key lc-api-key --oid <oid>
+echo '{"data": {"secret": "<the-api-key-value>"}, "usr_mtd": {"enabled": true}}' | limacharlie hive set --hive-name secret --key <agent-name> --oid <oid>
 ```
 
 Adjust permissions based on what the agent needs. For case-based agents, also include permissions for cases operations.
@@ -302,10 +302,10 @@ limacharlie api-key create \
 **Capture the key value** from the output and immediately store it as a secret (must be `enabled: true`):
 
 ```bash
-echo '{"data": {"secret": "<the-api-key-value>"}, "usr_mtd": {"enabled": true}}' | limacharlie hive set --hive-name secret --key <agent-secret-name> --oid <oid>
+echo '{"data": {"secret": "<the-api-key-value>"}, "usr_mtd": {"enabled": true}}' | limacharlie hive set --hive-name secret --key <agent-name> --oid <oid>
 ```
 
-The secret name must match what the agent's `ai_agent.yaml` references in its `lc_api_key_secret` field (e.g., `hive://secret/lean-triage-api-key` means the secret key is `lean-triage-api-key`).
+The secret name must match what the agent's `ai_agent.yaml` references in its `lc_api_key_secret` field (e.g., `hive://secret/lean-triage` means the secret key is `lean-triage`). The secret name is the same as the agent's hive key.
 
 ### Step 5b: Save Existing Tags (Multi-SOC Awareness)
 
@@ -418,7 +418,7 @@ Ask the user if they want to remove the secrets too:
 
 ```bash
 limacharlie secret delete --key anthropic-key --confirm --oid <oid>
-limacharlie secret delete --key lc-api-key --confirm --oid <oid>
+limacharlie secret delete --key <agent-name> --confirm --oid <oid>
 ```
 
 **Warn the user** that other agents or configurations may depend on these secrets. Only delete if the user confirms.
@@ -499,10 +499,10 @@ Ask the user if they want to remove per-agent API key secrets:
 
 ```bash
 # For each agent secret:
-limacharlie secret delete --key <agent-api-key-secret> --confirm --oid <oid>
+limacharlie secret delete --key <agent-name> --confirm --oid <oid>
 ```
 
-**Warn**: The `anthropic-key` secret may be shared with other agents or SOCs. Only delete if the user confirms no other agents depend on it. Shared agent secrets (e.g., `soc-l2-analyst-api-key`) should be kept if the other SOC is still installed.
+**Warn**: The `anthropic-key` secret may be shared with other agents or SOCs. Only delete if the user confirms no other agents depend on it. Shared agent secrets (e.g., `soc-l2-analyst`) should be kept if the other SOC is still installed.
 
 ### Step 5: Clean Up API Keys (Optional)
 
@@ -530,10 +530,10 @@ Automated Level 1 SOC analyst that investigates new security cases and documents
 | Secret Key | Description |
 |-----------|-------------|
 | `anthropic-key` | Anthropic API key (user provides) |
-| `lc-api-key` | LimaCharlie API key (can create for user) |
+| `l1-bot` | LimaCharlie API key (can create for user) |
 
 ### Recommended API Key Permissions
-For the `lc-api-key`, create with these permissions:
+For the `l1-bot` secret, create the API key with these permissions:
 ```
 org.get,sensor.list,sensor.get,sensor.task,dr.list,insight.det.get,insight.evt.get,investigation.get,investigation.set,ext.request,ai_agent.operate
 ```

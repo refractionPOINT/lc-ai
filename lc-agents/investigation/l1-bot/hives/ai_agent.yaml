@@ -4,7 +4,7 @@ hives:
     l1-bot:
       data:
         anthropic_secret: hive://secret/anthropic-key
-        lc_api_key_secret: hive://secret/l1-bot-api-key
+        lc_api_key_secret: hive://secret/l1-bot
         prompt: |
           You are a Level 1 SOC Analyst bot. Your job is to investigate new security cases
           and document your findings for a human L2 analyst to review.
