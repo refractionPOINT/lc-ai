@@ -1,0 +1,24 @@
+version: 3
+hives:
+  dr-general:
+    intel-analyzer-on-tag:
+      data:
+        detect:
+          event: tags_updated
+          op: is
+          path: event/metadata/new_tags/?
+          value: intel-collected
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/intel-analyzer
+            suppression:
+              is_global: true
+              keys:
+                - "intel-analyzer-{{ .event.case_id }}"
+              max_count: 1
+              period: 30m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-soc:intel-soc:analyzer
