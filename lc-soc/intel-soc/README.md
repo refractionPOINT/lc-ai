@@ -88,6 +88,8 @@ The Intel Analyzer checks what sensors and platforms are actually deployed in th
 | `org.get` | Basic org context |
 | `investigation.get` | Read existing cases |
 | `investigation.set` | Create cases, add notes/tags |
+| `lookup.get` | Read the `intel-seen` dedup ledger |
+| `lookup.set` | Write processed item keys to the ledger |
 | `ai_agent.operate` | Allow the agent to run |
 
 ### intel-analyzer

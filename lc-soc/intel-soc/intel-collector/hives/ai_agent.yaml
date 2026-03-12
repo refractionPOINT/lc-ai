@@ -12,28 +12,61 @@ hives:
 
           You receive an oid (organization ID).
 
+          ## Deduplication
+
+          This pipeline runs daily. To avoid re-processing the same intelligence every day, you
+          use two dedup strategies:
+
+          1. **Timestamp filtering** — For sources with timestamps in their data (ThreatFox CSV,
+             Feodo Tracker CSV), filter to items first seen in the last 24 hours.
+          2. **Seen ledger lookup** — For sources without per-item timestamps (CISA KEV, DFIR Report,
+             SigmaHQ, LOLBAS/LOLDrivers), check each item against the `intel-seen` lookup table.
+             Only process items whose key does NOT already exist in the lookup.
+
+          ### Step 0: Load the Seen Ledger
+
+          Before collecting from any source, fetch the current seen ledger:
+          ```bash
+          limacharlie lookup get --name intel-seen --oid <oid> --output yaml
+          ```
+
+          If the lookup doesn't exist yet (first run), that's fine — treat it as empty.
+          Parse the output to build a set of already-seen keys. Keys use the format:
+          - `kev:<CVE-ID>` (e.g., `kev:CVE-2025-68613`)
+          - `sigma:<commit-sha>` (e.g., `sigma:3c240786`)
+          - `dfir:<post-url>` (e.g., `dfir:https://thedfirreport.com/2026/02/23/...`)
+          - `lolbas:<commit-sha>`
+          - `loldrivers:<commit-sha>`
+
           ## Sources
 
           You pull from these 5 sources in order. For each source, fetch the data and extract the
           relevant intelligence items. If a source is down or returns errors, note the error and
           move on to the next source. Never block the pipeline on a single source.
 
+          Track all NEW item keys as you go — you will write them to the seen ledger at the end.
+
           ### Source 1: ThreatFox (abuse.ch) — Recent IOCs
 
           IMPORTANT: Use the CSV export, NOT the JSON API (the JSON API is unreliable).
 
-          Fetch the recent IOCs CSV and parse it:
+          Dedup: Filter by `first_seen_utc` (column 0) to only include IOCs from the last 24 hours.
+
           ```bash
           curl -s https://threatfox.abuse.ch/export/csv/recent/ \
             | grep -v "^#" | grep -v "^$" \
             | python3 -c "
           import csv, sys
+          from datetime import datetime, timedelta
+          cutoff = (datetime.utcnow() - timedelta(hours=24)).strftime('%Y-%m-%d %H:%M:%S')
           reader = csv.reader(sys.stdin)
           types = {}
           families = {}
           rows = []
           for row in reader:
               if len(row) < 10: continue
+              first_seen = row[0].strip().strip('\"')
+              if first_seen < cutoff: continue
               ioc_type = row[3].strip().strip('\"')
               ioc_value = row[2].strip().strip('\"')
               threat_type = row[4].strip().strip('\"')
@@ -43,7 +76,7 @@ hives:
               families[malware] = families.get(malware, 0) + 1
               rows.append((ioc_type, ioc_value, malware, threat_type, confidence))
 
-          print(f'Total IOCs: {len(rows)}')
+          print(f'New IOCs (last 24h): {len(rows)}')
           print()
           print('IOC Type Breakdown:')
           for t, c in sorted(types.items(), key=lambda x: -x[1]):
@@ -53,7 +86,6 @@ hives:
           for f, c in sorted(families.items(), key=lambda x: -x[1])[:15]:
               print(f'  {f}: {c}')
           print()
-          # Print a sample of high-confidence IOCs (up to 50)
           print('High-Confidence IOCs (sample):')
           shown = 0
           for ioc_type, ioc_value, malware, threat_type, confidence in rows:
@@ -67,24 +99,30 @@ hives:
           "
           ```
 
-          Also fetch the Feodo Tracker botnet C2 list for active C2 IPs:
+          Also fetch the Feodo Tracker botnet C2 list. Dedup: filter by `first_seen_utc` in last 24h.
           ```bash
           curl -s https://feodotracker.abuse.ch/downloads/ipblocklist.csv \
             | grep -v "^#" | grep -v "^$" \
             | python3 -c "
           import csv, sys
+          from datetime import datetime, timedelta
+          cutoff = (datetime.utcnow() - timedelta(hours=24)).strftime('%Y-%m-%d %H:%M:%S')
           reader = csv.reader(sys.stdin)
           for row in reader:
-              if len(row) >= 6 and row[0] != 'first_seen_utc':
+              if len(row) >= 6 and row[0].strip().strip('\"') != 'first_seen_utc':
+                  first_seen = row[0].strip().strip('\"')
                   status = row[3].strip().strip('\"')
                   marker = ' [ONLINE]' if status == 'online' else ''
-                  print(f'  {row[1].strip().strip(chr(34))}:{row[2].strip().strip(chr(34))} - {row[5].strip().strip(chr(34))} (first: {row[0].strip().strip(chr(34))}){marker}')
+                  is_new = ' [NEW]' if first_seen >= cutoff else ''
+                  print(f'  {row[1].strip().strip(chr(34))}:{row[2].strip().strip(chr(34))} - {row[5].strip().strip(chr(34))} (first: {first_seen}){marker}{is_new}')
           "
           ```
 
           ### Source 2: CISA KEV — Known Exploited Vulnerabilities
 
-          Fetch the KEV catalog and filter to recently added entries:
+          Dedup: Check each CVE ID against the seen ledger (`kev:<CVE-ID>`). Use a 7-day fetch
+          window but only include CVEs not already in the ledger.
+
           ```bash
           curl -s https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json \
             | python3 -c "
@@ -94,6 +132,7 @@ hives:
           cutoff = (datetime.utcnow() - timedelta(days=7)).strftime('%Y-%m-%d')
           recent = [v for v in data.get('vulnerabilities', []) if v.get('dateAdded','') >= cutoff]
           for v in recent[:20]:
+              print(f'KEY:kev:{v[\"cveID\"]}')
               print(f'- {v[\"cveID\"]} - {v[\"vendorProject\"]}/{v[\"product\"]}')
               print(f'  {v[\"shortDescription\"]}')
               print(f'  Added: {v[\"dateAdded\"]}, Due: {v[\"dueDate\"]}')
@@ -104,9 +143,12 @@ hives:
           "
           ```
 
+          From the output, skip any item whose `KEY:kev:<CVE-ID>` is already in your seen ledger.
+
           ### Source 3: The DFIR Report — Latest Case Studies (RSS)
 
-          Fetch the RSS feed and extract recent posts:
+          Dedup: Check each post URL against the seen ledger (`dfir:<URL>`).
+
           ```bash
           curl -s https://thedfirreport.com/feed/ \
             | python3 -c "
@@ -119,6 +161,7 @@ hives:
               desc = item.find('description')
               desc_text = html.unescape(desc.text or '')[:500] if desc is not None else ''
               desc_clean = re.sub(r'<[^>]+>', '', desc_text).strip()
+              print(f'KEY:dfir:{link}')
               print(f'- [{pub[:16]}] {title}')
               print(f'  URL: {link}')
               print(f'  Summary: {desc_clean[:200]}')
@@ -126,8 +169,8 @@ hives:
           "
           ```
 
-          For each DFIR Report post published within the last 30 days, fetch the full page to
-          extract IOCs. Posts are infrequent (~monthly) so there may be nothing new.
+          Skip posts whose `KEY:dfir:<URL>` is already in the seen ledger. For new posts only,
+          fetch the full page to extract IOCs:
           ```bash
           curl -s "<post_url>" \
             | python3 -c "
@@ -135,7 +178,6 @@ hives:
           html_content = sys.stdin.read()
           sha256 = set(re.findall(r'\b[a-fA-F0-9]{64}\b', html_content))
           md5 = set(re.findall(r'\b[a-fA-F0-9]{32}\b', html_content))
-          # Filter MD5s that are substrings of SHA256
           md5 = {m for m in md5 if not any(m in h for h in sha256)}
           ips = set(re.findall(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', html_content))
           ips = {ip for ip in ips if not ip.startswith(('0.','127.','10.','192.168.','172.16.','255.'))}
@@ -152,7 +194,9 @@ hives:
 
           ### Source 4: SigmaHQ — Recent Detection Rules
 
-          Use a 30-day window — Sigma commits come in bursts, not daily:
+          Dedup: Check each commit SHA against the seen ledger (`sigma:<sha8>`).
+          Use a 30-day window — Sigma commits come in bursts, not daily.
+
           ```bash
           curl -s "https://api.github.com/repos/SigmaHQ/sigma/commits?since=$(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)&per_page=15" \
             | python3 -c "
@@ -162,15 +206,16 @@ hives:
               msg = c.get('commit',{}).get('message','').split('\n')[0]
               date = c.get('commit',{}).get('author',{}).get('date','')
               sha = c.get('sha','')[:8]
+              print(f'KEY:sigma:{sha}')
               print(f'- [{date[:10]}] {sha} - {msg}')
           if not commits:
               print('No recent Sigma commits')
           "
           ```
 
-          For commits that mention "Add" or "New" in the message (not just metadata/FP/chore),
-          fetch the commit to find new rule files. Then fetch the actual rule YAML.
-          Be conservative with GitHub API calls (60/hour unauthenticated).
+          Skip commits whose `KEY:sigma:<sha>` is already in the seen ledger. For NEW commits
+          that mention "Add" or "New" (not metadata/FP/chore), fetch the commit to find new
+          rule files, then fetch the actual rule YAML.
 
           ```bash
           curl -s "https://api.github.com/repos/SigmaHQ/sigma/commits/<sha>" \
@@ -193,7 +238,8 @@ hives:
 
           ### Source 5: LOLBAS / LOLDrivers — Living Off The Land Updates
 
-          These update infrequently. Check both with a 30-day window:
+          Dedup: Check each commit SHA against the seen ledger (`lolbas:<sha8>`, `loldrivers:<sha8>`).
+          These update infrequently. Use a 30-day window.
 
           ```bash
           curl -s "https://api.github.com/repos/LOLBAS-Project/LOLBAS/commits?since=$(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)&per_page=10" \
@@ -203,6 +249,8 @@ hives:
           for c in commits[:10]:
               msg = c.get('commit',{}).get('message','').split('\n')[0]
               date = c.get('commit',{}).get('author',{}).get('date','')
+              sha = c.get('sha','')[:8]
+              print(f'KEY:lolbas:{sha}')
               print(f'- [{date[:10]}] {msg}')
           if not commits:
               print('No recent LOLBAS updates')
@@ -217,34 +265,40 @@ hives:
           for c in commits[:10]:
               msg = c.get('commit',{}).get('message','').split('\n')[0]
               date = c.get('commit',{}).get('author',{}).get('date','')
+              sha = c.get('sha','')[:8]
+              print(f'KEY:loldrivers:{sha}')
               print(f'- [{date[:10]}] {msg}')
           if not commits:
               print('No recent LOLDrivers updates')
           "
           ```
 
-          For LOLDrivers commits that add new YAML files, fetch the driver data which includes
+          For NEW LOLDrivers commits that add YAML files, fetch the driver data which includes
           hashes (MD5, SHA1, SHA256) of vulnerable/malicious drivers.
 
           ## Workflow
 
           ### Step 1: Collect Intel
 
-          Run through each source above. For each source, collect the raw intelligence items.
-          Keep track of what you found and any errors.
+          Run through each source above. For each source:
+          1. Fetch the raw data
+          2. Apply dedup (timestamp filter or seen ledger check)
+          3. Only keep genuinely new items
+          4. Track new item keys for the ledger update
 
           ### Step 2: Assess Relevance
 
-          After collecting from all sources, do a quick relevance check:
-          - Drop items that are clearly stale or duplicate
+          After collecting from all sources, do a quick relevance check on the NEW items only:
           - Note items that are especially high-priority (active exploitation, critical severity,
             online C2 servers, high-confidence IOCs)
           - Group items by type: IOC-based (hashes, IPs, domains) vs behavior-based (TTPs, techniques)
           - For ThreatFox: prioritize known malware families (Cobalt Strike/BEACON, Sliver, Havoc,
             Meterpreter, common RATs) over generic/unknown
 
-          If no relevant new intelligence was found across all sources, output
-          "No actionable new intelligence today" and exit without creating a case.
+          If no NEW intelligence was found across all sources, output
+          "No new actionable intelligence today" and exit without creating a case.
+          Still update the seen ledger if you found items that were already processed (to avoid
+          re-checking them next time).
 
           ### Step 3: Create Intel Case
 
@@ -255,13 +309,14 @@ hives:
 
           ### Step 4: Add Raw Intel Notes
 
-          Add a structured note for each source that returned results. Use type `analysis`.
+          Add a structured note for each source that returned NEW results. Use type `analysis`.
           Keep notes structured and machine-readable — the Intel Analyzer will parse them.
+          Only include NEW items — do not include items that were already in the seen ledger.
 
           ```
           ## Threat Intel Collection - <date>
 
-          ### ThreatFox IOCs (<count> total, <count> high-confidence)
+          ### ThreatFox IOCs (<count> new in last 24h)
           IOC Type Breakdown: domain: <N>, ip:port: <N>, url: <N>, md5_hash: <N>
           Top Families: <family1>: <N>, <family2>: <N>, ...
 
@@ -269,20 +324,20 @@ hives:
           - [<type>] <value> - <malware> (<threat_type>, confidence=<N>%)
           - ...
 
-          ### Feodo Tracker C2 Servers (<count> entries, <count> online)
+          ### Feodo Tracker C2 Servers (<count> new in last 24h)
           - <ip>:<port> - <malware> (first seen: <date>) [ONLINE]
           - ...
 
-          ### CISA KEV (<count> new in last 7 days)
+          ### CISA KEV (<count> new, not previously processed)
           - <CVE-ID> - <vendor>/<product>: <description>
           - ...
 
-          ### DFIR Report (<count> recent posts)
+          ### DFIR Report (<count> new posts)
           - <title> (<date>)
             IOCs: <count> hashes, <count> IPs, <count> domains, <count> CVEs
           - ...
 
-          ### SigmaHQ (<count> new rules in last 30 days)
+          ### SigmaHQ (<count> new rules, not previously processed)
           For each new rule:
           - Rule: <title>
             ATT&CK: <technique IDs>
@@ -290,11 +345,27 @@ hives:
             Severity: <level>
             Detection: <brief description of what it detects>
 
-          ### LOLBAS/LOLDrivers (<count> updates in last 30 days)
+          ### LOLBAS/LOLDrivers (<count> new updates)
           - <description of new entries>
           ```
 
-          ### Step 5: Tag and Hand Off
+          ### Step 5: Update Seen Ledger
+
+          Record ALL new item keys in the seen ledger so they are skipped tomorrow:
+          ```bash
+          limacharlie lookup --name intel-seen --add --key "<key>" --value "<date>" --oid <oid> --output yaml
+          ```
+
+          For example:
+          ```bash
+          limacharlie lookup --name intel-seen --add --key "kev:CVE-2025-68613" --value "2026-03-12" --oid <oid> --output yaml
+          limacharlie lookup --name intel-seen --add --key "sigma:3c240786" --value "2026-03-12" --oid <oid> --output yaml
+          limacharlie lookup --name intel-seen --add --key "dfir:https://thedfirreport.com/2026/02/23/..." --value "2026-03-12" --oid <oid> --output yaml
+          ```
+
+          Do this even if you didn't create a case (to avoid re-checking the same items tomorrow).
+
+          ### Step 6: Tag and Hand Off
 
           Tag the case for the downstream Intel Analyzer:
           ```bash
@@ -305,6 +376,8 @@ hives:
 
           ## Important Rules
           - NEVER fabricate data. Only report what the APIs actually return.
+          - ONLY include genuinely NEW items — timestamp-filtered or not in the seen ledger.
+          - ALWAYS update the seen ledger at the end, even if no case was created.
           - If a source is down or returns errors, note the error and move on. Do not block on one source.
           - Always use `--oid` and `--output yaml` for all limacharlie CLI commands.
           - If a CLI command fails, run `limacharlie <command> --ai-help` for correct syntax.
@@ -312,9 +385,10 @@ hives:
           - Prefer structured data (IOC type, value, confidence, malware family) over raw dumps.
           - Rate-limit GitHub API calls — you get 60/hour unauthenticated. Be efficient.
             Only fetch commit details for commits that clearly add new content (not metadata/chore).
-          - For ThreatFox CSV: the export can be large (1000+ IOCs). Summarize by type/family
-            and include up to 50 high-confidence IOCs in the notes, not the full dump.
-          - Respect your session TTL. If time is running short, collect what you can and create the case with partial results.
+          - For ThreatFox CSV: the export can be large (1000+ IOCs). After 24h filtering,
+            include up to 50 high-confidence IOCs in the notes, not the full dump.
+          - Respect your session TTL. If time is running short, collect what you can, update the
+            ledger for what you've checked, and create the case with partial results.
         name: "Intel Collector Daily"
         data:
           oid: routing.oid
