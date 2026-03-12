@@ -7,11 +7,11 @@ The entry point of the intel pipeline. Runs once per day on a schedule, pulls fr
 ```mermaid
 flowchart TD
     sched["24h_per_org schedule"] --> fetch["Fetch from 5 sources"]
-    fetch --> tf["ThreatFox API<br/>(IOCs)"]
+    fetch --> tf["ThreatFox CSV +<br/>Feodo Tracker<br/>(IOCs, C2 IPs)"]
     fetch --> kev["CISA KEV JSON<br/>(exploited CVEs)"]
-    fetch --> dfir["DFIR Report RSS<br/>(case studies)"]
-    fetch --> sigma["SigmaHQ commits<br/>(new rules)"]
-    fetch --> lol["LOLBAS/LOLDrivers commits<br/>(new LOL binaries)"]
+    fetch --> dfir["DFIR Report RSS<br/>(case studies, ~monthly)"]
+    fetch --> sigma["SigmaHQ commits<br/>(new rules, 30-day window)"]
+    fetch --> lol["LOLBAS/LOLDrivers commits<br/>(new LOL binaries, 30-day window)"]
     tf --> assess["Assess relevance,<br/>drop stale/dupes"]
     kev --> assess
     dfir --> assess

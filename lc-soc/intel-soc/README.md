@@ -10,7 +10,7 @@ flowchart TD
     collector -->|"tag: intel-collected"| analyzer["Intel Analyzer<br/>(opus, ~$2.00)"]
     analyzer -->|"tag: intel-analyzed"| engineer["Rule Engineer<br/>(opus, ~$3.00)"]
 
-    collector -.->|fetches| tf["ThreatFox"]
+    collector -.->|fetches| tf["ThreatFox CSV +<br/>Feodo Tracker"]
     collector -.->|fetches| kev["CISA KEV"]
     collector -.->|fetches| dfir["DFIR Report"]
     collector -.->|fetches| sigma["SigmaHQ"]
@@ -46,11 +46,11 @@ The Intel Analyzer checks what sensors and platforms are actually deployed in th
 
 | Source | Type | What It Provides | Update Frequency |
 |--------|------|-----------------|-----------------|
-| [ThreatFox](https://threatfox.abuse.ch/) | Structured API | IOCs (C2 IPs, domains, hashes) tagged by malware family | Continuous |
+| [ThreatFox](https://threatfox.abuse.ch/) + [Feodo Tracker](https://feodotracker.abuse.ch/) | CSV exports | IOCs (C2 IPs, domains, hashes) tagged by malware family; botnet C2 IPs | Continuous |
 | [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | JSON feed | CVEs confirmed exploited in the wild | ~Weekly |
 | [The DFIR Report](https://thedfirreport.com/) | RSS + scrape | Full intrusion case studies with IOCs and TTPs | ~Monthly |
-| [SigmaHQ](https://github.com/SigmaHQ/sigma) | Git commits | Community detection rules in YAML format | Daily |
-| [LOLBAS](https://lolbas-project.github.io/) / [LOLDrivers](https://www.loldrivers.io/) | Git commits | Legitimate binaries/drivers abused by attackers | Weekly |
+| [SigmaHQ](https://github.com/SigmaHQ/sigma) | Git commits + raw YAML | Community detection rules with ATT&CK mappings | ~Weekly (30-day window) |
+| [LOLBAS](https://lolbas-project.github.io/) / [LOLDrivers](https://www.loldrivers.io/) | Git commits | Legitimate binaries/drivers abused by attackers | ~Monthly (30-day window) |
 
 ## Inter-Agent Communication
 
