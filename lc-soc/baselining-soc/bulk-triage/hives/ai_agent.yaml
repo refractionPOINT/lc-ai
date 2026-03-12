@@ -195,3 +195,6 @@ hives:
         expiry: 0
         tags:
           - lc-soc:baselining-soc:bulk-triage
+          - lc-soc:baselining-soc:sends-to:l2-analyst
+          - lc-soc:baselining-soc:sends-to:malware-analyst
+          - lc-soc:api-key:soc-bulk-triage-api-key

@@ -117,3 +117,4 @@ hives:
         expiry: 0
         tags:
           - lc-soc:tiered-soc:shift-reporter
+          - lc-soc:api-key:soc-shift-reporter-api-key

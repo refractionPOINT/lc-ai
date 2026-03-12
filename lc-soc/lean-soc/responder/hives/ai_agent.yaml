@@ -94,3 +94,4 @@ hives:
         expiry: 0
         tags:
           - lc-soc:lean-soc:responder
+          - lc-soc:api-key:lean-responder-api-key
