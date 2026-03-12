@@ -105,3 +105,4 @@ hives:
         expiry: 0
         tags:
           - lc-soc:tiered-soc:containment
+          - lc-soc:api-key:soc-containment-api-key

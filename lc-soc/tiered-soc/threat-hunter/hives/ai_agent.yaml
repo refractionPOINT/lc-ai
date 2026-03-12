@@ -126,3 +126,5 @@ hives:
         expiry: 0
         tags:
           - lc-soc:tiered-soc:threat-hunter
+          - lc-soc:tiered-soc:sends-to:l1-investigator
+          - lc-soc:api-key:soc-threat-hunter-api-key

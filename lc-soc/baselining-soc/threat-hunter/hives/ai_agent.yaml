@@ -126,3 +126,4 @@ hives:
         expiry: 0
         tags:
           - lc-soc:baselining-soc:threat-hunter
+          - lc-soc:api-key:soc-threat-hunter-api-key

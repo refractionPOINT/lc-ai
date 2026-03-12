@@ -154,3 +154,5 @@ hives:
         expiry: 0
         tags:
           - lc-soc:lean-soc:investigator
+          - lc-soc:lean-soc:sends-to:responder
+          - lc-soc:api-key:lean-investigator-api-key

@@ -124,3 +124,5 @@ hives:
         expiry: 0
         tags:
           - lc-soc:lean-soc:triage
+          - lc-soc:lean-soc:sends-to:investigator
+          - lc-soc:api-key:lean-triage-api-key

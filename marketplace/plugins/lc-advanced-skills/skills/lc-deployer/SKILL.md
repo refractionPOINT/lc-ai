@@ -63,10 +63,31 @@ Full SOC definitions are in the `lc-soc/` directory. Each SOC is a coordinated s
 |-----|--------|-------------|
 | `lean-soc` | 4 agents | Minimal SOC: triage, investigator, responder, reporter |
 | `tiered-soc` | 8 agents | Full L1/L2/L3 SOC: triage, l1-investigator, l2-analyst, malware-analyst, containment, threat-hunter, soc-manager, shift-reporter |
+| `baselining-soc` | 7 agents | Noise-reduction SOC for new orgs: bulk-triage, l2-analyst, malware-analyst, containment, threat-hunter, soc-manager, shift-reporter |
 
 Each SOC has a top-level `README.md` describing its architecture, cost profile, and tradeoffs. Each agent within the SOC has its own `README.md` with specific API key permissions.
 
 To discover available SOCs, list the directories under `lc-soc/` in the lc-ai repository.
+
+### Tag Convention
+
+Every `ai_agent` hive record in a SOC carries two kinds of tags:
+
+| Tag Type | Format | Example |
+|----------|--------|---------|
+| **Identity** | `lc-soc:<soc-name>:<role>` | `lc-soc:tiered-soc:l1-investigator` |
+| **Relationship** | `lc-soc:<soc-name>:sends-to:<target-role>` | `lc-soc:tiered-soc:sends-to:l2-analyst` |
+| **API Key** | `lc-soc:api-key:<secret-name>` | `lc-soc:api-key:soc-l1-investigator-api-key` |
+
+- The **identity tag** names the agent's role within the SOC.
+- Each **`sends-to` tag** declares a directed edge: this agent's output feeds `<target-role>` (via D&R trigger, case escalation, or data dependency).
+- The **`api-key` tag** names the secret (in `hive://secret/`) that holds this agent's LimaCharlie API key. This is SOC-independent: shared agents carry one `api-key` tag regardless of how many SOCs reference them.
+- Schedule-only agents with no downstream consumers (reporter, soc-manager, shift-reporter) have an identity tag but no `sends-to` tags.
+- Terminal agents (responder, containment) also have no `sends-to` tags.
+
+**Reconstructing the flow graph**: List all `ai_agent` records, parse identity tags as nodes, parse `sends-to` tags as directed edges, and group by SOC name. This works even when multiple SOCs coexist in the same org because the SOC name is embedded in every tag.
+
+**Multi-SOC coexistence**: When tiered-soc and baselining-soc are installed in the same org, some agents share the same hive key (e.g., `soc-l2-analyst`). Each SOC contributes its own identity and `sends-to` tags, so the record carries tags from both SOCs simultaneously. See the "Install a SOC" section for the tag-merging procedure.
 
 ---
 
@@ -286,6 +307,26 @@ echo '{"data": {"secret": "<the-api-key-value>"}, "usr_mtd": {"enabled": true}}'
 
 The secret name must match what the agent's `ai_agent.yaml` references in its `lc_api_key_secret` field (e.g., `hive://secret/lean-triage-api-key` means the secret key is `lean-triage-api-key`).
 
+### Step 5b: Save Existing Tags (Multi-SOC Awareness)
+
+Before pushing hive configs, check whether any `ai_agent` keys that this SOC will create already exist in the org (from another SOC). If they do, save their current tags so they can be merged back after the push.
+
+**Shared keys between tiered-soc and baselining-soc:**
+
+| Hive | Shared Keys |
+|------|-------------|
+| `ai_agent` | `soc-l2-analyst`, `soc-malware-analyst`, `soc-containment`, `soc-threat-hunter`, `soc-manager`, `soc-shift-reporter` |
+| `dr-general` | `soc-l2-on-case-escalated`, `soc-malware-on-tag`, `soc-containment-on-tag`, `soc-threat-hunter-on-tag`, `soc-manager-hourly`, `soc-shift-reporter-daily` |
+
+For each shared key that already exists:
+```bash
+# Save the existing record's tags before the push overwrites them
+limacharlie hive get --hive-name ai_agent --key <shared-key> --oid <oid> --output yaml
+# Note down all tags from usr_mtd.tags
+```
+
+If no shared keys exist yet, skip to Step 6.
+
 ### Step 6: Push All Hive Configurations
 
 Each SOC has a root IaC file (e.g., `lean-soc.yaml`) that uses `include:` to pull in all agent hive configs. Push the entire SOC with a single command:
@@ -301,6 +342,27 @@ limacharlie sync push \
 The root file uses the sync `include:` mechanism to merge all per-agent hive YAMLs automatically. Use `--dry-run` first to preview changes.
 
 **Do NOT push secret.yaml files** -- secrets were already set in Steps 4-5 with actual values.
+
+### Step 6b: Reconcile Tags (Multi-SOC)
+
+If you saved tags from existing records in Step 5b, the push will have overwritten those records with the new SOC's tags only. You must merge the other SOC's tags back.
+
+For each shared key where you saved prior tags:
+
+1. Read the freshly pushed record:
+   ```bash
+   limacharlie hive get --hive-name ai_agent --key <shared-key> --oid <oid> --output yaml
+   ```
+
+2. Identify tags from the **other** SOC that were lost (tags that do NOT start with `lc-soc:<current-soc>:`).
+
+3. Write the merged record back with all tags from both SOCs:
+   ```bash
+   # Build the full record with merged tags and pipe to hive set
+   echo '<full record JSON with merged tags>' | limacharlie hive set --hive-name ai_agent --key <shared-key> --oid <oid>
+   ```
+
+**Example**: Installing baselining-soc when tiered-soc is already present. The `soc-l2-analyst` key previously had tags `[lc-soc:tiered-soc:l2-analyst, lc-soc:tiered-soc:sends-to:containment, lc-soc:tiered-soc:sends-to:threat-hunter]`. After pushing baselining-soc, it only has `[lc-soc:baselining-soc:l2-analyst, lc-soc:baselining-soc:sends-to:containment, lc-soc:baselining-soc:sends-to:threat-hunter]`. Merge both sets so the record has all six tags.
 
 ### Step 7: Verify Installation
 
@@ -397,17 +459,41 @@ When the user asks to remove/uninstall an entire SOC:
 
 Read the SOC's README and all agent hive files to know what was deployed.
 
-### Step 2: Remove All Hive Entries
+### Step 2: Check for Multi-SOC Coexistence
 
-Delete every AI agent definition and D&R rule for the SOC. Use the tags on hive records to identify all components (e.g., `lc-soc:lean-soc:*` tags):
+Before deleting records, check whether another SOC shares any hive keys with the SOC being removed. Shared keys exist between tiered-soc and baselining-soc:
+
+| Hive | Shared Keys |
+|------|-------------|
+| `ai_agent` | `soc-l2-analyst`, `soc-malware-analyst`, `soc-containment`, `soc-threat-hunter`, `soc-manager`, `soc-shift-reporter` |
+| `dr-general` | `soc-l2-on-case-escalated`, `soc-malware-on-tag`, `soc-containment-on-tag`, `soc-threat-hunter-on-tag`, `soc-manager-hourly`, `soc-shift-reporter-daily` |
+
+For each hive key in the SOC being removed:
+- **If the key is shared** and the other SOC is still installed: read the record, remove only the departing SOC's tags (tags starting with `lc-soc:<soc-being-removed>:`), keep the other SOC's tags, and write the record back. Do NOT delete the record.
+- **If the key is NOT shared** (unique to this SOC): delete the record entirely.
+
+### Step 3: Remove Non-Shared Hive Entries
+
+Delete hive records that belong exclusively to the SOC being removed:
 
 ```bash
-# For each agent in the SOC:
+# For each NON-shared agent in the SOC:
 limacharlie hive delete --hive-name ai_agent --key <agent-name> --confirm --oid <oid>
 limacharlie hive delete --hive-name dr-general --key <dr-rule-name> --confirm --oid <oid>
 ```
 
-### Step 3: Clean Up Secrets (Optional)
+### Step 3b: Clean Shared Hive Entries
+
+For shared keys where the other SOC is still installed, strip only the departing SOC's tags:
+
+```bash
+# Read the current record
+limacharlie hive get --hive-name ai_agent --key <shared-key> --oid <oid> --output yaml
+# Remove tags starting with lc-soc:<soc-being-removed>: and write back
+echo '<record JSON with only the remaining SOCs tags>' | limacharlie hive set --hive-name ai_agent --key <shared-key> --oid <oid>
+```
+
+### Step 4: Clean Up Secrets (Optional)
 
 Ask the user if they want to remove per-agent API key secrets:
 
@@ -416,19 +502,19 @@ Ask the user if they want to remove per-agent API key secrets:
 limacharlie secret delete --key <agent-api-key-secret> --confirm --oid <oid>
 ```
 
-**Warn**: The `anthropic-key` secret may be shared with other agents or SOCs. Only delete if the user confirms no other agents depend on it.
+**Warn**: The `anthropic-key` secret may be shared with other agents or SOCs. Only delete if the user confirms no other agents depend on it. Shared agent secrets (e.g., `soc-l2-analyst-api-key`) should be kept if the other SOC is still installed.
 
-### Step 4: Clean Up API Keys (Optional)
+### Step 5: Clean Up API Keys (Optional)
 
 ```bash
 limacharlie api-key list --oid <oid> --output yaml
-# Delete each agent's API key by hash
+# Delete each agent's API key by hash (only for non-shared agents)
 limacharlie api-key delete --key-hash <hash> --confirm --oid <oid>
 ```
 
-### Step 5: Report to User
+### Step 6: Report to User
 
-Summarize what was removed (agent definitions, D&R rules, secrets, API keys) and what was left in place.
+Summarize what was removed (agent definitions, D&R rules, secrets, API keys), what was left in place (shared records with tags stripped), and which SOC(s) remain active.
 
 ---
 

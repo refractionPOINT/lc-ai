@@ -96,3 +96,4 @@ hives:
         expiry: 0
         tags:
           - lc-soc:baselining-soc:soc-manager
+          - lc-soc:api-key:soc-manager-api-key

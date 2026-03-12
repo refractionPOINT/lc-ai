@@ -154,3 +154,6 @@ hives:
         expiry: 0
         tags:
           - lc-soc:baselining-soc:l2-analyst
+          - lc-soc:baselining-soc:sends-to:containment
+          - lc-soc:baselining-soc:sends-to:threat-hunter
+          - lc-soc:api-key:soc-l2-analyst-api-key

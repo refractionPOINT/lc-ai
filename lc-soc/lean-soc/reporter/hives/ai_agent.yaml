@@ -119,3 +119,4 @@ hives:
         expiry: 0
         tags:
           - lc-soc:lean-soc:reporter
+          - lc-soc:api-key:lean-reporter-api-key
