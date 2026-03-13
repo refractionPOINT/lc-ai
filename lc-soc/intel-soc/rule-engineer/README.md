@@ -8,8 +8,9 @@ The final stage of the intel pipeline. Takes analyzed intelligence and produces 
 flowchart TD
     tag["tag: intel-analyzed"] --> lock["Tag: engineering-rules"]
     lock --> read["Read analysis<br/>from case notes"]
-    read --> lookups["Populate IOC lookups<br/>(intel-ioc-hashes, domains, ips, urls)"]
-    lookups --> rules["Generate D&R rules<br/>using AI helpers"]
+    read --> research["Research event data<br/>(schemas, LCQL samples)"]
+    research --> lookups["Populate IOC lookups<br/>(intel-ioc-hashes, domains, ips, urls)"]
+    lookups --> rules["Generate D&R rules<br/>using AI helpers +<br/>real event data context"]
     rules --> validate["Validate each rule"]
     validate -->|valid| create["Create rule DISABLED"]
     validate -->|invalid| retry["Retry once, then skip"]
@@ -43,7 +44,9 @@ Create an API key named `intel-engineer` with:
 
 | Permission | Why |
 |-----------|-----|
-| `org.get` | Basic org context |
+| `org.get` | Basic org context and event schema access |
+| `sensor.list` | Find sensors to explore event data for each platform |
+| `insight.evt.get` | Research actual event data via LCQL before generating rules |
 | `dr.set` | Create new D&R rules (disabled) |
 | `dr.list` | Check for existing rules to avoid duplicates |
 | `lookup.set` | Add IOCs to lookup tables |

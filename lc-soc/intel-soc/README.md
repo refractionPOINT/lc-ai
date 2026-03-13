@@ -97,18 +97,21 @@ The Intel Analyzer checks what sensors and platforms are actually deployed in th
 | Permission | Why |
 |-----------|-----|
 | `org.get` | Basic org context |
-| `sensor.list` | Discover org platforms |
+| `sensor.list` | Discover org platforms and data sources (EDR sensors + adapter sensors like Okta, AWS, etc.) |
 | `dr.list` | Check existing detection coverage |
 | `investigation.get` | Read the intel case |
 | `investigation.set` | Update case with analysis |
-| `ext.request` | List extensions |
+| `ext.get` | List subscribed extensions |
+| `lookup.get` | Check existing lookups to avoid duplicate IOCs |
 | `ai_agent.operate` | Allow the agent to run |
 
 ### intel-engineer
 
 | Permission | Why |
 |-----------|-----|
-| `org.get` | Basic org context |
+| `org.get` | Basic org context and event schema access |
+| `sensor.list` | Find sensors to explore event data for each platform |
+| `insight.evt.get` | Research actual event data via LCQL before generating rules |
 | `dr.set` | Create new D&R rules |
 | `dr.list` | Check existing rules |
 | `lookup.set` | Populate IOC lookups |

@@ -33,11 +33,16 @@ hives:
           ```
 
           From the sensor list, determine:
-          - **OS platforms present**: Windows, macOS, Linux, ChromeOS, Android, iOS
-          - **Sensor types**: EDR agents, cloud adapters, syslog collectors, etc.
-          - **Architecture breakdown**: x86, arm64, etc.
+          - **EDR platforms present**: Windows, macOS, Linux, ChromeOS, Android, iOS
+            (sensors with `plat` = `windows`, `linux`, `macos`, etc. and `arch` != `usp_adapter`)
+          - **Adapter/data sources present**: sensors with `arch` = `usp_adapter` represent log
+            ingestion adapters. Their `plat` field identifies the data source:
+            `okta`, `aws`, `office365`, `crowdstrike`, `msdefender`, `sentinel_one`, `duo`,
+            `github`, `slack`, `azure_ad`, `gcp`, `carbon_black`, `1password`, `zeek`,
+            `guard_duty`, `k8s_pods`, `wiz`, `proofpoint`, `paloalto_fw`, `fortigate`, etc.
+          - **Architecture breakdown**: x86, x64, arm64, etc.
 
-          Also check what extensions and adapters are active:
+          Also check what extensions are subscribed:
           ```bash
           limacharlie extension list --oid <oid> --output yaml
           ```
@@ -46,13 +51,16 @@ hives:
           - "Windows endpoints (EDR): 150 sensors"
           - "Linux servers (EDR): 30 sensors"
           - "No macOS presence"
-          - "Cloud: AWS CloudTrail adapter active"
+          - "Okta adapter: 1 sensor (identity/SSO logs)"
+          - "AWS adapter: 2 sensors (CloudTrail logs)"
+          - "Office365 adapter: 1 sensor (email/audit logs)"
 
           Use this profile to filter all downstream analysis. For example:
           - If there are no Windows sensors, skip Windows-specific LOLBAS/Sigma rules
           - If there are no Linux sensors, skip GTFOBins-related intel
-          - If there is no network telemetry source, deprioritize network IOCs (IPs/domains)
-            unless there's a DNS adapter or network sensor
+          - If there is no Okta adapter, skip Okta-specific detections
+          - If there are no network/firewall adapters (paloalto_fw, fortigate, zeek, etc.)
+            and no EDR sensors, deprioritize network IOCs (IPs/domains)
 
           ### Step 3: Read the Raw Intel Case
 

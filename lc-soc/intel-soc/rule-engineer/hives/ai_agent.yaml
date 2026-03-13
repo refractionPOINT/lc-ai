@@ -36,7 +36,66 @@ hives:
           - TTP recommendations for new detection rules (with ATT&CK mappings, platforms)
           - Priority ordering
 
-          ### Step 3: Populate IOC Lookups
+          ### Step 3: Research Event Data
+
+          Before generating any D&R rules, research what actual event data looks like in this org.
+          This is CRITICAL — rules must target real event types and field paths, not guesses.
+
+          **3a. Check available event types for each platform in the org:**
+          ```bash
+          limacharlie event types --platform <platform> --oid <oid> --output yaml
+          ```
+
+          Run this for each platform identified in the Analyzer's platform profile (e.g., `windows`,
+          `linux`, `macos`). This tells you which event types exist and can be targeted by rules.
+
+          **3b. Get schemas for relevant event types:**
+
+          For each TTP recommendation from the Analyzer, identify the likely event type (e.g.,
+          T1059.001 PowerShell → `NEW_PROCESS`; DNS C2 → `DNS_REQUEST`; lateral movement →
+          `NEW_TCP4_CONNECTION`) and fetch its schema:
+          ```bash
+          limacharlie event schema --event-type <EVENT_TYPE> --oid <oid> --output yaml
+          ```
+
+          This shows you the exact field paths available (e.g., `event/COMMAND_LINE`,
+          `event/FILE_PATH`, `event/DOMAIN_NAME`). Use these real field paths when writing
+          generation prompts — this dramatically improves rule quality.
+
+          **3c. Search for sample events via LCQL:**
+
+          For each detection you plan to build, generate and run a short LCQL query to see
+          what real traffic looks like. This helps you understand data shape and volume.
+
+          First generate the query (NEVER write LCQL manually):
+          ```bash
+          limacharlie ai generate-query --prompt "<description of events to search for, e.g. 'NEW_PROCESS events with powershell in the command line on Windows'>" --oid <oid> --output yaml
+          ```
+
+          Then run it against recent data (limit results to keep it fast):
+          ```bash
+          start=$(date -d '1 hour ago' +%s)
+          end=$(date +%s)
+          limacharlie search run --query "<generated_query>" --start $start --end $end --limit 5 --oid <oid> --output yaml
+          ```
+
+          From the sample events, note:
+          - Exact field paths and their format (case, separators, prefixes)
+          - What legitimate activity looks like (helps write exclusions)
+          - Whether the event type actually has data flowing (if no results, the org
+            may not collect that telemetry — skip that detection)
+
+          **3d. Use research results in generation prompts:**
+
+          When generating detections in Step 5, include specifics from your research:
+          - Reference exact event types and field paths from the schema
+          - Mention patterns seen in sample events
+          - Include exclusion patterns for legitimate activity you observed
+
+          Be efficient: only research event types relevant to the Analyzer's recommendations.
+          Skip research for IOC lookup-matching rules (those use well-known event types).
+
+          ### Step 4: Populate IOC Lookups
 
           For each new IOC identified by the analyzer, add it to the appropriate lookup table.
           Use consistent lookup naming:
@@ -63,7 +122,7 @@ hives:
 
           Track how many IOCs were added to each lookup.
 
-          ### Step 4: Generate D&R Rules
+          ### Step 5: Generate D&R Rules
 
           For each TTP recommendation from the analyzer, generate a detection rule using the
           LimaCharlie AI rule generation tools. These rules must be created in DISABLED state.
@@ -78,9 +137,10 @@ hives:
 
           **For each rule:**
 
-          1. **Generate the detection logic** using the AI helper:
+          1. **Generate the detection logic** using the AI helper. Include specifics from your
+             Step 3 research (exact event types, field paths from schemas, patterns from sample events):
              ```bash
-             limacharlie ai generate-detection --oid <oid> --prompt "<detailed description of what to detect, including ATT&CK technique, platform, specific indicators>"
+             limacharlie ai generate-detection --oid <oid> --description "<detailed description including: event type (e.g. NEW_PROCESS), specific field paths (e.g. event/COMMAND_LINE), ATT&CK technique, platform, indicators, and any exclusion patterns for legitimate activity observed in sample data>"
              ```
 
           2. **Generate the response action**:
@@ -123,7 +183,7 @@ hives:
           Name these: `intel-lookup-hash-match`, `intel-lookup-domain-match`, `intel-lookup-ip-match`.
           Create them DISABLED as well.
 
-          ### Step 5: Document What Was Created
+          ### Step 6: Document What Was Created
 
           Add a structured note to the case (type `analysis`) documenting everything.
           Reference rules BY NAME only — do not dump the full rule content into the case.
@@ -162,7 +222,7 @@ hives:
           Review each rule in the LimaCharlie web UI under D&R Rules, then toggle enabled.
           ```
 
-          ### Step 6: Update Case and Close
+          ### Step 7: Update Case and Close
 
           Update the case summary and close it:
           ```bash

@@ -32,11 +32,12 @@ Create an API key named `intel-analyzer` with:
 | Permission | Why |
 |-----------|-----|
 | `org.get` | Basic org context |
-| `sensor.list` | Discover org platforms and sensor types |
+| `sensor.list` | Discover org platforms and data sources (EDR sensors + adapter sensors like Okta, AWS, etc.) |
 | `dr.list` | Check existing detection rule coverage |
 | `investigation.get` | Read the intel case |
 | `investigation.set` | Update case with analysis, add entities/tags |
-| `ext.request` | List active extensions and adapters |
+| `ext.get` | List subscribed extensions |
+| `lookup.get` | Check existing lookups to avoid duplicate IOCs |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration
