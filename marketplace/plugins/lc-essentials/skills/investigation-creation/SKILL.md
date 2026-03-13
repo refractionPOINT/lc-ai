@@ -1050,7 +1050,7 @@ limacharlie case bulk-update --numbers <num1>,<num2>,<num3> \
 
 **Classification values**: `pending`, `true_positive`, `false_positive`
 
-**Severity values**: `critical`, `high`, `medium`, `low`
+**Severity values**: `critical`, `high`, `medium`, `low`, `info`
 
 **Verdict values**: `malicious`, `suspicious`, `benign`, `unknown`, `informational`
 

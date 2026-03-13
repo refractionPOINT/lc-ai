@@ -66,7 +66,7 @@
               "description": { "type": "string" },
               "attacker_ip": { "type": "string" },
               "start_time": { "type": "string" },
-              "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] }
+              "severity": { "type": "string", "enum": ["critical", "high", "medium", "low", "info"] }
             }
           }
         },
