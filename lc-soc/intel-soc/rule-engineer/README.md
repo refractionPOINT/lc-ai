@@ -50,7 +50,8 @@ Create an API key named `intel-engineer` with:
 | `dr.set` | Create new D&R rules (disabled) |
 | `dr.list` | Check for existing rules to avoid duplicates |
 | `lookup.set` | Add IOCs to lookup tables |
-| `ext.request` | Case operations (get, add-note, update, close) via ext-cases |
+| `investigation.get` | Read the analyzed case |
+| `investigation.set` | Update case with report, close it |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration
