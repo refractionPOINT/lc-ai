@@ -101,7 +101,7 @@ The Intel Analyzer checks what sensors and platforms are actually deployed in th
 | `dr.list` | Check existing detection coverage |
 | `investigation.get` | Read the intel case |
 | `investigation.set` | Update case with analysis |
-| `ext.get` | List subscribed extensions |
+| `ext.conf.get` | List subscribed extensions |
 | `lookup.get` | Check existing lookups to avoid duplicate IOCs |
 | `ai_agent.operate` | Allow the agent to run |
 
