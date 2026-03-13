@@ -86,7 +86,9 @@ The Intel Analyzer checks what sensors and platforms are actually deployed in th
 | Permission | Why |
 |-----------|-----|
 | `org.get` | Basic org context |
-| `ext.request` | Case operations (create, add-note, tag, update) via ext-cases |
+| `ext.request` | Create cases via ext-cases |
+| `investigation.get` | List/read cases (needed to get case_number after create) |
+| `investigation.set` | Add notes, tags, update cases |
 | `lookup.get` | Read the `intel-seen` dedup ledger |
 | `lookup.set` | Write processed item keys to the ledger |
 | `ai_agent.operate` | Allow the agent to run |
@@ -98,7 +100,8 @@ The Intel Analyzer checks what sensors and platforms are actually deployed in th
 | `org.get` | Basic org context |
 | `sensor.list` | Discover org platforms and data sources (EDR sensors + adapter sensors like Okta, AWS, etc.) |
 | `dr.list` | Check existing detection coverage |
-| `ext.request` | Case operations (get, add-note, tag, entity) via ext-cases |
+| `investigation.get` | Read the intel case and notes |
+| `investigation.set` | Update case with analysis, add entities/tags |
 | `ext.conf.get` | List subscribed extensions |
 | `lookup.get` | Check existing lookups to avoid duplicate IOCs |
 | `ai_agent.operate` | Allow the agent to run |
@@ -113,7 +116,8 @@ The Intel Analyzer checks what sensors and platforms are actually deployed in th
 | `dr.set` | Create new D&R rules |
 | `dr.list` | Check existing rules |
 | `lookup.set` | Populate IOC lookups |
-| `ext.request` | Case operations (get, add-note, update, close) via ext-cases |
+| `investigation.get` | Read the analyzed case |
+| `investigation.set` | Update case with report, close it |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Installation

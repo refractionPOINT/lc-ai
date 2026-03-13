@@ -308,6 +308,15 @@ hives:
           limacharlie case create --severity low --oid <oid> --output yaml
           ```
 
+          IMPORTANT: The create command returns a `case_id` (UUID), but all other case
+          commands (`add-note`, `tag`, `get`, `update`) use `--id` which expects the
+          `case_number` (an integer). After creating, list cases to find the case_number:
+          ```bash
+          limacharlie case list --oid <oid> --output yaml
+          ```
+          Find the entry matching your `case_id` and extract its `case_number`.
+          Use this integer for all subsequent `--id` parameters.
+
           ### Step 4: Add Raw Intel Notes
 
           Add a structured note for each source that returned NEW results. Use type `analysis`.

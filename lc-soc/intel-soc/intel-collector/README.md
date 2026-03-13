@@ -32,7 +32,9 @@ Create an API key named `intel-collector` with:
 | Permission | Why |
 |-----------|-----|
 | `org.get` | Basic org context |
-| `ext.request` | Case operations (create, add-note, tag, update) via ext-cases |
+| `ext.request` | Create cases via ext-cases |
+| `investigation.get` | List/read cases (needed to get case_number after create) |
+| `investigation.set` | Add notes, tags, update cases |
 | `lookup.get` | Read the `intel-seen` dedup ledger |
 | `lookup.set` | Write processed item keys to the ledger |
 | `ai_agent.operate` | Allow the agent to run |
