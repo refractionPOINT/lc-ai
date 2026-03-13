@@ -185,8 +185,18 @@ hives:
 
           ### Step 6: Document What Was Created
 
-          Add a structured note to the case (type `analysis`) documenting everything.
+          Add a structured note to the case using `case add-note` (type `analysis`).
           Reference rules BY NAME only — do not dump the full rule content into the case.
+
+          For long notes, write to a temp file and use `--input-file`:
+          ```bash
+          cat > /tmp/intel-engineering.md << 'NOTEEOF'
+          <note content here>
+          NOTEEOF
+          limacharlie case add-note --id <case_number> --type analysis --input-file /tmp/intel-engineering.md --oid <oid> --output yaml
+          ```
+
+          Structure the note content as follows:
 
           ```
           ## Rule Engineering Report - <date>

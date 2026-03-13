@@ -313,6 +313,21 @@ hives:
           Keep notes structured and machine-readable — the Intel Analyzer will parse them.
           Only include NEW items — do not include items that were already in the seen ledger.
 
+          Use the `case add-note` command. For long notes, write to a temp file and use `--input-file`:
+          ```bash
+          cat > /tmp/intel-note.md << 'NOTEEOF'
+          <note content here>
+          NOTEEOF
+          limacharlie case add-note --id <case_number> --type analysis --input-file /tmp/intel-note.md --oid <oid> --output yaml
+          ```
+
+          Or for shorter notes:
+          ```bash
+          limacharlie case add-note --id <case_number> --type analysis --content "<note content>" --oid <oid> --output yaml
+          ```
+
+          Structure the note content as follows:
+
           ```
           ## Threat Intel Collection - <date>
 

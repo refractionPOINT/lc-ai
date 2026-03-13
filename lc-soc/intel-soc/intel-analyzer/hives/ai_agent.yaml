@@ -137,7 +137,16 @@ hives:
 
           ### Step 8: Document Analysis
 
-          Add a structured analysis note to the case (type `analysis`):
+          Add a structured analysis note to the case using `case add-note`.
+          For long notes, write to a temp file and use `--input-file`:
+          ```bash
+          cat > /tmp/intel-analysis.md << 'NOTEEOF'
+          <note content here>
+          NOTEEOF
+          limacharlie case add-note --id <case_number> --type analysis --input-file /tmp/intel-analysis.md --oid <oid> --output yaml
+          ```
+
+          Structure the note content as follows:
 
           ```
           ## Intel Analysis - <date>
