@@ -27,7 +27,7 @@ hives:
 
           Before collecting from any source, fetch the current seen ledger:
           ```bash
-          limacharlie lookup get --name intel-seen --oid <oid> --output yaml
+          limacharlie lookup get --key intel-seen --oid <oid> --output yaml
           ```
 
           If the lookup doesn't exist yet (first run), that's fine — treat it as empty.
@@ -103,19 +103,20 @@ hives:
           ```bash
           curl -s https://feodotracker.abuse.ch/downloads/ipblocklist.csv \
             | grep -v "^#" | grep -v "^$" \
-            | python3 -c "
+            | python3 << 'FEODO_PY'
           import csv, sys
           from datetime import datetime, timedelta
           cutoff = (datetime.utcnow() - timedelta(hours=24)).strftime('%Y-%m-%d %H:%M:%S')
           reader = csv.reader(sys.stdin)
           for row in reader:
-              if len(row) >= 6 and row[0].strip().strip('\"') != 'first_seen_utc':
-                  first_seen = row[0].strip().strip('\"')
-                  status = row[3].strip().strip('\"')
-                  marker = ' [ONLINE]' if status == 'online' else ''
-                  is_new = ' [NEW]' if first_seen >= cutoff else ''
-                  print(f'  {row[1].strip().strip(chr(34))}:{row[2].strip().strip(chr(34))} - {row[5].strip().strip(chr(34))} (first: {first_seen}){marker}{is_new}')
-          "
+              if len(row) < 6: continue
+              if row[0].strip().strip('"') == 'first_seen_utc': continue
+              first_seen = row[0].strip().strip('"')
+              status = row[3].strip().strip('"')
+              marker = ' [ONLINE]' if status == 'online' else ''
+              is_new = ' [NEW]' if first_seen >= cutoff else ''
+              print(f'  {row[1].strip().strip(chr(34))}:{row[2].strip().strip(chr(34))} - {row[5].strip().strip(chr(34))} (first: {first_seen}){marker}{is_new}')
+          FEODO_PY
           ```
 
           ### Source 2: CISA KEV — Known Exploited Vulnerabilities
@@ -366,17 +367,29 @@ hives:
 
           ### Step 5: Update Seen Ledger
 
-          Record ALL new item keys in the seen ledger so they are skipped tomorrow:
+          Record ALL new item keys in the seen ledger so they are skipped tomorrow.
+          Build a YAML file containing all entries (existing + new) and write it back:
+
+          1. Start with the data you loaded in Step 0 (or empty if first run)
+          2. Add all new item keys with today's date
+          3. Write the updated ledger:
+
           ```bash
-          limacharlie lookup --name intel-seen --add --key "<key>" --value "<date>" --oid <oid> --output yaml
+          cat > /tmp/intel-seen-update.yaml << 'SEENEOF'
+          data:
+            lookup_data:
+              "kev:CVE-2025-68613": {date: "2026-03-12"}
+              "sigma:3c240786": {date: "2026-03-12"}
+              "dfir:https://thedfirreport.com/2026/02/23/...": {date: "2026-03-12"}
+          usr_mtd:
+            enabled: true
+          SEENEOF
+          limacharlie lookup set --key intel-seen --input-file /tmp/intel-seen-update.yaml --oid <oid> --output yaml
           ```
 
-          For example:
-          ```bash
-          limacharlie lookup --name intel-seen --add --key "kev:CVE-2025-68613" --value "2026-03-12" --oid <oid> --output yaml
-          limacharlie lookup --name intel-seen --add --key "sigma:3c240786" --value "2026-03-12" --oid <oid> --output yaml
-          limacharlie lookup --name intel-seen --add --key "dfir:https://thedfirreport.com/2026/02/23/..." --value "2026-03-12" --oid <oid> --output yaml
-          ```
+          IMPORTANT: Include ALL existing entries from Step 0 plus all new entries.
+          The `lookup set` command replaces the entire lookup, so omitting existing entries
+          would delete them.
 
           Do this even if you didn't create a case (to avoid re-checking the same items tomorrow).
 
