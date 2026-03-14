@@ -305,7 +305,7 @@ hives:
 
           Create a new case to hold the collected intelligence:
           ```bash
-          limacharlie case create --severity low --oid <oid> --output yaml
+          limacharlie case create --severity 0 --oid <oid> --output yaml
           ```
 
           IMPORTANT: The create command returns a `case_id` (UUID), but all other case
