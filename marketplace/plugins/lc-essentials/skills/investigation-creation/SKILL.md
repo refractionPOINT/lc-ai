@@ -252,9 +252,9 @@ limacharlie case get --id <case_number> --oid <oid> --output yaml
 limacharlie case list --status new --status acknowledged --oid <oid> --output yaml
 ```
 
-**From a Detection ID** (find associated case):
+**From a Detection** (find associated case by category or hostname):
 ```bash
-limacharlie case list --search <detection_cat> --oid <oid> --output yaml
+limacharlie case list --search <search_term> --oid <oid> --output yaml
 ```
 
 If no case exists for the activity being investigated, you can still investigate using LC telemetry and create findings - just document the results and help the user decide whether to create a case manually or link findings to an existing case.
