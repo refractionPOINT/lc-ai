@@ -28,7 +28,7 @@
 
 ## Severity
 
-Derived from detection priority (0-10) using configurable thresholds.
+Initially derived from detection priority (0-10) using configurable thresholds. Severity can also be updated manually via `limacharlie case update --severity <level>`.
 
 | Severity | Default Priority Range | SLA: MTTA | SLA: MTTR |
 |----------|----------------------|-----------|-----------|

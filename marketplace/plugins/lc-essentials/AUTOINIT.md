@@ -25,6 +25,7 @@ The Cases extension (`ext-cases`) has first-class CLI support via `limacharlie c
 limacharlie case list --oid <oid> --output yaml
 limacharlie case get --id <case_number> --oid <oid> --output yaml
 limacharlie case update --id <case_number> --status acknowledged --oid <oid> --output yaml
+limacharlie case update --id <case_number> --severity high --oid <oid> --output yaml
 limacharlie case add-note --id <case_number> --content "Note" --type analysis --oid <oid> --output yaml
 limacharlie case entity add --case <case_number> --type ip --value "10.0.0.1" --verdict malicious --oid <oid> --output yaml
 limacharlie case telemetry add --case <case_number> --atom <atom> --sid <sid> --event-type NEW_PROCESS --oid <oid> --output yaml

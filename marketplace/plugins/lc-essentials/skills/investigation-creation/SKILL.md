@@ -44,6 +44,7 @@ The Cases extension has first-class CLI support via `limacharlie case`:
 limacharlie case list --oid <oid> --output yaml
 limacharlie case get --id <case_number> --oid <oid> --output yaml
 limacharlie case update --id <case_number> --status acknowledged --oid <oid> --output yaml
+limacharlie case update --id <case_number> --severity high --oid <oid> --output yaml
 limacharlie case add-note --id <case_number> --content "Note text" --type analysis --oid <oid> --output yaml
 limacharlie case tag set --id <case_number> --tag <tag> --oid <oid> --output yaml
 limacharlie case tag add --id <case_number> --tag <tag> --oid <oid> --output yaml
@@ -276,7 +277,7 @@ limacharlie case update --id <case_number> --status in_progress --oid <oid> --ou
 
 ### Step 4: Get the Source Detection
 
-Extract the detection details from the case's `detection_id`:
+Extract the detection details from the case's `detections` array (each entry contains a `detection_id`):
 ```bash
 limacharlie detection get --id <detection-id> --oid <oid> --output yaml
 ```
@@ -780,16 +781,11 @@ limacharlie case entity add --case <case_number> \
 
 ### Adding Detections
 
-Link additional detections discovered during investigation:
+Link additional detections discovered during investigation (pass the full detection JSON object):
 
 ```bash
 limacharlie case detection add --case <case_number> \
-    --detection-id "<detection-id>" \
-    --detection-cat "Encoded PowerShell" \
-    --detection-source "general" \
-    --detection-priority 7 \
-    --sensor-id "<sid>" \
-    --hostname "DESKTOP-001" \
+    --detection '<full detection JSON>' \
     --oid <oid> --output yaml
 ```
 
