@@ -1,0 +1,8 @@
+version: 3
+include:
+  - asset-discovery/hives/ai_agent.yaml
+  - asset-discovery/hives/dr-general.yaml
+  - exposure-scanner/hives/ai_agent.yaml
+  - exposure-scanner/hives/dr-general.yaml
+  - risk-analyst/hives/ai_agent.yaml
+  - risk-analyst/hives/dr-general.yaml

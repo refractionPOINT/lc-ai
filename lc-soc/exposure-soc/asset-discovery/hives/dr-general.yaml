@@ -1,0 +1,18 @@
+version: 3
+hives:
+  dr-general:
+    exposure-asset-discovery-daily:
+      data:
+        detect:
+          event: 24h_per_org
+          op: exists
+          path: /
+          target: schedule
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/exposure-asset-discovery
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-soc:exposure-soc:asset-discovery

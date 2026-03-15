@@ -1,0 +1,24 @@
+version: 3
+hives:
+  dr-general:
+    exposure-risk-analyst-on-tag:
+      data:
+        detect:
+          event: tags_updated
+          op: is
+          path: event/metadata/new_tags/?
+          value: exposure-scanned
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/exposure-risk-analyst
+            suppression:
+              is_global: true
+              keys:
+                - "exposure-risk-analyst-{{ .event.case_id }}"
+              max_count: 1
+              period: 30m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-soc:exposure-soc:risk-analyst
