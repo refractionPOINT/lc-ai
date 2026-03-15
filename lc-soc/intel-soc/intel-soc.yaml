@@ -1,0 +1,8 @@
+version: 3
+include:
+  - intel-collector/hives/ai_agent.yaml
+  - intel-collector/hives/dr-general.yaml
+  - intel-analyzer/hives/ai_agent.yaml
+  - intel-analyzer/hives/dr-general.yaml
+  - rule-engineer/hives/ai_agent.yaml
+  - rule-engineer/hives/dr-general.yaml

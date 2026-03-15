@@ -31,6 +31,7 @@ This event-driven architecture means agents are:
 | [Tiered SOC](tiered-soc/) | 8 | Full-featured orgs wanting defense-in-depth | $0.10 - $7.60 |
 | [Lean SOC](lean-soc/) | 4 | Smaller orgs or getting started fast | $0.10 - $2.10 |
 | [Baselining SOC](baselining-soc/) | 7 | New orgs with noisy detections, deploy before Tiered SOC | ~$5.00/hour (bulk) |
+| [Intel SOC](intel-soc/) | 3 | Automated daily threat intel collection and detection engineering | ~$5.50/day |
 
 ## Inter-Agent Communication
 

@@ -81,7 +81,7 @@ hives:
           **Update case status/fields:**
           ```bash
           limacharlie case update --id <case_number> --status <status> --oid <oid> --output yaml
-          # Also supports: --assignee, --classification, --summary, --conclusion
+          # Also supports: --assignee, --classification, --summary, --conclusion, --severity
           ```
 
           **Add/remove tags:**

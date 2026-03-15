@@ -44,6 +44,7 @@ The Cases extension has first-class CLI support via `limacharlie case`:
 limacharlie case list --oid <oid> --output yaml
 limacharlie case get --id <case_number> --oid <oid> --output yaml
 limacharlie case update --id <case_number> --status acknowledged --oid <oid> --output yaml
+limacharlie case update --id <case_number> --severity high --oid <oid> --output yaml
 limacharlie case add-note --id <case_number> --content "Note text" --type analysis --oid <oid> --output yaml
 limacharlie case tag set --id <case_number> --tag <tag> --oid <oid> --output yaml
 limacharlie case tag add --id <case_number> --tag <tag> --oid <oid> --output yaml
@@ -251,9 +252,9 @@ limacharlie case get --id <case_number> --oid <oid> --output yaml
 limacharlie case list --status new --status acknowledged --oid <oid> --output yaml
 ```
 
-**From a Detection ID** (find associated case):
+**From a Detection** (find associated case by category or hostname):
 ```bash
-limacharlie case list --search <detection_cat> --oid <oid> --output yaml
+limacharlie case list --search <search_term> --oid <oid> --output yaml
 ```
 
 If no case exists for the activity being investigated, you can still investigate using LC telemetry and create findings - just document the results and help the user decide whether to create a case manually or link findings to an existing case.
@@ -276,7 +277,7 @@ limacharlie case update --id <case_number> --status in_progress --oid <oid> --ou
 
 ### Step 4: Get the Source Detection
 
-Extract the detection details from the case's `detection_id`:
+Extract the detection details from the case's `detections` array (each entry contains a `detection_id`):
 ```bash
 limacharlie detection get --id <detection-id> --oid <oid> --output yaml
 ```
@@ -780,16 +781,11 @@ limacharlie case entity add --case <case_number> \
 
 ### Adding Detections
 
-Link additional detections discovered during investigation:
+Link additional detections discovered during investigation (pass the full detection JSON object):
 
 ```bash
 limacharlie case detection add --case <case_number> \
-    --detection-id "<detection-id>" \
-    --detection-cat "Encoded PowerShell" \
-    --detection-source "general" \
-    --detection-priority 7 \
-    --sensor-id "<sid>" \
-    --hostname "DESKTOP-001" \
+    --detection '<full detection JSON>' \
     --oid <oid> --output yaml
 ```
 
@@ -1050,7 +1046,7 @@ limacharlie case bulk-update --numbers <num1>,<num2>,<num3> \
 
 **Classification values**: `pending`, `true_positive`, `false_positive`
 
-**Severity values**: `critical`, `high`, `medium`, `low`
+**Severity values**: `critical`, `high`, `medium`, `low`, `info`
 
 **Verdict values**: `malicious`, `suspicious`, `benign`, `unknown`, `informational`
 

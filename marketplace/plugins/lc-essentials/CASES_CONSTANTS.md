@@ -28,7 +28,7 @@
 
 ## Severity
 
-Derived from detection priority (0-10) using configurable thresholds.
+Initially derived from detection priority (0-10) using configurable thresholds. Severity can also be updated manually via `limacharlie case update --severity <level>`.
 
 | Severity | Default Priority Range | SLA: MTTA | SLA: MTTR |
 |----------|----------------------|-----------|-----------|
@@ -36,6 +36,7 @@ Derived from detection priority (0-10) using configurable thresholds.
 | `high` | 5-7 | 15 min | 12 hours |
 | `medium` | 3-4 | 60 min | 24 hours |
 | `low` | 0-2 | 100 min | ~47 hours |
+| `info` | *(manual only)* | 480 min | 7 days |
 
 ## Classification
 
