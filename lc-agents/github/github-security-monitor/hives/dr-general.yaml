@@ -1,0 +1,203 @@
+version: 3
+hives:
+  dr-general:
+    github-monitor-branch-prot-removed:
+      data:
+        detect:
+          event: protected_branch.destroy
+          op: exists
+          path: event/org
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/github-security-monitor
+            suppression:
+              is_global: true
+              keys:
+                - github-monitor-rate-limit
+              max_count: 5
+              period: 1m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-agent:github-security-monitor
+    github-monitor-branch-prot-bypassed:
+      data:
+        detect:
+          event: protected_branch.policy_override
+          op: exists
+          path: event/org
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/github-security-monitor
+            suppression:
+              is_global: true
+              keys:
+                - github-monitor-rate-limit
+              max_count: 5
+              period: 1m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-agent:github-security-monitor
+    github-monitor-2fa-disabled:
+      data:
+        detect:
+          event: org.disable_two_factor_requirement
+          op: exists
+          path: event/org
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/github-security-monitor
+            suppression:
+              is_global: true
+              keys:
+                - github-monitor-rate-limit
+              max_count: 5
+              period: 1m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-agent:github-security-monitor
+    github-monitor-oauth-restrictions-disabled:
+      data:
+        detect:
+          event: org.disable_oauth_app_restrictions
+          op: exists
+          path: event/org
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/github-security-monitor
+            suppression:
+              is_global: true
+              keys:
+                - github-monitor-rate-limit
+              max_count: 5
+              period: 1m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-agent:github-security-monitor
+    github-monitor-secret-scanning-disabled:
+      data:
+        detect:
+          event: secret_scanning.disable
+          op: exists
+          path: event/org
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/github-security-monitor
+            suppression:
+              is_global: true
+              keys:
+                - github-monitor-rate-limit
+              max_count: 5
+              period: 1m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-agent:github-security-monitor
+    github-monitor-dependabot-disabled:
+      data:
+        detect:
+          event: dependabot_alerts.disable
+          op: exists
+          path: event/org
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/github-security-monitor
+            suppression:
+              is_global: true
+              keys:
+                - github-monitor-rate-limit
+              max_count: 5
+              period: 1m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-agent:github-security-monitor
+    github-monitor-repo-visibility:
+      data:
+        detect:
+          event: repo.access
+          op: exists
+          path: event/org
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/github-security-monitor
+            suppression:
+              is_global: true
+              keys:
+                - github-monitor-rate-limit
+              max_count: 5
+              period: 1m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-agent:github-security-monitor
+    github-monitor-repo-destroyed:
+      data:
+        detect:
+          event: repo.destroy
+          op: exists
+          path: event/org
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/github-security-monitor
+            suppression:
+              is_global: true
+              keys:
+                - github-monitor-rate-limit
+              max_count: 5
+              period: 1m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-agent:github-security-monitor
+    github-monitor-app-installed:
+      data:
+        detect:
+          event: integration_installation.create
+          op: exists
+          path: event/org
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/github-security-monitor
+            suppression:
+              is_global: true
+              keys:
+                - github-monitor-rate-limit
+              max_count: 5
+              period: 1m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-agent:github-security-monitor
+    github-monitor-deploy-key:
+      data:
+        detect:
+          event: deploy_key.create
+          op: exists
+          path: event/org
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/github-security-monitor
+            suppression:
+              is_global: true
+              keys:
+                - github-monitor-rate-limit
+              max_count: 5
+              period: 1m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - lc-agent:github-security-monitor
