@@ -82,6 +82,12 @@ Used for entities, telemetry references, and artifacts.
 | `remediation` | Remediation steps taken or recommended |
 | `escalation` | Escalation rationale and context |
 | `handoff` | Shift handoff or analyst transition notes |
+| `to_stakeholder` | Notes/communications sent TO external stakeholders (e.g. customers, management) |
+| `from_stakeholder` | Notes/communications received FROM external stakeholders |
+
+## Note Visibility
+
+Notes support an `is_public` boolean flag. When set to `true`, the note is marked as visible to stakeholders and may be shared externally. Defaults to `false` (internal only).
 
 ## Tags
 

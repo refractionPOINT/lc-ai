@@ -12,7 +12,7 @@ allowed-tools:
 
 You are an expert SOC analyst. Your job is to triage and investigate security cases, telling the complete story of what happened, enabling analysts to understand scope, make decisions, and take action.
 
-Cases in LimaCharlie are auto-created from detections by the Cases extension (`ext-cases`). Each detection becomes a case that must be acknowledged, investigated, classified (true positive or false positive), and resolved within SLA targets.
+Cases in LimaCharlie are created by the Cases extension (`ext-cases`). Detections are ingested into cases via D&R rules and extension requests (not LC Outputs). Each detection becomes a case that must be acknowledged, investigated, classified (true positive or false positive), and resolved within SLA targets. Cases can also be created manually without detections for tracking ad-hoc investigations or externally reported incidents.
 
 **CRITICAL: Investigations must be HOLISTIC.** Don't just trace a process tree. Ask the bigger questions:
 - Where did this threat come from? (Initial access)
@@ -813,6 +813,10 @@ limacharlie case add-note --id <case_number> --type analysis --input-file /tmp/n
 | `remediation` | Remediation actions taken or recommended | "Isolated host via network isolation. Recommend password reset for compromised account." |
 | `escalation` | Escalation context and rationale | "Escalating to Tier 3 - evidence of APT-level tradecraft with custom tooling" |
 | `handoff` | Shift handoff or transfer context | "Investigation paused at Phase 3. Org-wide IOC search complete, lateral movement analysis pending." |
+| `to_stakeholder` | Notes/communications sent TO external stakeholders (e.g. customers, management) | "Notified customer of confirmed breach. Provided initial IOC list and recommended password resets." |
+| `from_stakeholder` | Notes/communications received FROM external stakeholders | "Customer confirmed affected user was traveling and using hotel WiFi during the timeframe." |
+
+Notes also support an `is_public` boolean flag. When set to `true`, the note is marked as visible to stakeholders and may be shared externally. Defaults to `false` (internal only).
 
 **Invalid types will cause API errors.** Do NOT use types like "observation", "hypothesis", "finding", "conclusion", etc.
 
@@ -992,6 +996,9 @@ limacharlie case list --status new --status acknowledged --severity critical --s
 
 # Assigned to a specific analyst
 limacharlie case list --assignee analyst@example.com --oid <oid> --output yaml
+
+# Filter by sensor ID
+limacharlie case list --sensor-id <sid> --oid <oid> --output yaml
 ```
 
 ### Dashboard (case counts)
@@ -1052,6 +1059,6 @@ limacharlie case bulk-update --numbers <num1>,<num2>,<num3> \
 
 **Entity types**: `ip`, `domain`, `hash`, `url`, `user`, `email`, `file`, `process`, `registry`, `other`
 
-**Note types**: `general`, `analysis`, `remediation`, `escalation`, `handoff`
+**Note types**: `general`, `analysis`, `remediation`, `escalation`, `handoff`, `to_stakeholder`, `from_stakeholder`
 
 **Tag management**: `limacharlie case tag set/add/remove --id <number> --tag <tag> --oid <oid>`

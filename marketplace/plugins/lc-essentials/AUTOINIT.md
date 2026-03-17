@@ -33,7 +33,7 @@ limacharlie case export --id <case_number> --oid <oid> --output yaml
 limacharlie case export --id <case_number> --with-data ./case-export --oid <oid>
 ```
 
-The cases extension auto-creates cases from detections. Use `limacharlie case --ai-help` for full command reference. See the `case-investigation` skill for the full investigation workflow.
+The cases extension creates cases from detections via D&R rules and extension requests. Cases can also be created without detections for ad-hoc investigations. Use `limacharlie case --ai-help` for full command reference. See the `case-investigation` skill for the full investigation workflow.
 
 ## Required Tool
 
