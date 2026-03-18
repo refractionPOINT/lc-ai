@@ -7,8 +7,8 @@ A 3-agent pipeline that runs daily to collect open-source threat intelligence, a
 ```mermaid
 flowchart TD
     sched["24h_per_org schedule"] --> collector["Intel Collector<br/>(sonnet, ~$0.50)"]
-    collector -->|"tag: intel-collected"| analyzer["Intel Analyzer<br/>(opus, ~$2.00)"]
-    analyzer -->|"tag: intel-analyzed"| engineer["Rule Engineer<br/>(opus, ~$3.00)"]
+    collector -->|"@intel-analyzer note"| analyzer["Intel Analyzer<br/>(opus, ~$2.00)"]
+    analyzer -->|"@rule-engineer note"| engineer["Rule Engineer<br/>(opus, ~$3.00)"]
 
     collector -.->|fetches| tf["ThreatFox CSV +<br/>Feodo Tracker"]
     collector -.->|fetches| kev["CISA KEV"]
@@ -54,15 +54,22 @@ The Intel Analyzer checks what sensors and platforms are actually deployed in th
 
 ## Inter-Agent Communication
 
-| Tag | Meaning | Added By | Triggers |
-|-----|---------|----------|----------|
-| `intel-collected` | Raw intel ready for analysis | Collector | Analyzer |
-| `analyzing-intel` | Analysis in progress (lock) | Analyzer | — |
-| `intel-analyzed` | Analysis complete, ready for rules | Analyzer | Rule Engineer |
-| `engineering-rules` | Rule creation in progress (lock) | Rule Engineer | — |
-| `rules-drafted` | Rules created (completion signal) | Rule Engineer | — |
-| `intel-pipeline` | Marks case as part of intel pipeline | Collector | — |
-| `daily-intel` | Marks daily intel report | Rule Engineer | — |
+Agents signal each other by writing case notes with @mentions. D&R rules match on `note_added` events containing the @mention and require `ai_agent.exec` permission.
+
+| Signal | Meaning | Written By | Triggers |
+|--------|---------|------------|----------|
+| `@intel-analyzer` note | Raw intel ready for analysis | Collector | Analyzer |
+| `@rule-engineer` note | Analysis complete, ready for rules | Analyzer | Rule Engineer |
+
+**Lock/status tags** (still tag-based, for concurrency control):
+
+| Tag | Meaning | Added By |
+|-----|---------|----------|
+| `analyzing-intel` | Analysis in progress (lock) | Analyzer |
+| `engineering-rules` | Rule creation in progress (lock) | Rule Engineer |
+| `rules-drafted` | Rules created (completion signal) | Rule Engineer |
+| `intel-pipeline` | Marks case as part of intel pipeline | Collector |
+| `daily-intel` | Marks daily intel report | Rule Engineer |
 
 ## Cost Profile
 
@@ -92,6 +99,7 @@ The Intel Analyzer checks what sensors and platforms are actually deployed in th
 | `lookup.get` | Read the `intel-seen` dedup ledger |
 | `lookup.set` | Write processed item keys to the ledger |
 | `ai_agent.operate` | Allow the agent to run |
+| `ai_agent.exec` | Trigger Intel Analyzer via @mention note |
 
 ### intel-analyzer
 
@@ -105,6 +113,7 @@ The Intel Analyzer checks what sensors and platforms are actually deployed in th
 | `ext.conf.get` | List subscribed extensions |
 | `lookup.get` | Check existing lookups to avoid duplicate IOCs |
 | `ai_agent.operate` | Allow the agent to run |
+| `ai_agent.exec` | Trigger Rule Engineer via @mention note |
 
 ### intel-engineer
 
@@ -148,10 +157,10 @@ intel-soc/
 │   ├── README.md                      # Analyzer agent docs
 │   └── hives/
 │       ├── ai_agent.yaml              # Agent definition
-│       └── dr-general.yaml            # intel-collected tag trigger
+│       └── dr-general.yaml            # @intel-analyzer mention trigger
 └── rule-engineer/
     ├── README.md                      # Engineer agent docs
     └── hives/
         ├── ai_agent.yaml              # Agent definition
-        └── dr-general.yaml            # intel-analyzed tag trigger
+        └── dr-general.yaml            # @rule-engineer mention trigger
 ```

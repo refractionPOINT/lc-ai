@@ -10,9 +10,9 @@ flowchart TD
     tag --> review["Review Bulk Triage findings<br/>(DO NOT repeat triage work)"]
     review --> deep["Deep investigation:<br/>Lateral movement, root cause,<br/>credential compromise, full scope,<br/>C2 patterns, MITRE ATT&CK"]
     deep --> update["Update case with full picture:<br/>Summary, IOCs, attack timeline"]
-    update -->|Needs containment?| contain["tag: needs-containment"]
-    update -->|Needs org-wide hunt?| hunt["tag: needs-threat-hunt"]
-    update -->|Needs binary forensics?| malware["tag: needs-malware-analysis"]
+    update -->|Needs containment?| contain["@containment note"]
+    update -->|Needs org-wide hunt?| hunt["@threat-hunter note"]
+    update -->|Needs binary forensics?| malware["@malware-analyst note"]
     update -->|Fully resolved?| resolved["status: resolved"]
     contain --> cleanup["Remove 'l2-investigating' tag<br/>Session terminates"]
     hunt --> cleanup
@@ -22,11 +22,13 @@ flowchart TD
 
 ## Downstream Signaling
 
-| Tag Added | Triggers | When |
-|-----------|----------|------|
-| `needs-containment` | Containment | Confirmed malicious, endpoints need isolation or IOCs need blocking |
-| `needs-threat-hunt` | Threat Hunter | Confirmed IOCs that should be hunted org-wide |
-| `needs-malware-analysis` | Malware Analyst | Binary needs deep forensic analysis (if Bulk Triage didn't already tag it) |
+Signals downstream agents by writing a case note that @mentions the agent with specific context:
+
+| @mention | Triggers | When |
+|----------|----------|------|
+| `@containment` | Containment | Confirmed malicious, endpoints need isolation or IOCs need blocking |
+| `@threat-hunter` | Threat Hunter | Confirmed IOCs that should be hunted org-wide |
+| `@malware-analyst` | Malware Analyst | Binary needs deep forensic analysis (if Bulk Triage didn't already request it) |
 
 ## API Key Permissions
 
@@ -45,6 +47,7 @@ Create an API key named `soc-l2-analyst` with these permissions:
 | `investigation.set` | Update cases, add notes, entities, telemetry |
 | `ext.request` | Invoke extensions |
 | `ai_agent.operate` | Allow the agent to run |
+| `ai_agent.exec` | Trigger downstream agents via @mention notes |
 
 ## Configuration
 
