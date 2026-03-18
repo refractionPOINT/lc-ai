@@ -35,7 +35,7 @@ flowchart TD
 
 ## API Key Permissions
 
-Create an API key named `soc-containment` with these permissions:
+Create an API key named `containment` with these permissions:
 
 | Permission | Why |
 |-----------|-----|

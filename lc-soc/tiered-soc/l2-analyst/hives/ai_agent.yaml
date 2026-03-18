@@ -61,16 +61,16 @@ hives:
 
              **If confirmed malicious and containment is needed:**
              - Ensure all malicious IOCs are added as entities with `malicious` verdict
-             - Add a note mentioning `@soc-containment` with specific recommendations:
-               `limacharlie case add-note --id <case_number> --type analysis --content "@soc-containment Confirmed malicious activity. Sensors to isolate: <hostnames>. IOCs to block: <hashes/IPs/domains>. Accounts to disable: <users>." --oid <oid> --output yaml`
+             - Add a note mentioning `@containment` with specific recommendations:
+               `limacharlie case add-note --id <case_number> --type analysis --content "@containment Confirmed malicious activity. Sensors to isolate: <hostnames>. IOCs to block: <hashes/IPs/domains>. Accounts to disable: <users>." --oid <oid> --output yaml`
 
              **If IOCs are confirmed and org-wide hunting is needed:**
-             - Add a note mentioning `@soc-threat-hunter` with the confirmed IOCs:
-               `limacharlie case add-note --id <case_number> --type analysis --content "@soc-threat-hunter Hunt for these confirmed IOCs across the org: <hashes>, <IPs>, <domains>. Context: <malware family/campaign>." --oid <oid> --output yaml`
+             - Add a note mentioning `@threat-hunter` with the confirmed IOCs:
+               `limacharlie case add-note --id <case_number> --type analysis --content "@threat-hunter Hunt for these confirmed IOCs across the org: <hashes>, <IPs>, <domains>. Context: <malware family/campaign>." --oid <oid> --output yaml`
 
              **If a suspicious binary needs deeper forensic analysis:**
-             - Add a note mentioning `@soc-malware-analyst` with the binary reference:
-               `limacharlie case add-note --id <case_number> --type analysis --content "@soc-malware-analyst Analyze suspicious binary: hash <sha256>, path <filepath>, sensor <sid>. Reason: <why suspicious>." --oid <oid> --output yaml`
+             - Add a note mentioning `@malware-analyst` with the binary reference:
+               `limacharlie case add-note --id <case_number> --type analysis --content "@malware-analyst Analyze suspicious binary: hash <sha256>, path <filepath>, sensor <sid>. Reason: <why suspicious>." --oid <oid> --output yaml`
 
           6. **Close out**:
              - If fully investigated and no further automated action needed, set status to `resolved`

@@ -10,9 +10,9 @@ flowchart TD
     tag --> review["Review Bulk Triage findings<br/>(DO NOT repeat triage work)"]
     review --> deep["Deep investigation:<br/>Lateral movement, root cause,<br/>credential compromise, full scope,<br/>C2 patterns, MITRE ATT&CK"]
     deep --> update["Update case with full picture:<br/>Summary, IOCs, attack timeline"]
-    update -->|Needs containment?| contain["@soc-containment note"]
-    update -->|Needs org-wide hunt?| hunt["@soc-threat-hunter note"]
-    update -->|Needs binary forensics?| malware["@soc-malware-analyst note"]
+    update -->|Needs containment?| contain["@containment note"]
+    update -->|Needs org-wide hunt?| hunt["@threat-hunter note"]
+    update -->|Needs binary forensics?| malware["@malware-analyst note"]
     update -->|Fully resolved?| resolved["status: resolved"]
     contain --> cleanup["Remove 'l2-investigating' tag<br/>Session terminates"]
     hunt --> cleanup
@@ -26,9 +26,9 @@ Signals downstream agents by writing a case note that @mentions the agent with s
 
 | @mention | Triggers | When |
 |----------|----------|------|
-| `@soc-containment` | Containment | Confirmed malicious, endpoints need isolation or IOCs need blocking |
-| `@soc-threat-hunter` | Threat Hunter | Confirmed IOCs that should be hunted org-wide |
-| `@soc-malware-analyst` | Malware Analyst | Binary needs deep forensic analysis (if Bulk Triage didn't already request it) |
+| `@containment` | Containment | Confirmed malicious, endpoints need isolation or IOCs need blocking |
+| `@threat-hunter` | Threat Hunter | Confirmed IOCs that should be hunted org-wide |
+| `@malware-analyst` | Malware Analyst | Binary needs deep forensic analysis (if Bulk Triage didn't already request it) |
 
 ## API Key Permissions
 

@@ -24,7 +24,7 @@ flowchart TD
 
 ## API Key Permissions
 
-Create an API key named `lean-responder` with:
+Create an API key named `responder` with:
 
 | Permission | Why |
 |-----------|-----|

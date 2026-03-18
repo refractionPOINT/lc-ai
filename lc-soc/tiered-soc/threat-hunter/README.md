@@ -23,7 +23,7 @@ New cases created by the Threat Hunter automatically enter the SOC pipeline (Tri
 
 ## API Key Permissions
 
-Create an API key named `soc-threat-hunter` with these permissions:
+Create an API key named `threat-hunter` with these permissions:
 
 | Permission | Why |
 |-----------|-----|

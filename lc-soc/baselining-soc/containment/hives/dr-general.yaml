@@ -1,7 +1,7 @@
 version: 3
 hives:
   dr-general:
-    soc-containment-on-mention:
+    containment-on-mention:
       data:
         detect:
           event: note_added
@@ -9,17 +9,17 @@ hives:
           rules:
             - op: contains
               path: event/metadata/content
-              value: "@soc-containment"
+              value: "@containment"
             - op: is
               path: event/metadata/permitted/?
               value: ai_agent.exec
         respond:
           - action: start ai agent
-            definition: hive://ai_agent/soc-containment
+            definition: hive://ai_agent/containment
             suppression:
               is_global: true
               keys:
-                - "soc-containment-{{ .event.case_id }}"
+                - "containment-{{ .event.case_id }}"
               max_count: 1
               period: 30m
       usr_mtd:
