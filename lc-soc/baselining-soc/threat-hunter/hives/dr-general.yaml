@@ -4,10 +4,10 @@ hives:
     soc-threat-hunter-on-mention:
       data:
         detect:
+          event: note_added
           op: and
           rules:
-            - event: note_added
-              op: contains
+            - op: contains
               path: event/metadata/content
               value: "@threat-hunter"
             - op: is

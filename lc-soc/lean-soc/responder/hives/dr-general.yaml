@@ -4,10 +4,10 @@ hives:
     lean-responder-on-mention:
       data:
         detect:
+          event: note_added
           op: and
           rules:
-            - event: note_added
-              op: contains
+            - op: contains
               path: event/metadata/content
               value: "@responder"
             - op: is
