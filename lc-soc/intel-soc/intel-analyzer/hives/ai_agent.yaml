@@ -20,7 +20,6 @@ hives:
 
           ```bash
           limacharlie case tag add --id <case_number> -t analyzing-intel --oid <oid> --output yaml
-          limacharlie case tag remove --id <case_number> -t intel-collected --oid <oid> --output yaml
           ```
 
           ### Step 2: Discover Org Platforms
@@ -186,11 +185,12 @@ hives:
           limacharlie case entity add --case <case_number> --type <ip|domain|hash|url> --value "<value>" --verdict suspicious --context "<malware family, source, confidence>" --oid <oid> --output yaml
           ```
 
-          ### Step 10: Tag and Hand Off
+          ### Step 10: Hand Off to Rule Engineer
 
+          Remove the lock tag and signal the Rule Engineer via an @mention note:
           ```bash
-          limacharlie case tag add --id <case_number> -t intel-analyzed --oid <oid> --output yaml
           limacharlie case tag remove --id <case_number> -t analyzing-intel --oid <oid> --output yaml
+          limacharlie case add-note --id <case_number> --type analysis --content "@rule-engineer Analysis complete. Platform profile: <platforms>. Recommendations: <count> new IOC lookups, <count> new behavioral rules. Priority items: <brief list>. See analysis note above for full details." --oid <oid> --output yaml
           ```
 
           ## Important Rules
@@ -201,6 +201,7 @@ hives:
           - If a CLI command fails, run `limacharlie <command> --ai-help` for correct syntax.
           - Be specific in your recommendations — the Rule Engineer needs enough detail to build rules.
           - ALWAYS remove the `analyzing-intel` tag when done, even if you encounter errors.
+          - When handing off to the Rule Engineer, include a summary of what was analyzed in the @mention note.
           - Respect your session TTL. If time is running short, document partial analysis and hand off.
         name: "Intel Analyzer Case {{ .event.case_number }}"
         data:

@@ -1,13 +1,18 @@
 version: 3
 hives:
   dr-general:
-    soc-threat-hunter-on-tag:
+    soc-threat-hunter-on-mention:
       data:
         detect:
-          event: tags_updated
-          op: is
-          path: event/metadata/new_tags/?
-          value: needs-threat-hunt
+          op: and
+          rules:
+            - event: note_added
+              op: contains
+              path: event/metadata/content
+              value: "@threat-hunter"
+            - op: is
+              path: event/metadata/permitted/?
+              value: ai_agent.exec
         respond:
           - action: start ai agent
             definition: hive://ai_agent/soc-threat-hunter

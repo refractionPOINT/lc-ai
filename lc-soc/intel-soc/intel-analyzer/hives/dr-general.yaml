@@ -1,13 +1,18 @@
 version: 3
 hives:
   dr-general:
-    intel-analyzer-on-tag:
+    intel-analyzer-on-mention:
       data:
         detect:
-          event: tags_updated
-          op: is
-          path: event/metadata/new_tags/?
-          value: intel-collected
+          op: and
+          rules:
+            - event: note_added
+              op: contains
+              path: event/metadata/content
+              value: "@intel-analyzer"
+            - op: is
+              path: event/metadata/permitted/?
+              value: ai_agent.exec
         respond:
           - action: start ai agent
             definition: hive://ai_agent/intel-analyzer

@@ -1,13 +1,18 @@
 version: 3
 hives:
   dr-general:
-    intel-engineer-on-tag:
+    intel-engineer-on-mention:
       data:
         detect:
-          event: tags_updated
-          op: is
-          path: event/metadata/new_tags/?
-          value: intel-analyzed
+          op: and
+          rules:
+            - event: note_added
+              op: contains
+              path: event/metadata/content
+              value: "@rule-engineer"
+            - op: is
+              path: event/metadata/permitted/?
+              value: ai_agent.exec
         respond:
           - action: start ai agent
             definition: hive://ai_agent/intel-engineer
