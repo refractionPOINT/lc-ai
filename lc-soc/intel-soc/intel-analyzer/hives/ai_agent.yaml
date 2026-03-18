@@ -190,7 +190,7 @@ hives:
           Remove the lock tag and signal the Rule Engineer via an @mention note:
           ```bash
           limacharlie case tag remove --id <case_number> -t analyzing-intel --oid <oid> --output yaml
-          limacharlie case add-note --id <case_number> --type analysis --content "@rule-engineer Analysis complete. Platform profile: <platforms>. Recommendations: <count> new IOC lookups, <count> new behavioral rules. Priority items: <brief list>. See analysis note above for full details." --oid <oid> --output yaml
+          limacharlie case add-note --id <case_number> --type analysis --content "@intel-engineer Analysis complete. Platform profile: <platforms>. Recommendations: <count> new IOC lookups, <count> new behavioral rules. Priority items: <brief list>. See analysis note above for full details." --oid <oid> --output yaml
           ```
 
           ## Important Rules

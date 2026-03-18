@@ -9,7 +9,7 @@ hives:
           rules:
             - op: contains
               path: event/metadata/content
-              value: "@responder"
+              value: "@lean-responder"
             - op: is
               path: event/metadata/permitted/?
               value: ai_agent.exec

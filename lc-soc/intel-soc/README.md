@@ -8,7 +8,7 @@ A 3-agent pipeline that runs daily to collect open-source threat intelligence, a
 flowchart TD
     sched["24h_per_org schedule"] --> collector["Intel Collector<br/>(sonnet, ~$0.50)"]
     collector -->|"@intel-analyzer note"| analyzer["Intel Analyzer<br/>(opus, ~$2.00)"]
-    analyzer -->|"@rule-engineer note"| engineer["Rule Engineer<br/>(opus, ~$3.00)"]
+    analyzer -->|"@intel-engineer note"| engineer["Rule Engineer<br/>(opus, ~$3.00)"]
 
     collector -.->|fetches| tf["ThreatFox CSV +<br/>Feodo Tracker"]
     collector -.->|fetches| kev["CISA KEV"]
@@ -59,7 +59,7 @@ Agents signal each other by writing case notes with @mentions. D&R rules match o
 | Signal | Meaning | Written By | Triggers |
 |--------|---------|------------|----------|
 | `@intel-analyzer` note | Raw intel ready for analysis | Collector | Analyzer |
-| `@rule-engineer` note | Analysis complete, ready for rules | Analyzer | Rule Engineer |
+| `@intel-engineer` note | Analysis complete, ready for rules | Analyzer | Rule Engineer |
 
 **Lock/status tags** (still tag-based, for concurrency control):
 
@@ -162,5 +162,5 @@ intel-soc/
     ├── README.md                      # Engineer agent docs
     └── hives/
         ├── ai_agent.yaml              # Agent definition
-        └── dr-general.yaml            # @rule-engineer mention trigger
+        └── dr-general.yaml            # @intel-engineer mention trigger
 ```

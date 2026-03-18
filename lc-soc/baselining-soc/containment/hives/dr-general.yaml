@@ -9,7 +9,7 @@ hives:
           rules:
             - op: contains
               path: event/metadata/content
-              value: "@containment"
+              value: "@soc-containment"
             - op: is
               path: event/metadata/permitted/?
               value: ai_agent.exec

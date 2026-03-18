@@ -9,7 +9,7 @@ flowchart TD
     trigger["Case created<br/>(webhook event)"] --> tag["Tag: investigating<br/>Status: in_progress"]
     tag --> investigation["Full investigation:<br/>1. Analyze detection<br/>2. Sensor timeline & process trees<br/>3. Related activity (network, files, registry)<br/>4. IOC hunting on other sensors<br/>5. Lateral movement assessment<br/>6. Root cause analysis<br/>7. MITRE ATT&CK mapping"]
     investigation --> doc["Document EVERYTHING:<br/>Summary, Conclusion, Notes,<br/>Entities, Telemetry references"]
-    doc -->|Confirmed malicious?| contain["@responder note<br/>status: escalated"]
+    doc -->|Confirmed malicious?| contain["@lean-responder note<br/>status: escalated"]
     doc -->|False positive?| closed["closed (false_positive)"]
     doc -->|Uncertain?| escalated["escalated (for human review)"]
     contain --> cleanup["Remove 'investigating' tag<br/>Session terminates"]
