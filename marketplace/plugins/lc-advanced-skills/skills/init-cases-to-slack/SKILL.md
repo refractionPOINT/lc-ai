@@ -187,36 +187,81 @@ def playbook(sdk, data):
         {"type": "mrkdwn", "text": f"*By:* {by}"},
     ]
 
-    from_val = data.get("from_status")
-    to_val = data.get("to_status")
-    if from_val and to_val:
-        fields.append(
-            {"type": "mrkdwn", "text": f"*Change:* {from_val} \u2192 {to_val}"}
-        )
+    # Event-specific fields.
+    if action == "created":
+        severity = data.get("severity")
+        if severity:
+            fields.append({"type": "mrkdwn", "text": f"*Severity:* {severity}"})
+        detection_cat = data.get("detection_cat")
+        if detection_cat:
+            fields.append({"type": "mrkdwn", "text": f"*Detection:* {detection_cat}"})
+        hostname = data.get("hostname")
+        if hostname:
+            fields.append({"type": "mrkdwn", "text": f"*Host:* {hostname}"})
 
-    group = data.get("group")
-    if group:
-        fields.append({"type": "mrkdwn", "text": f"*Group:* {group}"})
+    elif action == "escalated":
+        group = data.get("group")
+        if group:
+            fields.append({"type": "mrkdwn", "text": f"*Escalation Group:* {group}"})
+        from_val = data.get("from_status")
+        to_val = data.get("to_status")
+        if from_val and to_val:
+            fields.append(
+                {"type": "mrkdwn", "text": f"*Status:* {from_val} \u2192 {to_val}"}
+            )
 
-    attachment = {
-        "color": cfg["color"],
-        "blocks": [
+    elif action == "severity_upgraded":
+        from_val = data.get("from_severity")
+        to_val = data.get("to_severity")
+        if from_val and to_val:
+            fields.append(
+                {"type": "mrkdwn", "text": f"*Severity:* {from_val} \u2192 {to_val}"}
+            )
+        reason = data.get("reason")
+        if reason:
+            fields.append({"type": "mrkdwn", "text": f"*Reason:* {reason}"})
+
+    elif action in ("resolved", "closed"):
+        from_val = data.get("from_status")
+        to_val = data.get("to_status")
+        if from_val and to_val:
+            fields.append(
+                {"type": "mrkdwn", "text": f"*Status:* {from_val} \u2192 {to_val}"}
+            )
+
+    blocks = [
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": f"{cfg['emoji']} *{cfg['label']}*: Case *#{case_number}*",
+            },
+        },
+        {"type": "section", "fields": fields},
+    ]
+
+    # Add summary as its own section when present.
+    summary = data.get("summary")
+    if summary:
+        blocks.append(
             {
                 "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"{cfg['emoji']} *{cfg['label']}*: Case *#{case_number}*",
-                },
-            },
-            {"type": "section", "fields": fields},
-            {
-                "type": "context",
-                "elements": [
-                    {"type": "mrkdwn", "text": f"Case ID: `{case_id[:8]}...`"}
-                ],
-            },
-        ],
-    }
+                "text": {"type": "mrkdwn", "text": f"*Summary:* {summary}"},
+            }
+        )
+
+    # Context footer.
+    case_id_short = case_id[:8] if case_id else "?"
+    blocks.append(
+        {
+            "type": "context",
+            "elements": [
+                {"type": "mrkdwn", "text": f"Case ID: `{case_id_short}...`"}
+            ],
+        }
+    )
+
+    attachment = {"color": cfg["color"], "blocks": blocks}
 
     payload = {
         "channel": slack_channel,
@@ -261,30 +306,32 @@ json.dump(record, sys.stdout)
 ### Step 7: Create the D&R Rules
 
 Create one D&R rule per case event type. Each rule triggers the same playbook but passes
-the appropriate action literal and event fields.
+event-type-specific metadata fields using Go template syntax (`{{ .event.FIELD }}`).
 
-For each of these 5 event types, create a D&R rule:
+**IMPORTANT**: Values in the `extension request` `data` block must use `{{ .event.FIELD }}`
+template syntax to reference event fields. Bare strings like `event.case_id` are passed
+as literals, NOT resolved from the event.
 
-| Event Type | D&R Key | Description |
-|------------|---------|-------------|
-| `escalated` | `cases-to-slack-on-escalated` | Case escalated — highest priority alert |
-| `created` | `cases-to-slack-on-created` | New case created |
-| `resolved` | `cases-to-slack-on-resolved` | Case resolved |
-| `severity_upgraded` | `cases-to-slack-on-severity-upgraded` | Severity increased |
-| `closed` | `cases-to-slack-on-closed` | Case closed |
+#### ext-cases Audit Event Structure
 
-For each event type, create the rule using this template (substitute `<EVENT_TYPE>` and
-`<DR_KEY>` from the table above):
+Events from ext-cases have these top-level fields: `action`, `case_id`, `case_number`,
+`event_id`, `oid`, `by`, `ts`, and `metadata` (event-type-specific).
+
+Metadata by event type:
+- **created**: `severity`, `detection_cat`, `detection_priority`, `detection_id`, `detection_source`, `sensor_id`, `hostname`, `summary`
+- **escalated**: `from` (old status), `to` (new status), `group` (escalation group)
+- **resolved / closed**: `from` (old status), `to` (new status)
+- **severity_upgraded**: `from` (old severity), `to` (new severity), `reason`
+
+#### created
 
 ```bash
 python3 -c "
 import json, sys
-event_type = sys.argv[1]
-dr_key = sys.argv[2]
 rule = {
     'data': {
         'detect': {
-            'event': event_type,
+            'event': 'created',
             'op': 'exists',
             'path': 'event/case_id'
         },
@@ -296,18 +343,19 @@ rule = {
                 'name': '{{ \"cases-to-slack\" }}',
                 'credentials': '{{ \"hive://secret/cases-to-slack-api-key\" }}',
                 'data': {
-                    'action': '{{ \"' + event_type + '\" }}',
-                    'case_id': 'event.case_id',
-                    'case_number': 'event.case_number',
-                    'by': 'event.by',
-                    'from_status': 'event.metadata.from',
-                    'to_status': 'event.metadata.to',
-                    'group': 'event.metadata.group'
+                    'action': '{{ \"created\" }}',
+                    'case_id': '{{ .event.case_id }}',
+                    'case_number': '{{ .event.case_number }}',
+                    'by': '{{ .event.by }}',
+                    'summary': '{{ .event.metadata.summary }}',
+                    'severity': '{{ .event.metadata.severity }}',
+                    'detection_cat': '{{ .event.metadata.detection_cat }}',
+                    'hostname': '{{ .event.metadata.hostname }}'
                 }
             },
             'suppression': {
                 'is_global': True,
-                'keys': ['cases-to-slack-' + event_type + '-{{ .event.case_id }}'],
+                'keys': ['cases-to-slack-created-{{ .event.case_id }}'],
                 'max_count': 1,
                 'period': '5m'
             }
@@ -316,11 +364,178 @@ rule = {
     'usr_mtd': {'enabled': True, 'tags': ['cases-to-slack']}
 }
 json.dump(rule, sys.stdout)
-" "<EVENT_TYPE>" "<DR_KEY>" \
-  | limacharlie hive set --hive-name dr-general --key <DR_KEY> --oid <oid>
+" | limacharlie hive set --hive-name dr-general --key cases-to-slack-on-created --oid <oid>
 ```
 
-Run this command 5 times, once for each event type/key pair from the table.
+#### escalated
+
+```bash
+python3 -c "
+import json, sys
+rule = {
+    'data': {
+        'detect': {
+            'event': 'escalated',
+            'op': 'exists',
+            'path': 'event/case_id'
+        },
+        'respond': [{
+            'action': 'extension request',
+            'extension name': 'ext-playbook',
+            'extension action': 'run_playbook',
+            'extension request': {
+                'name': '{{ \"cases-to-slack\" }}',
+                'credentials': '{{ \"hive://secret/cases-to-slack-api-key\" }}',
+                'data': {
+                    'action': '{{ \"escalated\" }}',
+                    'case_id': '{{ .event.case_id }}',
+                    'case_number': '{{ .event.case_number }}',
+                    'by': '{{ .event.by }}',
+                    'from_status': '{{ .event.metadata.from }}',
+                    'to_status': '{{ .event.metadata.to }}',
+                    'group': '{{ .event.metadata.group }}'
+                }
+            },
+            'suppression': {
+                'is_global': True,
+                'keys': ['cases-to-slack-escalated-{{ .event.case_id }}'],
+                'max_count': 1,
+                'period': '5m'
+            }
+        }]
+    },
+    'usr_mtd': {'enabled': True, 'tags': ['cases-to-slack']}
+}
+json.dump(rule, sys.stdout)
+" | limacharlie hive set --hive-name dr-general --key cases-to-slack-on-escalated --oid <oid>
+```
+
+#### resolved
+
+```bash
+python3 -c "
+import json, sys
+rule = {
+    'data': {
+        'detect': {
+            'event': 'resolved',
+            'op': 'exists',
+            'path': 'event/case_id'
+        },
+        'respond': [{
+            'action': 'extension request',
+            'extension name': 'ext-playbook',
+            'extension action': 'run_playbook',
+            'extension request': {
+                'name': '{{ \"cases-to-slack\" }}',
+                'credentials': '{{ \"hive://secret/cases-to-slack-api-key\" }}',
+                'data': {
+                    'action': '{{ \"resolved\" }}',
+                    'case_id': '{{ .event.case_id }}',
+                    'case_number': '{{ .event.case_number }}',
+                    'by': '{{ .event.by }}',
+                    'from_status': '{{ .event.metadata.from }}',
+                    'to_status': '{{ .event.metadata.to }}'
+                }
+            },
+            'suppression': {
+                'is_global': True,
+                'keys': ['cases-to-slack-resolved-{{ .event.case_id }}'],
+                'max_count': 1,
+                'period': '5m'
+            }
+        }]
+    },
+    'usr_mtd': {'enabled': True, 'tags': ['cases-to-slack']}
+}
+json.dump(rule, sys.stdout)
+" | limacharlie hive set --hive-name dr-general --key cases-to-slack-on-resolved --oid <oid>
+```
+
+#### severity_upgraded
+
+```bash
+python3 -c "
+import json, sys
+rule = {
+    'data': {
+        'detect': {
+            'event': 'severity_upgraded',
+            'op': 'exists',
+            'path': 'event/case_id'
+        },
+        'respond': [{
+            'action': 'extension request',
+            'extension name': 'ext-playbook',
+            'extension action': 'run_playbook',
+            'extension request': {
+                'name': '{{ \"cases-to-slack\" }}',
+                'credentials': '{{ \"hive://secret/cases-to-slack-api-key\" }}',
+                'data': {
+                    'action': '{{ \"severity_upgraded\" }}',
+                    'case_id': '{{ .event.case_id }}',
+                    'case_number': '{{ .event.case_number }}',
+                    'by': '{{ .event.by }}',
+                    'from_severity': '{{ .event.metadata.from }}',
+                    'to_severity': '{{ .event.metadata.to }}',
+                    'reason': '{{ .event.metadata.reason }}'
+                }
+            },
+            'suppression': {
+                'is_global': True,
+                'keys': ['cases-to-slack-severity_upgraded-{{ .event.case_id }}'],
+                'max_count': 1,
+                'period': '5m'
+            }
+        }]
+    },
+    'usr_mtd': {'enabled': True, 'tags': ['cases-to-slack']}
+}
+json.dump(rule, sys.stdout)
+" | limacharlie hive set --hive-name dr-general --key cases-to-slack-on-severity-upgraded --oid <oid>
+```
+
+#### closed
+
+```bash
+python3 -c "
+import json, sys
+rule = {
+    'data': {
+        'detect': {
+            'event': 'closed',
+            'op': 'exists',
+            'path': 'event/case_id'
+        },
+        'respond': [{
+            'action': 'extension request',
+            'extension name': 'ext-playbook',
+            'extension action': 'run_playbook',
+            'extension request': {
+                'name': '{{ \"cases-to-slack\" }}',
+                'credentials': '{{ \"hive://secret/cases-to-slack-api-key\" }}',
+                'data': {
+                    'action': '{{ \"closed\" }}',
+                    'case_id': '{{ .event.case_id }}',
+                    'case_number': '{{ .event.case_number }}',
+                    'by': '{{ .event.by }}',
+                    'from_status': '{{ .event.metadata.from }}',
+                    'to_status': '{{ .event.metadata.to }}'
+                }
+            },
+            'suppression': {
+                'is_global': True,
+                'keys': ['cases-to-slack-closed-{{ .event.case_id }}'],
+                'max_count': 1,
+                'period': '5m'
+            }
+        }]
+    },
+    'usr_mtd': {'enabled': True, 'tags': ['cases-to-slack']}
+}
+json.dump(rule, sys.stdout)
+" | limacharlie hive set --hive-name dr-general --key cases-to-slack-on-closed --oid <oid>
+```
 
 ### Step 8: Verify Installation
 
