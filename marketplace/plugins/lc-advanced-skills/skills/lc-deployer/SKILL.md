@@ -123,9 +123,10 @@ limacharlie org list --output yaml
 
 ### Step 2b: Verify Permissions
 
-Before proceeding, verify the current credentials have the `ai_agent.operate` permission (required for all agent deployments):
+Before proceeding, verify the current credentials have the `ai_agent.operate` permission (required for all agent deployments).
+**IMPORTANT**: You MUST include `--oid <oid>` — without it, the check runs against a null org context and will always return `has_perm: false`:
 ```bash
-limacharlie auth whoami --check-perm ai_agent.operate --output yaml
+limacharlie auth whoami --oid <oid> --check-perm ai_agent.operate --output yaml
 ```
 If `has_perm: false`, stop and inform the user their API key or user account lacks this permission.
 
@@ -251,8 +252,9 @@ limacharlie org list --output yaml
 
 ### Step 2b: Verify Permissions
 
+**IMPORTANT**: You MUST include `--oid <oid>` — without it, the check runs against a null org context and will always return `has_perm: false`:
 ```bash
-limacharlie auth whoami --check-perm ai_agent.operate --output yaml
+limacharlie auth whoami --oid <oid> --check-perm ai_agent.operate --output yaml
 ```
 
 ### Step 3: Subscribe to Required Extensions
