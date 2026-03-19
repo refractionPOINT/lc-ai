@@ -137,6 +137,23 @@ import urllib.request
 from limacharlie import Hive
 
 
+_CASES_API = "https://cases.limacharlie.io"
+
+
+def _fetch_case_summary(sdk, case_number):
+    """Fetch the case summary from ext-cases REST API."""
+    try:
+        oid = sdk._oid
+        jwt = sdk._jwt
+        url = f"{_CASES_API}/api/v1/cases/{case_number}?oid={oid}"
+        req = urllib.request.Request(url, headers={"Authorization": f"Bearer {jwt}"})
+        with urllib.request.urlopen(req) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return data.get("case", {}).get("summary") or None
+    except Exception:
+        return None
+
+
 def playbook(sdk, data):
     slack_token = Hive(sdk, "secret").get("slack-api-token").data["secret"]
     slack_channel = Hive(sdk, "secret").get("slack-notification-channel").data["secret"]
@@ -195,9 +212,6 @@ def playbook(sdk, data):
         detection_cat = data.get("detection_cat")
         if detection_cat:
             fields.append({"type": "mrkdwn", "text": f"*Detection:* {detection_cat}"})
-        hostname = data.get("hostname")
-        if hostname:
-            fields.append({"type": "mrkdwn", "text": f"*Host:* {hostname}"})
 
     elif action == "escalated":
         group = data.get("group")
@@ -240,8 +254,8 @@ def playbook(sdk, data):
         {"type": "section", "fields": fields},
     ]
 
-    # Add summary as its own section when present.
-    summary = data.get("summary")
+    # Fetch case summary from ext-cases API.
+    summary = _fetch_case_summary(sdk, case_number)
     if summary:
         blocks.append(
             {
@@ -318,10 +332,15 @@ Events from ext-cases have these top-level fields: `action`, `case_id`, `case_nu
 `event_id`, `oid`, `by`, `ts`, and `metadata` (event-type-specific).
 
 Metadata by event type:
-- **created**: `severity`, `detection_cat`, `detection_priority`, `detection_id`, `detection_source`, `sensor_id`, `hostname`, `summary`
+- **created**: always: `severity`, `detection_cat`, `detection_priority`; optional: `detection_id`, `detection_source`, `sensor_id`, `hostname`, `summary`
 - **escalated**: `from` (old status), `to` (new status), `group` (escalation group)
 - **resolved / closed**: `from` (old status), `to` (new status)
 - **severity_upgraded**: `from` (old severity), `to` (new severity), `reason`
+
+**IMPORTANT**: Only template metadata fields that are **always present**. Optional fields
+(like `summary`, `hostname`) cause Go template errors when absent, which silently prevents
+the extension request from being sent. The playbook fetches optional data (like summary)
+directly from the ext-cases REST API instead.
 
 #### created
 
@@ -347,10 +366,8 @@ rule = {
                     'case_id': '{{ .event.case_id }}',
                     'case_number': '{{ .event.case_number }}',
                     'by': '{{ .event.by }}',
-                    'summary': '{{ .event.metadata.summary }}',
                     'severity': '{{ .event.metadata.severity }}',
-                    'detection_cat': '{{ .event.metadata.detection_cat }}',
-                    'hostname': '{{ .event.metadata.hostname }}'
+                    'detection_cat': '{{ .event.metadata.detection_cat }}'
                 }
             },
             'suppression': {
