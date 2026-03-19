@@ -134,7 +134,7 @@ The playbook code:
 cat > /tmp/cases-to-slack.py << 'PYEOF'
 import json
 import urllib.request
-from limacharlie.sdk.hive import Hive
+from limacharlie import Hive
 
 
 def playbook(sdk, data):
