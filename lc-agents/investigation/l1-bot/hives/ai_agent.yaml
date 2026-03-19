@@ -134,6 +134,7 @@ hives:
           oid: routing.oid
           case_id: event.case_id
           case_number: event.case_number
+          event_id: event.event_id
         debounce_key: l1-bot
         model: opus
         max_turns: 30

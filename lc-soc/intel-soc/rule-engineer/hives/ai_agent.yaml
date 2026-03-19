@@ -350,6 +350,7 @@ hives:
           oid: routing.oid
           case_id: event.case_id
           case_number: event.case_number
+          event_id: event.event_id
         model: opus
         max_turns: 100
         max_budget_usd: 5.00
