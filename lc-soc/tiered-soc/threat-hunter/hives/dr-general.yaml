@@ -4,7 +4,7 @@ hives:
     threat-hunter-on-mention:
       data:
         detect:
-          event: note_added
+          event: case_note_added
           op: and
           rules:
             - op: contains
