@@ -1,13 +1,18 @@
 version: 3
 hives:
   dr-general:
-    exposure-scanner-on-tag:
+    exposure-scanner-on-mention:
       data:
         detect:
-          event: tags_updated
-          op: is
-          path: event/metadata/new_tags/?
-          value: assets-discovered
+          event: case_note_added
+          op: and
+          rules:
+            - op: contains
+              path: event/metadata/content
+              value: "@exposure-scanner"
+            - op: is
+              path: event/metadata/permitted/?
+              value: ai_agent.exec
         respond:
           - action: start ai agent
             definition: hive://ai_agent/exposure-scanner

@@ -21,7 +21,6 @@ hives:
 
           ```bash
           limacharlie case tag add --id <case_number> -t engineering-rules --oid <oid> --output yaml
-          limacharlie case tag remove --id <case_number> -t intel-analyzed --oid <oid> --output yaml
           ```
 
           ### Step 2: Read the Analysis

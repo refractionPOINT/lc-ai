@@ -18,7 +18,7 @@ Agent 1: Asset Discovery (Sonnet, ~$0.30)
   - Dangling DNS / subdomain takeover detection
   - DNS security check (SPF, DMARC)
       |
-      v  [tags: assets-discovered]
+      v  [@exposure-scanner note]
       |
       v
 Agent 2: Exposure Scanner (Sonnet, ~$0.50)
@@ -28,7 +28,7 @@ Agent 2: Exposure Scanner (Sonnet, ~$0.50)
   - HTTP security headers audit (HSTS, CSP, X-Frame-Options, etc.)
   - TLS configuration check (protocol version, cipher strength, cert validity)
       |
-      v  [tags: exposure-scanned]
+      v  [@exposure-risk-analyst note]
       |
       v
 Agent 3: Risk Analyst (Opus, ~$2.00)
@@ -94,6 +94,7 @@ All sources are free with no API keys required:
 | `investigation.set` | All | Create/update cases, add notes, entities |
 | `ext.request` | All | Make requests to extensions |
 | `ai_agent.operate` | All | Run AI agent sessions |
+| `ai_agent.exec` | Asset Discovery, Exposure Scanner | Trigger downstream agents via @mention notes |
 | `lookup.get` | Asset Discovery, Risk Analyst | Read exposure-domains config and exposure-seen ledger |
 | `lookup.set` | Risk Analyst | Update exposure-seen ledger |
 
@@ -138,18 +139,24 @@ limacharlie sync push --config-file exposure-soc.yaml --hive-ai-agent --hive-dr-
 | Exposure Scanner | Sonnet | $1.50 | 10 min | 60 |
 | Risk Analyst | Opus | $2.00 | 15 min | 50 |
 
-## Pipeline Flow
+## Inter-Agent Communication
 
-```
-asset-discovery ──[assets-discovered]──> exposure-scanner ──[exposure-scanned]──> risk-analyst
-```
+Agents signal each other by writing case notes with @mentions. D&R rules match on `note_added` events containing the @mention and require `ai_agent.exec` permission.
 
-**Tag progression:**
-1. `assets-discovered` → triggers scanner
-2. `scanning-exposure` → scanner in progress
-3. `exposure-scanned` → triggers risk analyst
-4. `analyzing-exposure` → analyst in progress
-5. `exposure-report` + `daily-exposure` → final state
+| Signal | Meaning | Written By | Triggers |
+|--------|---------|------------|----------|
+| `@exposure-scanner` note | Assets discovered, ready for scanning | Asset Discovery | Exposure Scanner |
+| `@exposure-risk-analyst` note | Scan complete, ready for analysis | Exposure Scanner | Risk Analyst |
+
+**Lock/status tags** (still tag-based, for concurrency control):
+
+| Tag | Meaning | Added By |
+|-----|---------|----------|
+| `scanning-exposure` | Scan in progress (lock) | Exposure Scanner |
+| `analyzing-exposure` | Analysis in progress (lock) | Risk Analyst |
+| `exposure-report` | Report complete (completion signal) | Risk Analyst |
+| `exposure-pipeline` | Marks case as part of exposure pipeline | Asset Discovery |
+| `daily-exposure` | Marks daily exposure report | Risk Analyst |
 
 ## State Management
 
@@ -170,13 +177,15 @@ exposure-soc/
 │   └── hives/
 │       ├── ai_agent.yaml                # Asset discovery prompt
 │       ├── dr-general.yaml              # Daily schedule trigger
-│       └── secret.yaml                  # All SOC secrets (template)
+│       └── secret.yaml                  # API key placeholder
 ├── exposure-scanner/
 │   └── hives/
 │       ├── ai_agent.yaml                # Exposure scanning prompt
-│       └── dr-general.yaml              # Triggered by assets-discovered tag
+│       ├── dr-general.yaml              # @exposure-scanner mention trigger
+│       └── secret.yaml                  # API key placeholder
 └── risk-analyst/
     └── hives/
         ├── ai_agent.yaml                # Risk analysis prompt
-        └── dr-general.yaml              # Triggered by exposure-scanned tag
+        ├── dr-general.yaml              # @exposure-risk-analyst mention trigger
+        └── secret.yaml                  # API key placeholder
 ```

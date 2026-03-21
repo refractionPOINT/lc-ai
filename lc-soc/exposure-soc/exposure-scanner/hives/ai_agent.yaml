@@ -20,7 +20,6 @@ hives:
 
           ```bash
           limacharlie case tag add --id <case_number> -t scanning-exposure --oid <oid> --output yaml
-          limacharlie case tag remove --id <case_number> -t assets-discovered --oid <oid> --output yaml
           ```
 
           ### Step 2: Read the Asset Inventory
@@ -302,11 +301,12 @@ hives:
           limacharlie case add-note --id <case_number> --type analysis --input-file /tmp/exposure-findings.md --oid <oid> --output yaml
           ```
 
-          ### Step 9: Tag and Hand Off
+          ### Step 9: Hand Off to Risk Analyst
 
+          Remove the lock tag and signal the Risk Analyst via an @mention note:
           ```bash
-          limacharlie case tag add --id <case_number> -t exposure-scanned --oid <oid> --output yaml
           limacharlie case tag remove --id <case_number> -t scanning-exposure --oid <oid> --output yaml
+          limacharlie case add-note --id <case_number> --type analysis --content "@exposure-risk-analyst Exposure scan complete. Scanned <count> IPs. Found: <count> open ports, <count> CVEs, <count> KEV matches, <count> phishing candidates. See scan results note above for details." --oid <oid> --output yaml
           ```
 
           ## Important Rules
@@ -321,6 +321,7 @@ hives:
             80 or 443 open, or that the asset discovery found resolving.
           - Process IPs in batches for InternetDB to stay within TTL.
           - ALWAYS remove the `scanning-exposure` tag when done, even if errors occur.
+          - When handing off to the Risk Analyst, include a summary of what was scanned in the @mention note.
           - Respect your session TTL. If time is running short, complete InternetDB (highest
             value) first, then headers, then urlscan. Skip TLS if necessary.
         name: "Exposure Monitor: Scanner {{ .event.case_number }}"
@@ -328,6 +329,7 @@ hives:
           oid: routing.oid
           case_id: event.case_id
           case_number: event.case_number
+          event_id: event.event_id
         model: sonnet
         max_turns: 60
         max_budget_usd: 1.50

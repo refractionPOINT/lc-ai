@@ -19,7 +19,6 @@ hives:
 
           ```bash
           limacharlie case tag add --id <case_number> -t analyzing-exposure --oid <oid> --output yaml
-          limacharlie case tag remove --id <case_number> -t exposure-scanned --oid <oid> --output yaml
           ```
 
           ### Step 2: Read All Findings
@@ -242,6 +241,7 @@ hives:
           oid: routing.oid
           case_id: event.case_id
           case_number: event.case_number
+          event_id: event.event_id
         model: opus
         max_turns: 50
         max_budget_usd: 2.00
