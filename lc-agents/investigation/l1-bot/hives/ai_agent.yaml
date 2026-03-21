@@ -147,3 +147,4 @@ hives:
         expiry: 0
         tags:
           - lc-agent:l1-bot
+          - lc-agent:api-key:l1-bot

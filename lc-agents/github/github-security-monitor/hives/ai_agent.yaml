@@ -207,3 +207,4 @@ hives:
         expiry: 0
         tags:
           - lc-agent:github-security-monitor
+          - lc-agent:api-key:github-security-monitor

@@ -178,3 +178,4 @@ hives:
         expiry: 0
         tags:
           - lc-agent:general-analyst
+          - lc-agent:api-key:general-analyst

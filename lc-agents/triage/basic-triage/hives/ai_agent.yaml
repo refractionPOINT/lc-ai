@@ -124,3 +124,4 @@ hives:
         expiry: 0
         tags:
           - lc-agent:basic-triage
+          - lc-agent:api-key:basic-triage

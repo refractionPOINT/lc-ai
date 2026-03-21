@@ -332,3 +332,4 @@ hives:
         expiry: 0
         tags:
           - lc-agent:github-threat-hunter
+          - lc-agent:api-key:github-threat-hunter
