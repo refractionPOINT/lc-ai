@@ -77,9 +77,10 @@ hives:
           - No existing case covers this group, or the activity is unrelated to any open case
           - The detections represent a genuinely new incident
 
-          To create a new case, use the most representative detection from the group:
+          To create a new case, use the most representative detection from the group.
+          Include a `--summary` that concisely describes the incident (hostname, detection categories, key indicators):
           ```bash
-          limacharlie case create --detection '<detection JSON>' --oid <oid> --output yaml
+          limacharlie case create --detection '<detection JSON>' --summary "<concise incident summary>" --oid <oid> --output yaml
           ```
           Then add remaining detections from the group to the newly created case:
           ```bash
