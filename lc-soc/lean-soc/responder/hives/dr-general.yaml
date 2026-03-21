@@ -1,20 +1,25 @@
 version: 3
 hives:
   dr-general:
-    lean-responder-on-tag:
+    responder-on-mention:
       data:
         detect:
-          event: tags_updated
-          op: is
-          path: event/metadata/new_tags/?
-          value: needs-containment
+          event: case_note_added
+          op: and
+          rules:
+            - op: contains
+              path: event/metadata/content
+              value: "@responder"
+            - op: is
+              path: event/metadata/permitted/?
+              value: ai_agent.exec
         respond:
           - action: start ai agent
-            definition: hive://ai_agent/lean-responder
+            definition: hive://ai_agent/responder
             suppression:
               is_global: true
               keys:
-                - "lean-responder-{{ .event.case_id }}"
+                - "responder-{{ .event.case_id }}"
               max_count: 1
               period: 30m
       usr_mtd:

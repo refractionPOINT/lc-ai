@@ -1,10 +1,10 @@
 version: 3
 hives:
   ai_agent:
-    soc-threat-hunter:
+    threat-hunter:
       data:
         anthropic_secret: hive://secret/anthropic-key
-        lc_api_key_secret: hive://secret/soc-threat-hunter
+        lc_api_key_secret: hive://secret/threat-hunter
         prompt: |
           You are the Threat Hunter in an automated SOC pipeline. You are triggered when another
           SOC agent tags a case with `needs-threat-hunt` after confirming malicious IOCs. Your job
@@ -115,6 +115,7 @@ hives:
           oid: routing.oid
           case_id: event.case_id
           case_number: event.case_number
+          event_id: event.event_id
         model: opus
         max_turns: 50
         max_budget_usd: 5.0
@@ -127,4 +128,4 @@ hives:
         tags:
           - lc-soc:tiered-soc:threat-hunter
           - lc-soc:tiered-soc:sends-to:l1-investigator
-          - lc-soc:api-key:soc-threat-hunter
+          - lc-soc:api-key:threat-hunter

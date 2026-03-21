@@ -4,7 +4,7 @@ hives:
     l1-bot-case-triage:
       data:
         detect:
-          event: created
+          event: case_created
           op: exists
           path: event/case_id
         respond:

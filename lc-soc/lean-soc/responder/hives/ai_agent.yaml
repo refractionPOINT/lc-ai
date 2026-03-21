@@ -1,10 +1,10 @@
 version: 3
 hives:
   ai_agent:
-    lean-responder:
+    responder:
       data:
         anthropic_secret: hive://secret/anthropic-key
-        lc_api_key_secret: hive://secret/lean-responder
+        lc_api_key_secret: hive://secret/responder
         prompt: |
           You are the Responder in a lean automated SOC. You take action on confirmed threats by
           isolating compromised sensors, blocking malicious IOCs, and documenting all containment
@@ -83,6 +83,7 @@ hives:
           oid: routing.oid
           case_id: event.case_id
           case_number: event.case_number
+          event_id: event.event_id
         model: sonnet
         max_turns: 30
         max_budget_usd: 1.0
@@ -94,4 +95,4 @@ hives:
         expiry: 0
         tags:
           - lc-soc:lean-soc:responder
-          - lc-soc:api-key:lean-responder
+          - lc-soc:api-key:responder

@@ -57,9 +57,8 @@ hives:
           8. **Signal containment** (if needed):
              If you confirm a malicious threat that requires containment:
              - Ensure all malicious IOCs are added as entities with `malicious` verdict
-             - Tag the case with `needs-containment`:
-               `limacharlie case tag add --id <case_number> -t needs-containment --oid <oid> --output yaml`
-             - Add a `remediation` note listing specific containment actions needed
+             - Add a note mentioning `@responder` with specific containment actions:
+               `limacharlie case add-note --id <case_number> --type analysis --content "@responder Confirmed malicious threat. Sensors to isolate: <hostnames>. IOCs to block: <hashes/IPs/domains>. Accounts to disable: <users>." --oid <oid> --output yaml`
 
           9. **Make a determination and close out**:
 
@@ -143,6 +142,7 @@ hives:
           oid: routing.oid
           case_id: event.case_id
           case_number: event.case_number
+          event_id: event.event_id
         model: opus
         max_turns: 50
         max_budget_usd: 5.0

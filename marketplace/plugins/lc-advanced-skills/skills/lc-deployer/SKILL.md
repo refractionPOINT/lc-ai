@@ -123,9 +123,10 @@ limacharlie org list --output yaml
 
 ### Step 2b: Verify Permissions
 
-Before proceeding, verify the current credentials have the `ai_agent.operate` permission (required for all agent deployments):
+Before proceeding, verify the current credentials have the `ai_agent.operate` permission (required for all agent deployments).
+**IMPORTANT**: You MUST include `--oid <oid>` — without it, the check runs against a null org context and will always return `has_perm: false`:
 ```bash
-limacharlie auth whoami --check-perm ai_agent.operate --output yaml
+limacharlie auth whoami --oid <oid> --check-perm ai_agent.operate --output yaml
 ```
 If `has_perm: false`, stop and inform the user their API key or user account lacks this permission.
 
@@ -251,8 +252,9 @@ limacharlie org list --output yaml
 
 ### Step 2b: Verify Permissions
 
+**IMPORTANT**: You MUST include `--oid <oid>` — without it, the check runs against a null org context and will always return `has_perm: false`:
 ```bash
-limacharlie auth whoami --check-perm ai_agent.operate --output yaml
+limacharlie auth whoami --oid <oid> --check-perm ai_agent.operate --output yaml
 ```
 
 ### Step 3: Subscribe to Required Extensions
@@ -315,8 +317,8 @@ Before pushing hive configs, check whether any `ai_agent` keys that this SOC wil
 
 | Hive | Shared Keys |
 |------|-------------|
-| `ai_agent` | `soc-l2-analyst`, `soc-malware-analyst`, `soc-containment`, `soc-threat-hunter`, `soc-manager`, `soc-shift-reporter` |
-| `dr-general` | `soc-l2-on-case-escalated`, `soc-malware-on-tag`, `soc-containment-on-tag`, `soc-threat-hunter-on-tag`, `soc-manager-hourly`, `soc-shift-reporter-daily` |
+| `ai_agent` | `soc-l2-analyst`, `malware-analyst`, `containment`, `threat-hunter`, `soc-manager`, `soc-shift-reporter` |
+| `dr-general` | `soc-l2-on-case-escalated`, `malware-analyst-on-mention`, `containment-on-mention`, `threat-hunter-on-mention`, `soc-manager-hourly`, `soc-shift-reporter-daily` |
 
 For each shared key that already exists:
 ```bash
@@ -465,8 +467,8 @@ Before deleting records, check whether another SOC shares any hive keys with the
 
 | Hive | Shared Keys |
 |------|-------------|
-| `ai_agent` | `soc-l2-analyst`, `soc-malware-analyst`, `soc-containment`, `soc-threat-hunter`, `soc-manager`, `soc-shift-reporter` |
-| `dr-general` | `soc-l2-on-case-escalated`, `soc-malware-on-tag`, `soc-containment-on-tag`, `soc-threat-hunter-on-tag`, `soc-manager-hourly`, `soc-shift-reporter-daily` |
+| `ai_agent` | `soc-l2-analyst`, `malware-analyst`, `containment`, `threat-hunter`, `soc-manager`, `soc-shift-reporter` |
+| `dr-general` | `soc-l2-on-case-escalated`, `malware-analyst-on-mention`, `containment-on-mention`, `threat-hunter-on-mention`, `soc-manager-hourly`, `soc-shift-reporter-daily` |
 
 For each hive key in the SOC being removed:
 - **If the key is shared** and the other SOC is still installed: read the record, remove only the departing SOC's tags (tags starting with `lc-soc:<soc-being-removed>:`), keep the other SOC's tags, and write the record back. Do NOT delete the record.

@@ -402,13 +402,13 @@ hives:
 
           Do this even if you didn't create a case (to avoid re-checking the same items tomorrow).
 
-          ### Step 6: Tag and Hand Off
+          ### Step 6: Hand Off to Intel Analyzer
 
-          Tag the case for the downstream Intel Analyzer:
+          Update the case summary and signal the downstream Intel Analyzer via an @mention note:
           ```bash
           limacharlie case update --id <case_number> --summary "Threat Intel Collection - <date>" --oid <oid> --output yaml
-          limacharlie case tag add --id <case_number> -t intel-collected --oid <oid> --output yaml
           limacharlie case tag add --id <case_number> -t intel-pipeline --oid <oid> --output yaml
+          limacharlie case add-note --id <case_number> --type analysis --content "@intel-analyzer Daily threat intel collected. Sources: <list sources that returned results>. New items: <count> IOCs, <count> KEVs, <count> Sigma rules, <count> DFIR reports. See notes above for details." --oid <oid> --output yaml
           ```
 
           ## Important Rules

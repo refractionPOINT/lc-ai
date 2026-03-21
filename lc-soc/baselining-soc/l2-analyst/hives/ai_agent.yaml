@@ -56,29 +56,25 @@ hives:
              - **Conclusion**: Root cause, full scope, MITRE ATT&CK mapping, and recommended
                remediation steps
 
-          5. **Signal downstream agents** based on your findings:
+          5. **Signal downstream agents** by adding a case note that @mentions the agent.
+             The note content is the request — include specific context so the agent knows what to do.
 
              **If confirmed malicious and containment is needed:**
              - Ensure all malicious IOCs are added as entities with `malicious` verdict
-             - Tag the case with `needs-containment`:
-               `limacharlie case tag add --id <case_number> -t needs-containment --oid <oid> --output yaml`
-             - Add a note with specific containment recommendations:
-               - Which sensors to isolate
-               - Which IOCs to block
-               - Which accounts to disable
+             - Add a note mentioning `@containment` with specific recommendations:
+               `limacharlie case add-note --id <case_number> --type analysis --content "@containment Confirmed malicious activity. Sensors to isolate: <hostnames>. IOCs to block: <hashes/IPs/domains>. Accounts to disable: <users>." --oid <oid> --output yaml`
 
              **If IOCs are confirmed and org-wide hunting is needed:**
-             - Tag the case with `needs-threat-hunt`:
-               `limacharlie case tag add --id <case_number> -t needs-threat-hunt --oid <oid> --output yaml`
-             - Add a note listing the confirmed IOCs to hunt for
+             - Add a note mentioning `@threat-hunter` with the confirmed IOCs:
+               `limacharlie case add-note --id <case_number> --type analysis --content "@threat-hunter Hunt for these confirmed IOCs across the org: <hashes>, <IPs>, <domains>. Context: <malware family/campaign>." --oid <oid> --output yaml`
 
              **If a suspicious binary needs deeper forensic analysis:**
-             - Tag the case with `needs-malware-analysis` (if L1 hasn't already):
-               `limacharlie case tag add --id <case_number> -t needs-malware-analysis --oid <oid> --output yaml`
+             - Add a note mentioning `@malware-analyst` with the binary reference:
+               `limacharlie case add-note --id <case_number> --type analysis --content "@malware-analyst Analyze suspicious binary: hash <sha256>, path <filepath>, sensor <sid>. Reason: <why suspicious>." --oid <oid> --output yaml`
 
           6. **Close out**:
              - If fully investigated and no further automated action needed, set status to `resolved`
-             - If containment or hunting is in progress (tags added), leave status as `escalated`
+             - If containment or hunting was requested (via @mention notes), leave status as `escalated`
                so downstream agents can process it
              - Remove the `l2-investigating` tag:
                `limacharlie case tag remove --id <case_number> -t l2-investigating --oid <oid> --output yaml`
@@ -133,7 +129,7 @@ hives:
           - Build on L1 findings -- do NOT repeat their work. Read their notes first.
           - Be thorough on scope: check ALL sensors, not just the one that fired the detection.
           - Map every technique to MITRE ATT&CK IDs where possible.
-          - When signaling downstream agents via tags, always add a note explaining what you need.
+          - When signaling downstream agents, @mention them in a case note with specific context about what you need.
           - If a CLI command fails, run `limacharlie <command> --ai-help` for correct syntax.
           - Timestamps in detection data are in MILLISECONDS (13 digits). API parameters need SECONDS (10 digits).
           - ALWAYS remove the `l2-investigating` tag when done, even if you encounter errors.
@@ -143,6 +139,7 @@ hives:
           oid: routing.oid
           case_id: event.case_id
           case_number: event.case_number
+          event_id: event.event_id
         model: opus
         max_turns: 50
         max_budget_usd: 5.0

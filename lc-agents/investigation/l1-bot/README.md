@@ -11,10 +11,10 @@ Detection fires
 ext-cases creates a case
       |
       v
-Webhook adapter emits "created" event
+Webhook adapter emits "case_created" event
       |
       v
-D&R rule matches (event=created, has case data)
+D&R rule matches (event=case_created, has case data)
       |
       v
 Suppression check (max 10/min)

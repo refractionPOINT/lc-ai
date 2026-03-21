@@ -33,7 +33,7 @@ limacharlie case export --id <case_number> --oid <oid> --output yaml
 limacharlie case export --id <case_number> --with-data ./case-export --oid <oid>
 ```
 
-The cases extension auto-creates cases from detections. Use `limacharlie case --ai-help` for full command reference. See the `case-investigation` skill for the full investigation workflow.
+The cases extension creates cases from detections via D&R rules and extension requests. Cases can also be created without detections for ad-hoc investigations. Use `limacharlie case --ai-help` for full command reference. See the `case-investigation` skill for the full investigation workflow.
 
 ## Required Tool
 
@@ -56,9 +56,10 @@ On first use, verify authentication:
 4. Require user to specify target org(s)
 5. Check SOPs: `limacharlie sop list --oid <oid> --output yaml`
 
-To verify a specific permission without fetching the full permission set, use `--check-perm`:
+To verify a specific permission without fetching the full permission set, use `--check-perm`.
+**IMPORTANT**: Always include `--oid <oid>` — without it, the check runs against a null org context and will always return `has_perm: false`:
 ```bash
-limacharlie auth whoami --check-perm ai_agent.operate --output yaml
+limacharlie auth whoami --oid <oid> --check-perm ai_agent.operate --output yaml
 # Returns: {perm: ai_agent.operate, has_perm: true/false}
 ```
 To see all permissions (verbose): `limacharlie auth whoami --show-perms --output yaml`

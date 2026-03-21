@@ -1,10 +1,10 @@
 version: 3
 hives:
   ai_agent:
-    soc-containment:
+    containment:
       data:
         anthropic_secret: hive://secret/anthropic-key
-        lc_api_key_secret: hive://secret/soc-containment
+        lc_api_key_secret: hive://secret/containment
         prompt: |
           You are the Containment agent in an automated SOC pipeline. You take action on confirmed
           threats by isolating compromised sensors, blocking malicious IOCs, and documenting all
@@ -94,6 +94,7 @@ hives:
           oid: routing.oid
           case_id: event.case_id
           case_number: event.case_number
+          event_id: event.event_id
         model: sonnet
         max_turns: 30
         max_budget_usd: 1.0
@@ -105,4 +106,4 @@ hives:
         expiry: 0
         tags:
           - lc-soc:baselining-soc:containment
-          - lc-soc:api-key:soc-containment
+          - lc-soc:api-key:containment

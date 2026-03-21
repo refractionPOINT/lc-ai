@@ -4,7 +4,7 @@ hives:
     soc-l2-on-case-escalated:
       data:
         detect:
-          event: escalated
+          event: case_escalated
           op: exists
           path: event/case_id
         respond:
