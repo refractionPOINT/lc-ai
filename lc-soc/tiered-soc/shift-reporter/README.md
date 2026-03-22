@@ -54,6 +54,7 @@ Create an API key named `soc-shift-reporter` with these permissions:
 | `investigation.get` | List cases, read dashboard, get report summary |
 | `investigation.set` | Create report case, add notes |
 | `ext.request` | Invoke extensions |
+| `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration

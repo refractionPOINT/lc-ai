@@ -63,6 +63,7 @@ Create an API key named `soc-shift-reporter` with these permissions:
 | `investigation.set` | Create report case, add notes |
 | `ext.request` | Invoke extensions |
 | `fp.ctrl` | List FP rules for baselining progress reporting |
+| `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration

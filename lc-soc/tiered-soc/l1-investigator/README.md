@@ -44,6 +44,7 @@ Create an API key named `soc-l1-investigator` with these permissions:
 | `investigation.get` | Read cases |
 | `investigation.set` | Update cases, add notes, entities, telemetry |
 | `ext.request` | Invoke extensions |
+| `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration

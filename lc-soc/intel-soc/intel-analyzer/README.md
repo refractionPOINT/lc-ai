@@ -38,6 +38,7 @@ Create an API key named `intel-analyzer` with:
 | `investigation.set` | Update case with analysis, add entities/tags |
 | `ext.conf.get` | List subscribed extensions |
 | `lookup.get` | Check existing lookups to avoid duplicate IOCs |
+| `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration

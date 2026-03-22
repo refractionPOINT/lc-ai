@@ -156,7 +156,7 @@ Offer to create the API key for the user automatically:
 ```bash
 limacharlie api-key create \
   --name "<agent-name>" \
-  --permissions "sensor.list,sensor.get,sensor.task,dr.list,dr.set,org.get,hive.get,ext.request,ai_agent.operate" \
+  --permissions "sensor.list,sensor.get,sensor.task,dr.list,dr.set,org.get,hive.get,ext.request,org_notes.get,org_notes.set,ai_agent.operate" \
   --oid <oid> \
   --output yaml
 ```
@@ -537,7 +537,7 @@ Automated Level 1 SOC analyst that investigates new security cases and documents
 ### Recommended API Key Permissions
 For the `l1-bot` secret, create the API key with these permissions:
 ```
-org.get,sensor.list,sensor.get,sensor.task,dr.list,insight.det.get,insight.evt.get,investigation.get,investigation.set,ext.request,ai_agent.operate
+org.get,sensor.list,sensor.get,sensor.task,dr.list,insight.det.get,insight.evt.get,investigation.get,investigation.set,ext.request,org_notes.get,org_notes.set,ai_agent.operate
 ```
 
 ### Hive Entries Created

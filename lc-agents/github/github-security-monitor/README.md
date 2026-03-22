@@ -81,6 +81,7 @@ The monitor looks for attack chains across events:
 | `investigation.get` | List and read existing cases |
 | `investigation.set` | Create cases, add notes, entities, telemetry |
 | `ext.request` | Make requests to extensions (ext-cases) |
+| `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run AI agent sessions |
 
 ## Installation

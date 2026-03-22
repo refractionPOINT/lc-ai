@@ -98,6 +98,7 @@ Agents signal each other by writing case notes with @mentions. D&R rules match o
 | `investigation.set` | Add notes, tags, update cases |
 | `lookup.get` | Read the `intel-seen` dedup ledger |
 | `lookup.set` | Write processed item keys to the ledger |
+| `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run |
 | `ai_agent.exec` | Trigger Intel Analyzer via @mention note |
 
@@ -112,6 +113,7 @@ Agents signal each other by writing case notes with @mentions. D&R rules match o
 | `investigation.set` | Update case with analysis, add entities/tags |
 | `ext.conf.get` | List subscribed extensions |
 | `lookup.get` | Check existing lookups to avoid duplicate IOCs |
+| `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run |
 | `ai_agent.exec` | Trigger Rule Engineer via @mention note |
 
@@ -127,6 +129,7 @@ Agents signal each other by writing case notes with @mentions. D&R rules match o
 | `lookup.set` | Populate IOC lookups |
 | `investigation.get` | Read the analyzed case |
 | `investigation.set` | Update case with report, close it |
+| `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Installation

@@ -37,6 +37,7 @@ Create an API key named `intel-collector` with:
 | `investigation.set` | Add notes, tags, update cases |
 | `lookup.get` | Read the `intel-seen` dedup ledger |
 | `lookup.set` | Write processed item keys to the ledger |
+| `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration
