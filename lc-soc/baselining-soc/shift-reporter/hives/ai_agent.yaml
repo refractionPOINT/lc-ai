@@ -52,7 +52,7 @@ hives:
           2. **Compile the report** - Create a structured daily report as a case note.
              Create a new case for the report itself:
              ```bash
-             limacharlie case create --severity low --oid <oid> --output yaml
+             limacharlie case create --severity low --summary "SOC Daily Report - <date>" --oid <oid> --output yaml
              ```
 
              Then add the report as notes on this case:

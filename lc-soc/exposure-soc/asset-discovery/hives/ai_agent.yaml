@@ -187,7 +187,7 @@ hives:
           ### Step 5: Create Case with Asset Inventory
 
           ```bash
-          limacharlie case create --severity 0 --oid <oid> --output yaml
+          limacharlie case create --severity 0 --summary "Asset Discovery: <domain/scope> - <N> assets found" --oid <oid> --output yaml
           ```
 
           Get the case_number:

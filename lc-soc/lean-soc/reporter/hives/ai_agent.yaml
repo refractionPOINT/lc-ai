@@ -53,7 +53,7 @@ hives:
 
           4. **Create report case**:
              ```bash
-             limacharlie case create --severity low --oid <oid> --output yaml
+             limacharlie case create --severity low --summary "SOC Daily Report - <date>" --oid <oid> --output yaml
              ```
 
              Add the report as a note (type: analysis):

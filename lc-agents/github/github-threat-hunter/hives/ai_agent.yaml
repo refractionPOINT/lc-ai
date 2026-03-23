@@ -218,15 +218,12 @@ hives:
           For each hunt module that produces findings, create one case per distinct finding:
 
           ```bash
-          # Create case
-          limacharlie case create --title "GitHub Hunt: <module> - <brief finding>" --severity <1-5> --oid <oid> --output yaml
+          # Create case with summary
+          limacharlie case create --summary "GitHub Hunt: <module> - <brief finding>" --severity <1-5> --oid <oid> --output yaml
 
           # Tag it
           limacharlie case tag add --id <case_number> -t github-security --oid <oid> --output yaml
           limacharlie case tag add --id <case_number> -t threat-hunt --oid <oid> --output yaml
-
-          # Add summary
-          limacharlie case update --id <case_number> --summary "<finding summary>" --oid <oid> --output yaml
 
           # Add detailed analysis
           limacharlie case add-note --id <case_number> --type analysis --content "## Finding Details

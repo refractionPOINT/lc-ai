@@ -86,7 +86,7 @@ hives:
           6. **Create new cases** for each newly discovered compromised endpoint:
              - These new cases will be picked up by L1 Investigator automatically
              ```bash
-             limacharlie case create --severity <severity> --oid <oid> --output yaml
+             limacharlie case create --severity <severity> --summary "<hostname> - <threat description and key IOCs>" --oid <oid> --output yaml
              ```
              Add a note to the new case referencing the source investigation:
              ```bash
