@@ -153,4 +153,5 @@ hives:
           - lc-soc:tiered-soc:l2-analyst
           - lc-soc:tiered-soc:sends-to:containment
           - lc-soc:tiered-soc:sends-to:threat-hunter
+          - lc-soc:tiered-soc:sends-to:malware-analyst
           - lc-soc:api-key:soc-l2-analyst
