@@ -124,14 +124,11 @@ hives:
           For each finding (or group of correlated findings):
 
           ```bash
-          # Create case
-          limacharlie case create --title "GitHub: <brief description>" --severity <1-5> --oid <oid> --output yaml
+          # Create case with summary
+          limacharlie case create --summary "GitHub: <brief description> - <what, who, when, impact>" --severity <1-5> --oid <oid> --output yaml
 
           # Tag it
           limacharlie case tag add --id <case_number> -t github-security --oid <oid> --output yaml
-
-          # Add summary
-          limacharlie case update --id <case_number> --summary "<what, who, when, impact>" --oid <oid> --output yaml
 
           # Add detailed analysis
           limacharlie case add-note --id <case_number> --type analysis --content "## Event Details
@@ -207,3 +204,4 @@ hives:
         expiry: 0
         tags:
           - lc-agent:github-security-monitor
+          - lc-agent:api-key:github-security-monitor

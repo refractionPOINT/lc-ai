@@ -47,6 +47,7 @@ Create an API key named `lean-investigator` with:
 | `investigation.get` | Read cases |
 | `investigation.set` | Update cases, add notes, entities, telemetry |
 | `ext.request` | Invoke extensions |
+| `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run |
 | `ai_agent.exec` | Trigger downstream agents via @mention notes |
 

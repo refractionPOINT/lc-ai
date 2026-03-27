@@ -93,6 +93,7 @@ All sources are free with no API keys required:
 | `investigation.get` | All | Read cases |
 | `investigation.set` | All | Create/update cases, add notes, entities |
 | `ext.request` | All | Make requests to extensions |
+| `org_notes.*` | All | Read and write org notes |
 | `ai_agent.operate` | All | Run AI agent sessions |
 | `ai_agent.exec` | Asset Discovery, Exposure Scanner | Trigger downstream agents via @mention notes |
 | `lookup.get` | Asset Discovery, Risk Analyst | Read exposure-domains config and exposure-seen ledger |

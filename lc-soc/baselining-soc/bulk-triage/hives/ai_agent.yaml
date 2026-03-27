@@ -133,9 +133,10 @@ hives:
 
           ### Step 6: Create Cases for True Positives
 
-          For each group of related TP detections, create one case:
+          For each group of related TP detections, create one case.
+          Include a `--summary` that concisely describes the incident (hostname, detection categories, key indicators):
           ```bash
-          limacharlie case create --detection '<first detection JSON>' --oid <oid> --output yaml
+          limacharlie case create --detection '<first detection JSON>' --summary "<concise incident summary>" --oid <oid> --output yaml
           ```
 
           Add remaining related detections to the same case:

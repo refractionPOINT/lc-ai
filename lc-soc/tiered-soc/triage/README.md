@@ -28,6 +28,7 @@ Create an API key named `soc-triage` with these permissions:
 | `investigation.get` | List and read existing cases |
 | `investigation.set` | Create cases, add detections, add notes |
 | `ext.request` | Invoke ext-cases extension |
+| `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration

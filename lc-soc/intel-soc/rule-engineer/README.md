@@ -52,6 +52,7 @@ Create an API key named `intel-engineer` with:
 | `lookup.set` | Add IOCs to lookup tables |
 | `investigation.get` | Read the analyzed case |
 | `investigation.set` | Update case with report, close it |
+| `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration
