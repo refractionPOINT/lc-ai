@@ -7,24 +7,18 @@
 | Status | Description |
 |--------|-------------|
 | `new` | Case just created (auto from detection) |
-| `acknowledged` | Analyst has seen the case |
 | `in_progress` | Active investigation underway |
-| `escalated` | Escalated to senior analyst or team |
 | `resolved` | Investigation complete, findings documented |
 | `closed` | Final state, no further action |
-| `merged` | Merged into another case (terminal) |
 
 ## Status Transitions (State Machine)
 
 | From | Allowed To |
 |------|------------|
-| `new` | `acknowledged`, `in_progress`, `escalated`, `closed`, `merged` |
-| `acknowledged` | `in_progress`, `escalated`, `closed`, `merged` |
-| `in_progress` | `escalated`, `resolved`, `closed`, `merged` |
-| `escalated` | `in_progress`, `resolved`, `closed`, `merged` |
-| `resolved` | `closed`, `in_progress` (reopen), `merged` |
-| `closed` | (terminal - no transitions) |
-| `merged` | (terminal - no transitions) |
+| `new` | `in_progress`, `closed` |
+| `in_progress` | `resolved`, `closed` |
+| `resolved` | `closed` |
+| `closed` | `in_progress` (reopen) |
 
 ## Severity
 
@@ -63,7 +57,7 @@ Initially derived from detection priority (0-10) using configurable thresholds. 
 
 ## Verdict
 
-Used for entities, telemetry references, and artifacts.
+Used for all evidence types: detections, entities, telemetry references, and artifacts.
 
 | Verdict | Description |
 |---------|-------------|

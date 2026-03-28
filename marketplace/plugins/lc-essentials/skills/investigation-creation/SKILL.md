@@ -1,6 +1,6 @@
 ---
 name: case-investigation
-description: Investigate security cases from the LimaCharlie Cases extension. Performs HOLISTIC investigations - not just process trees, but initial access hunting, org-wide scope assessment, lateral movement detection, and full host context. Enriches cases with telemetry references, entities/IOCs, analyst notes, and investigation summary/conclusion. Use for SOC triage, incident investigation, threat hunting, alert triage, or building SOC working reports. Supports case lifecycle management (acknowledge, classify, escalate, resolve).
+description: Investigate security cases from the LimaCharlie Cases extension. Performs HOLISTIC investigations - not just process trees, but initial access hunting, org-wide scope assessment, lateral movement detection, and full host context. Enriches cases with telemetry references, entities/IOCs, analyst notes, and investigation summary/conclusion. Use for SOC triage, incident investigation, threat hunting, alert triage, or building SOC working reports. Supports case lifecycle management (triage, classify, resolve).
 allowed-tools:
   - Task
   - Read
@@ -12,7 +12,7 @@ allowed-tools:
 
 You are an expert SOC analyst. Your job is to triage and investigate security cases, telling the complete story of what happened, enabling analysts to understand scope, make decisions, and take action.
 
-Cases in LimaCharlie are created by the Cases extension (`ext-cases`). Detections are ingested into cases via D&R rules and extension requests (not LC Outputs). Each detection becomes a case that must be acknowledged, investigated, classified (true positive or false positive), and resolved within SLA targets. Cases can also be created manually without detections for tracking ad-hoc investigations or externally reported incidents.
+Cases in LimaCharlie are created by the Cases extension (`ext-cases`). Detections are ingested into cases via D&R rules and extension requests (not LC Outputs). Each detection becomes a case that must be triaged, investigated, classified (true positive or false positive), and resolved within SLA targets. Cases can also be created manually without detections for tracking ad-hoc investigations or externally reported incidents.
 
 **CRITICAL: Investigations must be HOLISTIC.** Don't just trace a process tree. Ask the bigger questions:
 - Where did this threat come from? (Initial access)
@@ -43,7 +43,7 @@ The Cases extension has first-class CLI support via `limacharlie case`:
 ```bash
 limacharlie case list --oid <oid> --output yaml
 limacharlie case get --id <case_number> --oid <oid> --output yaml
-limacharlie case update --id <case_number> --status acknowledged --oid <oid> --output yaml
+limacharlie case update --id <case_number> --status in_progress --oid <oid> --output yaml
 limacharlie case update --id <case_number> --severity high --oid <oid> --output yaml
 limacharlie case add-note --id <case_number> --content "Note text" --type analysis --oid <oid> --output yaml
 limacharlie case tag set --id <case_number> --tag <tag> --oid <oid> --output yaml
@@ -193,10 +193,9 @@ curl -sS "[resource_link_url]" | gunzip | jq '.'
 Cases follow a strict state machine:
 
 ```
-new -> acknowledged -> in_progress -> resolved -> closed
-                    -> escalated   -> resolved -> closed
-                                   -> in_progress (de-escalate)
+new -> in_progress -> resolved -> closed
 resolved -> in_progress (reopen)
+closed -> in_progress (reopen)
 Any non-terminal -> closed (skip to close)
 ```
 
@@ -205,12 +204,9 @@ Any non-terminal -> closed (skip to close)
 | Status | Description | SLA Impact |
 |--------|-------------|------------|
 | `new` | Auto-created from detection, not yet reviewed | Clock starts |
-| `acknowledged` | Analyst has seen the case | Records MTTA |
-| `in_progress` | Active investigation underway | - |
-| `escalated` | Escalated to senior analyst or team | - |
-| `resolved` | Investigation complete, findings documented | Records MTTR |
+| `in_progress` | Active investigation underway | Records TTA |
+| `resolved` | Investigation complete, findings documented | Records TTR |
 | `closed` | Fully closed, terminal state | - |
-| `merged` | Merged into another case, terminal state | - |
 
 ### Classification (set independently of status)
 
@@ -229,7 +225,7 @@ Before starting, gather from the user:
 - **Organization ID (OID)**: UUID of the target organization (use `limacharlie org list` if needed)
 - **Starting Point** (one of):
   - **Case**: case_number (preferred - work directly with an existing case)
-  - **Detection**: detection_id (find the associated case)
+  - **Detection**: detect_id (find the associated case)
   - **Event**: atom + sid (sensor ID)
   - **LCQL Query**: query string and/or results
   - **IOC**: hash, IP, or domain to hunt for
@@ -249,7 +245,7 @@ limacharlie case get --id <case_number> --oid <oid> --output yaml
 
 **From the case queue** (list open cases):
 ```bash
-limacharlie case list --status new --status acknowledged --oid <oid> --output yaml
+limacharlie case list --status new --status in_progress --oid <oid> --output yaml
 ```
 
 **From a Detection** (find associated case by category or hostname):
@@ -259,25 +255,17 @@ limacharlie case list --search <search_term> --oid <oid> --output yaml
 
 If no case exists for the activity being investigated, you can still investigate using LC telemetry and create findings - just document the results and help the user decide whether to create a case manually or link findings to an existing case.
 
-### Step 2: Acknowledge the Case
+### Step 2: Move to In Progress
 
-If the case is in `new` status, acknowledge it to start the SLA clock:
-
-```bash
-limacharlie case update --id <case_number> --status acknowledged --oid <oid> --output yaml
-```
-
-### Step 3: Move to In Progress
-
-Once you begin active investigation:
+If the case is in `new` status, move it to `in_progress` to record TTA and begin investigation:
 
 ```bash
 limacharlie case update --id <case_number> --status in_progress --oid <oid> --output yaml
 ```
 
-### Step 4: Get the Source Detection
+### Step 3: Get the Source Detection
 
-Extract the detection details from the case's `detections` array (each entry contains a `detection_id`):
+Extract the detection details from the case's `detections` array (each entry contains a `detect_id`):
 ```bash
 limacharlie detection get --id <detection-id> --oid <oid> --output yaml
 ```
@@ -725,16 +713,16 @@ For each event you investigated, add a telemetry reference to the case:
 limacharlie case telemetry add --case <case_number> \
     --atom "<event-atom>" --sid "<sensor-id>" \
     --event-type "NEW_PROCESS" \
-    --event-summary "Brief description of what this event shows" \
+    --ts "<event-timestamp>" \
     --verdict malicious \
-    --relevance "Why this event matters to the investigation" \
+    --note "Brief description of what this event shows and why it matters to the investigation" \
     --oid <oid> --output yaml
 ```
 
 **Be inclusive** - add telemetry if you investigated the event, regardless of verdict:
 - `malicious` - Confirmed threats
 - `suspicious` - Unusual but not definitively malicious
-- `benign` - Investigated and cleared (explain why in relevance)
+- `benign` - Investigated and cleared (explain why in note)
 - `unknown` - Insufficient context to determine
 - `informational` - Context events that aid understanding
 
@@ -743,9 +731,9 @@ limacharlie case telemetry add --case <case_number> \
 limacharlie case telemetry add --case <case_number> \
     --atom "abc123..." --sid "sensor-id" \
     --event-type "NEW_PROCESS" \
-    --event-summary "svchost.exe spawned by services.exe (PID 684)" \
+    --ts "2025-01-20T19:39:10Z" \
     --verdict benign \
-    --relevance "Initially suspicious due to unusual parent. Cleared: Parent is services.exe, legitimate Windows service startup." \
+    --note "svchost.exe spawned by services.exe (PID 684). Initially suspicious due to unusual parent. Cleared: Parent is services.exe, legitimate Windows service startup." \
     --oid <oid> --output yaml
 ```
 
@@ -756,11 +744,8 @@ For each IOC or entity of interest:
 ```bash
 limacharlie case entity add --case <case_number> \
     --type ip --value "203.0.113.50" \
-    --name "Suspected C2 Server" \
     --verdict malicious \
-    --context "Provenance: Discovered via outbound connections from compromised process. 60+ beacon connections observed." \
-    --first-seen "2025-01-20T14:30:00Z" \
-    --last-seen "2025-01-20T16:45:00Z" \
+    --note "Suspected C2 Server. Provenance: Discovered via outbound connections from compromised process. 60+ beacon connections observed." \
     --oid <oid> --output yaml
 ```
 
@@ -849,9 +834,10 @@ Attach references to forensic artifacts (memory dumps, PCAPs, etc.):
 
 ```bash
 limacharlie case artifact add --case <case_number> \
-    --type "memory_dump" \
-    --description "Full memory dump of PID 4832 from DESKTOP-001" \
+    --path "/forensics/memory/pid4832.dmp" \
+    --source "DESKTOP-001" \
     --verdict malicious \
+    --note "Full memory dump of PID 4832 from DESKTOP-001" \
     --oid <oid> --output yaml
 ```
 
@@ -865,7 +851,7 @@ limacharlie case artifact add --case <case_number> \
 | `unknown` | Insufficient context, requires further analysis |
 | `informational` | Context-providing, neither good nor bad |
 
-**Important**: `benign` is a valuable verdict, not a reason to exclude evidence. If you investigated something because it looked suspicious but determined it was legitimate, add it with verdict `benign` and explain your reasoning in `relevance` or `context`.
+**Important**: `benign` is a valuable verdict, not a reason to exclude evidence. If you investigated something because it looked suspicious but determined it was legitimate, add it with verdict `benign` and explain your reasoning in `note`.
 
 ### MITRE ATT&CK References (Recommended)
 
@@ -913,7 +899,7 @@ Summarize for the user:
 - [ ] Added telemetry from ALL affected hosts (not just the first one)
 - [ ] Added parent/child process chain events
 - [ ] Added benign events that were investigated (with explanations)
-- [ ] Each telemetry reference has a detailed `relevance` explanation
+- [ ] Each telemetry reference has a detailed `note` explanation
 
 **Detection Coverage:**
 - [ ] Triggering detection is linked (auto-linked at case creation)
@@ -954,19 +940,14 @@ limacharlie case update --id <case_number> \
 
 ### Escalation (when needed)
 
-If the investigation reveals the case needs senior analyst attention:
+If the investigation reveals the case needs senior analyst attention, add an `escalation` note with context and use tags to flag it for the appropriate team:
 
-```bash
-limacharlie case update --id <case_number> \
-    --status escalated --escalation-group "tier-3-malware" \
-    --oid <oid> --output yaml
-```
-
-Add an `escalation` note explaining why:
 ```bash
 limacharlie case add-note --id <case_number> --type escalation \
     --content "Escalating: Evidence of APT-level tradecraft. Custom C2 implant with domain fronting. Requires malware reverse engineering." \
     --oid <oid> --output yaml
+
+limacharlie case tag add --id <case_number> --tag needs-escalation --oid <oid> --output yaml
 ```
 
 ### Merging Related Cases
@@ -979,7 +960,7 @@ limacharlie case merge --target <primary_case_number> \
     --oid <oid> --output yaml
 ```
 
-Source cases transition to `merged` status. All detections move to the primary case.
+Source cases transition to `closed` status with `merged_into_case_id` set. All detections move to the primary case.
 
 ---
 
@@ -989,10 +970,10 @@ Source cases transition to `merged` status. All detections move to the primary c
 
 ```bash
 # All open cases, most recent first
-limacharlie case list --status new --status acknowledged --status in_progress --oid <oid> --output yaml
+limacharlie case list --status new --status in_progress --oid <oid> --output yaml
 
 # Critical/high severity only
-limacharlie case list --status new --status acknowledged --severity critical --severity high --oid <oid> --output yaml
+limacharlie case list --status new --status in_progress --severity critical --severity high --oid <oid> --output yaml
 
 # Assigned to a specific analyst
 limacharlie case list --assignee analyst@example.com --oid <oid> --output yaml
@@ -1049,7 +1030,7 @@ limacharlie case bulk-update --numbers <num1>,<num2>,<num3> \
 
 ## Schema Quick Reference
 
-**Case status values**: `new`, `acknowledged`, `in_progress`, `escalated`, `resolved`, `closed`, `merged`
+**Case status values**: `new`, `in_progress`, `resolved`, `closed`
 
 **Classification values**: `pending`, `true_positive`, `false_positive`
 
