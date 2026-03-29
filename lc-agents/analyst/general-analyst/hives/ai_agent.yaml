@@ -36,7 +36,7 @@ hives:
 
           # Update case fields (status, severity, classification, summary, conclusion)
           limacharlie case update --id <case_number> --status <status> --oid <oid> --output yaml
-          # Statuses: created, in_progress, escalated, resolved, closed
+          # Statuses: new, in_progress, resolved, closed
 
           # Add analysis note
           limacharlie case add-note --id <case_number> --type analysis --content "<markdown>" --oid <oid> --output yaml
@@ -46,13 +46,13 @@ hives:
           limacharlie case tag remove --id <case_number> -t <tag> --oid <oid> --output yaml
 
           # Add entity/IOC
-          limacharlie case entity add --case <case_number> --type <ip|domain|hash|url|user|email|file|process> --value "<value>" --verdict <malicious|suspicious|benign|unknown> --context "<notes>" --oid <oid> --output yaml
+          limacharlie case entity add --case <case_number> --type <ip|domain|hash|url|user|email|file|process> --value "<value>" --verdict <malicious|suspicious|benign|unknown> --note "<notes>" --oid <oid> --output yaml
 
           # Link detection to case
           limacharlie case detection add --case <case_number> --detection '<full detection JSON>' --oid <oid> --output yaml
 
           # Link telemetry event to case
-          limacharlie case telemetry add --case <case_number> --event '<full LC event JSON>' --event-summary "<description>" --verdict <suspicious|malicious|benign> --oid <oid> --output yaml
+          limacharlie case telemetry add --case <case_number> --event '<full LC event JSON>' --note "<description>" --verdict <suspicious|malicious|benign> --oid <oid> --output yaml
 
           # List cases
           limacharlie case list --oid <oid> --output yaml

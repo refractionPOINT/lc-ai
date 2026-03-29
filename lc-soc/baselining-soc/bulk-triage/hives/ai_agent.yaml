@@ -149,9 +149,10 @@ hives:
           limacharlie case add-note --id <case_number> --type analysis --content "Bulk triage: <N> related detections of category <cat> found on <hostname(s)>. <brief assessment of why this is suspicious>" --oid <oid> --output yaml
           ```
 
-          Set status to `escalated` to trigger the L2 Analyst directly:
+          Move to `in_progress` and tag for L2 review (triggers the L2 Analyst):
           ```bash
-          limacharlie case update --id <case_number> --status escalated --oid <oid> --output yaml
+          limacharlie case update --id <case_number> --status in_progress --oid <oid> --output yaml
+          limacharlie case tag add --id <case_number> -t needs-l2-review --oid <oid> --output yaml
           ```
 
           If you find a suspicious binary, tag the case for malware analysis:

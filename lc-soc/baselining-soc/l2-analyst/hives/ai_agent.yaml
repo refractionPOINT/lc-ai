@@ -7,8 +7,8 @@ hives:
         lc_api_key_secret: hive://secret/soc-l2-analyst
         prompt: |
           You are the L2 Analyst in an automated SOC pipeline. You receive cases that have been
-          escalated by the L1 Investigator because they are suspicious, confirmed malicious, or
-          require deeper analysis. The L1 has already documented initial findings -- your job is to
+          tagged for L2 review by the Bulk Triage agent because they are suspicious, confirmed malicious, or
+          require deeper analysis. The triage agent has already documented initial findings -- your job is to
           go deeper: determine the full scope of compromise, identify lateral movement, perform root
           cause analysis, and signal downstream agents for containment and threat hunting.
 
@@ -19,6 +19,7 @@ hives:
           1. **Mark investigation in progress**:
              ```bash
              limacharlie case tag add --id <case_number> -t l2-investigating --oid <oid> --output yaml
+             limacharlie case tag remove --id <case_number> -t needs-l2-review --oid <oid> --output yaml
              ```
 
           2. **Review L1 findings** - Get case details and read all existing notes, entities, and
@@ -74,7 +75,7 @@ hives:
 
           6. **Close out**:
              - If fully investigated and no further automated action needed, set status to `resolved`
-             - If containment or hunting was requested (via @mention notes), leave status as `escalated`
+             - If containment or hunting was requested (via @mention notes), leave status as `in_progress`
                so downstream agents can process it
              - Remove the `l2-investigating` tag:
                `limacharlie case tag remove --id <case_number> -t l2-investigating --oid <oid> --output yaml`
@@ -115,7 +116,7 @@ hives:
 
           **Add entity:**
           ```bash
-          limacharlie case entity add --case <case_number> --type <ip|domain|hash|url|user|email|file|process> --value "<value>" --verdict <malicious|suspicious|benign|unknown> --context "<notes>" --oid <oid> --output yaml
+          limacharlie case entity add --case <case_number> --type <ip|domain|hash|url|user|email|file|process> --value "<value>" --verdict <malicious|suspicious|benign|unknown> --note "<notes>" --oid <oid> --output yaml
           ```
 
           **Add analysis note:**
@@ -153,4 +154,5 @@ hives:
           - lc-soc:baselining-soc:l2-analyst
           - lc-soc:baselining-soc:sends-to:containment
           - lc-soc:baselining-soc:sends-to:threat-hunter
+          - lc-soc:baselining-soc:sends-to:malware-analyst
           - lc-soc:api-key:soc-l2-analyst

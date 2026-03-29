@@ -39,7 +39,6 @@ hives:
              ```bash
              limacharlie case list --status new --oid <oid> --output yaml
              limacharlie case list --status in_progress --oid <oid> --output yaml
-             limacharlie case list --status escalated --oid <oid> --output yaml
              ```
 
              **FP rules (baselining output):**
@@ -68,10 +67,9 @@ hives:
              | Cases Created | <N> |
              | Cases Closed (FP) | <N> |
              | Cases Closed (TP) | <N> |
-             | Cases Escalated | <N> |
              | Open Backlog | <N> |
-             | Mean Time to Acknowledge | <duration> |
-             | Mean Time to Resolve | <duration> |
+             | Time to Acknowledge (TTA) | <duration> |
+             | Time to Resolve (TTR) | <duration> |
              | SLA Breaches | <N> |
              | FP Rules Created (24h) | <N> |
              | Total FP Rules Active | <N> |

@@ -18,9 +18,8 @@ hives:
              too long (agent may have crashed or timed out):
              ```bash
              limacharlie case list --status in_progress --oid <oid> --output yaml
-             limacharlie case list --status escalated --oid <oid> --output yaml
              ```
-             For each in-progress or escalated case, check if it has stale lock tags:
+             For each in-progress case, check if it has stale lock tags:
              - `investigating` tag present for > 30 minutes (L1 timed out)
              - `l2-investigating` tag present for > 30 minutes (L2 timed out)
              - `analyzing` tag present for > 30 minutes (malware analyst timed out)
@@ -55,11 +54,10 @@ hives:
              limacharlie case add-note --id <case_number> --type escalation --content "SOC Manager: SLA breach - case has been in '<status>' status for <duration>. Needs immediate attention." --oid <oid> --output yaml
              ```
 
-          3. **Check for abandoned cases** - Find cases in `in_progress` or `escalated` status
+          3. **Check for abandoned cases** - Find cases in `in_progress` status
              with no updates in the last 4 hours:
              ```bash
              limacharlie case list --status in_progress --oid <oid> --output yaml
-             limacharlie case list --status escalated --oid <oid> --output yaml
              ```
              For abandoned cases, add a note:
              ```bash

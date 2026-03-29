@@ -1,12 +1,17 @@
 version: 3
 hives:
   dr-general:
-    soc-l2-on-case-escalated:
+    soc-l2-on-needs-review:
       data:
         detect:
-          event: case_escalated
-          op: exists
-          path: event/case_id
+          event: case_tags_updated
+          op: and
+          rules:
+            - op: exists
+              path: event/case_id
+            - op: contains
+              path: event/metadata/new_tags
+              value: needs-l2-review
         respond:
           - action: start ai agent
             definition: hive://ai_agent/soc-l2-analyst

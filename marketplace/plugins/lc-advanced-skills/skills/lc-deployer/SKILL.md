@@ -1,13 +1,17 @@
 ---
 name: lc-deployer
 description: |
-  Deploy, install, and remove LimaCharlie Agentic SOC as Code definitions (lc-soc) and
-  individual AI agents (lc-agents) in an organization. Handles subscribing to required
-  extensions, creating API keys, setting secrets, and pushing hive configurations.
-  Use when user wants to deploy a SOC like "lean-soc", "tiered-soc", or "baselining-soc"
-  to their org, install an individual lc-agent like "l1-bot", or remove a previously
-  installed SOC or agent. Examples: "deploy tiered-soc to my org", "install lean-soc",
-  "install the l1-bot agent", "remove the tiered SOC", "uninstall lean-soc".
+  REQUIRED for ANY operation involving lc-soc or lc-agent definitions: deploy, install,
+  update, upgrade, remove, push, sync, or modify AI agents and Agentic SOC configurations
+  in a LimaCharlie organization. This includes modifying agent prompts, updating hive
+  configs (ai_agent, dr-general), managing API keys and secrets, subscribing to extensions,
+  and pushing changes after editing source YAML files in lc-soc/ or lc-agents/ directories.
+  Trigger words: lc-soc, lc-agent, ai_agent hive, deploy SOC, install agent, push agent,
+  update agent, sync agent, baselining-soc, tiered-soc, lean-soc, exposure-soc, intel-soc,
+  l1-bot, general-analyst, bulk-triage, l2-analyst, malware-analyst, containment,
+  threat-hunter, soc-manager, shift-reporter. Examples: "deploy tiered-soc to my org",
+  "install lean-soc", "update the l1-bot agent", "push agent changes to the org",
+  "remove the tiered SOC", "modify the bulk-triage prompt".
 allowed-tools:
   - Read
   - Bash
