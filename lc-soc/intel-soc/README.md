@@ -99,6 +99,8 @@ Agents signal each other by writing case notes with @mentions. D&R rules match o
 | `lookup.get` | Read the `intel-seen` dedup ledger |
 | `lookup.set` | Write processed item keys to the ledger |
 | `org_notes.*` | Read and write org notes |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
 | `ai_agent.exec` | Trigger Intel Analyzer via @mention note |
 

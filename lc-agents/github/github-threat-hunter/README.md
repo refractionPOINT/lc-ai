@@ -125,6 +125,8 @@ Tracks weakening of security posture:
 | `investigation.set` | Create cases, add notes, entities, telemetry |
 | `ext.request` | Make requests to extensions (ext-cases) |
 | `org_notes.*` | Read and write org notes |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run AI agent sessions |
 
 ## Installation

@@ -56,6 +56,8 @@ Session terminates (one_shot)
 | `investigation.set` | Update cases, add notes, entities, telemetry |
 | `ext.request` | Invoke extensions |
 | `org_notes.*` | Read and write org notes |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
 
 The note author must also have `ai_agent.exec` permission for the D&R rule to trigger.

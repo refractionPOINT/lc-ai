@@ -39,6 +39,8 @@ Create an API key named `intel-analyzer` with:
 | `ext.conf.get` | List subscribed extensions |
 | `lookup.get` | Check existing lookups to avoid duplicate IOCs |
 | `org_notes.*` | Read and write org notes |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration

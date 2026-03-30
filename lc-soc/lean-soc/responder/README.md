@@ -36,6 +36,8 @@ Create an API key named `responder` with:
 | `investigation.set` | Update cases, add notes |
 | `ext.request` | Invoke extensions |
 | `org_notes.*` | Read and write org notes |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
 | `lookup.set` | Add IOCs to block lookups |
 

@@ -54,6 +54,8 @@ The monitor triggers on and analyzes:
 | Access Management | New GitHub App installed, new deploy key, external collaborator added | HIGH |
 | Permission Escalation | Member → Admin role change | HIGH |
 | Webhook Manipulation | New webhook, webhook config change | MEDIUM |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 
 ## Correlation Patterns
 

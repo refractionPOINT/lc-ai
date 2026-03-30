@@ -52,6 +52,8 @@ Session terminates (one_shot)
 | `investigation.set` | Create cases, update status, add notes, link detections |
 | `ext.request` | Invoke the ext-cases extension to create/update cases |
 | `org_notes.*` | Read and write org notes |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run AI agent sessions |
 
 ## Installation
