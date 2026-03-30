@@ -32,6 +32,7 @@ This event-driven architecture means agents are:
 | [Lean SOC](lean-soc/) | 4 | Smaller orgs or getting started fast | $0.10 - $2.10 |
 | [Baselining SOC](baselining-soc/) | 7 | New orgs with noisy detections, deploy before Tiered SOC | ~$5.00/hour (bulk) |
 | [Intel SOC](intel-soc/) | 3 | Automated daily threat intel collection and detection engineering | ~$5.50/day |
+| [Compliance SOC](compliance-soc/) | 2 | Continuous compliance posture monitoring (SOC 2, ISO 27001, PCI-DSS, CIS) | ~$170/mo |
 
 ## Inter-Agent Communication
 

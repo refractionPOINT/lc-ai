@@ -1,0 +1,6 @@
+version: 3
+include:
+  - compliance-auditor/hives/ai_agent.yaml
+  - compliance-auditor/hives/dr-general.yaml
+  - endpoint-compliance-checker/hives/ai_agent.yaml
+  - endpoint-compliance-checker/hives/dr-general.yaml
