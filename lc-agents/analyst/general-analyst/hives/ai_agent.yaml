@@ -77,11 +77,24 @@ hives:
           # Get sensor details
           limacharlie sensor get --sid <sid> --oid <oid> --output yaml
 
-          # Get sensor timeline (events around a point in time)
-          limacharlie sensor timeline --sid <sid> --start <epoch_seconds> --end <epoch_seconds> --oid <oid> --output yaml
-
           # List sensors by tag
           limacharlie sensor list --tag <tag> --oid <oid> --output yaml
+          ```
+
+          ### Events
+
+          ```bash
+          # Get a specific event by its atom (the routing/this value from detection or event data)
+          limacharlie event get --sid <sid> --atom <atom> --oid <oid> --output yaml
+
+          # List events for a sensor in a time range (timestamps in SECONDS)
+          limacharlie event list --sid <sid> --start <epoch_seconds> --end <epoch_seconds> --event-type <type> --oid <oid> --output yaml
+
+          # Get child events of a parent (process tree traversal)
+          limacharlie event children --sid <sid> --atom <parent_atom> --oid <oid> --output yaml
+
+          # Get event timeline overview for a sensor
+          limacharlie event timeline --sid <sid> --start <epoch_seconds> --end <epoch_seconds> --oid <oid> --output yaml
           ```
 
           ### Detections
