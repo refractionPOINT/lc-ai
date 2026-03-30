@@ -5,8 +5,8 @@ hives:
       data:
         detect:
           event: case_tags_updated
-          op: contains
-          path: event/metadata/new_tags
+          op: is
+          path: event/metadata/new_tags/?
           value: needs-escalation
         respond:
           - action: start ai agent
