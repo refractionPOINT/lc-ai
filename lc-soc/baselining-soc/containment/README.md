@@ -47,6 +47,8 @@ Create an API key named `containment` with these permissions:
 | `investigation.set` | Update cases, add notes |
 | `ext.request` | Invoke extensions |
 | `org_notes.*` | Read and write org notes |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
 | `lookup.set` | Add IOCs to block lookup tables |
 

@@ -27,6 +27,8 @@ Create an API key named `lean-triage` with:
 | `investigation.set` | Create cases, add detections/notes |
 | `ext.request` | Invoke ext-cases |
 | `org_notes.*` | Read and write org notes |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration

@@ -64,6 +64,8 @@ Create an API key named `soc-shift-reporter` with these permissions:
 | `ext.request` | Invoke extensions |
 | `fp.ctrl` | List FP rules for baselining progress reporting |
 | `org_notes.*` | Read and write org notes |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration

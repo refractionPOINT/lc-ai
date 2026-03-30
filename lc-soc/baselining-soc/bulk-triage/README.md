@@ -45,6 +45,8 @@ Create an API key named `soc-bulk-triage` with these permissions:
 | `ext.request` | Invoke ext-cases extension |
 | `fp.ctrl` | Create, list, and manage FP rules |
 | `org_notes.*` | Read and write org notes |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration

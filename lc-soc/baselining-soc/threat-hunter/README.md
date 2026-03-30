@@ -37,6 +37,8 @@ Create an API key named `threat-hunter` with these permissions:
 | `investigation.set` | Update cases, create new cases, add notes |
 | `ext.request` | Invoke extensions |
 | `org_notes.*` | Read and write org notes |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration

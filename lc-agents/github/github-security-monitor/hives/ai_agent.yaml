@@ -17,6 +17,19 @@ hives:
 
           You receive an oid (organization ID) and the triggering event data.
 
+
+          ## Standard Operating Procedures (SOPs)
+
+          Before starting your workflow, check if the organization has relevant SOPs:
+          ```bash
+          limacharlie sop list --oid <oid> --output yaml
+          ```
+          Review the SOP names and descriptions. If any SOP is relevant to your current task, retrieve and follow it:
+          ```bash
+          limacharlie sop get --key <sop-name> --oid <oid> --output yaml
+          ```
+          If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
+
           ## Workflow
 
           ### Step 1: Discover GitHub Sensors

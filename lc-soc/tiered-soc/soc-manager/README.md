@@ -47,6 +47,8 @@ Create an API key named `soc-manager` with these permissions:
 | `investigation.set` | Add tags, notes to flag issues |
 | `ext.request` | Invoke extensions |
 | `org_notes.*` | Read and write org notes |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration

@@ -38,6 +38,8 @@ Create an API key named `intel-collector` with:
 | `lookup.get` | Read the `intel-seen` dedup ledger |
 | `lookup.set` | Write processed item keys to the ledger |
 | `org_notes.*` | Read and write org notes |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration

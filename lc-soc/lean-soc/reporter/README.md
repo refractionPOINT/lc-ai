@@ -33,6 +33,8 @@ Create an API key named `lean-reporter` with:
 | `investigation.set` | Create report case, add notes/tags, clean up stale tags |
 | `ext.request` | Invoke extensions |
 | `org_notes.*` | Read and write org notes |
+| `sop.get` | Read SOPs for operational guidance |
+| `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
 
 ## Configuration
