@@ -40,7 +40,7 @@ Agent 3: Risk Analyst (Opus, ~$2.00)
       |
       v  [tags: exposure-report, daily-exposure]
       v
-Case closed (or escalated if critical)
+Case closed (or tagged needs-escalation if critical)
 ```
 
 **Total cost: ~$2.80/day** using all free OSINT sources.

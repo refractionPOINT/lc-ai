@@ -11,7 +11,7 @@ flowchart TD
     stale --> sla["Check SLA violations:<br/>Critical > 15min, High > 30min,<br/>Medium > 60min, Low > 120min"]
     remove --> sla
     sla -->|SLA breached| breach["Tag: sla-breached,<br/>add escalation note"]
-    sla --> abandoned["Check abandoned cases:<br/>In-progress/escalated<br/>no updates > 4 hours?"]
+    sla --> abandoned["Check abandoned cases:<br/>In-progress/needs-escalation<br/>no updates > 4 hours?"]
     breach --> abandoned
     abandoned -->|Abandoned| escalate[Add escalation note]
     abandoned --> done["Output summary<br/>Session terminates"]

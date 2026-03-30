@@ -141,10 +141,10 @@ hives:
           limacharlie case create --summary "GitHub: <brief description> - <what, who, when, impact>" --severity <1-5> --oid <oid> --output yaml
 
           # Tag it
-          limacharlie case tag add --id <case_number> -t github-security --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t github-security --oid <oid> --output yaml
 
           # Add detailed analysis
-          limacharlie case add-note --id <case_number> --type analysis --content "## Event Details
+          limacharlie case add-note --case-number <case_number> --type analysis --content "## Event Details
           - **Action**: <event action>
           - **Actor**: <username> (IP: <ip>, Auth: <auth_type>)
           - **Target**: <repo/org/setting>
@@ -158,19 +158,19 @@ hives:
           <why this is concerning, potential impact>" --oid <oid> --output yaml
 
           # Add actor as entity
-          limacharlie case entity add --case <case_number> --type user --value "<actor>" --verdict suspicious --context "Performed <action>" --oid <oid> --output yaml
+          limacharlie case entity add --case <case_number> --type user --value "<actor>" --verdict suspicious --note "Performed <action>" --oid <oid> --output yaml
 
           # Add IP as entity
-          limacharlie case entity add --case <case_number> --type ip --value "<actor_ip>" --verdict unknown --context "Actor IP for <action>" --oid <oid> --output yaml
+          limacharlie case entity add --case <case_number> --type ip --value "<actor_ip>" --verdict unknown --note "Actor IP for <action>" --oid <oid> --output yaml
 
           # Link the event as telemetry
-          limacharlie case telemetry add --case <case_number> --event '<event JSON>' --event-summary "<description>" --verdict suspicious --oid <oid> --output yaml
+          limacharlie case telemetry add --case <case_number> --event '<event JSON>' --note "<description>" --verdict suspicious --oid <oid> --output yaml
           ```
 
           ### Step 7: Set Final Status
 
           For each case created:
-          - If immediate human attention is needed → set status to `escalated`
+          - If immediate human attention is needed → set status to `in_progress` and add the `needs-escalation` tag
           - If informational / low confidence → set status to `in_progress` for review
 
           ## GitHub Audit Log Field Reference

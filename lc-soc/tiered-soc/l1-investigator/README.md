@@ -13,7 +13,7 @@ flowchart TD
     scope --> doc["Document EVERYTHING:<br/>Summary, Conclusion, Notes,<br/>Entities, Telemetry references"]
     doc -->|Suspicious binary?| malware["tag: needs-malware-analysis"]
     doc -->|False positive?| closed["closed (false_positive)"]
-    doc -->|Everything else| escalated["escalated (triggers L2)"]
+    doc -->|Everything else| escalated["tag: needs-escalation<br/>(triggers L2)"]
     malware --> cleanup["Remove 'investigating' tag<br/>Session terminates"]
     closed --> cleanup
     escalated --> cleanup
@@ -26,7 +26,7 @@ The L1 Investigator communicates with other SOC agents through case tags:
 | Tag Added | Triggers | When |
 |-----------|----------|------|
 | `needs-malware-analysis` | Malware Analyst | Suspicious binary found that needs deep forensic analysis |
-| *(status: escalated)* | L2 Analyst | Everything that isn't a clear FP |
+| `needs-escalation` | L2 Analyst | Everything that isn't a clear FP |
 
 ## API Key Permissions
 

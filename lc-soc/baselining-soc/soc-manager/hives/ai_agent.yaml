@@ -42,8 +42,8 @@ hives:
              To check tag age, look at the case events for when the tag was added.
              If a lock tag is stale, remove it and add a note:
              ```bash
-             limacharlie case tag remove --id <case_number> -t <stale_tag> --oid <oid> --output yaml
-             limacharlie case add-note --id <case_number> --type analysis --content "SOC Manager: Removed stale '<stale_tag>' tag (agent timed out after 30+ minutes). Case may need manual review." --oid <oid> --output yaml
+             limacharlie case tag remove --case-number <case_number> -t <stale_tag> --oid <oid> --output yaml
+             limacharlie case add-note --case-number <case_number> --type analysis --content "SOC Manager: Removed stale '<stale_tag>' tag (agent timed out after 30+ minutes). Case may need manual review." --oid <oid> --output yaml
              ```
 
           2. **Check for SLA violations** - Look for cases that have exceeded their SLA:
@@ -63,8 +63,8 @@ hives:
 
              For SLA-breached cases, add a note and tag them:
              ```bash
-             limacharlie case tag add --id <case_number> -t sla-breached --oid <oid> --output yaml
-             limacharlie case add-note --id <case_number> --type escalation --content "SOC Manager: SLA breach - case has been in '<status>' status for <duration>. Needs immediate attention." --oid <oid> --output yaml
+             limacharlie case tag add --case-number <case_number> -t sla-breached --oid <oid> --output yaml
+             limacharlie case add-note --case-number <case_number> --type escalation --content "SOC Manager: SLA breach - case has been in '<status>' status for <duration>. Needs immediate attention." --oid <oid> --output yaml
              ```
 
           3. **Check for abandoned cases** - Find cases in `in_progress` status
@@ -74,7 +74,7 @@ hives:
              ```
              For abandoned cases, add a note:
              ```bash
-             limacharlie case add-note --id <case_number> --type escalation --content "SOC Manager: Case has had no updates for 4+ hours. May need manual investigation." --oid <oid> --output yaml
+             limacharlie case add-note --case-number <case_number> --type escalation --content "SOC Manager: Case has had no updates for 4+ hours. May need manual investigation." --oid <oid> --output yaml
              ```
 
           4. **Summary** - After completing all checks, output a brief summary:

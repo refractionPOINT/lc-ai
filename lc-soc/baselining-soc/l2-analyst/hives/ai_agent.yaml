@@ -31,8 +31,8 @@ hives:
 
           1. **Mark investigation in progress**:
              ```bash
-             limacharlie case tag add --id <case_number> -t l2-investigating --oid <oid> --output yaml
-             limacharlie case tag remove --id <case_number> -t needs-l2-review --oid <oid> --output yaml
+             limacharlie case tag add --case-number <case_number> -t l2-investigating --oid <oid> --output yaml
+             limacharlie case tag remove --case-number <case_number> -t needs-l2-review --oid <oid> --output yaml
              ```
 
           2. **Review L1 findings** - Get case details and read all existing notes, entities, and
@@ -76,28 +76,28 @@ hives:
              **If confirmed malicious and containment is needed:**
              - Ensure all malicious IOCs are added as entities with `malicious` verdict
              - Add a note mentioning `@containment` with specific recommendations:
-               `limacharlie case add-note --id <case_number> --type analysis --content "@containment Confirmed malicious activity. Sensors to isolate: <hostnames>. IOCs to block: <hashes/IPs/domains>. Accounts to disable: <users>." --oid <oid> --output yaml`
+               `limacharlie case add-note --case-number <case_number> --type analysis --content "@containment Confirmed malicious activity. Sensors to isolate: <hostnames>. IOCs to block: <hashes/IPs/domains>. Accounts to disable: <users>." --oid <oid> --output yaml`
 
              **If IOCs are confirmed and org-wide hunting is needed:**
              - Add a note mentioning `@threat-hunter` with the confirmed IOCs:
-               `limacharlie case add-note --id <case_number> --type analysis --content "@threat-hunter Hunt for these confirmed IOCs across the org: <hashes>, <IPs>, <domains>. Context: <malware family/campaign>." --oid <oid> --output yaml`
+               `limacharlie case add-note --case-number <case_number> --type analysis --content "@threat-hunter Hunt for these confirmed IOCs across the org: <hashes>, <IPs>, <domains>. Context: <malware family/campaign>." --oid <oid> --output yaml`
 
              **If a suspicious binary needs deeper forensic analysis:**
              - Add a note mentioning `@malware-analyst` with the binary reference:
-               `limacharlie case add-note --id <case_number> --type analysis --content "@malware-analyst Analyze suspicious binary: hash <sha256>, path <filepath>, sensor <sid>. Reason: <why suspicious>." --oid <oid> --output yaml`
+               `limacharlie case add-note --case-number <case_number> --type analysis --content "@malware-analyst Analyze suspicious binary: hash <sha256>, path <filepath>, sensor <sid>. Reason: <why suspicious>." --oid <oid> --output yaml`
 
           6. **Close out**:
              - If fully investigated and no further automated action needed, set status to `resolved`
              - If containment or hunting was requested (via @mention notes), leave status as `in_progress`
                so downstream agents can process it
              - Remove the `l2-investigating` tag:
-               `limacharlie case tag remove --id <case_number> -t l2-investigating --oid <oid> --output yaml`
+               `limacharlie case tag remove --case-number <case_number> -t l2-investigating --oid <oid> --output yaml`
 
           ## CLI Reference
 
           **Get case with all events/notes:**
           ```bash
-          limacharlie case get --id <case_number> --oid <oid> --output yaml
+          limacharlie case get --case-number <case_number> --oid <oid> --output yaml
           ```
 
           **Search for IOC across organization (use LCQL):**
@@ -134,7 +134,7 @@ hives:
 
           **Add analysis note:**
           ```bash
-          limacharlie case add-note --id <case_number> --type analysis --content "<markdown>" --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type analysis --content "<markdown>" --oid <oid> --output yaml
           ```
 
           ## Important Rules

@@ -29,8 +29,8 @@ hives:
 
           1. **Mark containment in progress**:
              ```bash
-             limacharlie case tag add --id <case_number> -t containing --oid <oid> --output yaml
-             limacharlie case tag remove --id <case_number> -t needs-containment --oid <oid> --output yaml
+             limacharlie case tag add --case-number <case_number> -t containing --oid <oid> --output yaml
+             limacharlie case tag remove --case-number <case_number> -t needs-containment --oid <oid> --output yaml
              ```
 
           2. **Review case** - Read all notes, entities, and the conclusion to understand:
@@ -77,9 +77,9 @@ hives:
 
           6. **Close out**:
              ```bash
-             limacharlie case tag add --id <case_number> -t contained --oid <oid> --output yaml
-             limacharlie case tag remove --id <case_number> -t containing --oid <oid> --output yaml
-             limacharlie case update --id <case_number> --status resolved --oid <oid> --output yaml
+             limacharlie case tag add --case-number <case_number> -t contained --oid <oid> --output yaml
+             limacharlie case tag remove --case-number <case_number> -t containing --oid <oid> --output yaml
+             limacharlie case update --case-number <case_number> --status resolved --oid <oid> --output yaml
              ```
 
           ## Important Rules

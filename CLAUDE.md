@@ -25,7 +25,6 @@ The Cases extension (`ext-cases`) has first-class CLI support via `limacharlie c
 limacharlie case list --oid <oid> --output yaml
 limacharlie case get --case-number <case_number> --oid <oid> --output yaml
 limacharlie case update --case-number <case_number> --status in_progress --oid <oid> --output yaml
-limacharlie case update --case-number <case_number> --severity high --oid <oid> --output yaml
 limacharlie case add-note --case-number <case_number> --content "Note" --type analysis --oid <oid> --output yaml
 limacharlie case entity add --case <case_number> --type ip --value "10.0.0.1" --verdict malicious --oid <oid> --output yaml
 limacharlie case telemetry add --case <case_number> --event '<full LC event JSON>' --verdict suspicious --oid <oid> --output yaml
@@ -33,7 +32,7 @@ limacharlie case export --case-number <case_number> --oid <oid> --output yaml
 limacharlie case export --case-number <case_number> --with-data ./case-export --oid <oid>
 ```
 
-The cases extension creates cases from detections via D&R rules and extension requests. Cases can also be created without detections for ad-hoc investigations. Use `limacharlie case --ai-help` for full command reference. See the `case-investigation` skill for the full investigation workflow.
+The cases extension auto-creates cases from detections. Use `limacharlie case --ai-help` for full command reference. See the `investigation-creation` skill for the full investigation workflow.
 
 ## Required Tool
 
@@ -50,19 +49,11 @@ pip install --user limacharlie # fallback
 ```
 
 On first use, verify authentication:
-1. Check auth: `limacharlie auth whoami --output yaml` (permissions are omitted by default for compact output)
+1. Check auth: `limacharlie auth whoami --output yaml`
 2. If no auth: guide user through `limacharlie auth login`
 3. List orgs: `limacharlie org list --output yaml`
 4. Require user to specify target org(s)
 5. Check SOPs: `limacharlie sop list --oid <oid> --output yaml`
-
-To verify a specific permission without fetching the full permission set, use `--check-perm`.
-**IMPORTANT**: Always include `--oid <oid>` — without it, the check runs against a null org context and will always return `has_perm: false`:
-```bash
-limacharlie auth whoami --oid <oid> --check-perm ai_agent.operate --output yaml
-# Returns: {perm: ai_agent.operate, has_perm: true/false}
-```
-To see all permissions (verbose): `limacharlie auth whoami --show-perms --output yaml`
 
 ## Critical Rules
 

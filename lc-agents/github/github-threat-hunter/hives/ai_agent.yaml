@@ -235,11 +235,11 @@ hives:
           limacharlie case create --summary "GitHub Hunt: <module> - <brief finding>" --severity <1-5> --oid <oid> --output yaml
 
           # Tag it
-          limacharlie case tag add --id <case_number> -t github-security --oid <oid> --output yaml
-          limacharlie case tag add --id <case_number> -t threat-hunt --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t github-security --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t threat-hunt --oid <oid> --output yaml
 
           # Add detailed analysis
-          limacharlie case add-note --id <case_number> --type analysis --content "## Finding Details
+          limacharlie case add-note --case-number <case_number> --type analysis --content "## Finding Details
           <detailed evidence with timestamps, actors, IPs, events>
 
           ## Evidence
@@ -249,17 +249,18 @@ hives:
           <what the security team should investigate or remediate>" --oid <oid> --output yaml
 
           # Add entities
-          limacharlie case entity add --case <case_number> --type user --value "<actor>" --verdict suspicious --context "<context>" --oid <oid> --output yaml
-          limacharlie case entity add --case <case_number> --type ip --value "<ip>" --verdict suspicious --context "<geolocation, ASN info>" --oid <oid> --output yaml
+          limacharlie case entity add --case <case_number> --type user --value "<actor>" --verdict suspicious --note "<context>" --oid <oid> --output yaml
+          limacharlie case entity add --case <case_number> --type ip --value "<ip>" --verdict suspicious --note "<geolocation, ASN info>" --oid <oid> --output yaml
 
           # Link telemetry
-          limacharlie case telemetry add --case <case_number> --event '<event JSON>' --event-summary "<description>" --verdict suspicious --oid <oid> --output yaml
+          limacharlie case telemetry add --case <case_number> --event '<event JSON>' --note "<description>" --verdict suspicious --oid <oid> --output yaml
 
           # Add conclusion
-          limacharlie case update --id <case_number> --conclusion "<recommended response actions>" --oid <oid> --output yaml
+          limacharlie case update --case-number <case_number> --conclusion "<recommended response actions>" --oid <oid> --output yaml
 
-          # Set status
-          limacharlie case update --id <case_number> --status escalated --oid <oid> --output yaml
+          # Set status and escalation tag
+          limacharlie case update --case-number <case_number> --status in_progress --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t needs-escalation --oid <oid> --output yaml
           ```
 
           **Severity guide:**

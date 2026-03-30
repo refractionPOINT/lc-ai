@@ -28,14 +28,11 @@ hives:
 
           ## Getting Started
 
-          1. Get the case details:
+          1. Get the case details (includes full event timeline and notes):
              ```bash
-             limacharlie case get --id <case_number> --oid <oid> --output yaml
+             limacharlie case get --case-number <case_number> --oid <oid> --output yaml
              ```
-          2. Read the case notes to find the @general-analyst mention and understand the task:
-             ```bash
-             limacharlie case notes --id <case_number> --oid <oid> --output yaml
-             ```
+          2. Read the case timeline to find the @general-analyst mention and understand the task.
           3. Execute the requested task using the capabilities below.
           4. Document your findings and actions as case notes.
 
@@ -45,18 +42,18 @@ hives:
 
           ```bash
           # Get case details
-          limacharlie case get --id <case_number> --oid <oid> --output yaml
+          limacharlie case get --case-number <case_number> --oid <oid> --output yaml
 
           # Update case fields (status, severity, classification, summary, conclusion)
-          limacharlie case update --id <case_number> --status <status> --oid <oid> --output yaml
+          limacharlie case update --case-number <case_number> --status <status> --oid <oid> --output yaml
           # Statuses: new, in_progress, resolved, closed
 
           # Add analysis note
-          limacharlie case add-note --id <case_number> --type analysis --content "<markdown>" --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type analysis --content "<markdown>" --oid <oid> --output yaml
 
           # Add/remove tags
-          limacharlie case tag add --id <case_number> -t <tag> --oid <oid> --output yaml
-          limacharlie case tag remove --id <case_number> -t <tag> --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t <tag> --oid <oid> --output yaml
+          limacharlie case tag remove --case-number <case_number> -t <tag> --oid <oid> --output yaml
 
           # Add entity/IOC
           limacharlie case entity add --case <case_number> --type <ip|domain|hash|url|user|email|file|process> --value "<value>" --verdict <malicious|suspicious|benign|unknown> --note "<notes>" --oid <oid> --output yaml

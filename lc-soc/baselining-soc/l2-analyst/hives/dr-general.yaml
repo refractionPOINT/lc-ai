@@ -5,13 +5,9 @@ hives:
       data:
         detect:
           event: case_tags_updated
-          op: and
-          rules:
-            - op: exists
-              path: event/case_id
-            - op: contains
-              path: event/metadata/new_tags
-              value: needs-l2-review
+          op: contains
+          path: event/metadata/new_tags
+          value: needs-l2-review
         respond:
           - action: start ai agent
             definition: hive://ai_agent/soc-l2-analyst

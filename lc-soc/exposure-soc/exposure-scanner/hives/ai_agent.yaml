@@ -32,13 +32,13 @@ hives:
           ### Step 1: Mark Scanning In Progress
 
           ```bash
-          limacharlie case tag add --id <case_number> -t scanning-exposure --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t scanning-exposure --oid <oid> --output yaml
           ```
 
           ### Step 2: Read the Asset Inventory
 
           ```bash
-          limacharlie case get --id <case_number> --oid <oid> --output yaml
+          limacharlie case get --case-number <case_number> --oid <oid> --output yaml
           ```
 
           Parse the Asset Discovery agent's notes to extract:
@@ -311,15 +311,15 @@ hives:
           | www.example.com | TLSv1.3 | TLS_AES_256... | 2027-01-01 | None |
           | old.example.com | TLSv1.1 | ... | 2026-04-01 | Deprecated TLS, expiring soon |
           NOTEEOF
-          limacharlie case add-note --id <case_number> --type analysis --input-file /tmp/exposure-findings.md --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type analysis --input-file /tmp/exposure-findings.md --oid <oid> --output yaml
           ```
 
           ### Step 9: Hand Off to Risk Analyst
 
           Remove the lock tag and signal the Risk Analyst via an @mention note:
           ```bash
-          limacharlie case tag remove --id <case_number> -t scanning-exposure --oid <oid> --output yaml
-          limacharlie case add-note --id <case_number> --type analysis --content "@exposure-risk-analyst Exposure scan complete. Scanned <count> IPs. Found: <count> open ports, <count> CVEs, <count> KEV matches, <count> phishing candidates. See scan results note above for details." --oid <oid> --output yaml
+          limacharlie case tag remove --case-number <case_number> -t scanning-exposure --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type analysis --content "@exposure-risk-analyst Exposure scan complete. Scanned <count> IPs. Found: <count> open ports, <count> CVEs, <count> KEV matches, <count> phishing candidates. See scan results note above for details." --oid <oid> --output yaml
           ```
 
           ## Important Rules

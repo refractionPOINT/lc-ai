@@ -10,7 +10,7 @@ flowchart TD
     bulk -->|FP pattern identified| fprule["Create FP rule<br/>(at least 2 conditions)"]
     bulk -->|Suspicious binary?| malware["MALWARE ANALYST<br/>opus, $5.00"]
     malware -->|findings on case| l2
-    bulk -->|"True positive? →<br/>creates case, status: escalated"| l2["L2 ANALYST<br/>opus, $5.00"]
+    bulk -->|"True positive? →<br/>creates case, tag: needs-l2-review"| l2["L2 ANALYST<br/>opus, $5.00"]
     l2 -->|"tag: needs-containment"| containment["CONTAINMENT<br/>sonnet, $1.00"]
     l2 -->|"tag: needs-threat-hunt"| hunter["THREAT HUNTER<br/>opus, $5.00"]
     l2 --> resolved[Resolved]
@@ -66,7 +66,7 @@ The bulk triage is more expensive per-run than per-detection triage, but process
 | Agent | Role | Model | Budget | TTL | Trigger |
 |-------|------|-------|--------|-----|---------|
 | [bulk-triage](bulk-triage/) | Process all detections hourly, create FP rules, escalate TPs | opus | $5.00 | 15m | Schedule: every 1h |
-| [l2-analyst](l2-analyst/) | Deep investigation, scope assessment, lateral movement | opus | $5.00 | 15m | Case escalated |
+| [l2-analyst](l2-analyst/) | Deep investigation, scope assessment, lateral movement | opus | $5.00 | 15m | Tag: needs-l2-review |
 | [malware-analyst](malware-analyst/) | Deep binary forensics via LCRE/Ghidra | opus | $5.00 | 15m | Tag: needs-malware-analysis |
 | [containment](containment/) | Isolate sensors, block IOCs | sonnet | $1.00 | 5m | Tag: needs-containment |
 | [threat-hunter](threat-hunter/) | Hunt IOCs from confirmed incidents org-wide | opus | $5.00 | 15m | Tag: needs-threat-hunt |

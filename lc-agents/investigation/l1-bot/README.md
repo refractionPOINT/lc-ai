@@ -34,7 +34,7 @@ Bot documents findings (summary, conclusion, entities, notes)
       |
       v
 False positive? --> closed (false_positive)
-Everything else --> escalated (for human follow-up)
+Everything else --> needs-escalation tag (for human follow-up)
       |
       v
 Session terminates (one_shot)
@@ -84,7 +84,7 @@ When a new case is created, the bot:
    - **Telemetry**: linked relevant events
 7. **Closes out** with one of two end states:
    - `false_positive` + `closed` if clearly benign
-   - `escalated` for everything else (true positive, suspicious, unclear, needs remediation)
+   - `in_progress` + `needs-escalation` tag for everything else (true positive, suspicious, unclear, needs remediation)
 8. **Removes** the `investigating` tag
 
 ## Configuration
