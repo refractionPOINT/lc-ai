@@ -6,7 +6,7 @@ The senior analyst. Only sees cases that L1 has already investigated and escalat
 
 ```mermaid
 flowchart TD
-    trigger["Case escalated<br/>(webhook event)"] --> tag["Tag: l2-investigating"]
+    trigger["Tag: needs-escalation<br/>(webhook event)"] --> tag["Tag: l2-investigating"]
     tag --> review["Review L1 findings<br/>(DO NOT repeat L1's work)"]
     review --> deep["Deep investigation:<br/>Lateral movement, root cause,<br/>credential compromise, full scope,<br/>C2 patterns, MITRE ATT&CK"]
     deep --> update["Update case with full picture:<br/>Summary, IOCs, attack timeline"]
@@ -73,5 +73,5 @@ Create an API key named `soc-l2-analyst` with these permissions:
 ## Files
 
 - `hives/ai_agent.yaml` - Agent definition with deep investigation prompt
-- `hives/dr-general.yaml` - D&R rule: triggers on case `escalated` webhook event
+- `hives/dr-general.yaml` - D&R rule: triggers on `needs-escalation` tag added
 - `hives/secret.yaml` - Placeholder secrets

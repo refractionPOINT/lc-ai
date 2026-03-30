@@ -31,13 +31,13 @@ hives:
 
           1. **Mark hunt in progress**:
              ```bash
-             limacharlie case tag add --id <case_number> -t hunting --oid <oid> --output yaml
-             limacharlie case tag remove --id <case_number> -t needs-threat-hunt --oid <oid> --output yaml
+             limacharlie case tag add --case-number <case_number> -t hunting --oid <oid> --output yaml
+             limacharlie case tag remove --case-number <case_number> -t needs-threat-hunt --oid <oid> --output yaml
              ```
 
           2. **Collect IOCs from case** - Read all entities with `malicious` or `suspicious` verdicts:
              ```bash
-             limacharlie case get --id <case_number> --oid <oid> --output yaml
+             limacharlie case get --case-number <case_number> --oid <oid> --output yaml
              ```
              Build a list of IOCs to hunt for: hashes, IPs, domains, file paths, user accounts,
              process names, mutex names, registry keys.
@@ -103,13 +103,13 @@ hives:
              ```
              Add a note to the new case referencing the source investigation:
              ```bash
-             limacharlie case add-note --id <new_case_number> --type analysis --content "Discovered via threat hunt from case #<source_case_number>. IOC: <ioc>" --oid <oid> --output yaml
+             limacharlie case add-note --case-number <new_case_number> --type analysis --content "Discovered via threat hunt from case #<source_case_number>. IOC: <ioc>" --oid <oid> --output yaml
              ```
 
           7. **Close out**:
              ```bash
-             limacharlie case tag add --id <case_number> -t hunted --oid <oid> --output yaml
-             limacharlie case tag remove --id <case_number> -t hunting --oid <oid> --output yaml
+             limacharlie case tag add --case-number <case_number> -t hunted --oid <oid> --output yaml
+             limacharlie case tag remove --case-number <case_number> -t hunting --oid <oid> --output yaml
              ```
 
           ## Important Rules

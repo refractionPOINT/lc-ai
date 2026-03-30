@@ -31,13 +31,13 @@ hives:
           ### Step 1: Mark Analysis In Progress
 
           ```bash
-          limacharlie case tag add --id <case_number> -t analyzing-exposure --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t analyzing-exposure --oid <oid> --output yaml
           ```
 
           ### Step 2: Read All Findings
 
           ```bash
-          limacharlie case get --id <case_number> --oid <oid> --output yaml
+          limacharlie case get --case-number <case_number> --oid <oid> --output yaml
           ```
 
           Parse notes from both the Asset Discovery and Exposure Scanner agents:
@@ -172,7 +172,7 @@ hives:
           | Dangling DNS | <count> |
           | Certs Expiring <30d | <count> |
           NOTEEOF
-          limacharlie case add-note --id <case_number> --type analysis --input-file /tmp/risk-report.md --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type analysis --input-file /tmp/risk-report.md --oid <oid> --output yaml
           ```
 
           ### Step 7: Add Entities
@@ -181,13 +181,13 @@ hives:
 
           ```bash
           # Vulnerable IPs
-          limacharlie case entity add --case <case_number> --type ip --value "<ip>" --verdict suspicious --context "Exposed <service> with <CVE>" --oid <oid> --output yaml
+          limacharlie case entity add --case <case_number> --type ip --value "<ip>" --verdict suspicious --note "Exposed <service> with <CVE>" --oid <oid> --output yaml
 
           # Dangling DNS subdomains
-          limacharlie case entity add --case <case_number> --type domain --value "<subdomain>" --verdict suspicious --context "Dangling DNS - subdomain takeover candidate" --oid <oid> --output yaml
+          limacharlie case entity add --case <case_number> --type domain --value "<subdomain>" --verdict suspicious --note "Dangling DNS - subdomain takeover candidate" --oid <oid> --output yaml
 
           # Phishing domains found via urlscan
-          limacharlie case entity add --case <case_number> --type domain --value "<domain>" --verdict malicious --context "Potential phishing - impersonating org" --oid <oid> --output yaml
+          limacharlie case entity add --case <case_number> --type domain --value "<domain>" --verdict malicious --note "Potential phishing - impersonating org" --oid <oid> --output yaml
           ```
 
           ### Step 8: Update Exposure Ledger
@@ -219,7 +219,7 @@ hives:
           ### Step 9: Update Case and Close
 
           ```bash
-          limacharlie case update --id <case_number> \
+          limacharlie case update --case-number <case_number> \
             --summary "Exposure Monitor: <critical_count> critical, <high_count> high, <medium_count> medium findings across <ip_count> IPs" \
             --conclusion "Daily external exposure scan complete. <new_count> new findings since last scan. <critical_summary>. See risk report for full details and remediation recommendations." \
             --severity <highest_severity_found> \
@@ -227,13 +227,13 @@ hives:
             --oid <oid> --output yaml
           ```
 
-          If there are CRITICAL findings, set status to `escalated` instead of `closed`.
+          If there are CRITICAL findings, set status to `in_progress` and add the `needs-escalation` tag instead of closing.
 
           Tag for tracking:
           ```bash
-          limacharlie case tag add --id <case_number> -t exposure-report --oid <oid> --output yaml
-          limacharlie case tag add --id <case_number> -t daily-exposure --oid <oid> --output yaml
-          limacharlie case tag remove --id <case_number> -t analyzing-exposure --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t exposure-report --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t daily-exposure --oid <oid> --output yaml
+          limacharlie case tag remove --case-number <case_number> -t analyzing-exposure --oid <oid> --output yaml
           ```
 
           ## Important Rules
@@ -242,7 +242,7 @@ hives:
           - If a CLI command fails, run `limacharlie <command> --ai-help` for correct syntax.
           - ALWAYS update the exposure-seen lookup, even if there are no changes.
           - ALWAYS remove the `analyzing-exposure` tag when done.
-          - If critical findings exist, set case status to `escalated`, not `closed`.
+          - If critical findings exist, set case status to `in_progress` and add the `needs-escalation` tag, not `closed`.
           - Be specific in recommendations — include exact remediation steps.
           - The risk report is the primary deliverable. Make it clear, actionable, and
             complete enough for a security team to act on without additional investigation.

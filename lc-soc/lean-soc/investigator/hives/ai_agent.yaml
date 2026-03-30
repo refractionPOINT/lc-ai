@@ -30,8 +30,8 @@ hives:
 
           1. **Mark investigation in progress**:
              ```bash
-             limacharlie case tag add --id <case_number> -t investigating --oid <oid> --output yaml
-             limacharlie case update --id <case_number> --status in_progress --oid <oid> --output yaml
+             limacharlie case tag add --case-number <case_number> -t investigating --oid <oid> --output yaml
+             limacharlie case update --case-number <case_number> --status in_progress --oid <oid> --output yaml
              ```
 
           2. **Get case details** - Fetch the full case to understand the detection that created it.
@@ -71,7 +71,7 @@ hives:
              If you confirm a malicious threat that requires containment:
              - Ensure all malicious IOCs are added as entities with `malicious` verdict
              - Add a note mentioning `@responder` with specific containment actions:
-               `limacharlie case add-note --id <case_number> --type analysis --content "@responder Confirmed malicious threat. Sensors to isolate: <hostnames>. IOCs to block: <hashes/IPs/domains>. Accounts to disable: <users>." --oid <oid> --output yaml`
+               `limacharlie case add-note --case-number <case_number> --type analysis --content "@responder Confirmed malicious threat. Sensors to isolate: <hostnames>. IOCs to block: <hashes/IPs/domains>. Accounts to disable: <users>." --oid <oid> --output yaml`
 
           9. **Make a determination and close out**:
 
@@ -80,12 +80,12 @@ hives:
              - Remove the `investigating` tag
 
              **If confirmed malicious and containment tagged:**
-             - Set classification to `true_positive`, status to `escalated`
+             - Set classification to `true_positive`, status to `in_progress`, add the `needs-escalation` tag
              - Remove the `investigating` tag
              - The Responder agent will handle containment downstream
 
              **If suspicious but not confirmed:**
-             - Set classification to `pending`, status to `escalated`
+             - Set classification to `pending`, status to `in_progress`, add the `needs-escalation` tag
              - Write a conclusion explaining what's uncertain and what a human should look at
              - Remove the `investigating` tag
 
@@ -95,33 +95,33 @@ hives:
 
           **Get case details:**
           ```bash
-          limacharlie case get --id <case_number> --oid <oid> --output yaml
+          limacharlie case get --case-number <case_number> --oid <oid> --output yaml
           ```
 
           **Update case:**
           ```bash
-          limacharlie case update --id <case_number> --status <status> --classification <class> --severity <level> --summary "<text>" --conclusion "<text>" --oid <oid> --output yaml
+          limacharlie case update --case-number <case_number> --status <status> --classification <class> --severity <level> --summary "<text>" --conclusion "<text>" --oid <oid> --output yaml
           ```
 
           **Add/remove tags:**
           ```bash
-          limacharlie case tag add --id <case_number> -t <tag> --oid <oid> --output yaml
-          limacharlie case tag remove --id <case_number> -t <tag> --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t <tag> --oid <oid> --output yaml
+          limacharlie case tag remove --case-number <case_number> -t <tag> --oid <oid> --output yaml
           ```
 
           **Add analysis note:**
           ```bash
-          limacharlie case add-note --id <case_number> --type analysis --content "<markdown>" --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type analysis --content "<markdown>" --oid <oid> --output yaml
           ```
 
           **Add entity/IOC:**
           ```bash
-          limacharlie case entity add --case <case_number> --type <ip|domain|hash|url|user|email|file|process> --value "<value>" --verdict <malicious|suspicious|benign|unknown> --context "<notes>" --oid <oid> --output yaml
+          limacharlie case entity add --case <case_number> --type <ip|domain|hash|url|user|email|file|process> --value "<value>" --verdict <malicious|suspicious|benign|unknown> --note "<notes>" --oid <oid> --output yaml
           ```
 
           **Link telemetry:**
           ```bash
-          limacharlie case telemetry add --case <case_number> --event '<full LC event JSON>' --event-summary "<description>" --verdict <suspicious|malicious|benign> --oid <oid> --output yaml
+          limacharlie case telemetry add --case <case_number> --event '<full LC event JSON>' --note "<description>" --verdict <suspicious|malicious|benign> --oid <oid> --output yaml
           ```
 
           **List detections on sensor:**

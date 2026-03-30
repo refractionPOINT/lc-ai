@@ -246,16 +246,16 @@ hives:
           | example.com | Present | Present |
           | example.io | MISSING | MISSING |
           NOTEEOF
-          limacharlie case add-note --id <case_number> --type analysis --input-file /tmp/asset-inventory.md --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type analysis --input-file /tmp/asset-inventory.md --oid <oid> --output yaml
           ```
 
           ### Step 7: Hand Off to Exposure Scanner
 
           Update the case summary and signal the downstream Exposure Scanner via an @mention note:
           ```bash
-          limacharlie case update --id <case_number> --summary "Exposure Monitor: Asset Discovery - <date>" --oid <oid> --output yaml
-          limacharlie case tag add --id <case_number> -t exposure-pipeline --oid <oid> --output yaml
-          limacharlie case add-note --id <case_number> --type analysis --content "@exposure-scanner Asset discovery complete. Domains scanned: <list>. Found: <count> subdomains, <count> unique IPs, <count> dangling DNS candidates. See inventory note above for details." --oid <oid> --output yaml
+          limacharlie case update --case-number <case_number> --summary "Exposure Monitor: Asset Discovery - <date>" --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t exposure-pipeline --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type analysis --content "@exposure-scanner Asset discovery complete. Domains scanned: <list>. Found: <count> subdomains, <count> unique IPs, <count> dangling DNS candidates. See inventory note above for details." --oid <oid> --output yaml
           ```
 
           ## Important Rules

@@ -33,13 +33,13 @@ hives:
           ### Step 1: Mark Engineering In Progress
 
           ```bash
-          limacharlie case tag add --id <case_number> -t engineering-rules --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t engineering-rules --oid <oid> --output yaml
           ```
 
           ### Step 2: Read the Analysis
 
           ```bash
-          limacharlie case get --id <case_number> --oid <oid> --output yaml
+          limacharlie case get --case-number <case_number> --oid <oid> --output yaml
           ```
 
           Parse the Intel Analyzer's notes to get:
@@ -292,7 +292,7 @@ hives:
           cat > /tmp/intel-engineering.md << 'NOTEEOF'
           <note content here>
           NOTEEOF
-          limacharlie case add-note --id <case_number> --type analysis --input-file /tmp/intel-engineering.md --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type analysis --input-file /tmp/intel-engineering.md --oid <oid> --output yaml
           ```
 
           Structure the note content as follows:
@@ -335,14 +335,14 @@ hives:
 
           Update the case summary and close it:
           ```bash
-          limacharlie case update --id <case_number> --summary "Intel Pipeline: <count> IOCs added to lookups, <count> D&R rules created (disabled)" --conclusion "Daily threat intel processing complete. <count> new IOCs added to lookup tables (active). <count> new D&R rules created in disabled state pending human review. See analysis notes for full details." --classification false_positive --status closed --oid <oid> --output yaml
+          limacharlie case update --case-number <case_number> --summary "Intel Pipeline: <count> IOCs added to lookups, <count> D&R rules created (disabled)" --conclusion "Daily threat intel processing complete. <count> new IOCs added to lookup tables (active). <count> new D&R rules created in disabled state pending human review. See analysis notes for full details." --classification false_positive --status closed --oid <oid> --output yaml
           ```
 
           Tag for tracking:
           ```bash
-          limacharlie case tag add --id <case_number> -t rules-drafted --oid <oid> --output yaml
-          limacharlie case tag add --id <case_number> -t daily-intel --oid <oid> --output yaml
-          limacharlie case tag remove --id <case_number> -t engineering-rules --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t rules-drafted --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t daily-intel --oid <oid> --output yaml
+          limacharlie case tag remove --case-number <case_number> -t engineering-rules --oid <oid> --output yaml
           ```
 
           ## Important Rules

@@ -43,9 +43,9 @@ Status transitions emit specific event types that D&R rules match on:
 
 | Status Transition | Event Type | Typical Use |
 |-------------------|------------|-------------|
-| New case created | `created` | Trigger investigation |
-| Case escalated | `escalated` | Trigger deep analysis |
-| Case resolved | `resolved` | Trigger verification |
+| New case created | `case_created` | Trigger investigation |
+| Status changed | `case_status_changed` | Track lifecycle transitions |
+| Case resolved | `case_resolved` | Trigger verification |
 
 ### 2. Case Tags
 

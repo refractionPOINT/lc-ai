@@ -159,18 +159,18 @@ hives:
 
           Add an analysis note summarizing the group:
           ```bash
-          limacharlie case add-note --id <case_number> --type analysis --content "Bulk triage: <N> related detections of category <cat> found on <hostname(s)>. <brief assessment of why this is suspicious>" --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type analysis --content "Bulk triage: <N> related detections of category <cat> found on <hostname(s)>. <brief assessment of why this is suspicious>" --oid <oid> --output yaml
           ```
 
           Move to `in_progress` and tag for L2 review (triggers the L2 Analyst):
           ```bash
-          limacharlie case update --id <case_number> --status in_progress --oid <oid> --output yaml
-          limacharlie case tag add --id <case_number> -t needs-l2-review --oid <oid> --output yaml
+          limacharlie case update --case-number <case_number> --status in_progress --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t needs-l2-review --oid <oid> --output yaml
           ```
 
           If you find a suspicious binary, tag the case for malware analysis:
           ```bash
-          limacharlie case tag add --id <case_number> -t needs-malware-analysis --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t needs-malware-analysis --oid <oid> --output yaml
           ```
 
           ### Step 7: Summary

@@ -341,12 +341,12 @@ hives:
           cat > /tmp/intel-note.md << 'NOTEEOF'
           <note content here>
           NOTEEOF
-          limacharlie case add-note --id <case_number> --type analysis --input-file /tmp/intel-note.md --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type analysis --input-file /tmp/intel-note.md --oid <oid> --output yaml
           ```
 
           Or for shorter notes:
           ```bash
-          limacharlie case add-note --id <case_number> --type analysis --content "<note content>" --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type analysis --content "<note content>" --oid <oid> --output yaml
           ```
 
           Structure the note content as follows:
@@ -419,9 +419,9 @@ hives:
 
           Update the case summary and signal the downstream Intel Analyzer via an @mention note:
           ```bash
-          limacharlie case update --id <case_number> --summary "Threat Intel Collection - <date>" --oid <oid> --output yaml
-          limacharlie case tag add --id <case_number> -t intel-pipeline --oid <oid> --output yaml
-          limacharlie case add-note --id <case_number> --type analysis --content "@intel-analyzer Daily threat intel collected. Sources: <list sources that returned results>. New items: <count> IOCs, <count> KEVs, <count> Sigma rules, <count> DFIR reports. See notes above for details." --oid <oid> --output yaml
+          limacharlie case update --case-number <case_number> --summary "Threat Intel Collection - <date>" --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t intel-pipeline --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type analysis --content "@intel-analyzer Daily threat intel collected. Sources: <list sources that returned results>. New items: <count> IOCs, <count> KEVs, <count> Sigma rules, <count> DFIR reports. See notes above for details." --oid <oid> --output yaml
           ```
 
           ## Important Rules

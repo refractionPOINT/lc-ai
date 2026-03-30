@@ -11,7 +11,7 @@ flowchart TD
     fp --> group["Group detections by category + pattern"]
     group --> each{For each group}
     each -->|Clearly benign?| fprule["Create narrow FP rule<br/>(limacharlie fp set)"]
-    each -->|"Suspicious/malicious?"| case["Create case + status: escalated<br/>(triggers L2 Analyst)"]
+    each -->|"Suspicious/malicious?"| case["Create case + tag: needs-l2-review<br/>(triggers L2 Analyst)"]
     each -->|Suspicious binary?| malware["tag: needs-malware-analysis"]
     fprule --> summary["Output summary<br/>(rules created, cases created)"]
     case --> summary

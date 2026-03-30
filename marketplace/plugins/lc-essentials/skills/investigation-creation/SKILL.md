@@ -42,13 +42,13 @@ The Cases extension has first-class CLI support via `limacharlie case`:
 
 ```bash
 limacharlie case list --oid <oid> --output yaml
-limacharlie case get --id <case_number> --oid <oid> --output yaml
-limacharlie case update --id <case_number> --status in_progress --oid <oid> --output yaml
-limacharlie case update --id <case_number> --severity high --oid <oid> --output yaml
-limacharlie case add-note --id <case_number> --content "Note text" --type analysis --oid <oid> --output yaml
-limacharlie case tag set --id <case_number> --tag <tag> --oid <oid> --output yaml
-limacharlie case tag add --id <case_number> --tag <tag> --oid <oid> --output yaml
-limacharlie case tag remove --id <case_number> --tag <tag> --oid <oid> --output yaml
+limacharlie case get --case-number <case_number> --oid <oid> --output yaml
+limacharlie case update --case-number <case_number> --status in_progress --oid <oid> --output yaml
+limacharlie case update --case-number <case_number> --severity high --oid <oid> --output yaml
+limacharlie case add-note --case-number <case_number> --content "Note text" --type analysis --oid <oid> --output yaml
+limacharlie case tag set --case-number <case_number> --tag <tag> --oid <oid> --output yaml
+limacharlie case tag add --case-number <case_number> --tag <tag> --oid <oid> --output yaml
+limacharlie case tag remove --case-number <case_number> --tag <tag> --oid <oid> --output yaml
 ```
 
 Use `limacharlie case --ai-help` for full command discovery.
@@ -240,7 +240,7 @@ That's it. Everything else, you discover.
 
 **From a Case Number** (most common):
 ```bash
-limacharlie case get --id <case_number> --oid <oid> --output yaml
+limacharlie case get --case-number <case_number> --oid <oid> --output yaml
 ```
 
 **From the case queue** (list open cases):
@@ -260,7 +260,7 @@ If no case exists for the activity being investigated, you can still investigate
 If the case is in `new` status, move it to `in_progress` to record TTA and begin investigation:
 
 ```bash
-limacharlie case update --id <case_number> --status in_progress --oid <oid> --output yaml
+limacharlie case update --case-number <case_number> --status in_progress --oid <oid> --output yaml
 ```
 
 ### Step 3: Get the Source Detection
@@ -779,14 +779,14 @@ limacharlie case detection add --case <case_number> \
 Use notes to document your investigation process. Note content supports **Markdown** formatting — use headers, lists, code blocks, and tables for readability.
 
 ```bash
-limacharlie case add-note --id <case_number> --type analysis \
+limacharlie case add-note --case-number <case_number> --type analysis \
     --content "Ran LCQL query for parent PID 2476 - no results found. Parent process may predate telemetry window." \
     --oid <oid> --output yaml
 ```
 
 For long notes, use `--input-file` to read content from a file:
 ```bash
-limacharlie case add-note --id <case_number> --type analysis --input-file /tmp/note.md --oid <oid> --output yaml
+limacharlie case add-note --case-number <case_number> --type analysis --input-file /tmp/note.md --oid <oid> --output yaml
 ```
 
 **Valid Note Types:**
@@ -816,8 +816,8 @@ Use tags to classify the case type and organize workflow. Add tags as you learn 
 
 ```bash
 # Add classification tags after identifying the threat type
-limacharlie case tag add --id <case_number> --tag phishing --oid <oid> --output yaml
-limacharlie case tag add --id <case_number> --tag needs-escalation --oid <oid> --output yaml
+limacharlie case tag add --case-number <case_number> --tag phishing --oid <oid> --output yaml
+limacharlie case tag add --case-number <case_number> --tag needs-escalation --oid <oid> --output yaml
 ```
 
 **Best Practice Note Structure:**
@@ -930,7 +930,7 @@ Always confirm with user before finalizing:
 After user confirmation, update the case with summary, conclusion, classification, and resolve it. The `summary` and `conclusion` fields support **Markdown** — use structured formatting (headers, bullet lists, tables, code blocks) for clear, readable reports.
 
 ```bash
-limacharlie case update --id <case_number> \
+limacharlie case update --case-number <case_number> \
     --summary "What happened - the full attack narrative, scope, and impact" \
     --conclusion "Final assessment - classification rationale, recommendations, remaining risks" \
     --classification true_positive \
@@ -943,11 +943,11 @@ limacharlie case update --id <case_number> \
 If the investigation reveals the case needs senior analyst attention, add an `escalation` note with context and use tags to flag it for the appropriate team:
 
 ```bash
-limacharlie case add-note --id <case_number> --type escalation \
+limacharlie case add-note --case-number <case_number> --type escalation \
     --content "Escalating: Evidence of APT-level tradecraft. Custom C2 implant with domain fronting. Requires malware reverse engineering." \
     --oid <oid> --output yaml
 
-limacharlie case tag add --id <case_number> --tag needs-escalation --oid <oid> --output yaml
+limacharlie case tag add --case-number <case_number> --tag needs-escalation --oid <oid> --output yaml
 ```
 
 ### Merging Related Cases
@@ -999,10 +999,10 @@ limacharlie case report --from 2025-01-01T00:00:00Z --to 2025-02-01T00:00:00Z --
 Export all case data (metadata, detections, entities, telemetry, artifacts) as a single JSON object, or to a directory with the actual detection records, telemetry events, and artifact binaries:
 ```bash
 # JSON to stdout
-limacharlie case export --id <case_number> --oid <oid> --output yaml
+limacharlie case export --case-number <case_number> --oid <oid> --output yaml
 
 # Full data export to a directory
-limacharlie case export --id <case_number> --with-data ./case-export --oid <oid>
+limacharlie case export --case-number <case_number> --with-data ./case-export --oid <oid>
 ```
 
 ### Bulk Operations
@@ -1042,4 +1042,4 @@ limacharlie case bulk-update --numbers <num1>,<num2>,<num3> \
 
 **Note types**: `general`, `analysis`, `remediation`, `escalation`, `handoff`, `to_stakeholder`, `from_stakeholder`
 
-**Tag management**: `limacharlie case tag set/add/remove --id <number> --tag <tag> --oid <oid>`
+**Tag management**: `limacharlie case tag set/add/remove --case-number <number> --tag <tag> --oid <oid>`

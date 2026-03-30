@@ -130,10 +130,10 @@ hives:
 
           3. **Update the report case**:
              ```bash
-             limacharlie case update --id <case_number> --summary "SOC Daily Report - <date>" --conclusion "Automated daily SOC report. Review notes for full details." --classification false_positive --status closed --oid <oid> --output yaml
-             limacharlie case tag add --id <case_number> -t soc-report --oid <oid> --output yaml
-             limacharlie case tag add --id <case_number> -t daily-report --oid <oid> --output yaml
-             limacharlie case tag add --id <case_number> -t baseline-report --oid <oid> --output yaml
+             limacharlie case update --case-number <case_number> --summary "SOC Daily Report - <date>" --conclusion "Automated daily SOC report. Review notes for full details." --classification false_positive --status closed --oid <oid> --output yaml
+             limacharlie case tag add --case-number <case_number> -t soc-report --oid <oid> --output yaml
+             limacharlie case tag add --case-number <case_number> -t daily-report --oid <oid> --output yaml
+             limacharlie case tag add --case-number <case_number> -t baseline-report --oid <oid> --output yaml
              ```
 
           ## Important Rules

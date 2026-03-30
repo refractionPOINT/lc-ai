@@ -29,8 +29,8 @@ hives:
 
           1. **Mark investigation in progress** - Tag the case with `investigating` and set status to `in_progress`:
              ```bash
-             limacharlie case tag add --id <case_number> -t investigating --oid <oid> --output yaml
-             limacharlie case update --id <case_number> --status in_progress --oid <oid> --output yaml
+             limacharlie case tag add --case-number <case_number> -t investigating --oid <oid> --output yaml
+             limacharlie case update --case-number <case_number> --status in_progress --oid <oid> --output yaml
              ```
 
           2. **Get case details** - Fetch the full case to understand the detection that created it
@@ -69,7 +69,7 @@ hives:
              **If you find a suspicious binary (executable, DLL, script file) that needs deeper analysis:**
              - Add its hash as an entity on the case
              - Tag the case with `needs-malware-analysis`:
-               `limacharlie case tag add --id <case_number> -t needs-malware-analysis --oid <oid> --output yaml`
+               `limacharlie case tag add --case-number <case_number> -t needs-malware-analysis --oid <oid> --output yaml`
              - Add a note explaining what binary needs analysis and why
 
           8. **Make a determination and close out** - Based on your investigation, there are only two end states:
@@ -79,14 +79,16 @@ hives:
              - Write a conclusion explaining why this is benign
              - Set status to `closed`
              - Remove the `investigating` tag:
-               `limacharlie case tag remove --id <case_number> -t investigating --oid <oid> --output yaml`
+               `limacharlie case tag remove --case-number <case_number> -t investigating --oid <oid> --output yaml`
 
              **Everything else (true positive, suspicious, unclear, needs remediation):**
              - Set classification to `true_positive` (or leave as `pending` if truly uncertain)
              - Write a conclusion explaining what you found and what needs to happen next
-             - Set status to `escalated` (this triggers the L2 Analyst downstream)
+             - Set status to `in_progress`
+             - Add the `needs-escalation` tag (this triggers the L2 Analyst downstream):
+               `limacharlie case tag add --case-number <case_number> -t needs-escalation --oid <oid> --output yaml`
              - Remove the `investigating` tag:
-               `limacharlie case tag remove --id <case_number> -t investigating --oid <oid> --output yaml`
+               `limacharlie case tag remove --case-number <case_number> -t investigating --oid <oid> --output yaml`
 
              IMPORTANT: Always remove the `investigating` tag when you are done, regardless of outcome.
 
@@ -94,29 +96,29 @@ hives:
 
           **Get case details:**
           ```bash
-          limacharlie case get --id <case_number> --oid <oid> --output yaml
+          limacharlie case get --case-number <case_number> --oid <oid> --output yaml
           ```
 
           **Update case status/fields:**
           ```bash
-          limacharlie case update --id <case_number> --status <status> --oid <oid> --output yaml
+          limacharlie case update --case-number <case_number> --status <status> --oid <oid> --output yaml
           # Also supports: --assignee, --classification, --summary, --conclusion, --severity
           ```
 
           **Add/remove tags:**
           ```bash
-          limacharlie case tag add --id <case_number> -t <tag> --oid <oid> --output yaml
-          limacharlie case tag remove --id <case_number> -t <tag> --oid <oid> --output yaml
+          limacharlie case tag add --case-number <case_number> -t <tag> --oid <oid> --output yaml
+          limacharlie case tag remove --case-number <case_number> -t <tag> --oid <oid> --output yaml
           ```
 
           **Add analysis note:**
           ```bash
-          limacharlie case add-note --id <case_number> --type analysis --content "<markdown text>" --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type analysis --content "<markdown text>" --oid <oid> --output yaml
           ```
 
           **Add entity/IOC:**
           ```bash
-          limacharlie case entity add --case <case_number> --type <ip|domain|hash|url|user|email|file|process> --value "<value>" --verdict <malicious|suspicious|benign|unknown> --context "<notes>" --oid <oid> --output yaml
+          limacharlie case entity add --case <case_number> --type <ip|domain|hash|url|user|email|file|process> --value "<value>" --verdict <malicious|suspicious|benign|unknown> --note "<notes>" --oid <oid> --output yaml
           ```
 
           **Link a detection (full detection object required):**
@@ -126,7 +128,7 @@ hives:
 
           **Link telemetry (full event object required):**
           ```bash
-          limacharlie case telemetry add --case <case_number> --event '<full LC event JSON>' --event-summary "<description>" --verdict <suspicious|malicious|benign> --oid <oid> --output yaml
+          limacharlie case telemetry add --case <case_number> --event '<full LC event JSON>' --note "<description>" --verdict <suspicious|malicious|benign> --oid <oid> --output yaml
           ```
 
           **List detections on sensor (for context):**

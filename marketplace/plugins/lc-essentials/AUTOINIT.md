@@ -23,14 +23,14 @@ limacharlie api <endpoint> --oid <oid> --output yaml
 The Cases extension (`ext-cases`) has first-class CLI support via `limacharlie case`:
 ```bash
 limacharlie case list --oid <oid> --output yaml
-limacharlie case get --id <case_number> --oid <oid> --output yaml
-limacharlie case update --id <case_number> --status in_progress --oid <oid> --output yaml
-limacharlie case update --id <case_number> --severity high --oid <oid> --output yaml
-limacharlie case add-note --id <case_number> --content "Note" --type analysis --oid <oid> --output yaml
+limacharlie case get --case-number <case_number> --oid <oid> --output yaml
+limacharlie case update --case-number <case_number> --status in_progress --oid <oid> --output yaml
+limacharlie case update --case-number <case_number> --severity high --oid <oid> --output yaml
+limacharlie case add-note --case-number <case_number> --content "Note" --type analysis --oid <oid> --output yaml
 limacharlie case entity add --case <case_number> --type ip --value "10.0.0.1" --verdict malicious --oid <oid> --output yaml
-limacharlie case telemetry add --case <case_number> --atom <atom> --sid <sid> --event-type NEW_PROCESS --oid <oid> --output yaml
-limacharlie case export --id <case_number> --oid <oid> --output yaml
-limacharlie case export --id <case_number> --with-data ./case-export --oid <oid>
+limacharlie case telemetry add --case <case_number> --event '<full LC event JSON>' --verdict suspicious --oid <oid> --output yaml
+limacharlie case export --case-number <case_number> --oid <oid> --output yaml
+limacharlie case export --case-number <case_number> --with-data ./case-export --oid <oid>
 ```
 
 The cases extension creates cases from detections via D&R rules and extension requests. Cases can also be created without detections for ad-hoc investigations. Use `limacharlie case --ai-help` for full command reference. See the `case-investigation` skill for the full investigation workflow.
