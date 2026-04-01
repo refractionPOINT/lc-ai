@@ -452,6 +452,6 @@ hives:
         enabled: true
         expiry: 0
         tags:
-          - ai-team:intel-soc:collector
-          - ai-team:intel-soc:sends-to:analyzer
+          - ai-team:intel-team:collector
+          - ai-team:intel-team:sends-to:analyzer
           - ai-team:api-key:intel-collector

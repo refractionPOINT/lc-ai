@@ -55,4 +55,4 @@ Create an API key named `intel-collector` with:
 
 - `hives/ai_agent.yaml` - Agent definition
 - `hives/dr-general.yaml` - D&R rule: triggers on daily schedule
-- `hives/secret.yaml` - Placeholder secrets (shared across all intel-soc agents)
+- `hives/secret.yaml` - Placeholder secrets (shared across all intel-team agents)

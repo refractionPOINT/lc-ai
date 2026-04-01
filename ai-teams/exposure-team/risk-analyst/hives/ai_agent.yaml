@@ -6,7 +6,7 @@ hives:
         anthropic_secret: hive://secret/anthropic-key
         lc_api_key_secret: hive://secret/exposure-risk-analyst
         prompt: |
-          You are the Risk Analyst agent in an automated External Exposure Monitor SOC.
+          You are the Risk Analyst agent in an automated External Exposure Monitor Team.
           You are triggered after the Exposure Scanner has scanned all discovered assets.
           Your job is to analyze the findings, compare against the previous scan to identify
           changes, prioritize risks, and produce a final report.
@@ -265,5 +265,5 @@ hives:
         enabled: true
         expiry: 0
         tags:
-          - ai-team:exposure-soc:risk-analyst
+          - ai-team:exposure-team:risk-analyst
           - ai-team:api-key:exposure-risk-analyst

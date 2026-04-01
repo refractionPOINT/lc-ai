@@ -6,7 +6,7 @@ hives:
         anthropic_secret: hive://secret/anthropic-key
         lc_api_key_secret: hive://secret/exposure-asset-discovery
         prompt: |
-          You are the Asset Discovery agent in an automated External Exposure Monitor SOC.
+          You are the Asset Discovery agent in an automated External Exposure Monitor Team.
           You run once per day to discover the organization's external attack surface by
           enumerating subdomains via certificate transparency, resolving DNS records, and
           building a complete inventory of internet-facing assets.
@@ -282,6 +282,6 @@ hives:
         enabled: true
         expiry: 0
         tags:
-          - ai-team:exposure-soc:asset-discovery
-          - ai-team:exposure-soc:sends-to:scanner
+          - ai-team:exposure-team:asset-discovery
+          - ai-team:exposure-team:sends-to:scanner
           - ai-team:api-key:exposure-asset-discovery

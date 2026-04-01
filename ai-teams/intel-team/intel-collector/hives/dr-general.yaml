@@ -15,4 +15,4 @@ hives:
         enabled: true
         expiry: 0
         tags:
-          - ai-team:intel-soc:collector
+          - ai-team:intel-team:collector

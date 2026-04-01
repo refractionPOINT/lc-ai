@@ -311,8 +311,8 @@ teams:
         runs_per_day: 1
         estimated_daily_usd: 1.00
 
-  intel-soc:
-    display_name: "Intel SOC"
+  intel-team:
+    display_name: "Intel Team"
     description: >
       Three-agent pipeline that runs daily to collect open-source threat intelligence,
       analyze it against the org's platform profile, and produce detection rules and
@@ -366,8 +366,8 @@ teams:
         runs_per_day: 1
         estimated_daily_usd: 3.00
 
-  exposure-soc:
-    display_name: "Exposure Monitor SOC"
+  exposure-team:
+    display_name: "Exposure Monitor Team"
     description: >
       AI-powered SOC that runs daily to discover, scan, and report on the
       organization's external attack surface using free OSINT sources.
