@@ -4,23 +4,16 @@
 #
 #   max_budget_usd        Hard per-run cap enforced by the runtime. A session is
 #                         terminated if it would exceed this amount. Sourced from
-#                         each agent's ai_agent.yaml.
-#
-#   estimated_per_run_usd What a single session typically costs. This is a rough
-#                         estimate based on observed usage, NOT a guarantee.
-#                         For batch agents (triage), one "run" processes many
-#                         detections — the estimate reflects the full batch, not
-#                         a single detection.
-#                         When this equals max_budget_usd, it means the agent
-#                         typically uses its full budget (complex tasks like
-#                         malware analysis or threat hunting).
+#                         each agent's ai_agent.yaml. All cost calculations below
+#                         use this worst-case value.
 #
 #   cost_scenarios        Named paths through the agent pipeline. Each total is
-#                         the sum of estimated_per_run_usd for the agents in that
-#                         path. These represent per-incident costs, not per-detection.
+#                         the sum of max_budget_usd for the agents in that path
+#                         (worst-case per-incident cost).
 #
 #   daily_overhead        Scheduled agents that run on a fixed cadence regardless
-#                         of detection volume.
+#                         of detection volume. Costs are worst-case (max_budget_usd
+#                         × runs_per_day).
 #
 #   trigger.type          How the agent is invoked:
 #                           per_detection - fires on every detection (rate-limited)
@@ -47,7 +40,6 @@ teams:
       triage:
         model: sonnet
         max_budget_usd: 2.00
-        estimated_per_run_usd: 0.10
         trigger:
           type: per_detection
           suppression: "20/1m"
@@ -57,7 +49,6 @@ teams:
       l1-investigator:
         model: opus
         max_budget_usd: 2.00
-        estimated_per_run_usd: 0.50
         trigger:
           type: per_case
           event: case_created
@@ -67,7 +58,6 @@ teams:
       l2-analyst:
         model: opus
         max_budget_usd: 5.00
-        estimated_per_run_usd: 2.00
         trigger:
           type: per_tag
           tag: needs-escalation
@@ -77,7 +67,6 @@ teams:
       malware-analyst:
         model: opus
         max_budget_usd: 5.00
-        estimated_per_run_usd: 5.00
         trigger:
           type: per_mention
           mention: "@malware-analyst"
@@ -87,7 +76,6 @@ teams:
       containment:
         model: sonnet
         max_budget_usd: 1.00
-        estimated_per_run_usd: 1.00
         trigger:
           type: per_mention
           mention: "@containment"
@@ -97,7 +85,6 @@ teams:
       threat-hunter:
         model: opus
         max_budget_usd: 5.00
-        estimated_per_run_usd: 5.00
         trigger:
           type: per_mention
           mention: "@threat-hunter"
@@ -107,7 +94,6 @@ teams:
       soc-manager:
         model: sonnet
         max_budget_usd: 0.50
-        estimated_per_run_usd: 0.50
         trigger:
           type: schedule
           interval: 1h
@@ -116,7 +102,6 @@ teams:
       shift-reporter:
         model: sonnet
         max_budget_usd: 1.00
-        estimated_per_run_usd: 1.00
         trigger:
           type: schedule
           interval: 24h
@@ -125,27 +110,27 @@ teams:
     cost_scenarios:
       - name: "FP dismissed at triage"
         runs: [triage]
-        estimated_total_usd: 0.10
+        max_cost_usd: 2.00
       - name: "FP dismissed after L1"
         runs: [triage, l1-investigator]
-        estimated_total_usd: 0.60
+        max_cost_usd: 4.00
       - name: "TP through L2"
         runs: [triage, l1-investigator, l2-analyst]
-        estimated_total_usd: 2.60
+        max_cost_usd: 9.00
       - name: "TP with malware analysis"
         runs: [triage, l1-investigator, malware-analyst, l2-analyst]
-        estimated_total_usd: 7.60
+        max_cost_usd: 14.00
       - name: "TP with containment + hunt"
         runs: [triage, l1-investigator, l2-analyst, containment, threat-hunter]
-        estimated_total_usd: 8.60
+        max_cost_usd: 15.00
 
     daily_overhead:
       - agent: soc-manager
         runs_per_day: 24
-        estimated_daily_usd: 12.00
+        max_daily_usd: 12.00
       - agent: shift-reporter
         runs_per_day: 1
-        estimated_daily_usd: 1.00
+        max_daily_usd: 1.00
 
   lean-soc:
     display_name: "Lean SOC"
@@ -159,7 +144,6 @@ teams:
       triage:
         model: sonnet
         max_budget_usd: 2.00
-        estimated_per_run_usd: 0.10
         trigger:
           type: per_detection
           suppression: "20/1m"
@@ -169,7 +153,6 @@ teams:
       investigator:
         model: opus
         max_budget_usd: 5.00
-        estimated_per_run_usd: 1.00
         trigger:
           type: per_case
           event: case_created
@@ -179,7 +162,6 @@ teams:
       responder:
         model: sonnet
         max_budget_usd: 1.00
-        estimated_per_run_usd: 1.00
         trigger:
           type: per_mention
           mention: "@responder"
@@ -189,7 +171,6 @@ teams:
       reporter:
         model: sonnet
         max_budget_usd: 1.00
-        estimated_per_run_usd: 1.00
         trigger:
           type: schedule
           interval: 24h
@@ -198,18 +179,18 @@ teams:
     cost_scenarios:
       - name: "FP dismissed at triage"
         runs: [triage]
-        estimated_total_usd: 0.10
+        max_cost_usd: 2.00
       - name: "FP dismissed after investigation"
         runs: [triage, investigator]
-        estimated_total_usd: 1.10
+        max_cost_usd: 7.00
       - name: "TP with containment"
         runs: [triage, investigator, responder]
-        estimated_total_usd: 2.10
+        max_cost_usd: 8.00
 
     daily_overhead:
       - agent: reporter
         runs_per_day: 1
-        estimated_daily_usd: 1.00
+        max_daily_usd: 1.00
 
   baselining-soc:
     display_name: "Baselining SOC"
@@ -224,7 +205,6 @@ teams:
       bulk-triage:
         model: opus
         max_budget_usd: 5.00
-        estimated_per_run_usd: 5.00
         trigger:
           type: schedule
           interval: 1h
@@ -234,7 +214,6 @@ teams:
       l2-analyst:
         model: opus
         max_budget_usd: 5.00
-        estimated_per_run_usd: 5.00
         trigger:
           type: per_tag
           tag: needs-l2-review
@@ -244,7 +223,6 @@ teams:
       malware-analyst:
         model: opus
         max_budget_usd: 5.00
-        estimated_per_run_usd: 5.00
         trigger:
           type: per_mention
           mention: "@malware-analyst"
@@ -254,7 +232,6 @@ teams:
       containment:
         model: sonnet
         max_budget_usd: 1.00
-        estimated_per_run_usd: 1.00
         trigger:
           type: per_mention
           mention: "@containment"
@@ -264,7 +241,6 @@ teams:
       threat-hunter:
         model: opus
         max_budget_usd: 5.00
-        estimated_per_run_usd: 5.00
         trigger:
           type: per_mention
           mention: "@threat-hunter"
@@ -274,7 +250,6 @@ teams:
       soc-manager:
         model: sonnet
         max_budget_usd: 0.50
-        estimated_per_run_usd: 0.50
         trigger:
           type: schedule
           interval: 1h
@@ -283,7 +258,6 @@ teams:
       shift-reporter:
         model: sonnet
         max_budget_usd: 1.00
-        estimated_per_run_usd: 1.00
         trigger:
           type: schedule
           interval: 24h
@@ -292,24 +266,24 @@ teams:
     cost_scenarios:
       - name: "Hourly bulk triage (FPs only)"
         runs: [bulk-triage]
-        estimated_total_usd: 5.00
+        max_cost_usd: 5.00
       - name: "Hourly triage + TP with L2"
         runs: [bulk-triage, l2-analyst]
-        estimated_total_usd: 10.00
+        max_cost_usd: 10.00
       - name: "TP with malware analysis"
         runs: [bulk-triage, malware-analyst, l2-analyst]
-        estimated_total_usd: 15.00
+        max_cost_usd: 15.00
       - name: "TP with containment + hunt"
         runs: [bulk-triage, l2-analyst, containment, threat-hunter]
-        estimated_total_usd: 16.00
+        max_cost_usd: 16.00
 
     daily_overhead:
       - agent: soc-manager
         runs_per_day: 24
-        estimated_daily_usd: 12.00
+        max_daily_usd: 12.00
       - agent: shift-reporter
         runs_per_day: 1
-        estimated_daily_usd: 1.00
+        max_daily_usd: 1.00
 
   intel-team:
     display_name: "Intel Team"
@@ -324,7 +298,6 @@ teams:
       intel-collector:
         model: sonnet
         max_budget_usd: 2.00
-        estimated_per_run_usd: 0.50
         trigger:
           type: schedule
           interval: 24h
@@ -333,7 +306,6 @@ teams:
       intel-analyzer:
         model: opus
         max_budget_usd: 5.00
-        estimated_per_run_usd: 2.00
         trigger:
           type: per_mention
           mention: "@intel-analyzer"
@@ -343,7 +315,6 @@ teams:
       rule-engineer:
         model: opus
         max_budget_usd: 5.00
-        estimated_per_run_usd: 3.00
         trigger:
           type: per_mention
           mention: "@intel-engineer"
@@ -353,18 +324,18 @@ teams:
     cost_scenarios:
       - name: "Full daily pipeline"
         runs: [intel-collector, intel-analyzer, rule-engineer]
-        estimated_total_usd: 5.50
+        max_cost_usd: 12.00
 
     daily_overhead:
       - agent: intel-collector
         runs_per_day: 1
-        estimated_daily_usd: 0.50
+        max_daily_usd: 2.00
       - agent: intel-analyzer
         runs_per_day: 1
-        estimated_daily_usd: 2.00
+        max_daily_usd: 5.00
       - agent: rule-engineer
         runs_per_day: 1
-        estimated_daily_usd: 3.00
+        max_daily_usd: 5.00
 
   exposure-team:
     display_name: "Exposure Monitor Team"
@@ -378,7 +349,6 @@ teams:
       asset-discovery:
         model: sonnet
         max_budget_usd: 1.00
-        estimated_per_run_usd: 0.30
         trigger:
           type: schedule
           interval: 24h
@@ -387,7 +357,6 @@ teams:
       exposure-scanner:
         model: sonnet
         max_budget_usd: 1.50
-        estimated_per_run_usd: 0.50
         trigger:
           type: per_mention
           mention: "@exposure-scanner"
@@ -397,7 +366,6 @@ teams:
       risk-analyst:
         model: opus
         max_budget_usd: 2.00
-        estimated_per_run_usd: 2.00
         trigger:
           type: per_mention
           mention: "@exposure-risk-analyst"
@@ -407,18 +375,18 @@ teams:
     cost_scenarios:
       - name: "Full daily pipeline"
         runs: [asset-discovery, exposure-scanner, risk-analyst]
-        estimated_total_usd: 2.80
+        max_cost_usd: 4.50
 
     daily_overhead:
       - agent: asset-discovery
         runs_per_day: 1
-        estimated_daily_usd: 0.30
+        max_daily_usd: 1.00
       - agent: exposure-scanner
         runs_per_day: 1
-        estimated_daily_usd: 0.50
+        max_daily_usd: 1.50
       - agent: risk-analyst
         runs_per_day: 1
-        estimated_daily_usd: 2.00
+        max_daily_usd: 2.00
 
 agents:
   basic-triage:
@@ -427,7 +395,6 @@ agents:
     category: triage
     model: sonnet
     max_budget_usd: 2.00
-    estimated_per_run_usd: 0.10
     trigger:
       type: per_detection
       suppression: "20/1m"
@@ -439,7 +406,6 @@ agents:
     category: investigation
     model: opus
     max_budget_usd: 2.00
-    estimated_per_run_usd: 0.50
     trigger:
       type: per_case
       event: case_created
@@ -452,7 +418,6 @@ agents:
     category: investigation
     model: opus
     max_budget_usd: 5.00
-    estimated_per_run_usd: 5.00
     trigger:
       type: external
 
@@ -462,7 +427,6 @@ agents:
     category: analyst
     model: opus
     max_budget_usd: 5.00
-    estimated_per_run_usd: 2.00
     trigger:
       type: per_mention
       mention: "@general-analyst"
@@ -474,7 +438,6 @@ agents:
     category: github
     model: sonnet
     max_budget_usd: 2.00
-    estimated_per_run_usd: 0.50
     trigger:
       type: per_event
       events:
@@ -497,7 +460,6 @@ agents:
     category: github
     model: opus
     max_budget_usd: 5.00
-    estimated_per_run_usd: 3.00
     trigger:
       type: schedule
       interval: 24h
