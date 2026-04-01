@@ -1,12 +1,12 @@
 ---
 name: lc-deployer
 description: |
-  REQUIRED for ANY operation involving lc-soc or lc-agent definitions: deploy, install,
+  REQUIRED for ANY operation involving ai-team or ai-agent definitions: deploy, install,
   update, upgrade, remove, push, sync, or modify AI agents and Agentic SOC configurations
   in a LimaCharlie organization. This includes modifying agent prompts, updating hive
   configs (ai_agent, dr-general), managing API keys and secrets, subscribing to extensions,
-  and pushing changes after editing source YAML files in lc-soc/ or lc-agents/ directories.
-  Trigger words: lc-soc, lc-agent, ai_agent hive, deploy SOC, install agent, push agent,
+  and pushing changes after editing source YAML files in ai-teams/ or ai-agents/ directories.
+  Trigger words: ai-team, ai-agent, ai_agent hive, deploy SOC, install agent, push agent,
   update agent, sync agent, baselining-soc, tiered-soc, lean-soc, exposure-soc, intel-soc,
   l1-bot, general-analyst, bulk-triage, l2-analyst, malware-analyst, containment,
   threat-hunter, soc-manager, shift-reporter. Examples: "deploy tiered-soc to my org",
@@ -22,7 +22,7 @@ allowed-tools:
 
 # LimaCharlie Agentic SOC & Agent Deployer
 
-You help users deploy, install, and remove Agentic SOC as Code definitions (lc-soc) and individual AI agents (lc-agents) in their LimaCharlie organizations.
+You help users deploy, install, and remove Agentic SOC as Code definitions (ai-team) and individual AI agents (ai-agents) in their LimaCharlie organizations.
 
 ---
 
@@ -53,15 +53,15 @@ For command help and discovery: `limacharlie <command> --ai-help`
 
 ## Available Agents
 
-Individual agents are defined in the `lc-agents/` directory of the lc-ai repository. Each agent has:
+Individual agents are defined in the `ai-agents/` directory of the lc-ai repository. Each agent has:
 - A `README.md` describing what it does and its prerequisites
 - A `hives/` directory containing the IaC YAML files to deploy
 
-To discover available agents, list the directories under `lc-agents/` in the lc-ai repository.
+To discover available agents, list the directories under `ai-agents/` in the lc-ai repository.
 
 ## Available SOCs
 
-Full SOC definitions are in the `lc-soc/` directory. Each SOC is a coordinated set of agents that work together:
+Full SOC definitions are in the `ai-teams/` directory. Each SOC is a coordinated set of agents that work together:
 
 | SOC | Agents | Description |
 |-----|--------|-------------|
@@ -71,7 +71,7 @@ Full SOC definitions are in the `lc-soc/` directory. Each SOC is a coordinated s
 
 Each SOC has a top-level `README.md` describing its architecture, cost profile, and tradeoffs. Each agent within the SOC has its own `README.md` with specific API key permissions.
 
-To discover available SOCs, list the directories under `lc-soc/` in the lc-ai repository.
+To discover available SOCs, list the directories under `ai-teams/` in the lc-ai repository.
 
 ### Tag Convention
 
@@ -79,9 +79,9 @@ Every `ai_agent` hive record in a SOC carries two kinds of tags:
 
 | Tag Type | Format | Example |
 |----------|--------|---------|
-| **Identity** | `lc-soc:<soc-name>:<role>` | `lc-soc:tiered-soc:l1-investigator` |
-| **Relationship** | `lc-soc:<soc-name>:sends-to:<target-role>` | `lc-soc:tiered-soc:sends-to:l2-analyst` |
-| **API Key** | `lc-soc:api-key:<agent-name>` | `lc-soc:api-key:soc-l1-investigator` |
+| **Identity** | `ai-team:<soc-name>:<role>` | `ai-team:tiered-soc:l1-investigator` |
+| **Relationship** | `ai-team:<soc-name>:sends-to:<target-role>` | `ai-team:tiered-soc:sends-to:l2-analyst` |
+| **API Key** | `ai-team:api-key:<agent-name>` | `ai-team:api-key:soc-l1-investigator` |
 
 - The **identity tag** names the agent's role within the SOC.
 - Each **`sends-to` tag** declares a directed edge: this agent's output feeds `<target-role>` (via D&R trigger, case escalation, or data dependency).
@@ -107,12 +107,12 @@ Read the agent's `README.md` and all files in its `hives/` directory to understa
 - What secrets it needs
 - What hive entries it creates (ai_agent, dr-general, etc.)
 
-The agent definitions are in the `lc-agents/` directory at the root of the lc-ai repository. The lc-ai repo is the marketplace source for this plugin, so find it by searching for it relative to the plugin installation:
+The agent definitions are in the `ai-agents/` directory at the root of the lc-ai repository. The lc-ai repo is the marketplace source for this plugin, so find it by searching for it relative to the plugin installation:
 
 ```bash
-# The lc-agents dir is 3 levels up from this skill's directory
+# The ai-agents dir is 3 levels up from this skill's directory
 # (skills/lc-deployer/ -> skills/ -> lc-advanced-skills/ -> plugins/ -> marketplace/ -> repo root)
-find / -path "*/lc-ai/lc-agents" -type d 2>/dev/null | head -1
+find / -path "*/lc-ai/ai-agents" -type d 2>/dev/null | head -1
 ```
 
 Read all hive YAML files for the agent to understand the full configuration.
@@ -241,8 +241,8 @@ When the user asks to install/deploy a full SOC (lean-soc or tiered-soc), follow
 Read the SOC's top-level `README.md` and every agent's `README.md` within it:
 
 ```bash
-# Find the lc-soc directory
-find / -path "*/lc-ai/lc-soc" -type d 2>/dev/null | head -1
+# Find the ai-teams directory
+find / -path "*/lc-ai/ai-teams" -type d 2>/dev/null | head -1
 ```
 
 Read the SOC README for the architecture overview, installation order, and agent list. Then read each agent's README for its specific API key permissions.
@@ -360,7 +360,7 @@ For each shared key where you saved prior tags:
    limacharlie hive get --hive-name ai_agent --key <shared-key> --oid <oid> --output yaml
    ```
 
-2. Identify tags from the **other** SOC that were lost (tags that do NOT start with `lc-soc:<current-soc>:`).
+2. Identify tags from the **other** SOC that were lost (tags that do NOT start with `ai-team:<current-soc>:`).
 
 3. Write the merged record back with all tags from both SOCs:
    ```bash
@@ -368,7 +368,7 @@ For each shared key where you saved prior tags:
    echo '<full record JSON with merged tags>' | limacharlie hive set --hive-name ai_agent --key <shared-key> --oid <oid>
    ```
 
-**Example**: Installing baselining-soc when tiered-soc is already present. The `soc-l2-analyst` key previously had tags `[lc-soc:tiered-soc:l2-analyst, lc-soc:tiered-soc:sends-to:containment, lc-soc:tiered-soc:sends-to:threat-hunter]`. After pushing baselining-soc, it only has `[lc-soc:baselining-soc:l2-analyst, lc-soc:baselining-soc:sends-to:containment, lc-soc:baselining-soc:sends-to:threat-hunter]`. Merge both sets so the record has all six tags.
+**Example**: Installing baselining-soc when tiered-soc is already present. The `soc-l2-analyst` key previously had tags `[ai-team:tiered-soc:l2-analyst, ai-team:tiered-soc:sends-to:containment, ai-team:tiered-soc:sends-to:threat-hunter]`. After pushing baselining-soc, it only has `[ai-team:baselining-soc:l2-analyst, ai-team:baselining-soc:sends-to:containment, ai-team:baselining-soc:sends-to:threat-hunter]`. Merge both sets so the record has all six tags.
 
 ### Step 7: Verify Installation
 
@@ -475,7 +475,7 @@ Before deleting records, check whether another SOC shares any hive keys with the
 | `dr-general` | `soc-l2-on-case-escalated`, `malware-analyst-on-mention`, `containment-on-mention`, `threat-hunter-on-mention`, `soc-manager-hourly`, `soc-shift-reporter-daily` |
 
 For each hive key in the SOC being removed:
-- **If the key is shared** and the other SOC is still installed: read the record, remove only the departing SOC's tags (tags starting with `lc-soc:<soc-being-removed>:`), keep the other SOC's tags, and write the record back. Do NOT delete the record.
+- **If the key is shared** and the other SOC is still installed: read the record, remove only the departing SOC's tags (tags starting with `ai-team:<soc-being-removed>:`), keep the other SOC's tags, and write the record back. Do NOT delete the record.
 - **If the key is NOT shared** (unique to this SOC): delete the record entirely.
 
 ### Step 3: Remove Non-Shared Hive Entries
@@ -495,7 +495,7 @@ For shared keys where the other SOC is still installed, strip only the departing
 ```bash
 # Read the current record
 limacharlie hive get --hive-name ai_agent --key <shared-key> --oid <oid> --output yaml
-# Remove tags starting with lc-soc:<soc-being-removed>: and write back
+# Remove tags starting with ai-team:<soc-being-removed>: and write back
 echo '<record JSON with only the remaining SOCs tags>' | limacharlie hive set --hive-name ai_agent --key <shared-key> --oid <oid>
 ```
 

@@ -23,6 +23,6 @@ All CLI usage rules, timestamp handling, LCQL generation, and D&R rule generatio
 - **limacharlie-iac** - Infrastructure as Code with ext-git-sync
 
 ### Fleet Operations
-- **lc-deployer** - Deploy/remove Agentic SOC as Code definitions (lc-soc) and individual AI agents (lc-agents)
+- **lc-deployer** - Deploy/remove Agentic SOC as Code definitions (ai-team) and individual AI agents (ai-agents)
 - **test-limacharlie-edr** - Deploy temporary local EDR agent for testing
 - **test-limacharlie-adapter** - Deploy temporary local adapter for testing

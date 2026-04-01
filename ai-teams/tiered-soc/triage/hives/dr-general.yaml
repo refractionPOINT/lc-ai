@@ -1,0 +1,23 @@
+version: 3
+hives:
+  dr-general:
+    soc-triage-on-detect:
+      data:
+        detect:
+          target: detection
+          op: exists
+          path: /
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/soc-triage
+            suppression:
+              is_global: true
+              keys:
+                - soc-triage-rate-limit
+              max_count: 20
+              period: 1m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - ai-team:tiered-soc:triage

@@ -1,0 +1,29 @@
+version: 3
+hives:
+  dr-general:
+    intel-engineer-on-mention:
+      data:
+        detect:
+          event: case_note_added
+          op: and
+          rules:
+            - op: contains
+              path: event/metadata/content
+              value: "@intel-engineer"
+            - op: is
+              path: event/metadata/permitted/?
+              value: ai_agent.exec
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/intel-engineer
+            suppression:
+              is_global: true
+              keys:
+                - "intel-engineer-{{ .event.case_id }}"
+              max_count: 1
+              period: 30m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - ai-team:intel-soc:engineer
