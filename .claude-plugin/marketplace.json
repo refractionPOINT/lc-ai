@@ -12,7 +12,7 @@
       "name": "lc-essentials",
       "description": "Core LimaCharlie skills for CLI-based API access, detection engineering, sensor tasking, case investigation, and fleet health monitoring.",
       "source": "./marketplace/plugins/lc-essentials",
-      "version": "3.0.0",
+      "version": "3.1.0",
       "author": {
         "name": "LimaCharlie",
         "email": "support@limacharlie.io"
@@ -22,7 +22,7 @@
       "name": "lc-advanced-skills",
       "description": "Advanced LimaCharlie skills for MSSP reporting, fleet coverage, threat intelligence, adapter management, IaC, onboarding, and HTML dashboards. Requires lc-essentials plugin.",
       "source": "./marketplace/plugins/lc-advanced-skills",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": {
         "name": "LimaCharlie",
         "email": "support@limacharlie.io"
