@@ -1,4 +1,4 @@
-# Intel SOC - Automated Threat Intelligence Pipeline
+# Intel Team - Automated Threat Intelligence Pipeline
 
 A 3-agent pipeline that runs daily to collect open-source threat intelligence, analyze it against your org's actual platform profile, and produce detection rules and IOC lookups.
 
@@ -138,20 +138,20 @@ Agents signal each other by writing case notes with @mentions. D&R rules match o
 
 Deploy via the `lc-deployer` skill:
 ```
-/lc-deployer install intel-soc to <org>
+/lc-deployer install intel-team to <org>
 ```
 
 Or manually with `limacharlie sync push`:
 ```bash
-limacharlie sync push --oid <oid> --input intel-soc.yaml
+limacharlie sync push --oid <oid> --input intel-team.yaml
 ```
 
 ## Files
 
 ```
-intel-soc/
+intel-team/
 ├── README.md                          # This file
-├── intel-soc.yaml                     # Master include file
+├── intel-team.yaml                     # Master include file
 ├── intel-collector/
 │   ├── README.md                      # Collector agent docs
 │   └── hives/

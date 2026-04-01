@@ -1,7 +1,7 @@
 version: 3
 hives:
   dr-general:
-    exposure-risk-analyst-on-mention:
+    exposure-scanner-on-mention:
       data:
         detect:
           event: case_note_added
@@ -9,21 +9,21 @@ hives:
           rules:
             - op: contains
               path: event/metadata/content
-              value: "@exposure-risk-analyst"
+              value: "@exposure-scanner"
             - op: is
               path: event/metadata/permitted/?
               value: ai_agent.exec
         respond:
           - action: start ai agent
-            definition: hive://ai_agent/exposure-risk-analyst
+            definition: hive://ai_agent/exposure-scanner
             suppression:
               is_global: true
               keys:
-                - "exposure-risk-analyst-{{ .event.case_id }}"
+                - "exposure-scanner-{{ .event.case_id }}"
               max_count: 1
               period: 30m
       usr_mtd:
         enabled: true
         expiry: 0
         tags:
-          - ai-team:exposure-soc:risk-analyst
+          - ai-team:exposure-team:scanner

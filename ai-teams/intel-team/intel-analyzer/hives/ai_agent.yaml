@@ -232,6 +232,6 @@ hives:
         enabled: true
         expiry: 0
         tags:
-          - ai-team:intel-soc:analyzer
-          - ai-team:intel-soc:sends-to:engineer
+          - ai-team:intel-team:analyzer
+          - ai-team:intel-team:sends-to:engineer
           - ai-team:api-key:intel-analyzer

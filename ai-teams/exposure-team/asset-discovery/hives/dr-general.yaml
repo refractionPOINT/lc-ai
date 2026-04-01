@@ -15,4 +15,4 @@ hives:
         enabled: true
         expiry: 0
         tags:
-          - ai-team:exposure-soc:asset-discovery
+          - ai-team:exposure-team:asset-discovery

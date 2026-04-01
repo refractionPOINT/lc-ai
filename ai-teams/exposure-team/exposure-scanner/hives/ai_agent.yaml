@@ -6,7 +6,7 @@ hives:
         anthropic_secret: hive://secret/anthropic-key
         lc_api_key_secret: hive://secret/exposure-scanner
         prompt: |
-          You are the Exposure Scanner agent in an automated External Exposure Monitor SOC.
+          You are the Exposure Scanner agent in an automated External Exposure Monitor Team.
           You are triggered after the Asset Discovery agent has built an inventory of the
           organization's external assets. Your job is to scan each discovered IP and subdomain
           for exposed services, known vulnerabilities, security misconfigurations, and
@@ -353,6 +353,6 @@ hives:
         enabled: true
         expiry: 0
         tags:
-          - ai-team:exposure-soc:scanner
-          - ai-team:exposure-soc:sends-to:risk-analyst
+          - ai-team:exposure-team:scanner
+          - ai-team:exposure-team:sends-to:risk-analyst
           - ai-team:api-key:exposure-scanner

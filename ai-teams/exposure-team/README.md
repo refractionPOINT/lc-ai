@@ -1,4 +1,4 @@
-# Exposure Monitor SOC - Automated External Attack Surface Management
+# Exposure Monitor Team - Automated External Attack Surface Management
 
 An AI-powered SOC that runs daily to discover, scan, and report on your organization's
 external attack surface using free OSINT sources. No API keys required beyond LimaCharlie
@@ -131,7 +131,7 @@ Use the `lc-deployer` skill to install, or manually:
 2. Store secrets in the secret hive
 3. Push the configuration:
 ```bash
-limacharlie sync push --config-file exposure-soc.yaml --hive-ai-agent --hive-dr-general --oid <oid>
+limacharlie sync push --config-file exposure-team.yaml --hive-ai-agent --hive-dr-general --oid <oid>
 ```
 
 ## Agent Configuration
@@ -173,8 +173,8 @@ previous scan. This enables change detection:
 ## Files
 
 ```
-exposure-soc/
-├── exposure-soc.yaml                    # Master include file
+exposure-team/
+├── exposure-team.yaml                    # Master include file
 ├── README.md
 ├── asset-discovery/
 │   └── hives/
