@@ -36,7 +36,7 @@ Create an API key named `lean-triage` with:
 | Parameter | Value |
 |-----------|-------|
 | `model` | `sonnet` |
-| `max_budget_usd` | `0.50` |
+| `max_budget_usd` | `2.00` |
 | `ttl_seconds` | `300` (5m) |
 | Suppression | `20/min` |
 

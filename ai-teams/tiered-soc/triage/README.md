@@ -38,8 +38,8 @@ Create an API key named `soc-triage` with these permissions:
 | Parameter | Value | Description |
 |-----------|-------|-------------|
 | `model` | `sonnet` | Fast, cost-effective triage |
-| `max_turns` | `30` | Enough for context gathering + routing |
-| `max_budget_usd` | `0.50` | Cost cap per session |
+| `max_turns` | `50` | Enough for context gathering + routing |
+| `max_budget_usd` | `2.00` | Cost cap per session |
 | `ttl_seconds` | `300` | 5 minute hard timeout |
 | `one_shot` | `true` | Terminates after completing |
 | Suppression | `20/min` | Max 20 agent invocations per minute |

@@ -1,14 +1,35 @@
 # Catalog of AI agents and AI teams available in this repository.
 #
-# Costs are estimates based on typical session usage. Actual costs depend on
-# investigation complexity and current Anthropic model pricing.
+# How to read cost fields:
 #
-# Fields:
-#   max_budget_usd      - hard per-run session cap (from ai_agent.yaml)
-#   estimated_per_run_usd - what a single session typically costs
-#   trigger.type        - per_detection, per_case, per_tag, per_mention, schedule, per_event, external
-#   cost_scenarios      - named paths through the agent pipeline
-#   daily_overhead      - scheduled agents with fixed daily cost
+#   max_budget_usd        Hard per-run cap enforced by the runtime. A session is
+#                         terminated if it would exceed this amount. Sourced from
+#                         each agent's ai_agent.yaml.
+#
+#   estimated_per_run_usd What a single session typically costs. This is a rough
+#                         estimate based on observed usage, NOT a guarantee.
+#                         For batch agents (triage), one "run" processes many
+#                         detections — the estimate reflects the full batch, not
+#                         a single detection.
+#                         When this equals max_budget_usd, it means the agent
+#                         typically uses its full budget (complex tasks like
+#                         malware analysis or threat hunting).
+#
+#   cost_scenarios        Named paths through the agent pipeline. Each total is
+#                         the sum of estimated_per_run_usd for the agents in that
+#                         path. These represent per-incident costs, not per-detection.
+#
+#   daily_overhead        Scheduled agents that run on a fixed cadence regardless
+#                         of detection volume.
+#
+#   trigger.type          How the agent is invoked:
+#                           per_detection - fires on every detection (rate-limited)
+#                           per_case      - fires when a case is created
+#                           per_tag       - fires when a specific tag is added to a case
+#                           per_mention   - fires when an @mention appears in a case note
+#                           schedule      - fires on a fixed interval (1h, 24h)
+#                           per_event     - fires on specific event types
+#                           external      - no built-in trigger; called by other agents
 
 version: 1
 

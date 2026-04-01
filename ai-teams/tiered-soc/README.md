@@ -6,7 +6,7 @@ A full-featured Agentic SOC as Code modeled after the traditional L1/L2/L3 SOC s
 
 ```mermaid
 flowchart TD
-    det[EDR Detection] --> triage["TRIAGE<br/>sonnet, $0.50"]
+    det[EDR Detection] --> triage["TRIAGE<br/>sonnet, $2.00"]
     triage -->|Obvious FP| dismissed["Dismissed<br/>(no case, ~$0.10)"]
     triage -->|creates case| l1["L1 INVESTIGATOR<br/>opus, $2.00"]
     l1 -->|FP confirmed| closed["Closed<br/>(false_positive, ~$0.60)"]
@@ -55,7 +55,7 @@ Costs assume typical session lengths. Actual costs depend on investigation compl
 
 | Agent | Role | Model | Budget | TTL | Trigger |
 |-------|------|-------|--------|-----|---------|
-| [triage](triage/) | Evaluate every detection, dismiss FPs, create/route cases | sonnet | $0.50 | 5m | Every detection |
+| [triage](triage/) | Evaluate every detection, dismiss FPs, create/route cases | sonnet | $2.00 | 5m | Every detection |
 | [l1-investigator](l1-investigator/) | Investigate new cases, document findings, classify | opus | $2.00 | 10m | Case created |
 | [l2-analyst](l2-analyst/) | Deep investigation, scope assessment, lateral movement | opus | $5.00 | 15m | Tag: needs-escalation |
 | [malware-analyst](malware-analyst/) | Deep binary forensics via LCRE/Ghidra | opus | $5.00 | 15m | Tag: needs-malware-analysis |

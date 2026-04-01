@@ -65,8 +65,8 @@ Use the `lc-deployer` skill to install and manage this agent. See the [lc-essent
 | Parameter | Value | Description |
 |-----------|-------|-------------|
 | `model` | `sonnet` | Claude model used for triage (fast and cost-effective) |
-| `max_turns` | `30` | Maximum CLI tool calls per triage session |
-| `max_budget_usd` | `0.50` | Cost cap per triage session |
+| `max_turns` | `50` | Maximum CLI tool calls per triage session |
+| `max_budget_usd` | `2.00` | Cost cap per triage session |
 | `ttl_seconds` | `300` | Hard timeout (5 minutes) |
 | `one_shot` | `true` | Session terminates after completing |
 | Suppression | `20/min` | Maximum AI agent invocations per minute (global) |

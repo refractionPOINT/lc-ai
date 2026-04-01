@@ -6,7 +6,7 @@ A minimal Agentic SOC as Code built for maximum autonomy with minimum complexity
 
 ```mermaid
 flowchart TD
-    det[EDR Detection] --> triage["TRIAGE<br/>sonnet, $0.50"]
+    det[EDR Detection] --> triage["TRIAGE<br/>sonnet, $2.00"]
     triage -->|Obvious FP| dismissed["Dismissed<br/>(no case, ~$0.10)"]
     triage -->|creates case| inv["INVESTIGATOR<br/>opus, $5.00<br/>(combined L1 + L2)"]
     inv -->|FP confirmed| closed["Closed<br/>(false_positive, ~$1.10)"]
@@ -40,7 +40,7 @@ The lean model optimizes for simplicity and cost:
 
 | Agent | Role | Model | Budget | TTL | Trigger |
 |-------|------|-------|--------|-----|---------|
-| [triage](triage/) | Evaluate every detection, dismiss FPs, create/route cases | sonnet | $0.50 | 5m | Every detection |
+| [triage](triage/) | Evaluate every detection, dismiss FPs, create/route cases | sonnet | $2.00 | 5m | Every detection |
 | [investigator](investigator/) | Full investigation from triage to conclusion | opus | $5.00 | 15m | Case created |
 | [responder](responder/) | Isolate sensors, block IOCs for confirmed threats | sonnet | $1.00 | 5m | Tag: needs-containment |
 | [reporter](reporter/) | Daily SOC metrics, SLA monitoring, stale case cleanup | sonnet | $1.00 | 5m | Schedule: every 24h |
