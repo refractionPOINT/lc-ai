@@ -13,7 +13,9 @@
 #
 #   daily_overhead        Scheduled agents that run on a fixed cadence regardless
 #                         of detection volume. Costs are worst-case (max_budget_usd
-#                         × runs_per_day).
+#                         × runs_per_day). Entries use either "agent" (single
+#                         scheduled agent) or "pipeline" (chain of agents triggered
+#                         by a single scheduled entry-point).
 #
 #   trigger.type          How the agent is invoked:
 #                           per_detection - fires on every detection (rate-limited)
@@ -278,6 +280,9 @@ teams:
         max_cost_usd: 16.00
 
     daily_overhead:
+      - agent: bulk-triage
+        runs_per_day: 24
+        max_daily_usd: 120.00
       - agent: soc-manager
         runs_per_day: 24
         max_daily_usd: 12.00
@@ -321,21 +326,10 @@ teams:
           suppression: "1/30m"
         sends_to: []
 
-    cost_scenarios:
-      - name: "Full daily pipeline"
-        runs: [intel-collector, intel-analyzer, rule-engineer]
-        max_cost_usd: 12.00
-
     daily_overhead:
-      - agent: intel-collector
+      - pipeline: [intel-collector, intel-analyzer, rule-engineer]
         runs_per_day: 1
-        max_daily_usd: 2.00
-      - agent: intel-analyzer
-        runs_per_day: 1
-        max_daily_usd: 5.00
-      - agent: rule-engineer
-        runs_per_day: 1
-        max_daily_usd: 5.00
+        max_daily_usd: 12.00
 
   exposure-team:
     display_name: "Exposure Monitor Team"
@@ -372,21 +366,10 @@ teams:
           suppression: "1/30m"
         sends_to: []
 
-    cost_scenarios:
-      - name: "Full daily pipeline"
-        runs: [asset-discovery, exposure-scanner, risk-analyst]
-        max_cost_usd: 4.50
-
     daily_overhead:
-      - agent: asset-discovery
+      - pipeline: [asset-discovery, exposure-scanner, risk-analyst]
         runs_per_day: 1
-        max_daily_usd: 1.00
-      - agent: exposure-scanner
-        runs_per_day: 1
-        max_daily_usd: 1.50
-      - agent: risk-analyst
-        runs_per_day: 1
-        max_daily_usd: 2.00
+        max_daily_usd: 4.50
 
 agents:
   basic-triage:
