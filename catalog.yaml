@@ -1,0 +1,483 @@
+# Catalog of AI agents and AI teams available in this repository.
+#
+# Costs are estimates based on typical session usage. Actual costs depend on
+# investigation complexity and current Anthropic model pricing.
+#
+# Fields:
+#   max_budget_usd      - hard per-run session cap (from ai_agent.yaml)
+#   estimated_per_run_usd - what a single session typically costs
+#   trigger.type        - per_detection, per_case, per_tag, per_mention, schedule, per_event, external
+#   cost_scenarios      - named paths through the agent pipeline
+#   daily_overhead      - scheduled agents with fixed daily cost
+
+version: 1
+
+teams:
+  tiered-soc:
+    display_name: "Tiered SOC"
+    description: >
+      Full-featured Agentic SOC modeled after the traditional L1/L2/L3 structure.
+      Eight specialized agents form a coordinated pipeline that handles the complete
+      alert lifecycle.
+    best_for: "Stable orgs wanting defense-in-depth with specialist agents"
+    prerequisites: [ext-cases]
+
+    agents:
+      triage:
+        model: sonnet
+        max_budget_usd: 2.00
+        estimated_per_run_usd: 0.10
+        trigger:
+          type: per_detection
+          suppression: "20/1m"
+          debounce: true
+        sends_to: [l1-investigator]
+
+      l1-investigator:
+        model: opus
+        max_budget_usd: 2.00
+        estimated_per_run_usd: 0.50
+        trigger:
+          type: per_case
+          event: case_created
+          suppression: "10/1m"
+        sends_to: [l2-analyst, malware-analyst]
+
+      l2-analyst:
+        model: opus
+        max_budget_usd: 5.00
+        estimated_per_run_usd: 2.00
+        trigger:
+          type: per_tag
+          tag: needs-escalation
+          suppression: "1/30m per case"
+        sends_to: [containment, threat-hunter, malware-analyst]
+
+      malware-analyst:
+        model: opus
+        max_budget_usd: 5.00
+        estimated_per_run_usd: 5.00
+        trigger:
+          type: per_mention
+          mention: "@malware-analyst"
+          suppression: "1/30m per case"
+        sends_to: []
+
+      containment:
+        model: sonnet
+        max_budget_usd: 1.00
+        estimated_per_run_usd: 1.00
+        trigger:
+          type: per_mention
+          mention: "@containment"
+          suppression: "1/30m per case"
+        sends_to: []
+
+      threat-hunter:
+        model: opus
+        max_budget_usd: 5.00
+        estimated_per_run_usd: 5.00
+        trigger:
+          type: per_mention
+          mention: "@threat-hunter"
+          suppression: "1/30m per case"
+        sends_to: [l1-investigator]
+
+      soc-manager:
+        model: sonnet
+        max_budget_usd: 0.50
+        estimated_per_run_usd: 0.50
+        trigger:
+          type: schedule
+          interval: 1h
+        sends_to: []
+
+      shift-reporter:
+        model: sonnet
+        max_budget_usd: 1.00
+        estimated_per_run_usd: 1.00
+        trigger:
+          type: schedule
+          interval: 24h
+        sends_to: []
+
+    cost_scenarios:
+      - name: "FP dismissed at triage"
+        runs: [triage]
+        estimated_total_usd: 0.10
+      - name: "FP dismissed after L1"
+        runs: [triage, l1-investigator]
+        estimated_total_usd: 0.60
+      - name: "TP through L2"
+        runs: [triage, l1-investigator, l2-analyst]
+        estimated_total_usd: 2.60
+      - name: "TP with malware analysis"
+        runs: [triage, l1-investigator, malware-analyst, l2-analyst]
+        estimated_total_usd: 7.60
+      - name: "TP with containment + hunt"
+        runs: [triage, l1-investigator, l2-analyst, containment, threat-hunter]
+        estimated_total_usd: 8.60
+
+    daily_overhead:
+      - agent: soc-manager
+        runs_per_day: 24
+        estimated_daily_usd: 12.00
+      - agent: shift-reporter
+        runs_per_day: 1
+        estimated_daily_usd: 1.00
+
+  lean-soc:
+    display_name: "Lean SOC"
+    description: >
+      Minimal Agentic SOC built for maximum autonomy with minimum complexity.
+      Four agents handle the complete alert lifecycle without specialized tiers.
+    best_for: "Smaller orgs or getting started fast"
+    prerequisites: [ext-cases]
+
+    agents:
+      triage:
+        model: sonnet
+        max_budget_usd: 2.00
+        estimated_per_run_usd: 0.10
+        trigger:
+          type: per_detection
+          suppression: "20/1m"
+          debounce: true
+        sends_to: [investigator]
+
+      investigator:
+        model: opus
+        max_budget_usd: 5.00
+        estimated_per_run_usd: 1.00
+        trigger:
+          type: per_case
+          event: case_created
+          suppression: "10/1m"
+        sends_to: [responder]
+
+      responder:
+        model: sonnet
+        max_budget_usd: 1.00
+        estimated_per_run_usd: 1.00
+        trigger:
+          type: per_mention
+          mention: "@responder"
+          suppression: "1/30m per case"
+        sends_to: []
+
+      reporter:
+        model: sonnet
+        max_budget_usd: 1.00
+        estimated_per_run_usd: 1.00
+        trigger:
+          type: schedule
+          interval: 24h
+        sends_to: []
+
+    cost_scenarios:
+      - name: "FP dismissed at triage"
+        runs: [triage]
+        estimated_total_usd: 0.10
+      - name: "FP dismissed after investigation"
+        runs: [triage, investigator]
+        estimated_total_usd: 1.10
+      - name: "TP with containment"
+        runs: [triage, investigator, responder]
+        estimated_total_usd: 2.10
+
+    daily_overhead:
+      - agent: reporter
+        runs_per_day: 1
+        estimated_daily_usd: 1.00
+
+  baselining-soc:
+    display_name: "Baselining SOC"
+    description: >
+      Designed for newly onboarded organizations with high false positive volume.
+      Processes detections in hourly batches and aggressively creates FP rules
+      to reduce noise. Migrate to Tiered SOC once volume is manageable.
+    best_for: "New orgs with noisy detections, first days/weeks"
+    prerequisites: [ext-cases]
+
+    agents:
+      bulk-triage:
+        model: opus
+        max_budget_usd: 5.00
+        estimated_per_run_usd: 5.00
+        trigger:
+          type: schedule
+          interval: 1h
+          debounce: true
+        sends_to: [l2-analyst, malware-analyst]
+
+      l2-analyst:
+        model: opus
+        max_budget_usd: 5.00
+        estimated_per_run_usd: 5.00
+        trigger:
+          type: per_tag
+          tag: needs-l2-review
+          suppression: "1/30m per case"
+        sends_to: [containment, threat-hunter, malware-analyst]
+
+      malware-analyst:
+        model: opus
+        max_budget_usd: 5.00
+        estimated_per_run_usd: 5.00
+        trigger:
+          type: per_mention
+          mention: "@malware-analyst"
+          suppression: "1/30m per case"
+        sends_to: [l2-analyst]
+
+      containment:
+        model: sonnet
+        max_budget_usd: 1.00
+        estimated_per_run_usd: 1.00
+        trigger:
+          type: per_mention
+          mention: "@containment"
+          suppression: "1/30m per case"
+        sends_to: []
+
+      threat-hunter:
+        model: opus
+        max_budget_usd: 5.00
+        estimated_per_run_usd: 5.00
+        trigger:
+          type: per_mention
+          mention: "@threat-hunter"
+          suppression: "1/30m per case"
+        sends_to: []
+
+      soc-manager:
+        model: sonnet
+        max_budget_usd: 0.50
+        estimated_per_run_usd: 0.50
+        trigger:
+          type: schedule
+          interval: 1h
+        sends_to: []
+
+      shift-reporter:
+        model: sonnet
+        max_budget_usd: 1.00
+        estimated_per_run_usd: 1.00
+        trigger:
+          type: schedule
+          interval: 24h
+        sends_to: []
+
+    cost_scenarios:
+      - name: "Hourly bulk triage (FPs only)"
+        runs: [bulk-triage]
+        estimated_total_usd: 5.00
+      - name: "Hourly triage + TP with L2"
+        runs: [bulk-triage, l2-analyst]
+        estimated_total_usd: 10.00
+      - name: "TP with malware analysis"
+        runs: [bulk-triage, malware-analyst, l2-analyst]
+        estimated_total_usd: 15.00
+      - name: "TP with containment + hunt"
+        runs: [bulk-triage, l2-analyst, containment, threat-hunter]
+        estimated_total_usd: 16.00
+
+    daily_overhead:
+      - agent: soc-manager
+        runs_per_day: 24
+        estimated_daily_usd: 12.00
+      - agent: shift-reporter
+        runs_per_day: 1
+        estimated_daily_usd: 1.00
+
+  intel-soc:
+    display_name: "Intel SOC"
+    description: >
+      Three-agent pipeline that runs daily to collect open-source threat intelligence,
+      analyze it against the org's platform profile, and produce detection rules and
+      IOC lookups.
+    best_for: "Automated daily threat intel pipeline"
+    prerequisites: [ext-cases]
+
+    agents:
+      intel-collector:
+        model: sonnet
+        max_budget_usd: 2.00
+        estimated_per_run_usd: 0.50
+        trigger:
+          type: schedule
+          interval: 24h
+        sends_to: [intel-analyzer]
+
+      intel-analyzer:
+        model: opus
+        max_budget_usd: 5.00
+        estimated_per_run_usd: 2.00
+        trigger:
+          type: per_mention
+          mention: "@intel-analyzer"
+          suppression: "1/30m"
+        sends_to: [rule-engineer]
+
+      rule-engineer:
+        model: opus
+        max_budget_usd: 5.00
+        estimated_per_run_usd: 3.00
+        trigger:
+          type: per_mention
+          mention: "@intel-engineer"
+          suppression: "1/30m"
+        sends_to: []
+
+    cost_scenarios:
+      - name: "Full daily pipeline"
+        runs: [intel-collector, intel-analyzer, rule-engineer]
+        estimated_total_usd: 5.50
+
+    daily_overhead:
+      - agent: intel-collector
+        runs_per_day: 1
+        estimated_daily_usd: 0.50
+      - agent: intel-analyzer
+        runs_per_day: 1
+        estimated_daily_usd: 2.00
+      - agent: rule-engineer
+        runs_per_day: 1
+        estimated_daily_usd: 3.00
+
+  exposure-soc:
+    display_name: "Exposure Monitor SOC"
+    description: >
+      AI-powered SOC that runs daily to discover, scan, and report on the
+      organization's external attack surface using free OSINT sources.
+    best_for: "Automated external attack surface management"
+    prerequisites: [ext-cases]
+
+    agents:
+      asset-discovery:
+        model: sonnet
+        max_budget_usd: 1.00
+        estimated_per_run_usd: 0.30
+        trigger:
+          type: schedule
+          interval: 24h
+        sends_to: [exposure-scanner]
+
+      exposure-scanner:
+        model: sonnet
+        max_budget_usd: 1.50
+        estimated_per_run_usd: 0.50
+        trigger:
+          type: per_mention
+          mention: "@exposure-scanner"
+          suppression: "1/30m"
+        sends_to: [risk-analyst]
+
+      risk-analyst:
+        model: opus
+        max_budget_usd: 2.00
+        estimated_per_run_usd: 2.00
+        trigger:
+          type: per_mention
+          mention: "@exposure-risk-analyst"
+          suppression: "1/30m"
+        sends_to: []
+
+    cost_scenarios:
+      - name: "Full daily pipeline"
+        runs: [asset-discovery, exposure-scanner, risk-analyst]
+        estimated_total_usd: 2.80
+
+    daily_overhead:
+      - agent: asset-discovery
+        runs_per_day: 1
+        estimated_daily_usd: 0.30
+      - agent: exposure-scanner
+        runs_per_day: 1
+        estimated_daily_usd: 0.50
+      - agent: risk-analyst
+        runs_per_day: 1
+        estimated_daily_usd: 2.00
+
+agents:
+  basic-triage:
+    display_name: "Basic Triage"
+    description: "Standalone detection triage and case routing"
+    category: triage
+    model: sonnet
+    max_budget_usd: 2.00
+    estimated_per_run_usd: 0.10
+    trigger:
+      type: per_detection
+      suppression: "20/1m"
+      debounce: true
+
+  l1-bot:
+    display_name: "L1 Bot"
+    description: "Automated L1 SOC analyst that investigates new cases"
+    category: investigation
+    model: opus
+    max_budget_usd: 2.00
+    estimated_per_run_usd: 0.50
+    trigger:
+      type: per_case
+      event: case_created
+      suppression: "10/1m"
+      debounce: true
+
+  malware-analysis:
+    display_name: "Malware Analysis"
+    description: "Deep binary forensics via LCRE and Ghidra"
+    category: investigation
+    model: opus
+    max_budget_usd: 5.00
+    estimated_per_run_usd: 5.00
+    trigger:
+      type: external
+
+  general-analyst:
+    display_name: "General Analyst"
+    description: "On-demand analyst invoked via @mention in case notes"
+    category: analyst
+    model: opus
+    max_budget_usd: 5.00
+    estimated_per_run_usd: 2.00
+    trigger:
+      type: per_mention
+      mention: "@general-analyst"
+      suppression: "1/30m per case"
+
+  github-security-monitor:
+    display_name: "GitHub Security Monitor"
+    description: "Monitors high-risk GitHub audit log events"
+    category: github
+    model: sonnet
+    max_budget_usd: 2.00
+    estimated_per_run_usd: 0.50
+    trigger:
+      type: per_event
+      events:
+        - protected_branch.destroy
+        - protected_branch.policy_override
+        - org.disable_two_factor_requirement
+        - org.disable_oauth_app_restrictions
+        - secret_scanning.disable
+        - dependabot_alerts.disable
+        - repo.access
+        - repo.destroy
+        - integration_installation.create
+        - deploy_key.create
+      suppression: "5/1m"
+      debounce: true
+
+  github-threat-hunter:
+    display_name: "GitHub Threat Hunter"
+    description: "Daily proactive threat hunting in GitHub audit logs"
+    category: github
+    model: opus
+    max_budget_usd: 5.00
+    estimated_per_run_usd: 3.00
+    trigger:
+      type: schedule
+      interval: 24h
+      suppression: "2/24h"
