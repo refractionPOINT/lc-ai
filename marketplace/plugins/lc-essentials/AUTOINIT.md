@@ -192,6 +192,10 @@ Sensor selectors use [bexpr](https://github.com/hashicorp/go-bexpr) syntax. Use 
 
 Not all extensions have a configuration. To check subscriptions: `limacharlie extension list --oid <oid> --output yaml`.
 
+## Infrastructure Sync
+
+When using `limacharlie sync push`, **avoid using `--force`** unless you are certain you want to remove cloud resources not present in the local config file. Without `--force`, push only adds or updates resources — it never removes them. With `--force`, any resource in the cloud that is missing from the local file **will be deleted**, which can cause data loss if your local file is not a complete representation of the org's configuration.
+
 ## Billing, Features and Functionality
 
 Don't assume you know anything about LimaCharlie billing, pricing, or features. Use the documentation: https://github.com/refractionPOINT/documentation/tree/master/docs/limacharlie/doc
