@@ -240,7 +240,7 @@ hives:
           oid: routing.oid
         model: opus
         max_turns: 100
-        max_budget_usd: 5.0
+        max_budget_usd: 10.0
         ttl_seconds: 900
         one_shot: true
         permission_mode: bypassPermissions

@@ -12,7 +12,7 @@ flowchart TD
     rules --> test["Unit test each rule:<br/>Positive + negative tests"]
     test --> replay["Replay on last 24h:<br/>Across all tenant orgs"]
     replay -->|High FP rate| fp["Create narrow FP rules"]
-    replay -->|Low FP rate| deploy["Deploy across tenant orgs:<br/>D&R rules (disabled)<br/>IOC lookups (active)"]
+    replay -->|Low FP rate| deploy["Deploy across tenant orgs:<br/>D&R rules (enabled)<br/>IOC lookups (active)"]
     fp --> deploy
     deploy --> document["Document in daily report:<br/>Rules created, replay results,<br/>FP analysis"]
     document --> handoff["@mdr-threat-hunter<br/>Session terminates"]
@@ -29,7 +29,7 @@ flowchart TD
 
 | Artifact | State | Rationale |
 |----------|-------|-----------|
-| D&R Rules | **Disabled** | Human review required before enabling in customer orgs |
+| D&R Rules | **Enabled** | Unit tested and replay validated before deployment |
 | IOC Lookups | **Active** | Data-only, matched by existing lookup rules |
 | FP Rules | **Active** | Tested and validated, reduces noise immediately |
 
@@ -63,7 +63,7 @@ Uses the shared User API Key (`mdr-api-key`) and UID (`mdr-uid`). Required permi
 |-----------|-------|-------------|
 | `model` | `opus` | Complex rule generation and FP analysis |
 | `max_turns` | `100` | Many rules to generate, test, and deploy across orgs |
-| `max_budget_usd` | `5.0` | Higher budget for multi-org rule deployment |
+| `max_budget_usd` | `10.0` | Higher budget for multi-org rule deployment |
 | `ttl_seconds` | `900` | 15 minute hard timeout |
 | `one_shot` | `true` | Terminates after completing |
 | Suppression | `1/30m per case` | Max one run per case per 30 minutes |

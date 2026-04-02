@@ -385,7 +385,7 @@ teams:
     agents:
       intel-scout:
         model: opus
-        max_budget_usd: 5.00
+        max_budget_usd: 10.00
         trigger:
           type: schedule
           interval: 24h
@@ -393,7 +393,7 @@ teams:
 
       detection-engineer:
         model: opus
-        max_budget_usd: 5.00
+        max_budget_usd: 10.00
         trigger:
           type: per_mention
           mention: "@mdr-detection-engineer"
@@ -402,7 +402,7 @@ teams:
 
       threat-hunter:
         model: opus
-        max_budget_usd: 5.00
+        max_budget_usd: 10.00
         trigger:
           type: per_mention
           mention: "@mdr-threat-hunter"
@@ -412,7 +412,7 @@ teams:
     daily_overhead:
       - pipeline: [intel-scout, detection-engineer, threat-hunter]
         runs_per_day: 1
-        max_daily_usd: 15.00
+        max_daily_usd: 30.00
 
 agents:
   basic-triage:

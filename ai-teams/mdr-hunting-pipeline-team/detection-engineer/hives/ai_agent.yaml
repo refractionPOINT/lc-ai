@@ -226,15 +226,13 @@ hives:
 
           ### Step 10: Deploy Rules Across All Tenant Orgs
 
-          For each validated rule, deploy it to every relevant tenant org in DISABLED state
-          for human review:
+          For each validated rule, deploy it to every relevant tenant org in ENABLED state.
+          These rules have already been unit tested and replay tested, so they are ready for
+          production:
 
           ```bash
           # For each tenant org:
           limacharlie dr set --key <rule-name> --oid <tenant_oid> --input-file <rule_file>
-
-          # Disable the rule (it's created for review, not auto-enabled)
-          limacharlie dr disable --key <rule-name> --oid <tenant_oid> --output yaml
           ```
 
           If you created FP rules, deploy those ACTIVE to the same tenant orgs:
@@ -253,7 +251,7 @@ hives:
           ### Rules Created
           | Rule Name | Threat | Type | Unit Tests | Replay (Avg Matches) | Status |
           |-----------|--------|------|------------|---------------------|--------|
-          | <name> | <threat> | <behavioral/ioc> | PASS/FAIL | <N> matches | Deployed (disabled) |
+          | <name> | <threat> | <behavioral/ioc> | PASS/FAIL | <N> matches | Deployed (enabled) |
           ...
 
           ### IOC Lookups Updated
@@ -273,7 +271,7 @@ hives:
 
           ### Deployment Summary
           - Rules deployed to <N> tenant organizations
-          - All D&R rules are DISABLED pending human review
+          - All D&R rules are ENABLED (unit tested + replay validated)
           - IOC lookups are ACTIVE
           - FP rules are ACTIVE
           " --oid <oid> --output yaml
@@ -298,7 +296,7 @@ hives:
             `limacharlie ai generate-response`.
           - Always use `--oid` and `--output yaml` for all CLI commands.
           - Always validate rules before deploying: `limacharlie dr validate`.
-          - D&R rules are deployed DISABLED for human review. IOC lookups and FP rules are ACTIVE.
+          - D&R rules are deployed ENABLED (they passed unit tests and replay). IOC lookups and FP rules are also ACTIVE.
           - Check for existing rules before creating duplicates.
           - If a CLI command fails, run `limacharlie <command> --ai-help` for correct syntax.
           - Timestamps in detection data are in MILLISECONDS (13 digits). API parameters need SECONDS (10 digits).
@@ -314,7 +312,7 @@ hives:
           event_id: event.event_id
         model: opus
         max_turns: 100
-        max_budget_usd: 5.0
+        max_budget_usd: 10.0
         ttl_seconds: 900
         one_shot: true
         permission_mode: bypassPermissions

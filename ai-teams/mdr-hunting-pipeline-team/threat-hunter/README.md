@@ -62,7 +62,7 @@ Uses the shared User API Key (`mdr-api-key`) and UID (`mdr-uid`). Required permi
 |-----------|-------|-------------|
 | `model` | `opus` | Complex hunting and cross-org correlation |
 | `max_turns` | `100` | Many orgs to hunt across, many IOCs to search |
-| `max_budget_usd` | `5.0` | Higher budget for thorough cross-org hunting |
+| `max_budget_usd` | `10.0` | Higher budget for thorough cross-org hunting |
 | `ttl_seconds` | `900` | 15 minute hard timeout |
 | `one_shot` | `true` | Terminates after completing |
 | Suppression | `1/30m per case` | Max one run per case per 30 minutes |

@@ -197,7 +197,7 @@ hives:
           2. **Detection Engineering**: D&R rules and IOC lookups generated and tested
           3. **Proactive Hunting**: LCQL queries across your organization's telemetry data
 
-          D&R rules have been deployed (in disabled state) for ongoing detection:
+          D&R rules have been deployed and enabled for ongoing detection:
           - <rule-name-1>
           - <rule-name-2>
           " --oid <tenant_oid> --output yaml
@@ -305,7 +305,7 @@ hives:
           event_id: event.event_id
         model: opus
         max_turns: 100
-        max_budget_usd: 5.0
+        max_budget_usd: 10.0
         ttl_seconds: 900
         one_shot: true
         permission_mode: bypassPermissions

@@ -56,7 +56,7 @@ Triggered by the Intel Scout's @mention. Reads the intel from the daily report c
 3. **Replays rules** on the last 24 hours of data across all tenant orgs to validate FP rates
 4. **Creates FP rules** for narrow, positively identified false positive corner cases
 5. **Deploys lookups** (IOC hashes, domains, IPs) across all tenant orgs - active immediately
-6. **Deploys D&R rules** across all tenant orgs - disabled for human review
+6. **Deploys D&R rules** across all tenant orgs - enabled (unit tested + replay validated)
 7. **Documents everything** in the daily report case
 8. **Hands off** to Threat Hunter via `@mdr-threat-hunter`
 
@@ -148,11 +148,11 @@ The User API Key's roles across tenant orgs should include:
 
 | Agent | Model | Max Budget | Trigger |
 |-------|-------|-----------|---------|
-| Intel Scout | Opus | $5.00 | Daily schedule |
-| Detection Engineer | Opus | $5.00 | @mention from Intel Scout |
-| Threat Hunter | Opus | $5.00 | @mention from Detection Engineer |
+| Intel Scout | Opus | $10.00 | Daily schedule |
+| Detection Engineer | Opus | $10.00 | @mention from Intel Scout |
+| Threat Hunter | Opus | $10.00 | @mention from Detection Engineer |
 
-**Daily overhead**: ~$15.00/day (worst-case, full pipeline runs once daily)
+**Daily overhead**: ~$30.00/day (worst-case, full pipeline runs once daily)
 
 ## Files
 

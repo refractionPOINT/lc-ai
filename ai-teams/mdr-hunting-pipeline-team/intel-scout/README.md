@@ -58,7 +58,7 @@ Uses the shared User API Key (`mdr-api-key`) and UID (`mdr-uid`). Required permi
 |-----------|-------|-------------|
 | `model` | `opus` | Complex reasoning for cross-org platform profiling and relevance filtering |
 | `max_turns` | `100` | Many orgs to enumerate and sources to fetch |
-| `max_budget_usd` | `5.0` | Higher budget for multi-org profiling + intel fetching |
+| `max_budget_usd` | `10.0` | Higher budget for multi-org profiling + intel fetching |
 | `ttl_seconds` | `900` | 15 minute hard timeout |
 | `one_shot` | `true` | Terminates after completing |
 | Schedule | `24h_per_org` | Runs every 24 hours |
