@@ -371,6 +371,49 @@ teams:
         runs_per_day: 1
         max_daily_usd: 4.50
 
+  mdr-hunting-pipeline-team:
+    display_name: "MDR Hunting Pipeline Team"
+    description: >
+      MSSP-oriented threat intelligence, detection engineering, and proactive
+      threat hunting pipeline. Runs daily in a central management org and
+      operates across all tenant organizations via a User API Key. Collects
+      public threat intel, generates and tests D&R rules, hunts for active
+      threats, and creates detailed cases in affected tenant orgs.
+    best_for: "MSSPs wanting automated daily threat hunting across tenants"
+    prerequisites: [ext-cases]
+
+    agents:
+      intel-scout:
+        model: opus
+        max_budget_usd: 5.00
+        trigger:
+          type: schedule
+          interval: 24h
+        sends_to: [detection-engineer]
+
+      detection-engineer:
+        model: opus
+        max_budget_usd: 5.00
+        trigger:
+          type: per_mention
+          mention: "@mdr-detection-engineer"
+          suppression: "1/30m"
+        sends_to: [threat-hunter]
+
+      threat-hunter:
+        model: opus
+        max_budget_usd: 5.00
+        trigger:
+          type: per_mention
+          mention: "@mdr-threat-hunter"
+          suppression: "1/30m"
+        sends_to: []
+
+    daily_overhead:
+      - pipeline: [intel-scout, detection-engineer, threat-hunter]
+        runs_per_day: 1
+        max_daily_usd: 15.00
+
 agents:
   basic-triage:
     display_name: "Basic Triage"
