@@ -47,48 +47,33 @@ hives:
           ```
 
 
-          ### Step 2: Enumerate All Tenant Organizations
+          ### Step 2: Read Tenant Inventory
 
-          List all organizations you have access to:
+          The Tenant Profiler agent maintains a weekly inventory of all tenant organizations
+          stored as an org note. Read it:
+
+          ```bash
+          limacharlie org note get --name mdr-tenant-inventory --oid <oid> --output yaml
+          ```
+
+          This contains the platform profile for every tenant org: sensor counts per platform,
+          installed adapters, and extensions. Parse this YAML to understand which platforms are
+          onboarded across your tenants.
+
+          **If the org note is missing or empty** (e.g., first run before the Tenant Profiler has
+          executed), fall back to enumerating orgs and profiling them yourself:
+
           ```bash
           limacharlie org list --output yaml
           ```
 
-          This returns all orgs the User API Key can access. Record every org name and OID.
-          The central org (your oid) is your management org -- the tenant orgs are all others.
-
-          Add a note documenting the tenant inventory:
+          For any org NOT present in the inventory, do a quick profile:
           ```bash
-          limacharlie case add-note --case-number <case_number> --type analysis --content "## Tenant Inventory
-
-          | Org Name | OID | Status |
-          |----------|-----|--------|
-          | <name> | <oid> | Active |
-          ..." --oid <oid> --output yaml
-          ```
-
-
-          ### Step 3: Profile Onboarded Platforms Across Tenants
-
-          For EACH tenant org, discover what platforms and data sources are onboarded:
-
-          ```bash
-          # List sensors to discover platforms (Windows, Linux, macOS, etc.)
           limacharlie sensor list --oid <tenant_oid> --output yaml
-
-          # Check what extensions are installed
           limacharlie extension list --oid <tenant_oid> --output yaml
           ```
 
-          Build a platform profile per tenant:
-          - Which OS platforms have EDR sensors (Windows, Linux, macOS, ChromeOS)
-          - Which cloud/SaaS adapters are onboarded (e.g., o365, google-workspace, crowdstrike, etc.)
-          - What event types are available
-
-          This profile determines which threat intel is RELEVANT. Do NOT spend time on threats
-          targeting platforms not present in any tenant.
-
-          Add a platform summary note:
+          Add a platform summary note to the daily report:
           ```bash
           limacharlie case add-note --case-number <case_number> --type analysis --content "## Platform Profile
 
@@ -106,46 +91,41 @@ hives:
           ```
 
 
-          ### Step 4: Fetch Threat Intelligence
+          ### Step 3: Fetch Threat Intelligence via Playbook
 
-          Fetch the latest threat intel from public sources. Focus on the LAST 24 HOURS of new
-          intelligence, high-profile vulnerabilities, and actively exploited threats.
+          Fetch the `mdr-fetch-intel` payload (a Python script that collects intel from all
+          public sources) and execute it:
 
-          **Source 1: CISA Known Exploited Vulnerabilities (KEV)**
           ```bash
-          curl -s "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json" | head -c 50000
-          ```
-          Look for entries with recent `dateAdded` (last 7 days). These are actively exploited.
-
-          **Source 2: ThreatFox Recent IOCs**
-          ```bash
-          curl -s -X POST "https://threatfox-api.abuse.ch/api/v1/" -H "Content-Type: application/json" -d '{"query": "get_iocs", "days": 1}' | head -c 50000
+          limacharlie payload get --name mdr-fetch-intel --oid <oid> > /tmp/fetch_intel.py
+          python3 /tmp/fetch_intel.py --days 1 --output /tmp/intel_results.json
           ```
 
-          **Source 3: Feodo Tracker (C2 IPs)**
+          Read the results:
           ```bash
-          curl -s "https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.txt" | head -100
+          cat /tmp/intel_results.json
           ```
 
-          **Source 4: DFIR Report (latest reports)**
-          ```bash
-          curl -s "https://thedfirreport.com/feed/" | head -c 20000
-          ```
-          Extract recent report titles and URLs for behavioral intelligence.
+          The script fetches from 6 sources (CISA KEV, ThreatFox, Feodo Tracker, DFIR Report,
+          LOLBAS, LOLDrivers) and returns structured JSON with:
+          - `summary`: source counts, total IOCs
+          - `sources.cisa_kev.entries`: recently added KEV vulnerabilities
+          - `sources.threatfox.iocs`: recent malware/C2 IOCs
+          - `sources.feodo_tracker.ips`: active C2 IP addresses
+          - `sources.dfir_report.articles`: latest intrusion reports
+          - `sources.lolbas.entries`: living-off-the-land binaries
+          - `sources.loldrivers.drivers`: vulnerable/malicious drivers with hashes
 
-          **Source 5: LOLBAS (Living Off The Land Binaries)**
+          If the payload is not found, fall back to fetching sources directly with curl
+          (but note this will be more limited in scale):
           ```bash
-          curl -s "https://lolbas-project.github.io/api/lolbas.json" | head -c 30000
-          ```
-          Focus on recently added entries if timestamps are available.
-
-          **Source 6: LOLDrivers (Vulnerable/Malicious Drivers)**
-          ```bash
-          curl -s "https://www.loldrivers.io/api/drivers.json" | head -c 30000
+          curl -s "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json" > /tmp/kev.json
+          curl -s -X POST "https://threatfox-api.abuse.ch/api/v1/" -H "Content-Type: application/json" -d '{"query": "get_iocs", "days": 1}' > /tmp/threatfox.json
+          curl -s "https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.txt" > /tmp/feodo.txt
           ```
 
 
-          ### Step 5: Filter and Prioritize by Relevance
+          ### Step 4: Filter and Prioritize by Relevance
 
           For each piece of intel, assess relevance:
 
@@ -167,7 +147,7 @@ hives:
           if no iOS sensors exist).
 
 
-          ### Step 6: Document Intel in Daily Report
+          ### Step 5: Document Intel in Daily Report
 
           Add a comprehensive note to the daily report case with ALL relevant intel:
 
@@ -207,7 +187,7 @@ hives:
           ```
 
 
-          ### Step 7: Hand Off to Detection Engineer
+          ### Step 6: Hand Off to Detection Engineer
 
           Update the case tags and hand off:
           ```bash

@@ -383,6 +383,15 @@ teams:
     prerequisites: [ext-cases]
 
     agents:
+      tenant-profiler:
+        model: sonnet
+        max_budget_usd: 2.00
+        trigger:
+          type: schedule
+          interval: 24h
+          note: "Runs daily but skips if inventory is <7 days old"
+        sends_to: []
+
       intel-scout:
         model: opus
         max_budget_usd: 10.00
@@ -410,6 +419,10 @@ teams:
         sends_to: []
 
     daily_overhead:
+      - agent: tenant-profiler
+        runs_per_day: 1
+        max_daily_usd: 2.00
+        note: "Skips most days (refreshes weekly); worst-case shown"
       - pipeline: [intel-scout, detection-engineer, threat-hunter]
         runs_per_day: 1
         max_daily_usd: 30.00

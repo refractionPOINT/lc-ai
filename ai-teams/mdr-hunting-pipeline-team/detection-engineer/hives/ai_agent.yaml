@@ -176,19 +176,24 @@ hives:
           ### Step 8: Replay Rules Against Historical Data
 
           For each rule that passes unit tests, replay it against the last 24 hours of data
-          across tenant orgs to check for false positive rates:
+          across tenant orgs to check for false positive rates.
+
+          IMPORTANT: Use a TEMPORARY rule name prefixed with `__test-` for replay so that the
+          rule is never visible as an enabled production rule during testing. This prevents
+          the rule from generating live detections that would spam the SOC while you are still
+          validating.
 
           ```bash
-          # Deploy the rule temporarily for replay
-          limacharlie dr set --key <rule-name> --oid <tenant_oid> --input-file <rule_file>
+          # Deploy the rule with a temporary test name
+          limacharlie dr set --key __test-<rule-name> --oid <tenant_oid> --input-file <rule_file>
 
           # Replay against last 24 hours
           END=$(date +%s)
           START=$((END - 86400))
-          limacharlie dr replay --name <rule-name> --start $START --end $END --oid <tenant_oid> --output yaml
+          limacharlie dr replay --name __test-<rule-name> --start $START --end $END --oid <tenant_oid> --output yaml
 
-          # Delete the temporary rule after replay
-          limacharlie dr delete --key <rule-name> --oid <tenant_oid> --output yaml
+          # ALWAYS delete the temporary rule after replay, regardless of outcome
+          limacharlie dr delete --key __test-<rule-name> --oid <tenant_oid> --output yaml
           ```
 
           **Evaluate replay results:**
@@ -200,6 +205,8 @@ hives:
           If matches look like genuine FPs that follow a narrow, specific pattern, create an FP
           rule for that corner case (see Step 9). If the rule is fundamentally too broad, refine
           the detection logic and re-test.
+
+          CRITICAL: Never leave a `__test-` rule in the hive. Always clean up after replay.
 
 
           ### Step 9: Create FP Rules (If Needed)
@@ -224,14 +231,14 @@ hives:
           identified as false positives. Never create broad FP rules that could hide real threats.
 
 
-          ### Step 10: Deploy Rules Across All Tenant Orgs
+          ### Step 10: Deploy Validated Rules Across All Tenant Orgs
 
-          For each validated rule, deploy it to every relevant tenant org in ENABLED state.
-          These rules have already been unit tested and replay tested, so they are ready for
-          production:
+          ONLY after a rule has passed ALL validation (syntax, unit tests, replay with
+          acceptable FP rates), deploy it with its final production name. The rule will be
+          ENABLED on creation -- this is safe because it has been fully validated.
 
           ```bash
-          # For each tenant org:
+          # For each tenant org -- deploy only fully validated rules:
           limacharlie dr set --key <rule-name> --oid <tenant_oid> --input-file <rule_file>
           ```
 
@@ -239,6 +246,10 @@ hives:
           ```bash
           limacharlie fp set --key <fp-rule-name> --oid <tenant_oid> --input-file <fp_rule_file>
           ```
+
+          NEVER deploy a rule under its production name before validation is complete. The
+          sequence must be: generate -> validate -> unit test -> replay (with __test- prefix)
+          -> delete test rule -> deploy final rule.
 
 
           ### Step 11: Document in Daily Report
@@ -296,7 +307,10 @@ hives:
             `limacharlie ai generate-response`.
           - Always use `--oid` and `--output yaml` for all CLI commands.
           - Always validate rules before deploying: `limacharlie dr validate`.
-          - D&R rules are deployed ENABLED (they passed unit tests and replay). IOC lookups and FP rules are also ACTIVE.
+          - NEVER deploy a rule under its production name until it passes ALL validation.
+          - Use `__test-` prefixed names for replay testing, then delete them.
+          - Only deploy the final rule (enabled) after syntax validation, unit tests, and replay pass.
+          - IOC lookups and FP rules are ACTIVE.
           - Check for existing rules before creating duplicates.
           - If a CLI command fails, run `limacharlie <command> --ai-help` for correct syntax.
           - Timestamps in detection data are in MILLISECONDS (13 digits). API parameters need SECONDS (10 digits).

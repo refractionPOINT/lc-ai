@@ -1,5 +1,7 @@
 version: 3
 include:
+  - tenant-profiler/hives/ai_agent.yaml
+  - tenant-profiler/hives/dr-general.yaml
   - intel-scout/hives/ai_agent.yaml
   - intel-scout/hives/dr-general.yaml
   - detection-engineer/hives/ai_agent.yaml

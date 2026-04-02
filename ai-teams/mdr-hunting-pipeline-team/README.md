@@ -6,12 +6,13 @@ An AI-powered threat intelligence, detection engineering, and proactive threat h
 
 ```mermaid
 flowchart TD
-    trigger["Schedule: every 24 hours"] --> scout["Intel Scout<br/>(Opus, $5.00)"]
-    scout --> |"1. Enumerate tenant orgs<br/>2. Profile onboarded platforms<br/>3. Fetch relevant threat intel<br/>4. Create daily report case (INFO)"| mention1["@mdr-detection-engineer"]
-    mention1 --> engineer["Detection Engineer<br/>(Opus, $5.00)"]
-    engineer --> |"1. Generate D&R rules + unit tests<br/>2. Replay on last 24h across all orgs<br/>3. Create FP rules if needed<br/>4. Deploy lookups + rules across orgs"| mention2["@mdr-threat-hunter"]
-    mention2 --> hunter["Threat Hunter<br/>(Opus, $5.00)"]
-    hunter --> |"1. Hunt IOCs + behaviors across all orgs<br/>2. Create Cases in affected tenant orgs<br/>3. Detailed threat intel attribution<br/>4. Update central daily report"| done["Pipeline complete"]
+    profiler["Tenant Profiler<br/>(Sonnet, $2.00)<br/>Weekly refresh"] -.->|"org note:<br/>mdr-tenant-inventory"| scout
+    trigger["Schedule: every 24 hours"] --> scout["Intel Scout<br/>(Opus, $10.00)"]
+    scout --> |"1. Read tenant inventory<br/>2. Run fetch_intel.py playbook<br/>3. Filter + prioritize by platform<br/>4. Create daily report case (INFO)"| mention1["@mdr-detection-engineer"]
+    mention1 --> engineer["Detection Engineer<br/>(Opus, $10.00)"]
+    engineer --> |"1. Generate D&R rules + unit tests<br/>2. Replay with __test- prefix<br/>3. Deploy validated rules (enabled)<br/>4. Deploy lookups + FP rules"| mention2["@mdr-threat-hunter"]
+    mention2 --> hunter["Threat Hunter<br/>(Opus, $10.00)"]
+    hunter --> |"1. Hunt IOCs + behaviors across all orgs<br/>2. Create Cases in affected tenant orgs<br/>3. Detailed threat intel attribution<br/>4. Close central daily report"| done["Pipeline complete"]
 ```
 
 ## MSSP Design
@@ -31,19 +32,22 @@ This team is fundamentally different from single-org teams:
 
 ## Pipeline Phases
 
+### Tenant Profiler (Background)
+
+Runs on a daily schedule but only performs a full refresh when the inventory is older than 7 days. Profiles all tenant orgs (sensors, platforms, extensions) and stores the result as the `mdr-tenant-inventory` org note in the central org. Other agents read this note instead of re-profiling.
+
 ### Phase 1: Intel Scout
 
 Runs daily on a 24-hour schedule. Creates an INFO-level case in the central org as the daily pipeline report, then:
 
-1. **Enumerates all tenant orgs** accessible via the User API Key
-2. **Profiles each org** - what platforms, sensors, extensions, and data sources are onboarded
-3. **Fetches threat intel** from public sources, filtered by relevance to onboarded platforms:
+1. **Reads the tenant inventory** from the `mdr-tenant-inventory` org note (only profiles orgs missing from the inventory)
+2. **Executes the `mdr-fetch-intel` playbook** -- a Python script that fetches intel from all public sources at scale:
    - [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) - Known Exploited Vulnerabilities
    - [ThreatFox](https://threatfox.abuse.ch/) - IOCs (malware, C2, botnet)
    - [Feodo Tracker](https://feodotracker.abuse.ch/) - C2 infrastructure
    - [DFIR Report](https://thedfirreport.com/) - Detailed intrusion reports
-   - [SigmaHQ](https://github.com/SigmaHQ/sigma) - Community detection rules
    - [LOLBAS](https://lolbas-project.github.io/) / [LOLDrivers](https://www.loldrivers.io/) - Living off the land
+3. **Filters and prioritizes** intel by relevance to onboarded platforms
 4. **Documents findings** in the daily report case with structured notes
 5. **Hands off** to Detection Engineer via `@mdr-detection-engineer`
 
@@ -53,10 +57,10 @@ Triggered by the Intel Scout's @mention. Reads the intel from the daily report c
 
 1. **Generates D&R rules** using `limacharlie ai generate-detection/response` for each relevant threat
 2. **Creates unit tests** - positive tests (must match) and negative tests (must not match)
-3. **Replays rules** on the last 24 hours of data across all tenant orgs to validate FP rates
+3. **Replays rules** using `__test-` prefixed names so no live detections fire during testing
 4. **Creates FP rules** for narrow, positively identified false positive corner cases
 5. **Deploys lookups** (IOC hashes, domains, IPs) across all tenant orgs - active immediately
-6. **Deploys D&R rules** across all tenant orgs - enabled (unit tested + replay validated)
+6. **Deploys validated D&R rules** under their production names (enabled) only after all testing passes
 7. **Documents everything** in the daily report case
 8. **Hands off** to Threat Hunter via `@mdr-threat-hunter`
 
@@ -97,9 +101,9 @@ limacharlie case list --tag mdr-daily-report --oid <central-oid> --output yaml
 - **User API Key** with access to all tenant organizations
 - **Anthropic API Key** for Claude
 
-## API Key Setup
+## Setup
 
-This team uses a **User API Key** (not org-level API keys) for cross-org access. All three agents share the same credentials:
+This team uses a **User API Key** (not org-level API keys) for cross-org access. All four agents share the same credentials:
 
 1. Create a User API Key at [app.limacharlie.io/profile](https://app.limacharlie.io/profile)
 2. Ensure the user has appropriate roles in all tenant organizations
@@ -117,6 +121,13 @@ echo '{"data": {"secret": "<YOUR-USER-UID>"}, "usr_mtd": {"enabled": true}}' | \
 # Store the Anthropic API Key
 echo '{"data": {"secret": "<YOUR-ANTHROPIC-API-KEY>"}, "usr_mtd": {"enabled": true}}' | \
   limacharlie hive set --hive-name secret --key anthropic-key --oid <central-oid>
+```
+
+4. Upload the intel-fetching playbook as a payload:
+
+```bash
+limacharlie payload create --name mdr-fetch-intel \
+  --path intel-scout/fetch_intel.py --oid <central-oid>
 ```
 
 ### Required Permissions
@@ -148,11 +159,12 @@ The User API Key's roles across tenant orgs should include:
 
 | Agent | Model | Max Budget | Trigger |
 |-------|-------|-----------|---------|
+| Tenant Profiler | Sonnet | $2.00 | Daily schedule (skips if <7 days old) |
 | Intel Scout | Opus | $10.00 | Daily schedule |
 | Detection Engineer | Opus | $10.00 | @mention from Intel Scout |
 | Threat Hunter | Opus | $10.00 | @mention from Detection Engineer |
 
-**Daily overhead**: ~$30.00/day (worst-case, full pipeline runs once daily)
+**Daily overhead**: ~$30.00/day (worst-case, full pipeline) + ~$0.29/day (profiler amortized over 7 days)
 
 ## Files
 
@@ -160,8 +172,15 @@ The User API Key's roles across tenant orgs should include:
 mdr-hunting-pipeline-team/
 ├── mdr-hunting-pipeline-team.yaml    # Master include
 ├── README.md                          # This file
+├── tenant-profiler/
+│   ├── README.md
+│   └── hives/
+│       ├── ai_agent.yaml              # Agent definition + prompt
+│       ├── dr-general.yaml            # 24h schedule trigger (weekly logic in prompt)
+│       └── secret.yaml                # Credential placeholders
 ├── intel-scout/
 │   ├── README.md
+│   ├── fetch_intel.py                 # Playbook: upload as payload mdr-fetch-intel
 │   └── hives/
 │       ├── ai_agent.yaml              # Agent definition + prompt
 │       ├── dr-general.yaml            # 24h schedule trigger
@@ -188,4 +207,4 @@ Use the `lc-deployer` skill to install this team in your central management org:
 /lc-deployer install mdr-hunting-pipeline-team in <central-org-name>
 ```
 
-Then configure the secrets as described in [API Key Setup](#api-key-setup).
+Then configure the secrets and upload the playbook as described in [Setup](#setup).
