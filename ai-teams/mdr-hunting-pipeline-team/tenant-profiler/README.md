@@ -1,6 +1,6 @@
-# Tenant Profiler - Weekly Cross-Org Platform Inventory
+# Tenant Profiler - Weekly Cross-Org Data Source Inventory
 
-Maintains a platform inventory of all tenant organizations. Runs on a daily schedule but only performs a full refresh when the inventory is older than 7 days. Stores results as an org note in the central management org so that other pipeline agents can read it without re-profiling.
+Maintains a data-source inventory of all tenant organizations. Runs on a daily schedule but only performs a full refresh when the inventory is older than 7 days. Stores results as an org note in the central management org so downstream pipeline agents can determine which threat intel is relevant without re-profiling.
 
 ## What It Does
 
@@ -9,33 +9,34 @@ flowchart TD
     trigger["Schedule: every 24 hours"] --> check["Read org note:<br/>mdr-tenant-inventory"]
     check -->|Fresh < 7 days| skip["Exit immediately<br/>(no work needed)"]
     check -->|Stale or missing| enumerate["Enumerate all tenant orgs"]
-    enumerate --> profile["For each org:<br/>List sensors, extensions,<br/>event types"]
-    profile --> write["Write inventory to org note:<br/>mdr-tenant-inventory"]
+    enumerate --> profile["For each org:<br/>Classify sensors into<br/>EDR platforms & adapters"]
+    profile --> write["Write data-source inventory<br/>to org note: mdr-tenant-inventory"]
     write --> done["Session terminates"]
 ```
 
 ## MSSP Context
 
 - **Runs in**: Central management org (schedule trigger)
-- **Reads from**: All tenant orgs (sensor/extension profiling)
+- **Reads from**: All tenant orgs (sensor listing)
 - **Writes to**: Central org only (org note with inventory)
 - **Auth**: User API Key + UID (cross-org access)
+- **Purpose**: Downstream agents use this to filter threat intel by relevance (e.g. skip iOS threats if no iOS sensors exist, skip AWS-specific threats if no CloudTrail adapter is onboarded)
 
 ## Org Note Format
 
-The inventory is stored as the org note `mdr-tenant-inventory` in the central org. It contains a YAML document with:
+The inventory is stored as the org note `mdr-tenant-inventory` in the central org. It contains a YAML document focused on data source presence (not counts or details):
 
 ```yaml
 last_updated: "2026-04-01T00:00:00Z"
 tenants:
   <oid>:
     name: "<org name>"
-    platforms:
-      windows: <sensor count>
-      linux: <sensor count>
-      macos: <sensor count>
-    adapters: [<list of adapter types>]
-    extensions: [<list of installed extensions>]
+    edr_platforms:
+      - windows
+      - linux
+    adapters:
+      - o365
+      - aws-cloudtrail
 ```
 
 ## API Key Permissions
@@ -45,8 +46,7 @@ Uses the shared User API Key (`mdr-api-key`) and UID (`mdr-uid`). Required permi
 | Permission | Why |
 |-----------|-----|
 | `org.get` | Enumerate orgs |
-| `sensor.list` | Profile sensors per org |
-| `ext.request` | List extensions per org |
+| `sensor.list` | Classify sensors per org |
 | `org_notes.*` | Read/write the inventory org note |
 | `sop.get` | Read SOPs |
 | `sop.get.mtd` | Read SOP metadata |
