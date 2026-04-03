@@ -1,0 +1,18 @@
+version: 3
+hives:
+  dr-general:
+    customer-report-weekly:
+      data:
+        detect:
+          event: 168h_per_org
+          op: exists
+          path: /
+          target: schedule
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/customer-report
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - ai-agent:customer-report

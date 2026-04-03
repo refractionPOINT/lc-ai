@@ -447,3 +447,18 @@ agents:
       type: schedule
       interval: 24h
       suppression: "2/24h"
+
+  customer-report:
+    display_name: "Customer Report"
+    description: "Weekly customer-facing security summary for MSSP/MDR environments"
+    category: reporting
+    model: sonnet
+    max_budget_usd: 1.50
+    trigger:
+      type: schedule
+      interval: 168h
+
+    daily_overhead:
+      - agent: customer-report
+        runs_per_day: 0.14
+        max_daily_usd: 0.21

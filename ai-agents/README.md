@@ -8,6 +8,7 @@ Autonomous AI agents that run inside LimaCharlie organizations. Each agent is de
 |----------|-------------|
 | [analyst](analyst/) | General-purpose analysts invoked on demand via @mentions |
 | [investigation](investigation/) | Agents that investigate and triage security events |
+| [reporting](reporting/) | Scheduled agents that produce summary reports |
 | [triage](triage/) | Agents that evaluate and route new detections |
 
 ## Structure
