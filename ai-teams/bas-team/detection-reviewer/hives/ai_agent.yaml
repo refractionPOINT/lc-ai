@@ -62,20 +62,34 @@ hives:
           ### Step 4: Query Detections
 
           Search for all detections on the target sensor during the simulation window.
-          Add a 5-minute buffer after the simulation end time to catch delayed detections:
+          Add a 5-minute buffer after the simulation end time to catch delayed detections.
+
+          IMPORTANT: LCQL uses pipe-separated syntax, NOT SQL-like syntax. Always use
+          `limacharlie ai generate-query` to build your queries. For detections, use
+          `--stream detect`. Example workflow:
 
           ```bash
           SIM_END_BUFFERED=$((<simulation_end_time> + 300))
+
+          # Generate the LCQL query (ALWAYS do this instead of writing LCQL by hand)
+          limacharlie ai generate-query --oid <oid> \
+            --prompt "Find all events for sensor <sid>"
+
+          # Run the generated query against the detect stream
           limacharlie search run \
-            --query "cat = 'detect' AND routing.sid = '<sid>'" \
+            --query "<generated query>" \
             --start <simulation_start_time> --end $SIM_END_BUFFERED \
+            --stream detect \
             --oid <oid> --output yaml
           ```
 
-          If the query syntax doesn't work, generate it:
+          If the detect stream returns nothing, also search the event stream for raw telemetry:
           ```bash
-          limacharlie ai generate-query --oid <oid> \
-            --prompt "Find all detections for sensor <sid> between epoch <start> and <end>"
+          limacharlie search run \
+            --query "<generated query>" \
+            --start <simulation_start_time> --end $SIM_END_BUFFERED \
+            --stream event \
+            --oid <oid> --output yaml
           ```
 
           For each detection found, record:
@@ -113,38 +127,39 @@ hives:
           ### Step 6: Analyze Telemetry for Gaps
 
           For each UNDETECTED technique, investigate what telemetry IS available. This determines
-          whether we CAN write a detection (telemetry exists) or CANNOT (telemetry gap):
+          whether we CAN write a detection (telemetry exists) or CANNOT (telemetry gap).
+
+          IMPORTANT: Use `limacharlie ai generate-query` to build all LCQL queries. Do NOT
+          write LCQL by hand — the syntax is pipe-separated and easy to get wrong.
 
           ```bash
-          limacharlie search run \
-            --query "routing.sid = '<sid>'" \
-            --start <technique_start_time> --end <technique_end_time> \
-            --oid <oid> --output yaml
-          ```
+          # Generate a query for the technique's expected telemetry
+          limacharlie ai generate-query --oid <oid> \
+            --prompt "Find NEW_PROCESS events for sensor <sid>"
 
-          If you don't have per-technique timing, use the full simulation window:
-          ```bash
+          # Run against the event stream
           limacharlie search run \
-            --query "routing.sid = '<sid>'" \
+            --query "<generated query>" \
             --start <simulation_start_time> --end <simulation_end_time> \
+            --stream event \
             --oid <oid> --output yaml
           ```
 
-          For each undetected technique, look for telemetry that corresponds to the expected behavior:
+          Tailor the generate-query prompt to each technique's expected behavior:
 
-          **Discovery (T1082, T1083, T1057):** Look for NEW_PROCESS events running system enumeration
+          **Discovery (T1082, T1083, T1057):** Search for NEW_PROCESS with system enumeration
           commands (systeminfo, whoami, hostname, ipconfig, net, uname, cat /etc/os-release).
 
-          **Execution (T1059.001, T1059.004):** Look for NEW_PROCESS events with powershell.exe,
-          pwsh, bash, sh as the process. Check for SCRIPT_BLOCK events if available.
+          **Execution (T1059.001, T1059.004):** Search for NEW_PROCESS with powershell.exe,
+          pwsh, bash, sh. Also check for SCRIPT_BLOCK events.
 
-          **Credential Access (T1003.001):** Look for SENSITIVE_PROCESS_ACCESS targeting lsass.exe,
-          or NEW_PROCESS with tools like mimikatz, procdump, comsvcs.dll.
+          **Credential Access (T1003.001):** Search for SENSITIVE_PROCESS_ACCESS targeting lsass.exe,
+          or NEW_PROCESS with mimikatz, procdump, comsvcs.dll.
 
-          **Persistence (T1053.*, T1547.*):** Look for REGISTRY_WRITE, NEW_SCHEDULED_TASK, AUTORUN
+          **Persistence (T1053.*, T1547.*):** Search for REGISTRY_WRITE, NEW_SCHEDULED_TASK, AUTORUN
           events.
 
-          **Defense Evasion (T1218.*, T1070.*):** Look for proxy execution binaries (rundll32,
+          **Defense Evasion (T1218.*, T1070.*):** Search for proxy execution binaries (rundll32,
           regsvr32, mshta, certutil) or FILE_DELETE events.
 
           For each gap, classify it as:
@@ -417,6 +432,9 @@ hives:
           ## Important Rules
 
           - NEVER fabricate detections. Only report what LCQL queries actually returned.
+          - NEVER write LCQL queries by hand. ALWAYS use `limacharlie ai generate-query` to build
+            them — LCQL uses pipe-separated syntax that is easy to get wrong.
+          - Use `--stream detect` for detections, `--stream event` for raw telemetry.
           - NEVER write D&R rules manually. Always use `limacharlie ai generate-detection` and
             `limacharlie ai generate-response`.
           - ALWAYS validate rules before deploying: syntax + unit tests + replay.
