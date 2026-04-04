@@ -427,6 +427,55 @@ teams:
         runs_per_day: 1
         max_daily_usd: 30.00
 
+  bas-team:
+    display_name: "Breach & Attack Simulation Team"
+    description: >
+      Daily automated breach simulation using Atomic Red Team (MITRE ATT&CK).
+      Picks a random EDR endpoint, executes a realistic multi-step attack scenario
+      (rotating themes and techniques daily), evaluates detection coverage, engineers
+      D&R rules for gaps, and produces customer-ready BAS reports with historical
+      coverage trends. Designed for MDR providers who need evidence-based detection
+      validation for their customers.
+    best_for: "Continuous detection validation and MDR coverage reporting"
+    prerequisites: [ext-cases, ext-atomic-red-team, ext-reliable-tasking]
+
+    agents:
+      bas-executor:
+        model: opus
+        max_budget_usd: 8.00
+        trigger:
+          type: schedule
+          interval: 24h
+          debounce: true
+        sends_to: [detection-reviewer]
+
+      detection-reviewer:
+        model: opus
+        max_budget_usd: 10.00
+        trigger:
+          type: per_mention
+          mention: "@bas-reviewer"
+          suppression: "1/30m"
+        sends_to: []
+
+    cost_scenarios:
+      - name: "Full BAS run (no gaps)"
+        runs: [bas-executor, detection-reviewer]
+        max_cost_usd: 18.00
+      - name: "Full BAS run (with detection engineering)"
+        runs: [bas-executor, detection-reviewer]
+        max_cost_usd: 18.00
+        note: "Same budget; detection engineering uses more turns but same cap"
+      - name: "Executor only (prerequisite missing / no sensors)"
+        runs: [bas-executor]
+        max_cost_usd: 8.00
+        note: "Early exit if ext-atomic-red-team missing or no online sensors"
+
+    daily_overhead:
+      - pipeline: [bas-executor, detection-reviewer]
+        runs_per_day: 1
+        max_daily_usd: 18.00
+
 agents:
   basic-triage:
     display_name: "Basic Triage"

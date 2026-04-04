@@ -1,0 +1,6 @@
+version: 3
+include:
+  - bas-executor/hives/ai_agent.yaml
+  - bas-executor/hives/dr-general.yaml
+  - detection-reviewer/hives/ai_agent.yaml
+  - detection-reviewer/hives/dr-general.yaml
