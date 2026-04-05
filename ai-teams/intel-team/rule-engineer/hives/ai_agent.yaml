@@ -267,15 +267,15 @@ hives:
           create them:
 
           ```bash
-          limacharlie ai generate-detection --oid <oid> --prompt "detect when a process creates or accesses a file whose hash matches an entry in the 'intel-ioc-hashes' lookup table"
+          limacharlie ai generate-detection --oid <oid> --description "detect when a process creates or accesses a file whose hash matches an entry in the 'intel-ioc-hashes' lookup table"
           ```
 
           ```bash
-          limacharlie ai generate-detection --oid <oid> --prompt "detect when a DNS request resolves a domain that matches an entry in the 'intel-ioc-domains' lookup table"
+          limacharlie ai generate-detection --oid <oid> --description "detect when a DNS request resolves a domain that matches an entry in the 'intel-ioc-domains' lookup table"
           ```
 
           ```bash
-          limacharlie ai generate-detection --oid <oid> --prompt "detect when a network connection is made to an IP that matches an entry in the 'intel-ioc-ips' lookup table"
+          limacharlie ai generate-detection --oid <oid> --description "detect when a network connection is made to an IP that matches an entry in the 'intel-ioc-ips' lookup table"
           ```
 
           Name these: `intel-lookup-hash-match`, `intel-lookup-domain-match`, `intel-lookup-ip-match`.

@@ -122,10 +122,10 @@ hives:
 
           ```bash
           # Generate the detection component
-          limacharlie ai generate-detection --oid <tenant_oid> --prompt "Detect <description of threat behavior, include specific IOCs, paths, techniques>"
+          limacharlie ai generate-detection --oid <tenant_oid> --description "Detect <description of threat behavior, include specific IOCs, paths, techniques>"
 
           # Generate the response component
-          limacharlie ai generate-response --oid <tenant_oid> --prompt "When this detection fires, create a report with category <category> and include relevant context"
+          limacharlie ai generate-response --oid <tenant_oid> --description "When this detection fires, create a report with category <category> and include relevant context"
           ```
 
           Combine the generated detect and respond into a complete rule YAML file.
@@ -215,7 +215,7 @@ hives:
 
           ```bash
           # Generate an FP rule
-          limacharlie ai generate-detection --oid <tenant_oid> --prompt "Create a false positive filter for detection <rule-name> that matches when <describe the specific FP pattern>"
+          limacharlie ai generate-detection --oid <tenant_oid> --description "Create a false positive filter for detection <rule-name> that matches when <describe the specific FP pattern>"
           ```
 
           FP rule naming: `fp-mdr-<category>-<pattern>-<YYYYMMDD>`
