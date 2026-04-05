@@ -114,6 +114,7 @@ LCQL uses unique pipe-based syntax validated against org-specific schemas. **LLM
    - Queries from saved queries or other sources
 3. Execute query (only after validation passes):
    - **Prefer `limacharlie search run --query "..." --start <ts> --end <ts> --oid <oid> --output yaml`**
+   - Valid `--stream` values: `event`, `detection`, `audit` (NOT `detect`)
 
 **For queries beyond 30 days (paid queries):**
 - First call `limacharlie search estimate --query "..." --start <ts> --end <ts> --oid <oid> --output yaml` to get cost estimate

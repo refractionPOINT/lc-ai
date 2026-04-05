@@ -1,0 +1,18 @@
+version: 3
+hives:
+  dr-general:
+    bas-executor-daily:
+      data:
+        detect:
+          event: 24h_per_org
+          op: exists
+          path: /
+          target: schedule
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/bas-executor
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - ai-team:bas-team:executor
