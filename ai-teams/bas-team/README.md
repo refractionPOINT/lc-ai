@@ -120,7 +120,8 @@ Note: The BAS Executor has a 30-minute TTL due to waiting for ART preparation, t
 |-----------|-----|
 | `org.get` | Basic org context and event schema access |
 | `sensor.list` | Get sensor details for the target |
-| `insight.evt.get` | Query detections and telemetry via LCQL |
+| `insight.evt.get` | Query telemetry via LCQL |
+| `insight.det.get` | Query detections via `detection list` |
 | `dr.list` | Check existing D&R rules |
 | `dr.set` | Create new D&R rules (disabled) |
 | `dr.del` | Delete temporary `__test-` rules after replay |

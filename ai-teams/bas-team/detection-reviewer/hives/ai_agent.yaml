@@ -65,8 +65,8 @@ hives:
           Add a 5-minute buffer after the simulation end time to catch delayed detections.
 
           IMPORTANT: LCQL uses pipe-separated syntax, NOT SQL-like syntax. Always use
-          `limacharlie ai generate-query` to build your queries. For detections, use
-          `--stream detect`. Example workflow:
+          `limacharlie ai generate-query` to build your queries. Valid `--stream` values
+          are `event`, `detection`, `audit` (NOT `detect`).
 
           ```bash
           SIM_END_BUFFERED=$((<simulation_end_time> + 300))
@@ -75,21 +75,26 @@ hives:
           limacharlie ai generate-query --oid <oid> \
             --prompt "Find all events for sensor <sid>"
 
-          # Run the generated query against the detect stream
+          # Run the generated query against the detection stream
           limacharlie search run \
             --query "<generated query>" \
             --start <simulation_start_time> --end $SIM_END_BUFFERED \
-            --stream detect \
+            --stream detection \
             --oid <oid> --output yaml
           ```
 
-          If the detect stream returns nothing, also search the event stream for raw telemetry:
+          If the detection stream returns nothing, also search the event stream for raw telemetry:
           ```bash
           limacharlie search run \
             --query "<generated query>" \
             --start <simulation_start_time> --end $SIM_END_BUFFERED \
             --stream event \
             --oid <oid> --output yaml
+          ```
+
+          Use `--filter` with JMESPATH to reduce output volume:
+          ```bash
+          --filter "[0].rows[].{cmd: data.event.COMMAND_LINE, path: data.event.FILE_PATH, time: data.routing.event_time}"
           ```
 
           For each detection found, record:
@@ -129,15 +134,13 @@ hives:
           For each UNDETECTED technique, investigate what telemetry IS available. This determines
           whether we CAN write a detection (telemetry exists) or CANNOT (telemetry gap).
 
-          IMPORTANT: Use `limacharlie ai generate-query` to build all LCQL queries. Do NOT
-          write LCQL by hand — the syntax is pipe-separated and easy to get wrong.
+          Use `limacharlie ai generate-query` to build LCQL queries for each technique's
+          expected telemetry. Run them against the event stream:
 
           ```bash
-          # Generate a query for the technique's expected telemetry
           limacharlie ai generate-query --oid <oid> \
-            --prompt "Find NEW_PROCESS events for sensor <sid>"
+            --prompt "Find <event_type> events for sensor <sid> where <technique-specific criteria>"
 
-          # Run against the event stream
           limacharlie search run \
             --query "<generated query>" \
             --start <simulation_start_time> --end <simulation_end_time> \
@@ -174,14 +177,12 @@ hives:
 
           **7a. Generate the detection:**
           ```bash
-          limacharlie ai generate-detection --oid <oid> \
-            --prompt "Detect MITRE ATT&CK technique <technique_id> (<name>). Based on observed telemetry from a BAS simulation, the following events were seen: <describe specific events and field values from Step 6>. Create a detection that would catch this behavior."
+          limacharlie ai generate-detection --description "Detect MITRE ATT&CK technique <technique_id> (<name>). Based on observed telemetry from a BAS simulation, the following events were seen: <describe specific events and field values from Step 6>. Create a detection that would catch this behavior." --oid <oid> --output yaml
           ```
 
           **7b. Generate the response:**
           ```bash
-          limacharlie ai generate-response --oid <oid> \
-            --prompt "When this detection fires, create a report named bas-<technique-id>-<short-descriptor>. Include MITRE ATT&CK mapping to <tactic> / <technique_id>. Set severity to <low|medium|high|critical based on technique impact>."
+          limacharlie ai generate-response --description "When this detection fires, create a report named bas-<technique-id>-<short-descriptor>. Include MITRE ATT&CK mapping to <tactic> / <technique_id>. Set severity to <low|medium|high|critical based on technique impact>." --oid <oid> --output yaml
           ```
 
           **7c. Combine into a complete rule YAML.** Add metadata:
@@ -244,19 +245,75 @@ hives:
           CRITICAL: ALWAYS delete `__test-` rules after replay, regardless of outcome.
 
           **7g. Deploy validated rules (DISABLED):**
-          ```bash
-          limacharlie dr set --key <rule-name> --oid <oid> --input-file <rule_file>
+
+          Before deploying, you MUST ensure the rule YAML contains `usr_mtd.enabled: false`.
+          The `ai generate-detection` output will not include this — you must add it yourself.
+          Write the final rule file with this structure:
+
+          ```yaml
+          # /tmp/bas-rule-<technique-id>.yaml
+          data:
+            detect:
+              <generated detect block>
+            respond:
+              <generated respond block>
+            metadata:
+              author: bas-team
+              description: "<what this rule detects>"
+              level: "<low|medium|high|critical>"
+              tags:
+                - "attack.<tactic>"
+                - "attack.<technique_id>"
+              references:
+                - "https://attack.mitre.org/techniques/<technique_id>/"
+              date_added: "<YYYY-MM-DD>"
+              bas_validated: true
+          usr_mtd:
+            enabled: false
           ```
 
-          The rule YAML should include `usr_mtd.enabled: false` so it is created disabled. The
-          operator reviews and enables it. Document in the case how to enable.
+          Then deploy:
+          ```bash
+          limacharlie dr set --key <rule-name> --oid <oid> --input-file /tmp/bas-rule-<technique-id>.yaml
+          ```
+
+          Verify it was created disabled:
+          ```bash
+          limacharlie hive get --hive-name dr-general --key <rule-name> --oid <oid> --output yaml --filter "usr_mtd.enabled"
+          ```
 
           If replay produced narrow, specific false positive patterns, create an FP rule:
           ```bash
-          limacharlie ai generate-detection --oid <oid> \
-            --prompt "Create a false positive filter for detection <rule-name> that matches when <describe specific FP pattern>"
+          limacharlie ai generate-detection --description "Create a false positive filter for detection <rule-name> that matches when <describe specific FP pattern>" --oid <oid> --output yaml
           limacharlie fp set --key fp-bas-<category>-<pattern> --oid <oid> --input-file <fp_rule_file>
           ```
+
+          **7h. Log every created rule in the case:**
+
+          After deploying all rules, add a case note listing each one by name so operators
+          can find and review them:
+          ```bash
+          cat > /tmp/bas-rules-created.md << 'RULESEOF'
+          ## D&R Rules Created (DISABLED — pending review)
+
+          The following rules were created to close detection gaps found during today's BAS run.
+          All rules are **disabled** and must be reviewed and enabled manually.
+
+          | Rule Name | Technique | Description |
+          |-----------|-----------|-------------|
+          | `<rule-name-1>` | <technique_id> — <name> | <one-line description> |
+          | `<rule-name-2>` | <technique_id> — <name> | <one-line description> |
+
+          ### How to enable
+          Navigate to **D&R Rules** in the LimaCharlie web UI, find each rule by name,
+          review its logic, and toggle it to enabled.
+          RULESEOF
+          limacharlie case add-note --case-number <case_number> --type analysis \
+            --input-file /tmp/bas-rules-created.md --oid <oid> --output yaml
+          ```
+
+          If NO rules were created (all techniques detected, or no usable telemetry for gaps),
+          skip this note.
 
 
           ### Step 8: Update BAS History
@@ -295,9 +352,12 @@ hives:
 
           ### Step 9: Write BAS Report
 
-          Add the comprehensive report to the case. This report should be CUSTOMER-READY —
-          MDR providers can share it directly with their clients as evidence of continuous
-          security validation.
+          Add the report to the case. This report should be CUSTOMER-READY — MDR providers
+          can share it directly with their clients as evidence of continuous security validation.
+
+          IMPORTANT: Case notes have a maximum content length. Keep each note concise. If the
+          report is long, split it into 2-3 separate notes (e.g., scorecard + gap analysis +
+          recommendations). Aim for under 3000 characters per note.
 
           ```bash
           cat > /tmp/bas-report.md << 'REPORTEOF'
@@ -432,11 +492,12 @@ hives:
           ## Important Rules
 
           - NEVER fabricate detections. Only report what LCQL queries actually returned.
-          - NEVER write LCQL queries by hand. ALWAYS use `limacharlie ai generate-query` to build
-            them — LCQL uses pipe-separated syntax that is easy to get wrong.
-          - Use `--stream detect` for detections, `--stream event` for raw telemetry.
+          - NEVER write LCQL queries by hand. ALWAYS use `limacharlie ai generate-query` to
+            build them — LCQL uses pipe-separated syntax that is easy to get wrong.
+          - Use `--stream detection` for detections, `--stream event` for raw telemetry. NEVER
+            use `--stream detect` (invalid — the valid values are `event`, `detection`, `audit`).
           - NEVER write D&R rules manually. Always use `limacharlie ai generate-detection` and
-            `limacharlie ai generate-response`.
+            `limacharlie ai generate-response` (flag is `--description`, NOT `--prompt`).
           - ALWAYS validate rules before deploying: syntax + unit tests + replay.
           - ALWAYS delete `__test-` rules after replay, regardless of outcome.
           - ALWAYS use `--oid` and `--output yaml` for all limacharlie CLI commands.

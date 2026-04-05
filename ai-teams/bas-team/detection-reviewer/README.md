@@ -45,7 +45,8 @@ Create an API key named `bas-reviewer` with:
 |-----------|-----|
 | `org.get` | Basic org context and event schema access |
 | `sensor.list` | Get sensor details |
-| `insight.evt.get` | Query detections and telemetry via LCQL |
+| `insight.evt.get` | Query telemetry via LCQL |
+| `insight.det.get` | Query detections via `detection list` |
 | `dr.list` | Check existing D&R rules |
 | `dr.set` | Create new D&R rules (disabled) |
 | `dr.del` | Delete `__test-` rules after replay |
