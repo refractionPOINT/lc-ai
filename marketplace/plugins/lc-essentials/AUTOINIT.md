@@ -133,6 +133,8 @@ Use AI generation commands:
 2. `limacharlie ai generate-response --description "..." --oid <oid> --output yaml` - Generate response YAML
 3. `limacharlie dr validate --detect detect.yaml --respond respond.yaml --oid <oid>` - Validate before deploy (takes file paths)
 
+D&R rules are stored across three hives: `dr-general` (custom rules), `dr-managed` (managed rules from subscriptions), and `dr-services` (service-provided rules). When listing or auditing rules, check all three to get the full picture.
+
 ### 8. Never Calculate Timestamps Manually
 
 LLMs consistently produce incorrect timestamp values.
