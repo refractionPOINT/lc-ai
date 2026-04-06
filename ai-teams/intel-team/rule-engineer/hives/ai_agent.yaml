@@ -324,30 +324,23 @@ hives:
           | intel-ioc-urls | <count> | <first 3 URLs> |
 
           ### D&R Rules Created (DISABLED — requires human review)
-          | Rule Name | ATT&CK | Platform | Source | Description |
-          |-----------|--------|----------|--------|-------------|
-          | intel-sigma-t1059-encoded-powershell | T1059.001 | Windows | SigmaHQ | Detects Base64-encoded PowerShell execution |
-          | intel-kev-cve-2024-12345-exploitation | - | Windows | CISA KEV | Detects exploitation of CVE-2024-12345 |
-          | intel-lookup-hash-match | - | All | Lookup | Matches file hashes against intel IOC lookup |
-          | ... | ... | ... | ... | ... |
+          | Rule Name | ATT&CK | Platform | Source | Web UI | Description |
+          |-----------|--------|----------|--------|--------|-------------|
+          | intel-sigma-t1059-encoded-powershell | T1059.001 | Windows | SigmaHQ | [View](https://app.limacharlie.io/orgs/<oid>/dr-rules/intel-sigma-t1059-encoded-powershell) | Detects Base64-encoded PowerShell execution |
+          | intel-kev-cve-2024-12345-exploitation | - | Windows | CISA KEV | [View](https://app.limacharlie.io/orgs/<oid>/dr-rules/intel-kev-cve-2024-12345-exploitation) | Detects exploitation of CVE-2024-12345 |
+          | intel-lookup-hash-match | - | All | Lookup | [View](https://app.limacharlie.io/orgs/<oid>/dr-rules/intel-lookup-hash-match) | Matches file hashes against intel IOC lookup |
+          | ... | ... | ... | ... | ... | ... |
+
+          For each rule, the deep link format is:
+          `https://app.limacharlie.io/orgs/<oid>/dr-rules/<rule-name>`
 
           ### Rules Failed to Create
           | Intended Name | Reason |
           |--------------|--------|
           | <name> | <validation error or other reason> |
 
-          ### View Rules in Web UI
-          - D&R Rules: https://app.limacharlie.io/orgs/<oid>/dr-rules
-          - Lookups: https://app.limacharlie.io/orgs/<oid>/lookups
-
           ### Activation Instructions
-          To enable a rule after review:
-          ```
-          limacharlie dr set --name "<rule-name>" --enabled --oid <oid>
-          ```
-
-          Or review and enable directly in the web UI:
-          https://app.limacharlie.io/orgs/<oid>/dr-rules
+          Click the "View" link for each rule above to review and enable it in the web UI.
           ```
 
           ### Step 7: Update Case and Close

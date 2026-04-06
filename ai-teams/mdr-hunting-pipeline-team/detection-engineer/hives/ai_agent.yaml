@@ -309,10 +309,13 @@ hives:
           limacharlie case add-note --case-number <case_number> --type analysis --content "## Detection Engineering Report
 
           ### Rules Created
-          | Rule Name | Threat | Type | Unit Tests | Replay (Avg Matches) | Status |
-          |-----------|--------|------|------------|---------------------|--------|
-          | <name> | <threat> | <behavioral/ioc> | PASS/FAIL | <N> matches | Deployed (enabled) |
+          | Rule Name | Threat | Type | Unit Tests | Replay (Avg Matches) | Status | Web UI |
+          |-----------|--------|------|------------|---------------------|--------|--------|
+          | <name> | <threat> | <behavioral/ioc> | PASS/FAIL | <N> matches | Deployed (enabled) | [View](https://app.limacharlie.io/orgs/<tenant_oid>/dr-rules/<name>) |
           ...
+
+          Deep link format: `https://app.limacharlie.io/orgs/<tenant_oid>/dr-rules/<rule-name>`
+          Include a View link for EVERY tenant org where the rule was deployed.
 
           ### IOC Lookups Updated
           | Lookup | Entries Added | Deployed To |
@@ -322,18 +325,14 @@ hives:
           | intel-ioc-ips | <N> | <N> orgs |
 
           ### FP Rules Created
-          | FP Rule | Pattern | For Detection | Deployed To |
-          |---------|---------|--------------|-------------|
-          | <name> | <pattern> | <detection> | <N> orgs |
+          | FP Rule | Pattern | For Detection | Deployed To | Web UI |
+          |---------|---------|--------------|-------------|--------|
+          | <name> | <pattern> | <detection> | <N> orgs | [View](https://app.limacharlie.io/orgs/<tenant_oid>/fp/<name>) |
+
+          FP deep link format: `https://app.limacharlie.io/orgs/<tenant_oid>/fp/<fp-rule-name>`
 
           ### Skipped / Failed
           - <rule>: <reason for skipping>
-
-          ### View Rules in Web UI
-          For each tenant org, review the deployed rules:
-          - D&R Rules: https://app.limacharlie.io/orgs/<tenant_oid>/dr-rules
-          - FP Rules: https://app.limacharlie.io/orgs/<tenant_oid>/fp-rules
-          - Lookups: https://app.limacharlie.io/orgs/<tenant_oid>/lookups
 
           ### Deployment Summary
           - Rules deployed to <N> tenant organizations

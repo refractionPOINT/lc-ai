@@ -325,19 +325,16 @@ hives:
           The following rules were created to close detection gaps found during today's BAS run.
           All rules are **disabled** and must be reviewed and enabled manually.
 
-          | Rule Name | Technique | Description |
-          |-----------|-----------|-------------|
-          | `<rule-name-1>` | <technique_id> — <name> | <one-line description> |
-          | `<rule-name-2>` | <technique_id> — <name> | <one-line description> |
+          | Rule Name | Technique | Description | Web UI |
+          |-----------|-----------|-------------|--------|
+          | `<rule-name-1>` | <technique_id> — <name> | <one-line description> | [View](https://app.limacharlie.io/orgs/<oid>/dr-rules/<rule-name-1>) |
+          | `<rule-name-2>` | <technique_id> — <name> | <one-line description> | [View](https://app.limacharlie.io/orgs/<oid>/dr-rules/<rule-name-2>) |
 
-          ### View Rules in Web UI
-          - D&R Rules: https://app.limacharlie.io/orgs/<oid>/dr-rules
-          - FP Rules: https://app.limacharlie.io/orgs/<oid>/fp-rules
+          Deep link format: `https://app.limacharlie.io/orgs/<oid>/dr-rules/<rule-name>`
+          For FP rules: `https://app.limacharlie.io/orgs/<oid>/fp/<fp-rule-name>`
 
           ### How to enable
-          Navigate to **D&R Rules** in the web UI, find each rule by name,
-          review its logic, and toggle it to enabled:
-          https://app.limacharlie.io/orgs/<oid>/dr-rules
+          Click the "View" link for each rule above to review and enable it in the web UI.
           RULESEOF
           limacharlie case add-note --case-number <case_number> --type analysis \
             --input-file /tmp/bas-rules-created.md --oid <oid> --output yaml
@@ -454,12 +451,11 @@ hives:
           ### New D&R Rules Created
 
           <If rules were created:>
-          | Rule Name | Detects | Unit Tests | Replay (24h) | Status |
-          |-----------|---------|------------|--------------|--------|
-          | bas-t1003-lsass-access | LSASS credential dump | PASS | 0 FP | DISABLED |
+          | Rule Name | Detects | Unit Tests | Replay (24h) | Status | Web UI |
+          |-----------|---------|------------|--------------|--------|--------|
+          | bas-t1003-lsass-access | LSASS credential dump | PASS | 0 FP | DISABLED | [View](https://app.limacharlie.io/orgs/<oid>/dr-rules/bas-t1003-lsass-access) |
 
-          **To enable**: Review each rule and toggle it to enabled:
-          https://app.limacharlie.io/orgs/<oid>/dr-rules
+          **To enable**: Click the "View" link for each rule to review and enable it in the web UI.
 
           <If no rules were created:>
           No new rules needed — all techniques were detected by existing coverage.
