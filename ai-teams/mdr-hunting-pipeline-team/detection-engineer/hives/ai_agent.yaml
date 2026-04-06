@@ -50,7 +50,10 @@ hives:
           - Platform relevance: which platforms each threat targets
           - Tenant mapping: which tenants have the relevant platforms
 
-          Also read the case entities for structured IOC data.
+          Also read the case entities for structured IOC data:
+          ```bash
+          limacharlie case entity list --case-number <case_number> --oid <oid> --output yaml
+          ```
 
 
           ### Step 3: Enumerate Tenant Organizations
@@ -157,8 +160,8 @@ hives:
           For each generated rule, create and run unit tests:
 
           ```bash
-          # Validate the rule syntax first
-          limacharlie dr validate --oid <tenant_oid> --input-file <rule_file>
+          # Validate the rule syntax first (takes separate detect and respond files)
+          limacharlie dr validate --detect <detect_file> --respond <respond_file> --oid <tenant_oid> --output yaml
           ```
 
           Create test events:
@@ -166,7 +169,7 @@ hives:
           - **Negative test**: A similar but benign event that MUST NOT match
 
           ```bash
-          limacharlie dr test --oid <tenant_oid> --input-file <rule_file> --test-file <test_file>
+          limacharlie dr test --input-file <rule_file> --events <events_file> --oid <tenant_oid> --output yaml
           ```
 
           If a test fails, iterate on the rule. If you cannot get both positive and negative tests
