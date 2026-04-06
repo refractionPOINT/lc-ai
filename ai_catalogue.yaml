@@ -567,3 +567,18 @@ agents:
       - agent: customer-report
         runs_per_day: 0.14
         max_daily_usd: 0.21
+
+  limacharlie-maintainer:
+    display_name: "LimaCharlie Maintainer"
+    description: "Daily autonomous org self-improvement guided by a SOUL.md SOP"
+    category: operations
+    model: opus
+    max_budget_usd: 5.00
+    trigger:
+      type: schedule
+      interval: 24h
+
+    daily_overhead:
+      - agent: limacharlie-maintainer
+        runs_per_day: 1
+        max_daily_usd: 5.00
