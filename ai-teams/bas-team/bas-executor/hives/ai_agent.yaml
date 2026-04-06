@@ -78,56 +78,52 @@ hives:
           If no online sensors are found, create an INFO case noting this and exit.
 
 
-          ### Step 3: Select Attack Scenario
+          ### Step 3: Discover Available Techniques
 
-          Compose a coherent attack scenario that simulates a REALISTIC breach. The scenario should
+          Query the ext-atomic-red-team extension schema to get the full catalog of supported
+          techniques and their MITRE ATT&CK tactic categories:
+          ```bash
+          limacharlie extension schema --name ext-atomic-red-team --oid <oid> --output yaml
+          ```
+
+          Parse the `request_schema.run_tests.parameters.fields.rules.complex_enum_values` list.
+          Each entry has:
+          - `value`: the technique ID (e.g. T1082)
+          - `label`: the technique name (e.g. "T1082: System Information Discovery")
+          - `category_key`: the MITRE ATT&CK tactic (e.g. "discovery", "credential-access")
+
+          Build a map of tactic -> available techniques from this data.
+
+
+          ### Step 4: Select Attack Scenario
+
+          Using the discovered technique catalog from Step 3 and the BAS history from Step 1,
+          compose a coherent attack scenario that simulates a REALISTIC breach. The scenario should
           form a logical kill chain — not just random unrelated techniques.
 
-          Use these scenario themes as a starting point, selecting one that emphasizes tactics NOT
-          recently tested (from Step 1):
+          **Scenario composition process:**
+          1. Identify which MITRE ATT&CK tactics have the LEAST coverage in the BAS history
+          2. Pick a realistic attack theme (e.g. ransomware intrusion, APT data theft, credential
+             theft, living off the land, supply chain compromise, insider threat, etc.)
+          3. Build a kill chain of 3-6 techniques from the available catalog that:
+             - Spans multiple tactics in a logical attack progression
+             - Prioritizes techniques NOT tested in the last 14 days
+             - Only uses techniques available for the target platform
+             - Forms a believable adversary narrative
 
-          **Theme 1: Ransomware Intrusion**
-          Kill chain: Discovery -> Credential Access -> Lateral Movement -> Impact
-          - Windows: T1082, T1083, T1003.001, T1021.002, T1486
-          - Linux: T1082, T1083, T1003.008, T1021.004, T1486
-
-          **Theme 2: APT Data Theft**
-          Kill chain: Execution -> Persistence -> Collection -> Exfiltration
-          - Windows: T1059.001, T1053.005, T1560.001, T1048.003
-          - Linux: T1059.004, T1053.003, T1560.001, T1048.003
-
-          **Theme 3: Credential Theft & Privilege Escalation**
-          Kill chain: Credential Access -> Privilege Escalation -> Defense Evasion
-          - Windows: T1003.001, T1003.003, T1134.001, T1070.004
-          - Linux: T1003.008, T1548.001, T1070.004
-
-          **Theme 4: Living Off The Land**
-          Kill chain: Execution -> Discovery -> Defense Evasion -> Persistence
-          - Windows: T1059.001, T1082, T1218.011, T1547.001
-          - Linux: T1059.004, T1082, T1070.006, T1053.003
-
-          **Theme 5: Reconnaissance & Collection**
-          Kill chain: Discovery -> Execution -> Collection
-          - Windows: T1082, T1057, T1049, T1005, T1560.001
-          - Linux: T1082, T1057, T1049, T1005, T1560.001
-
-          **Theme 6: Defense Evasion Focus**
-          Kill chain: Multiple evasion techniques
-          - Windows: T1218.011, T1218.010, T1027, T1070.004, T1140
-          - Linux: T1070.004, T1027, T1140, T1222.002
-
-          You may also MIX techniques across themes to create novel scenarios or to fill coverage
-          gaps identified from history. Use your knowledge of real-world attack campaigns to compose
-          convincing chains.
+          Use your knowledge of real-world attack campaigns, threat actor TTPs, and MITRE ATT&CK
+          to compose convincing chains. Do NOT repeat the same scenario themes — vary the attack
+          narrative and technique selection daily.
 
           Guidelines:
           - Select 3-6 techniques per run
+          - Only use technique IDs that appeared in the extension schema (Step 3)
           - Ensure all techniques are appropriate for the target platform
           - Prefer techniques not tested in the last 14 days
           - Write a 2-3 sentence attack narrative describing the simulated adversary's goals
 
 
-          ### Step 4: Record Simulation Start Time
+          ### Step 5: Record Simulation Start Time
 
           ```bash
           BAS_START=$(date +%s)
@@ -137,7 +133,7 @@ hives:
           Save this value — the Detection Reviewer needs it to query the right time window.
 
 
-          ### Step 5: Prepare the Endpoint
+          ### Step 6: Prepare the Endpoint
 
           Install the Atomic Red Team framework on the target:
           ```bash
@@ -156,11 +152,11 @@ hives:
           limacharlie sensor list --oid <oid> --output yaml
           ```
 
-          If the sensor went offline, note the failure, attempt cleanup (Step 7), create a case
+          If the sensor went offline, note the failure, attempt cleanup (Step 8), create a case
           noting the issue, and exit.
 
 
-          ### Step 6: Execute Attack Scenario
+          ### Step 7: Execute Attack Scenario
 
           Run the selected techniques with atomic cleanup enabled:
           ```bash
@@ -169,7 +165,7 @@ hives:
             --oid <oid> --output yaml
           ```
 
-          Replace the technique list with your selected techniques from Step 3.
+          Replace the technique list with your selected techniques from Step 4.
 
           IMPORTANT: Always set `clean: true` so each technique's atomic cleanup runs after
           execution, restoring the endpoint toward its original state.
@@ -183,7 +179,7 @@ hives:
           For example, 5 techniques: `sleep 900` (15 minutes).
 
 
-          ### Step 7: Cleanup the Endpoint
+          ### Step 8: Cleanup the Endpoint
 
           Remove the ART framework installation:
           ```bash
@@ -197,7 +193,7 @@ hives:
           ```
 
 
-          ### Step 8: Record Simulation End Time
+          ### Step 9: Record Simulation End Time
 
           ```bash
           BAS_END=$(date +%s)
@@ -205,7 +201,7 @@ hives:
           ```
 
 
-          ### Step 9: Create BAS Case
+          ### Step 10: Create BAS Case
 
           Create a case to hold the simulation results and detection review:
           ```bash
@@ -263,7 +259,7 @@ hives:
           ```
 
 
-          ### Step 10: Hand Off to Detection Reviewer
+          ### Step 11: Hand Off to Detection Reviewer
 
           ```bash
           limacharlie case add-note --case-number <case_number> --type handoff \
