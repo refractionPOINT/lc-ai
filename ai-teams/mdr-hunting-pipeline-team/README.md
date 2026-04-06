@@ -10,7 +10,7 @@ flowchart TD
     trigger["Schedule: every 24 hours"] --> scout["Intel Scout<br/>(Opus, $10.00)"]
     scout --> |"1. Read tenant inventory<br/>2. Run fetch_intel.py playbook<br/>3. Filter + prioritize by platform<br/>4. Create daily report case (INFO)"| mention1["@mdr-detection-engineer"]
     mention1 --> engineer["Detection Engineer<br/>(Opus, $10.00)"]
-    engineer --> |"1. Generate D&R rules + unit tests<br/>2. Replay with __test- prefix<br/>3. Deploy validated rules (enabled)<br/>4. Deploy lookups + FP rules"| mention2["@mdr-threat-hunter"]
+    engineer --> |"1. Generate D&R rules + unit tests<br/>2. Deploy disabled + replay<br/>3. Enable validated rules<br/>4. Deploy lookups + FP rules"| mention2["@mdr-threat-hunter"]
     mention2 --> hunter["Threat Hunter<br/>(Opus, $10.00)"]
     hunter --> |"1. Hunt IOCs + behaviors across all orgs<br/>2. Create Cases in affected tenant orgs<br/>3. Detailed threat intel attribution<br/>4. Close central daily report"| done["Pipeline complete"]
 ```
@@ -57,7 +57,7 @@ Triggered by the Intel Scout's @mention. Reads the intel from the daily report c
 
 1. **Generates D&R rules** using `limacharlie ai generate-detection/response` for each relevant threat
 2. **Creates unit tests** - positive tests (must match) and negative tests (must not match)
-3. **Replays rules** using `__test-` prefixed names so no live detections fire during testing
+3. **Replays rules** deployed in disabled state so no live detections fire during testing
 4. **Creates FP rules** for narrow, positively identified false positive corner cases
 5. **Deploys lookups** (IOC hashes, domains, IPs) across all tenant orgs - active immediately
 6. **Deploys validated D&R rules** under their production names (enabled) only after all testing passes

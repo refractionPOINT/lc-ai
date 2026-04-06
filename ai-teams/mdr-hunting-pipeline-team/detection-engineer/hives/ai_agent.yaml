@@ -178,22 +178,31 @@ hives:
           For each rule that passes unit tests, replay it against the last 24 hours of data
           across tenant orgs to check for false positive rates.
 
-          IMPORTANT: Use a TEMPORARY rule name prefixed with `__test-` for replay so that the
-          rule is never visible as an enabled production rule during testing. This prevents
-          the rule from generating live detections that would spam the SOC while you are still
-          validating.
+          IMPORTANT: Deploy the rule in a DISABLED state for replay testing. Disabled rules are
+          not evaluated by the live D&R engine, so they will not generate live detections that
+          would spam the SOC while you are still validating. The replay service evaluates rules
+          regardless of their enabled state, so replay will still work.
+
+          To create a disabled rule, your input YAML file must wrap the rule data and set
+          `usr_mtd.enabled: false`:
+
+          ```yaml
+          # rule_file.yaml
+          data:
+            detect: { ... }
+            respond: [ ... ]
+          usr_mtd:
+            enabled: false
+          ```
 
           ```bash
-          # Deploy the rule with a temporary test name
-          limacharlie dr set --key __test-<rule-name> --oid <tenant_oid> --input-file <rule_file>
+          # Deploy the rule in DISABLED state (won't fire on live data)
+          limacharlie dr set --key <rule-name> --oid <tenant_oid> --input-file <rule_file>
 
-          # Replay against last 24 hours
+          # Replay against last 24 hours (replay evaluates disabled rules)
           END=$(date +%s)
           START=$((END - 86400))
-          limacharlie dr replay --name __test-<rule-name> --start $START --end $END --oid <tenant_oid> --output yaml
-
-          # ALWAYS delete the temporary rule after replay, regardless of outcome
-          limacharlie dr delete --key __test-<rule-name> --oid <tenant_oid> --output yaml
+          limacharlie dr replay --name <rule-name> --start $START --end $END --oid <tenant_oid> --output yaml
           ```
 
           **Evaluate replay results:**
@@ -205,8 +214,6 @@ hives:
           If matches look like genuine FPs that follow a narrow, specific pattern, create an FP
           rule for that corner case (see Step 9). If the rule is fundamentally too broad, refine
           the detection logic and re-test.
-
-          CRITICAL: Never leave a `__test-` rule in the hive. Always clean up after replay.
 
 
           ### Step 9: Create FP Rules (If Needed)
@@ -231,14 +238,23 @@ hives:
           identified as false positives. Never create broad FP rules that could hide real threats.
 
 
-          ### Step 10: Deploy Validated Rules Across All Tenant Orgs
+          ### Step 10: Enable Validated Rules Across All Tenant Orgs
 
           ONLY after a rule has passed ALL validation (syntax, unit tests, replay with
-          acceptable FP rates), deploy it with its final production name. The rule will be
-          ENABLED on creation -- this is safe because it has been fully validated.
+          acceptable FP rates), enable it by re-setting the rule with `usr_mtd.enabled: true`.
+          Update the input YAML to set enabled to true and re-deploy:
+
+          ```yaml
+          # rule_file.yaml (now with enabled: true)
+          data:
+            detect: { ... }
+            respond: [ ... ]
+          usr_mtd:
+            enabled: true
+          ```
 
           ```bash
-          # For each tenant org -- deploy only fully validated rules:
+          # For each tenant org -- enable only fully validated rules:
           limacharlie dr set --key <rule-name> --oid <tenant_oid> --input-file <rule_file>
           ```
 
@@ -247,9 +263,8 @@ hives:
           limacharlie fp set --key <fp-rule-name> --oid <tenant_oid> --input-file <fp_rule_file>
           ```
 
-          NEVER deploy a rule under its production name before validation is complete. The
-          sequence must be: generate -> validate -> unit test -> replay (with __test- prefix)
-          -> delete test rule -> deploy final rule.
+          NEVER enable a rule before validation is complete. The sequence must be:
+          generate -> validate -> unit test -> deploy disabled -> replay -> enable.
 
 
           ### Step 11: Document in Daily Report
@@ -308,8 +323,8 @@ hives:
           - Always use `--oid` and `--output yaml` for all CLI commands.
           - Always validate rules before deploying: `limacharlie dr validate`.
           - NEVER deploy a rule under its production name until it passes ALL validation.
-          - Use `__test-` prefixed names for replay testing, then delete them.
-          - Only deploy the final rule (enabled) after syntax validation, unit tests, and replay pass.
+          - Deploy rules in DISABLED state (`usr_mtd.enabled: false`) for replay testing, then enable after validation.
+          - Only enable a rule after syntax validation, unit tests, and replay pass.
           - IOC lookups and FP rules are ACTIVE.
           - Check for existing rules before creating duplicates.
           - If a CLI command fails, run `limacharlie <command> --ai-help` for correct syntax.
