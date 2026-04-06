@@ -52,7 +52,7 @@ hives:
 
           Also read the case entities for structured IOC data:
           ```bash
-          limacharlie case entity list --case-number <case_number> --oid <oid> --output yaml
+          limacharlie case entity list --case <case_number> --oid <oid> --output yaml
           ```
 
 

@@ -205,7 +205,7 @@ hives:
 
           **7d. Validate syntax:**
           ```bash
-          limacharlie dr validate --oid <oid> --input-file <rule_file>
+          limacharlie dr validate --detect <detect_file> --respond <respond_file> --oid <oid> --output yaml
           ```
 
           **7e. Unit test with positive and negative test events:**
@@ -215,40 +215,22 @@ hives:
           - **Negative test**: A similar but benign event — MUST NOT match
 
           ```bash
-          limacharlie dr test --oid <oid> --input-file <rule_file> --test-file <test_file>
+          limacharlie dr test --input-file <rule_file> --events <events_file> --oid <oid> --output yaml
           ```
 
           If a test fails, iterate on the rule (up to 3 attempts). If you cannot get both positive
           and negative tests to pass, document the issue and skip this rule.
 
           **7f. Replay against historical data:**
-          ```bash
-          # Deploy with a temporary test name
-          limacharlie dr set --key __test-bas-<technique-id> --oid <oid> --input-file <rule_file>
 
-          # Replay against the last 24 hours
-          REPLAY_END=$(date +%s)
-          REPLAY_START=$((REPLAY_END - 86400))
-          limacharlie dr replay --name __test-bas-<technique-id> \
-            --start $REPLAY_START --end $REPLAY_END --oid <oid> --output yaml
+          Deploy the rule in a DISABLED state for replay testing. Disabled rules are not
+          evaluated by the live D&R engine, so they will not generate live detections while
+          you are still validating. The replay service evaluates rules regardless of their
+          enabled state, so replay will still work.
 
-          # ALWAYS delete the temporary rule after replay
-          limacharlie dr delete --key __test-bas-<technique-id> --oid <oid> --output yaml
-          ```
-
-          Evaluate replay results:
-          - 0 matches: Clean — expected for most BAS rules since the technique was just simulated
-          - 1-10 matches: Review each to determine if TP or FP
-          - 10-50 matches: Likely too noisy, needs tuning or an FP rule
-          - 50+ matches: Rule is too broad — refine the detection or skip
-
-          CRITICAL: ALWAYS delete `__test-` rules after replay, regardless of outcome.
-
-          **7g. Deploy validated rules (DISABLED):**
-
-          Before deploying, you MUST ensure the rule YAML contains `usr_mtd.enabled: false`.
-          The `ai generate-detection` output will not include this — you must add it yourself.
-          Write the final rule file with this structure:
+          Before deploying, ensure the rule YAML wraps the rule data and sets
+          `usr_mtd.enabled: false`. The `ai generate-detection` output will not include
+          this — you must add it yourself:
 
           ```yaml
           # /tmp/bas-rule-<technique-id>.yaml
@@ -272,12 +254,26 @@ hives:
             enabled: false
           ```
 
-          Then deploy:
           ```bash
+          # Deploy the rule in DISABLED state (won't fire on live data)
           limacharlie dr set --key <rule-name> --oid <oid> --input-file /tmp/bas-rule-<technique-id>.yaml
+
+          # Replay against the last 24 hours (replay evaluates disabled rules)
+          REPLAY_END=$(date +%s)
+          REPLAY_START=$((REPLAY_END - 86400))
+          limacharlie dr replay --name <rule-name> \
+            --start $REPLAY_START --end $REPLAY_END --oid <oid> --output yaml
           ```
 
-          Verify it was created disabled:
+          Evaluate replay results:
+          - 0 matches: Clean — expected for most BAS rules since the technique was just simulated
+          - 1-10 matches: Review each to determine if TP or FP
+          - 10-50 matches: Likely too noisy, needs tuning or an FP rule
+          - 50+ matches: Rule is too broad — refine the detection or skip
+
+          **7g. Verify deployment and create FP rules:**
+
+          Verify the rule was created disabled:
           ```bash
           limacharlie hive get --hive-name dr-general --key <rule-name> --oid <oid> --output yaml --filter "usr_mtd.enabled"
           ```
@@ -499,7 +495,7 @@ hives:
           - NEVER write D&R rules manually. Always use `limacharlie ai generate-detection` and
             `limacharlie ai generate-response` (flag is `--description`, NOT `--prompt`).
           - ALWAYS validate rules before deploying: syntax + unit tests + replay.
-          - ALWAYS delete `__test-` rules after replay, regardless of outcome.
+          - Deploy rules in DISABLED state (`usr_mtd.enabled: false`) for replay testing.
           - ALWAYS use `--oid` and `--output yaml` for all limacharlie CLI commands.
           - Deploy new rules DISABLED. Let humans review and enable.
           - Timestamps in detection data are in MILLISECONDS (13 digits). API start/end parameters

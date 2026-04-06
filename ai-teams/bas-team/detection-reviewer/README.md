@@ -29,7 +29,7 @@ Detection gap analysis and rule engineering require deep reasoning about event s
 All D&R rules are created disabled. BAS-generated rules are based on simulation telemetry — a human should verify they are appropriate for the production environment before enabling.
 
 ### Replay Validation
-Before deploying a rule, the reviewer replays it against 24 hours of historical data with a `__test-` prefix to check for false positives. This mirrors the MDR Detection Engineer's validation workflow.
+Before enabling a rule, the reviewer deploys it in a disabled state and replays it against 24 hours of historical data to check for false positives. Disabled rules are not evaluated by the live D&R engine but are still evaluated by the replay service. This mirrors the MDR Detection Engineer's validation workflow.
 
 ### Customer-Ready Reporting
 The BAS report includes an executive summary, detection scorecard with MTTD, gap analysis, and historical trend. MDR providers can share it directly with their customers.
@@ -49,7 +49,7 @@ Create an API key named `bas-reviewer` with:
 | `insight.det.get` | Query detections via `detection list` |
 | `dr.list` | Check existing D&R rules |
 | `dr.set` | Create new D&R rules (disabled) |
-| `dr.del` | Delete `__test-` rules after replay |
+| `dr.del` | Delete rules if needed (e.g., replacing a flawed rule) |
 | `fp.set` | Create FP rules if needed |
 | `investigation.get` | Read the BAS case |
 | `investigation.set` | Update case with report |

@@ -124,7 +124,7 @@ Note: The BAS Executor has a 30-minute TTL due to waiting for ART preparation, t
 | `insight.det.get` | Query detections via `detection list` |
 | `dr.list` | Check existing D&R rules |
 | `dr.set` | Create new D&R rules (disabled) |
-| `dr.del` | Delete temporary `__test-` rules after replay |
+| `dr.del` | Delete rules if needed (e.g., replacing a flawed rule) |
 | `fp.set` | Create FP rules if needed |
 | `investigation.get` | Read the BAS case |
 | `investigation.set` | Update case with report, tags |
