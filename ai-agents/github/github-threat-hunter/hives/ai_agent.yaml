@@ -335,7 +335,7 @@ hives:
         model: opus
         max_turns: 80
         max_budget_usd: 5.0
-        ttl_seconds: 1200
+        ttl_seconds: 2400
         one_shot: true
         permission_mode: bypassPermissions
       usr_mtd:

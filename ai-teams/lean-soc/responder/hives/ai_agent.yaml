@@ -100,7 +100,7 @@ hives:
         model: sonnet
         max_turns: 30
         max_budget_usd: 1.0
-        ttl_seconds: 300
+        ttl_seconds: 600
         one_shot: true
         permission_mode: bypassPermissions
       usr_mtd:
