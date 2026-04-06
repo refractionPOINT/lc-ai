@@ -251,12 +251,27 @@ hives:
              limacharlie dr validate --detect '<detect yaml>' --respond '<respond yaml>' --oid <oid> --output yaml
              ```
 
-          4. **Create the rule in DISABLED state**:
-             ```bash
-             limacharlie dr set --name "<rule-name>" --detect '<detect yaml>' --respond '<respond yaml>' --disabled --oid <oid> --output yaml
+          4. **Create the rule in DISABLED state with `to-be-reviewed` tag:**
+
+             Write the complete rule to a temp file with `usr_mtd` set to disabled and tagged:
+             ```yaml
+             # /tmp/intel-rule-<name>.yaml
+             data:
+               detect:
+                 <generated detect block>
+               respond:
+                 <generated respond block with metadata>
+             usr_mtd:
+               enabled: false
+               tags:
+                 - to-be-reviewed
              ```
 
-             CRITICAL: Always use the `--disabled` flag. These rules need human review before activation.
+             ```bash
+             limacharlie dr set --key "<rule-name>" --input-file /tmp/intel-rule-<name>.yaml --oid <oid> --output yaml
+             ```
+
+             CRITICAL: Always set `usr_mtd.enabled: false`. These rules need human review before activation.
 
           5. If the rule fails validation, try adjusting the detection logic and re-validate.
              If it still fails after 2 attempts, skip it and note the failure in the case.

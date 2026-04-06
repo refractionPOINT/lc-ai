@@ -168,12 +168,19 @@ hives:
           - **Positive test**: A crafted event that MUST match the detection
           - **Negative test**: A similar but benign event that MUST NOT match
 
+          Each test event must have an `event` dict (the event payload) and a `routing` dict
+          with at least `event_type` and `oid`.
+
           ```bash
           limacharlie dr test --input-file <rule_file> --events <events_file> --oid <tenant_oid> --output yaml
           ```
 
           If a test fails, iterate on the rule. If you cannot get both positive and negative tests
           to pass, document the issue and skip this rule.
+
+          **IMPORTANT — embed tests in the rule:** After tests pass, include the test events in
+          the rule YAML under `data.tests`. This ensures the tests are persisted with the rule
+          and re-validated on every future rule update. See the YAML template in Step 8 below.
 
 
           ### Step 8: Replay Rules Against Historical Data
@@ -187,16 +194,40 @@ hives:
           regardless of their enabled state, so replay will still work.
 
           To create a disabled rule, your input YAML file must wrap the rule data and set
-          `usr_mtd.enabled: false`:
+          `usr_mtd.enabled: false`. Include the unit test events from Step 7 in `data.tests`
+          so they are persisted with the rule:
 
           ```yaml
           # rule_file.yaml
           data:
             detect: { ... }
             respond: [ ... ]
+            tests:
+              match:
+                - - event:
+                      <fields from the positive test event>
+                    routing:
+                      event_type: "<EVENT_TYPE>"
+                      oid: "<oid>"
+                      sid: "test-sid"
+              non_match:
+                - - event:
+                      <fields from the negative test event>
+                    routing:
+                      event_type: "<EVENT_TYPE>"
+                      oid: "<oid>"
+                      sid: "test-sid"
           usr_mtd:
             enabled: false
+            tags:
+              - to-be-reviewed
           ```
+
+          The `tests.match` array contains test cases that MUST trigger the rule.
+          The `tests.non_match` array contains test cases that MUST NOT trigger the rule.
+          Each test case is an array of one or more events (use a single-element array for
+          simple rules). Each event needs `event` (payload) and `routing` (with at least
+          `event_type` and `oid`).
 
           ```bash
           # Deploy the rule in DISABLED state (won't fire on live data)
