@@ -321,14 +321,18 @@ hives:
           |--------------|--------|
           | <name> | <validation error or other reason> |
 
+          ### View Rules in Web UI
+          - D&R Rules: https://app.limacharlie.io/orgs/<oid>/dr-rules
+          - Lookups: https://app.limacharlie.io/orgs/<oid>/lookups
+
           ### Activation Instructions
           To enable a rule after review:
           ```
           limacharlie dr set --name "<rule-name>" --enabled --oid <oid>
           ```
 
-          To enable all intel rules at once:
-          Review each rule in the LimaCharlie web UI under D&R Rules, then toggle enabled.
+          Or review and enable directly in the web UI:
+          https://app.limacharlie.io/orgs/<oid>/dr-rules
           ```
 
           ### Step 7: Update Case and Close

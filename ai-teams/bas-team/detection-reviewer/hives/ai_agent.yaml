@@ -300,9 +300,14 @@ hives:
           | `<rule-name-1>` | <technique_id> — <name> | <one-line description> |
           | `<rule-name-2>` | <technique_id> — <name> | <one-line description> |
 
+          ### View Rules in Web UI
+          - D&R Rules: https://app.limacharlie.io/orgs/<oid>/dr-rules
+          - FP Rules: https://app.limacharlie.io/orgs/<oid>/fp-rules
+
           ### How to enable
-          Navigate to **D&R Rules** in the LimaCharlie web UI, find each rule by name,
-          review its logic, and toggle it to enabled.
+          Navigate to **D&R Rules** in the web UI, find each rule by name,
+          review its logic, and toggle it to enabled:
+          https://app.limacharlie.io/orgs/<oid>/dr-rules
           RULESEOF
           limacharlie case add-note --case-number <case_number> --type analysis \
             --input-file /tmp/bas-rules-created.md --oid <oid> --output yaml
@@ -423,7 +428,8 @@ hives:
           |-----------|---------|------------|--------------|--------|
           | bas-t1003-lsass-access | LSASS credential dump | PASS | 0 FP | DISABLED |
 
-          **To enable**: Review each rule in the D&R Rules page, then toggle it to enabled.
+          **To enable**: Review each rule and toggle it to enabled:
+          https://app.limacharlie.io/orgs/<oid>/dr-rules
 
           <If no rules were created:>
           No new rules needed — all techniques were detected by existing coverage.

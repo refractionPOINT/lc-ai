@@ -298,6 +298,12 @@ hives:
           ### Skipped / Failed
           - <rule>: <reason for skipping>
 
+          ### View Rules in Web UI
+          For each tenant org, review the deployed rules:
+          - D&R Rules: https://app.limacharlie.io/orgs/<tenant_oid>/dr-rules
+          - FP Rules: https://app.limacharlie.io/orgs/<tenant_oid>/fp-rules
+          - Lookups: https://app.limacharlie.io/orgs/<tenant_oid>/lookups
+
           ### Deployment Summary
           - Rules deployed to <N> tenant organizations
           - All D&R rules are ENABLED (unit tested + replay validated)
