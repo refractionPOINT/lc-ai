@@ -53,7 +53,13 @@ hives:
           ### Step 3: Wait for Detection Pipeline
 
           Allow 5 minutes for the detection pipeline to finish processing. Late-firing rules,
-          correlations, and batched evaluations need this buffer:
+          correlations, and batched evaluations need this buffer.
+
+          IMPORTANT: This MUST be a blocking (foreground) sleep. Do NOT run it in the background
+          and proceed early — doing so defeats the purpose of waiting for the pipeline. You may
+          pre-generate LCQL queries you will need in Step 4 while waiting, but do NOT execute
+          any searches until the full 300 seconds have elapsed.
+
           ```bash
           sleep 300
           ```
@@ -129,10 +135,51 @@ hives:
           - **Per-tactic coverage**: group by MITRE tactic
 
 
+          ### Step 5b: Verify Technique Execution
+
+          Before analyzing gaps, verify that the simulated techniques actually executed. If ART
+          tests failed silently, the absence of telemetry is an execution problem — not a detection
+          or telemetry gap.
+
+          **Telemetry sanity check:** In Step 4 you searched for all events during the simulation
+          window. Verify that NEW_PROCESS events exist for OTHER processes during the window
+          (system noise like wmiprvse.exe, conhost.exe, svchost.exe, etc.). If they do, the
+          sensor IS collecting process creation telemetry — so missing technique-specific
+          processes means they were never spawned, not that the sensor cannot see them.
+
+          **Look for ART execution artifacts:** Search for evidence that Invoke-AtomicTest
+          actually ran the techniques:
+
+          ```bash
+          limacharlie ai generate-query --oid <oid> \
+            --prompt "Find NEW_PROCESS events for sensor <sid> where COMMAND_LINE contains Invoke-AtomicTest or AtomicRedTeam"
+
+          limacharlie search run \
+            --query "<generated query>" \
+            --start <simulation_start_time> --end <simulation_end_time> \
+            --stream event \
+            --oid <oid> --output yaml
+          ```
+
+          **Classify each technique's execution status:**
+          - If you see the technique's expected child process (e.g., net.exe for T1087.001): **Executed**
+          - If you see Invoke-AtomicTest output referencing the technique but no child process:
+            **Executed** (may have used PowerShell cmdlets instead of spawning child processes)
+          - If you see NO evidence the technique ran at all AND the telemetry sanity check
+            confirms NEW_PROCESS is working: **Possibly not executed**
+
+          For techniques classified as "Possibly not executed", do NOT classify them as telemetry
+          gaps in Step 6. Instead report them as **execution failures** — the ART test may have
+          failed, been blocked by endpoint protection, or been skipped due to missing prerequisites.
+          This distinction matters: recommending Sysmon or enhanced logging for a technique that
+          never ran is misleading to the customer.
+
+
           ### Step 6: Analyze Telemetry for Gaps
 
-          For each UNDETECTED technique, investigate what telemetry IS available. This determines
-          whether we CAN write a detection (telemetry exists) or CANNOT (telemetry gap).
+          For each UNDETECTED technique that was confirmed as **Executed** in Step 5b, investigate
+          what telemetry IS available. This determines whether we CAN write a detection (telemetry
+          exists) or CANNOT (telemetry gap).
 
           Use `limacharlie ai generate-query` to build LCQL queries for each technique's
           expected telemetry. Run them against the event stream:
@@ -169,6 +216,9 @@ hives:
           - **Detectable**: Telemetry exists, we just need a D&R rule
           - **Partial telemetry**: Some events present but insufficient for reliable detection
           - **Telemetry gap**: No relevant events — the sensor doesn't capture this activity
+          - **Execution failure** (from Step 5b): Telemetry is flowing for other activity on this
+            sensor but no evidence this technique was executed by ART. The test likely failed, was
+            blocked, or was skipped. This is NOT a sensor issue — do not recommend logging changes
 
 
           ### Step 7: Detection Engineering for Gaps
@@ -440,11 +490,14 @@ hives:
 
           #### <technique_id> — <name> (<tactic>)
           - **Status**: Not detected
-          - **Telemetry Available**: <Yes/Partial/No>
+          - **Telemetry Available**: <Yes/Partial/No/Execution Failure>
           - **Root Cause**: <e.g., "No D&R rule exists for this technique", "Telemetry events were
-            present (NEW_PROCESS with cmd.exe /c systeminfo) but no rule matched">
+            present (NEW_PROCESS with cmd.exe /c systeminfo) but no rule matched",
+            "ART test did not execute — sensor telemetry is functional (other NEW_PROCESS events
+            observed) but no evidence of technique execution">
           - **Remediation**: <e.g., "New rule `bas-t1082-system-enum` created (DISABLED)",
-            "Telemetry gap — consider enabling enhanced logging">
+            "Telemetry gap — consider enabling enhanced logging",
+            "Execution failure — re-run simulation or investigate ART prerequisites on this host">
 
           ---
 
