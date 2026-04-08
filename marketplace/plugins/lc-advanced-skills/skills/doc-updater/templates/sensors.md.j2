@@ -1,0 +1,132 @@
+# Sensors & Endpoints
+
+> [!NOTE]
+> IP addresses (internal and external) are intentionally omitted from this document for security. Use the CLI to retrieve full sensor details when needed.
+
+---
+
+## EDR Sensors
+
+{% if sensors.edr %}
+| Short Hostname | SID | Platform | Sensor Version | Status | Isolated | Enrolled |
+|----------------|-----|----------|----------------|--------|----------|----------|
+{% for s in sensors.edr %}
+| {{ s.hostname_short }} | `{{ s.sid }}` | {{ s.platform }} | {{ s.version }} | {{ "Online" if s.is_online else "**Offline**" }} | {{ "**Yes**" if s.is_isolated else "No" }} | {{ s.enrolled }} |
+{% endfor %}
+
+{% if sensors.edr_isolated %}
+> [!WARNING]
+{% for s in sensors.edr_isolated %}
+> The EDR sensor **{{ s.hostname_short }}** is currently **network-isolated**. This means:
+> - The sensor can still communicate with LimaCharlie cloud
+> - All other network traffic is blocked
+> - Verify if isolation is still needed:
+> ```bash
+> limacharlie sensor get --sid {{ s.sid }} --oid {{ org.oid }} --output yaml
+> ```
+> To de-isolate:
+> ```bash
+> limacharlie sensor rejoin --sid {{ s.sid }} --oid {{ org.oid }}
+> ```
+{% endfor %}
+{% endif %}
+{% else %}
+No EDR sensors enrolled.
+{% endif %}
+
+---
+
+## Cloud Sensors
+
+{% if sensors.cloud %}
+| Hostname | SID | Type | Platform | Status | Enrolled | Tags |
+|----------|-----|------|----------|--------|----------|------|
+{% for s in sensors.cloud %}
+| {{ s.hostname }} | `{{ s.sid }}` | {{ s.type }} | {{ s.platform }} | {{ "Online" if s.is_online else "**Offline**" }} | {{ s.enrolled }} | {{ s.tags | join(", ") if s.tags else "—" }} |
+{% endfor %}
+
+{% for s in sensors.cloud_offline %}
+> [!WARNING]
+> The cloud sensor **{{ s.hostname }}** is **offline**. Check the adapter configuration and connectivity.
+{% endfor %}
+{% else %}
+No cloud sensors configured.
+{% endif %}
+
+---
+
+{% if sensors.extensions %}
+<details>
+<summary><strong>Extension Sensors ({{ sensors.extension_count }})</strong></summary>
+
+| Hostname | SID | Status |
+|----------|-----|--------|
+{% for s in sensors.extensions %}
+| {{ s.hostname }} | `{{ s.sid }}` | {{ "Online" if s.is_online else "**Offline**" }} |
+{% endfor %}
+
+{% set ext_online = sensors.extensions | selectattr('is_online') | list %}
+{% if ext_online | length == sensors.extension_count %}
+All extension sensors are healthy and online.
+{% endif %}
+
+</details>
+
+---
+{% endif %}
+
+## Sensor Tags
+
+{% if tags %}
+| Tag | Description |
+|-----|-------------|
+{% for tag in tags | sort %}
+| `{{ tag }}` | |
+{% endfor %}
+{% endif %}
+
+---
+
+<details>
+<summary><strong>Health Monitoring CLI Commands</strong></summary>
+
+```bash
+# List all sensors with status
+limacharlie sensor list --oid {{ org.oid }} --output yaml
+
+# Get detailed info for a specific sensor
+limacharlie sensor get --sid <SID> --oid {{ org.oid }} --output yaml
+
+# Check sensor connectivity
+limacharlie sensor list --oid {{ org.oid }} \
+  --filter "[].{sid:sid,hostname:hostname,alive:alive,last_error:last_error}" --output yaml
+
+# List tags for a sensor
+limacharlie tag list --sid <SID> --oid {{ org.oid }} --output yaml
+```
+
+</details>
+
+{% if known_issues %}
+---
+
+## Known Issues
+
+> [!WARNING]
+{% for issue in known_issues %}
+> - {{ issue }}
+{% endfor %}
+{% endif %}
+
+---
+
+## Further Reading
+
+- [Sensor Deployment Overview](https://docs.limacharlie.io/2-sensors-deployment/)
+- [Installation Keys](https://docs.limacharlie.io/2-sensors-deployment/installation-keys/)
+- [Sensor Tags](https://docs.limacharlie.io/2-sensors-deployment/sensor-tags/)
+- [Cloud Adapters](https://docs.limacharlie.io/2-sensors-deployment/adapters/)
+- [Azure Event Hub Adapter](https://docs.limacharlie.io/2-sensors-deployment/adapters/types/azure-event-hub/)
+- [MS Defender Adapter](https://docs.limacharlie.io/2-sensors-deployment/adapters/types/microsoft-defender/)
+- [Endpoint Agent Payloads](https://docs.limacharlie.io/2-sensors-deployment/endpoint-agent/payloads/)
+- [Sensor Selector Expressions](https://docs.limacharlie.io/8-reference/sensor-selector-expressions/)

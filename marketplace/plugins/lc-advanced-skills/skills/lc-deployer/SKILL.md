@@ -7,7 +7,7 @@ description: |
   configs (ai_agent, dr-general), managing API keys and secrets, subscribing to extensions,
   and pushing changes after editing source YAML files in ai-teams/ or ai-agents/ directories.
   Trigger words: ai-team, ai-agent, ai_agent hive, deploy SOC, install agent, push agent,
-  update agent, sync agent, baselining-soc, tiered-soc, lean-soc, exposure-team, intel-team,
+  update agent, sync agent, baselining-soc, tiered-soc, lean-soc, exposure-soc, intel-soc,
   l1-bot, general-analyst, bulk-triage, l2-analyst, malware-analyst, containment,
   threat-hunter, soc-manager, shift-reporter. Examples: "deploy tiered-soc to my org",
   "install lean-soc", "update the l1-bot agent", "push agent changes to the org",

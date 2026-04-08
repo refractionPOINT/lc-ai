@@ -1,0 +1,183 @@
+# Detection & Response Rules
+
+> See the [D&R Overview](https://docs.limacharlie.io/3-detection-response/) and [Writing & Testing Rules](https://docs.limacharlie.io/3-detection-response/tutorials/writing-testing-rules/) documentation for background on detection logic.
+
+---
+
+## Overview
+
+**{{ org.name }}** has **{{ rules.total_count }} D&R rules** across {{ rules.categories | length }} categories{% if managed_packs %}, plus {{ managed_packs | length }} managed rule pack(s){% endif %}. Of these, **{{ rules.enabled_count }} are enabled** and **{{ rules.disabled_count }} are disabled** (awaiting human review).
+
+| State | Meaning |
+|-------|---------|
+| **Enabled** | Actively evaluated against incoming telemetry |
+| **Disabled** | Deployed but not evaluated; typically awaiting human review |
+
+---
+
+## Rule Category Summary
+
+```mermaid
+pie title D&R Rules by Category ({{ rules.total_count }} total)
+{% for cat_name, cat_data in rules.category_counts.items() %}
+{% set display = rules.categories[cat_name][0].display_name if rules.categories[cat_name] else cat_name %}
+    "{{ display }} ({{ cat_data.total }})" : {{ cat_data.total }}
+{% endfor %}
+```
+
+---
+
+{% for cat_name, cat_rules in rules.categories.items() %}
+{% set cat_display = cat_rules[0].display_name if cat_rules else cat_name %}
+{% set cat_counts = rules.category_counts[cat_name] %}
+{% set is_all_disabled = cat_counts.enabled == 0 %}
+{% set should_collapse = cat_rules | length > 6 and is_all_disabled %}
+
+{% if should_collapse %}
+<details>
+<summary><strong>{{ cat_display }} ({{ cat_rules | length }} rules — all disabled)</strong></summary>
+{% else %}
+## {{ cat_display }} ({{ cat_rules | length }} rules)
+{% endif %}
+
+{% if cat_name == "ai_triggers" %}
+> [!CAUTION]
+> These rules are the backbone of all automation. **Disabling them shuts down agent pipelines.**
+
+{% set sched_triggers = cat_rules | selectattr('trigger_type', 'equalto', 'schedule') | list %}
+{% set event_triggers = cat_rules | rejectattr('trigger_type', 'equalto', 'schedule') | list %}
+
+{% if sched_triggers %}
+### Scheduled Triggers
+
+| Rule Name | Schedule | Agent | Team |
+|-----------|----------|-------|------|
+{% for r in sched_triggers %}
+| {{ r.name }} | {{ r.schedule }} | {{ r.agent }} | {{ r.team }} |
+{% endfor %}
+{% endif %}
+
+{% if event_triggers %}
+### Event-Driven Triggers
+
+| Rule Name | Trigger | Agent | Suppression |
+|-----------|---------|-------|-------------|
+{% for r in event_triggers %}
+| {{ r.name }} | {{ r.trigger_detail }} | {{ r.agent }} | {{ r.suppression if r.suppression else "—" }} |
+{% endfor %}
+{% endif %}
+
+{% elif cat_name == "intel_pipeline" or cat_name == "mdr_hunting" %}
+| Rule Name | Event | Source | Level | MITRE |
+|-----------|-------|--------|-------|-------|
+{% for r in cat_rules %}
+| {{ r.name }} | {{ r.event }} | {{ r.source if r.source else "—" }} | {{ r.level if r.level else "—" }} | {{ r.mitre if r.mitre else "—" }} |
+{% endfor %}
+
+{% elif cat_name == "data_pipeline" %}
+| Rule Name | Source Event | Destination | Response |
+|-----------|-------------|-------------|----------|
+{% for r in cat_rules %}
+| {{ r.name }} | {{ r.event }} | {{ r.dest_output if r.dest_output else "—" }} | {{ r.response }} |
+{% endfor %}
+
+{% elif cat_name == "system" %}
+| Rule Name | Event | Target | Status | Response |
+|-----------|-------|--------|--------|----------|
+{% for r in cat_rules %}
+| {{ r.name }} | {{ r.event }} | {{ r.target if r.target else "—" }} | {{ "**Enabled**" if r.enabled else "Disabled" }} | {{ r.response }} |
+{% endfor %}
+
+{% else %}
+| Rule Name | Event | Status | Response |
+|-----------|-------|--------|----------|
+{% for r in cat_rules %}
+| {{ r.name }} | {{ r.event }} | {{ "**Enabled**" if r.enabled else "Disabled" }} | {{ r.response }} |
+{% endfor %}
+{% endif %}
+
+{% if should_collapse %}
+</details>
+{% endif %}
+
+---
+
+{% endfor %}
+
+{% if managed_packs %}
+## Managed Rule Packs
+
+| Pack | Docs |
+|------|------|
+{% for pack in managed_packs %}
+| {{ pack.name }} | [Docs]({{ pack.docs_url }}) |
+{% endfor %}
+
+> [!NOTE]
+> Managed rule packs are maintained by LimaCharlie and updated automatically.
+
+---
+{% endif %}
+
+## False Positive Rules
+
+{% if fp_rules %}
+| Rule Name | Description |
+|-----------|-------------|
+{% for fp in fp_rules %}
+| {{ fp.name }} | {{ fp.description if fp.description else "—" }} |
+{% endfor %}
+{% else %}
+No false positive rules are currently deployed.
+{% endif %}
+
+---
+
+<details>
+<summary><strong>CLI Commands Reference</strong></summary>
+
+```bash
+# List all D&R rules
+limacharlie dr list --oid {{ org.oid }} --output yaml
+
+# Get a specific rule's full definition
+limacharlie dr get --key "<rule-name>" --oid {{ org.oid }} --output yaml
+
+# Enable a disabled rule (after review)
+limacharlie dr set --name "<rule-name>" --enabled true --oid {{ org.oid }}
+
+# List FP rules
+limacharlie dr fp list --oid {{ org.oid }} --output yaml
+
+# Validate a new rule before deploying
+limacharlie dr validate --detect detect.yaml --respond respond.yaml --oid {{ org.oid }}
+```
+
+</details>
+
+{% if rules.review_queue %}
+---
+
+## Review Queue
+
+> [!WARNING]
+> The following **{{ rules.disabled_count }} rules** are **disabled** and awaiting human review:
+>
+{% for cat_name, disabled_rules in rules.review_queue.items() %}
+{% set cat_display = disabled_rules[0].display_name if disabled_rules else cat_name %}
+> **{{ cat_display }} ({{ disabled_rules | length }}):** {{ disabled_rules | map(attribute='name') | join(', ') }}
+>
+{% endfor %}
+{% endif %}
+
+---
+
+## Further Reading
+
+- [D&R Overview](https://docs.limacharlie.io/3-detection-response/)
+- [Writing & Testing Rules](https://docs.limacharlie.io/3-detection-response/tutorials/writing-testing-rules/)
+- [Detection Logic Operators](https://docs.limacharlie.io/8-reference/detection-logic-operators/)
+- [Response Actions](https://docs.limacharlie.io/8-reference/response-actions/)
+- [False Positives](https://docs.limacharlie.io/3-detection-response/false-positives/)
+- [Unit Tests](https://docs.limacharlie.io/3-detection-response/unit-tests/)
+- [D&R Rules in Config Hive](https://docs.limacharlie.io/7-administration/config-hive/dr-rules/)

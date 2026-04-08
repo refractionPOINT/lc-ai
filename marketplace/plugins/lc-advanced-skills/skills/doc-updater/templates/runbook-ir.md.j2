@@ -1,0 +1,158 @@
+# Incident Response Workflow
+
+How the **{{ org.name }}** SOC pipeline handles security incidents, and when/how to intervene manually.
+
+---
+
+## Pipeline Overview
+
+{% set has_soc = agents.teams.get('baselining_soc') or agents.teams.get('tiered_soc') %}
+{% if has_soc %}
+```mermaid
+flowchart TD
+    DET["Detection fires"] --> CASE["ext-cases<br/>auto-creates case"]
+    CASE --> BT["Bulk Triage<br/>(runs hourly)"]
+    BT -->|"INFO / LOW"| AUTO["Auto-resolve +<br/>analysis note"]
+    BT -->|"MEDIUM / HIGH / CRITICAL"| L2["L2 Analyst"]
+    L2 -->|"False positive"| FP["Resolve case"]
+    L2 -->|"Confirmed threat"| CONTAIN["Containment"]
+    CONTAIN -->|"CRITICAL"| ISO["Auto-isolate sensor +<br/>block IOCs"]
+    CONTAIN -->|"MEDIUM / HIGH"| DOC["Document recommendations"]
+
+    style AUTO fill:#2d6a2d,color:#fff
+    style FP fill:#2d6a2d,color:#fff
+    style ISO fill:#8b1a1a,color:#fff
+    style DOC fill:#8b6914,color:#fff
+```
+{% else %}
+No automated SOC pipeline is configured. All incident response is manual.
+{% endif %}
+
+---
+
+## When You Need to Intervene
+
+### 1. Review Agent Decisions
+
+```bash
+# Check recent cases
+limacharlie case list --oid {{ org.oid }} --output yaml
+
+# Review a specific case
+limacharlie case get --id <case_number> --oid {{ org.oid }} --output yaml
+```
+
+### 2. Handle Stuck Cases
+
+```bash
+# Manually tag to re-trigger the next agent
+limacharlie case update --id <case_number> --add-tag needs-l2-review \
+  --oid {{ org.oid }}
+```
+
+### 3. Override Agent Containment
+
+```bash
+# De-isolate a sensor
+limacharlie sensor rejoin --sid <SID> --oid {{ org.oid }}
+
+# Document the override
+limacharlie case add-note --id <case_number> --type analysis \
+  --content "Manual override: de-isolated sensor. Reason: false positive." \
+  --oid {{ org.oid }}
+```
+
+### 4. Manually Invoke Specialist Agents
+
+{% for team_key, team in agents.teams.items() %}
+{% if team.mentions %}
+{% for m in team.mentions %}
+```bash
+# Request {{ m.agent }}
+limacharlie case add-note --id <case_number> --type analysis \
+  --content "@{{ m.mention }} <your instructions here>" \
+  --oid {{ org.oid }}
+```
+
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+---
+
+## Manual Incident Response
+
+> [!NOTE]
+> Use when automated agents are insufficient. See [Endpoint Commands](https://docs.limacharlie.io/8-reference/endpoint-commands/).
+
+### Step 1: Assess
+
+```bash
+START=$(date -d '1 hour ago' +%s)
+END=$(date +%s)
+limacharlie detection list --start $START --end $END --oid {{ org.oid }} --output yaml
+```
+
+### Step 2: Isolate if Necessary
+
+```bash
+limacharlie sensor isolate --sid <SID> --oid {{ org.oid }}
+```
+
+### Step 3: Collect Forensic Data
+
+```bash
+# Memory dump (Windows)
+limacharlie extension request --name ext-dumper --action dump_memory \
+  --data '{"sid":"<SID>"}' --oid {{ org.oid }} --output yaml
+
+# Velociraptor collection
+limacharlie extension request --name ext-velociraptor --action collect \
+  --data '{"sid":"<SID>","artifact":"<artifact-name>"}' --oid {{ org.oid }} --output yaml
+```
+
+### Step 4: Query Historical Events
+
+```bash
+limacharlie ai generate-query \
+  --prompt "Find all process executions for sensor <SID> in the last 24 hours" \
+  --oid {{ org.oid }} --output yaml
+```
+
+### Step 5: Document on Case
+
+```bash
+limacharlie case add-note --id <case_number> --type remediation \
+  --content "Manual response: <describe actions taken>" --oid {{ org.oid }}
+```
+
+---
+
+## Emergency: Shut Down All Automation
+
+> [!CAUTION]
+> Use only if the SOC pipeline is actively misbehaving. This stops **all** automated case processing.
+
+```bash
+{% for agent in agents.scheduled %}
+limacharlie dr set --name "{{ agent.trigger_rule }}" --enabled false --oid {{ org.oid }}
+{% endfor %}
+```
+
+To re-enable, set `--enabled true` on each rule.
+
+---
+
+## Escalation Path
+
+```mermaid
+flowchart LR
+    A["Automated SOC"] -->|"routine"| B["Human reviews"]
+    B -->|"needs intervention"| C["Manual response"]
+    C -->|"pipeline failure"| D["Emergency shutdown"]
+
+    style A fill:#2d6a2d,color:#fff
+    style B fill:#1a5276,color:#fff
+    style C fill:#8b6914,color:#fff
+    style D fill:#8b1a1a,color:#fff
+```

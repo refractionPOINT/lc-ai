@@ -1,0 +1,181 @@
+# AI Agents & Automation
+
+> See [AI Sessions](https://docs.limacharlie.io/9-ai-sessions/), [D&R-Triggered Sessions](https://docs.limacharlie.io/9-ai-sessions/dr-sessions/), [Config Hive](https://docs.limacharlie.io/7-administration/config-hive/), and [ext-cases](https://docs.limacharlie.io/5-integrations/extensions/limacharlie/cases/) for platform documentation.
+
+> [!IMPORTANT]
+> All AI agents depend on the `anthropic-key` secret for LLM access. If this secret is rotated or removed, **all {{ agents.total_count }} agents stop functioning**. Each agent also has its own dedicated API key secret for LimaCharlie API access.
+
+---
+
+## Overview
+
+The org runs **{{ agents.total_count }} AI agent{{ "s" if agents.total_count != 1 }}** organized into **{{ agents.team_count }} team{{ "s" if agents.team_count != 1 }}** and **{{ agents.standalone | length }} standalone agent{{ "s" if agents.standalone | length != 1 }}**:
+
+| Team | Agents | Purpose |
+|------|--------|---------|
+{% for team_key, team in agents.teams.items() %}
+| {{ team.display_name }} | {{ team.agents | length }} | {{ team.description }} |
+{% endfor %}
+{% if agents.standalone %}
+| Standalone | {{ agents.standalone | length }} | On-demand and scheduled standalone agents |
+{% endif %}
+
+{% for team_key, team in agents.teams.items() %}
+---
+
+## {{ team.display_name }} ({{ team.agents | length }} agents)
+
+{% if team.description %}
+{{ team.description }}
+{% endif %}
+
+### Pipeline Flow
+
+```mermaid
+flowchart TD
+{% for agent in team.agents %}
+{% if agent.schedule %}
+    SCHED_{{ loop.index }}["{{ agent.schedule }}"] --> {{ agent.key | replace('-', '_') }}["{{ agent.key }}<br/>model: {{ agent.model }} | budget: ${{ agent.budget }}"]
+{% endif %}
+{% endfor %}
+{% for agent in team.agents %}
+{% if agent.trigger_type == 'tag' %}
+    TAG_{{ loop.index }}["tag: {{ agent.trigger_detail }}"] --> {{ agent.key | replace('-', '_') }}["{{ agent.key }}<br/>model: {{ agent.model }} | budget: ${{ agent.budget }}"]
+{% elif agent.trigger_type == 'escalation' %}
+    ESC_{{ loop.index }}["{{ agent.trigger_detail }}"] --> {{ agent.key | replace('-', '_') }}["{{ agent.key }}<br/>model: {{ agent.model if agent.model else '—' }}"]
+{% elif agent.trigger_type == 'mention' and not agent.schedule %}
+    MENTION_{{ loop.index }}["mention: {{ agent.trigger_detail }}"] --> {{ agent.key | replace('-', '_') }}["{{ agent.key }}<br/>model: {{ agent.model if agent.model else '—' }}"]
+{% elif agent.trigger_type == 'event' and not agent.schedule %}
+    EVT_{{ loop.index }}["{{ agent.trigger_detail }}"] --> {{ agent.key | replace('-', '_') }}["{{ agent.key }}<br/>model: {{ agent.model if agent.model else '—' }}"]
+{% endif %}
+{% endfor %}
+```
+
+| Agent | Key | Model | Budget | TTL | Trigger | Schedule |
+|-------|-----|-------|--------|-----|---------|----------|
+{% for agent in team.agents %}
+| {{ agent.name }} | `{{ agent.key }}` | {{ agent.model if agent.model else "—" }} | {{ "$%.2f" | format(agent.budget) if agent.budget else "—" }} | {{ "%dm" | format(agent.ttl // 60) if agent.ttl else "—" }} | `{{ agent.trigger_rule }}` | {{ agent.schedule if agent.schedule else "On-demand" }} |
+{% endfor %}
+
+{% if team.inter_agent_tags %}
+### Inter-Agent Communication Tags
+
+| Tag | Meaning | Set By | Consumed By |
+|-----|---------|--------|-------------|
+{% for t in team.inter_agent_tags %}
+| `{{ t.tag }}` | {{ t.meaning }} | {{ t.set_by }} | {{ t.consumed_by }} |
+{% endfor %}
+{% endif %}
+
+{% if team.mentions %}
+### Mention Triggers
+
+| Mention | Agent | Set By |
+|---------|-------|--------|
+{% for m in team.mentions %}
+| `{{ m.mention }}` | {{ m.agent }} | {{ m.set_by }} |
+{% endfor %}
+{% endif %}
+
+{% endfor %}
+
+{% if agents.standalone %}
+---
+
+## Standalone Agents ({{ agents.standalone | length }})
+
+| Agent | Key | Model | Budget | TTL | Trigger |
+|-------|-----|-------|--------|-----|---------|
+{% for agent in agents.standalone %}
+| {{ agent.name }} | `{{ agent.key }}` | {{ agent.model if agent.model else "—" }} | {{ "$%.2f" | format(agent.budget) if agent.budget else "—" }} | {{ "%dm" | format(agent.ttl // 60) if agent.ttl else "—" }} | `{{ agent.trigger_rule }}` |
+{% endfor %}
+
+{% for agent in agents.standalone %}
+**{{ agent.name }}** — {{ agent.purpose }}
+
+{% endfor %}
+{% endif %}
+
+---
+
+## Agent Configuration
+
+### Scheduling Summary
+
+| Frequency | Agents |
+|-----------|--------|
+{% set freq_map = {} %}
+{% for agent in agents.scheduled %}
+{% set _ = freq_map.update({agent.schedule: freq_map.get(agent.schedule, []) + [agent.key]}) %}
+{% endfor %}
+{% for freq, agent_list in freq_map.items() %}
+| {{ freq }} | {{ agent_list | join(", ") }} |
+{% endfor %}
+| On-demand | {{ agents.on_demand | map(attribute='key') | join(", ") }} |
+
+---
+
+<details>
+<summary><strong>Secrets Mapping</strong></summary>
+
+Each agent requires two secrets:
+1. **`anthropic-key`** — Shared LLM access key (used by all agents)
+2. **Agent-specific API key** — Named matching the agent key
+
+| Secret Name | Used By |
+|-------------|---------|
+| `anthropic-key` | All {{ agents.total_count }} agents |
+{% for team_key, team in agents.teams.items() %}
+{% for agent in team.agents %}
+| `{{ agent.key }}` | {{ agent.name }} |
+{% endfor %}
+{% endfor %}
+{% for agent in agents.standalone %}
+| `{{ agent.key }}` | {{ agent.name }} |
+{% endfor %}
+
+</details>
+
+---
+
+<details>
+<summary><strong>CLI Commands</strong></summary>
+
+```bash
+# List all AI agents
+limacharlie hive list --hive-name ai_agent --oid {{ org.oid }} --output yaml
+
+# Get a specific agent's configuration
+limacharlie hive get --hive-name ai_agent --key <agent-key> --oid {{ org.oid }} --output yaml
+
+# View AI session history
+limacharlie ai session list --oid {{ org.oid }} --output yaml
+
+# Check an agent's trigger rule
+limacharlie dr get --key "<trigger-rule-name>" --oid {{ org.oid }} --output yaml
+```
+
+</details>
+
+---
+
+## Troubleshooting
+
+> [!TIP]
+> **Agent not firing?** Check the trigger D&R rule is enabled, then verify the agent's debounce/suppression key hasn't locked it out.
+
+> [!TIP]
+> **Agent timing out?** Check the TTL setting. If the agent consistently runs out of time, increase the TTL in the hive configuration.
+
+> [!TIP]
+> **Budget exceeded?** Each agent has a `max_budget_usd` cap. If the agent hits its budget, the session terminates. Check AI session logs.
+
+---
+
+## Further Reading
+
+- [AI Sessions](https://docs.limacharlie.io/9-ai-sessions/)
+- [D&R-Triggered Sessions](https://docs.limacharlie.io/9-ai-sessions/dr-sessions/)
+- [ext-cases](https://docs.limacharlie.io/5-integrations/extensions/limacharlie/cases/)
+- [Config Hive](https://docs.limacharlie.io/7-administration/config-hive/)
+- [Secrets](https://docs.limacharlie.io/7-administration/config-hive/secrets/)
