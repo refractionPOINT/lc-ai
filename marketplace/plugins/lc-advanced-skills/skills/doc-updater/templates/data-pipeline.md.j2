@@ -1,0 +1,144 @@
+{# Template: data-pipeline.md.j2
+   Extensions, adapters, outputs, lookups, payloads. Expects: org, extensions, adapters, outputs, lookups, payloads, services_not_registered.
+   See config-schema.yaml for the full data structure reference. #}
+# Data Pipeline — Extensions, Outputs & Cloud Adapters
+
+---
+
+## Extensions ({{ extensions | length }} subscribed)
+
+[Extensions](https://docs.limacharlie.io/5-integrations/extensions/) add capabilities to the LimaCharlie platform.
+
+{% set categories = extensions | groupby('category') %}
+{% for category, ext_list in categories %}
+
+### {{ category }}
+
+| Extension | Description |
+|-----------|-------------|
+{% for ext in ext_list %}
+{% if ext.docs_url %}
+| [{{ ext.name }}]({{ ext.docs_url }}) | {{ ext.description }} |
+{% else %}
+| {{ ext.name }} | {{ ext.description }} |
+{% endif %}
+{% endfor %}
+
+{% endfor %}
+
+---
+
+## Cloud Adapters
+
+{% if adapters.active or adapters.disabled %}
+<details>
+<summary><strong>Active Adapters ({{ adapters.active_count }})</strong></summary>
+
+| Name | Type | Platform | Installation Key |
+|------|------|----------|-----------------|
+{% for a in adapters.active %}
+| {{ a.key }} | {{ a.type }} | {{ a.platform }} | `{{ a.installation_key }}` |
+{% endfor %}
+
+</details>
+
+{% if adapters.disabled %}
+### Disabled Adapters
+
+| Name | Type | Platform | Installation Key | Notes |
+|------|------|----------|-----------------|-------|
+{% for a in adapters.disabled %}
+| {{ a.key }} | {{ a.type }} | {{ a.platform }} | `{{ a.installation_key }}` | Adapter is disabled |
+{% endfor %}
+
+> [!WARNING]
+{% for a in adapters.disabled %}
+> The **{{ a.key }}** adapter ({{ a.type }}) is **disabled**. No telemetry is flowing from this source.
+{% endfor %}
+{% endif %}
+{% else %}
+No cloud adapters configured.
+{% endif %}
+
+---
+
+## Outputs ({{ outputs | length }})
+
+{% if outputs %}
+| Name | Module | Stream | Created By |
+|------|--------|--------|------------|
+{% for o in outputs %}
+| {{ o.name }} | {{ o.module }} | {{ o.stream }} | {{ o.created_by }} |
+{% endfor %}
+{% else %}
+No outputs configured.
+{% endif %}
+
+{% if outputs | length <= 1 %}
+> [!WARNING]
+> Only **{{ outputs | length }} output(s)** configured. If detections need to be forwarded to a SIEM, ticketing system, or data lake, configure additional [outputs](https://docs.limacharlie.io/5-integrations/outputs/).
+{% endif %}
+
+---
+
+{% if payloads %}
+<details>
+<summary><strong>Payloads ({{ payloads | length }})</strong></summary>
+
+{% set payload_categories = payloads | groupby('category') if payloads[0] is mapping and 'category' in payloads[0] else [(None, payloads)] %}
+{% for category, payload_list in payload_categories %}
+{% if category %}
+### {{ category }}
+{% endif %}
+
+| Name | Size | Created By |
+|------|------|------------|
+{% for p in payload_list %}
+| {{ p.name }} | {{ p.size }} | {{ p.created_by }} |
+{% endfor %}
+
+{% endfor %}
+
+See [Payloads](https://docs.limacharlie.io/2-sensors-deployment/endpoint-agent/payloads/).
+
+</details>
+
+---
+{% endif %}
+
+## Lookups ({{ lookups | length }})
+
+{% if lookups %}
+| Lookup Name | Purpose | Managed By |
+|-------------|---------|------------|
+{% for l in lookups %}
+| `{{ l.name }}` | {{ l.purpose }} | {{ l.managed_by if l.managed_by else "Manual" }} |
+{% endfor %}
+{% else %}
+No lookup tables configured.
+{% endif %}
+
+See [Lookups](https://docs.limacharlie.io/7-administration/config-hive/lookups/).
+
+{% if services_not_registered %}
+---
+
+## Services NOT Registered
+
+> [!CAUTION]
+{% for svc in services_not_registered %}
+> The org is **not registered** to the `{{ svc.service }}` service. {{ svc.note }}
+{% endfor %}
+{% endif %}
+
+---
+
+## Further Reading
+
+- [Extensions Overview](https://docs.limacharlie.io/5-integrations/extensions/)
+- [Cloud Adapters](https://docs.limacharlie.io/2-sensors-deployment/adapters/)
+- [Outputs Overview](https://docs.limacharlie.io/5-integrations/outputs/)
+- [Webhook Output](https://docs.limacharlie.io/5-integrations/outputs/destinations/webhook/)
+- [BigQuery Output](https://docs.limacharlie.io/5-integrations/outputs/destinations/bigquery/)
+- [Lookup Tables](https://docs.limacharlie.io/7-administration/config-hive/lookups/)
+- [Payloads](https://docs.limacharlie.io/2-sensors-deployment/endpoint-agent/payloads/)

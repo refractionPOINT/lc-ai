@@ -1,0 +1,24 @@
+version: 3
+hives:
+  dr-general:
+    doc-updater-daily:
+      data:
+        detect:
+          target: schedule
+          event: 24h_per_org
+          op: exists
+          path: /
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/doc-updater
+            suppression:
+              is_global: true
+              keys:
+                - doc-updater
+              max_count: 1
+              period: 23h
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - ai-agent:doc-updater

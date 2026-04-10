@@ -1,0 +1,190 @@
+{# Template: readme.md.j2
+   Main entry point. Expects: org, sensors, rules, agents, extensions, adapters, outputs, lookups, secrets, sops, fp_rules, managed_packs, capabilities, known_issues, recent_changes.
+   See config-schema.yaml for the full data structure reference. #}
+# {{ org.name }} Organization — Architecture & Operations Guide
+
+![Org: {{ org.name }}](https://img.shields.io/badge/Org-{{ org.name | badge_encode }}-blue)
+![OID](https://img.shields.io/badge/OID-{{ org.oid | abbreviate_oid }}-lightgrey)
+![Last Updated](https://img.shields.io/badge/Last_Updated-{{ org.generated_at | badge_encode }}-green)
+![Owner](https://img.shields.io/badge/Owner-SOC_Engineering-purple)
+
+Complete operational reference for the **{{ org.name }}** LimaCharlie organization.
+
+> [!IMPORTANT]
+> **OID**: Always use `{{ org.oid }}` (never the org name) in all CLI commands.
+> All commands require `--output yaml`. Timestamps in API params are epoch **seconds** (10 digits).
+
+---
+
+## Architecture at a Glance
+
+```mermaid
+graph TB
+    subgraph Sources["Data Sources"]
+{% if sensors.edr %}
+        EDR["EDR Sensors<br/>({{ sensors.edr_count }})"]
+{% endif %}
+{% if sensors.cloud %}
+        CLOUD["Cloud Sensors<br/>({{ sensors.cloud_count }})"]
+{% endif %}
+        WH["Webhook Ingestion"]
+    end
+
+    subgraph Engine["D&R Engine"]
+        DR["{{ rules.total_count }} D&R Rules"]
+        FP["FP Rules ({{ fp_rules | length }})"]
+{% if managed_packs %}
+        SOT["Managed Rule Packs"]
+{% endif %}
+    end
+
+    subgraph AI["AI Agent Teams"]
+{% for team_key, team in agents.teams.items() %}
+        {{ team_key | upper }}["{{ team.display_name }}<br/>{{ team.agents | length }} agents"]
+{% endfor %}
+{% if agents.standalone %}
+        SA["Standalone<br/>{{ agents.standalone | length }} agents"]
+{% endif %}
+    end
+
+    subgraph Out["Outputs & Actions"]
+        CASES["ext-cases"]
+        AUDIT["Outputs ({{ outputs | length }})"]
+    end
+
+    Sources --> Engine
+    Engine --> AI
+    Engine --> Out
+    AI --> Out
+```
+
+{% if recent_changes %}
+---
+
+## Recent Changes ({{ org.generated_at }})
+
+{% for change in recent_changes %}
+- **{{ change.category }}**: {{ change.description }}
+{% if change.context %}
+  - *Context: {{ change.context }}*
+{% endif %}
+{% if change.case_ref %}
+  - *Related: Case #{{ change.case_ref }}*
+{% endif %}
+{% endfor %}
+
+> [!NOTE]
+> This section is automatically updated by the `doc-updater` agent. See [CHANGELOG.md](CHANGELOG.md) for full history.
+{% endif %}
+
+---
+
+## Where Do I Start?
+
+> New to LimaCharlie? Start with the [Quickstart Guide](https://docs.limacharlie.io/1-getting-started/quickstart/) and [Core Concepts](https://docs.limacharlie.io/1-getting-started/core-concepts/).
+
+```mermaid
+flowchart TD
+    START{"What do you<br/>need to do?"} -->|"Understand<br/>the system"| ARCH["Architecture Overview"]
+    START -->|"Check sensors<br/>& health"| SENS["Sensors & Endpoints"]
+    START -->|"Review detection<br/>rules"| DET["Detection Rules"]
+    START -->|"Understand AI<br/>automation"| AIAG["AI Agents"]
+    START -->|"Manage access<br/>& keys"| ACC["Access Control"]
+    START -->|"Respond to<br/>an incident"| IR["Incident Response"]
+    START -->|"Update<br/>this wiki"| UPD["Updating Docs"]
+
+    click ARCH "architecture.md"
+    click SENS "sensors.md"
+    click DET "detection-rules.md"
+    click AIAG "ai-agents.md"
+    click ACC "access-control.md"
+    click IR "runbooks/incident-response.md"
+    click UPD "runbooks/updating-docs.md"
+
+    style START fill:#1a5276,color:#fff
+```
+
+---
+
+## Documentation Map
+
+| | Document | Description |
+|---|----------|-------------|
+| **Core** | [Architecture Overview](architecture.md) | System topology, data flows, design decisions |
+| **Core** | [Sensors & Endpoints](sensors.md) | EDR, extension, and cloud sensors |
+| **Core** | [Detection & Response Rules](detection-rules.md) | {{ rules.total_count }} rules across {{ rules.categories | length }} categories |
+| **Core** | [AI Agents & Automation](ai-agents.md) | {{ agents.total_count }} agents in {{ agents.team_count }} teams + {{ agents.standalone | length }} standalone |
+| **Core** | [Data Pipeline](data-pipeline.md) | {{ extensions | length }} extensions, outputs, lookups, payloads |
+| **Core** | [Access Control](access-control.md) | API keys, secrets, SOPs, installation keys |
+| **Runbook** | [Common Admin Tasks](runbooks/common-admin-tasks.md) | Day-to-day CLI operations |
+| **Runbook** | [Incident Response](runbooks/incident-response.md) | SOC pipeline and manual IR procedures |
+| **Runbook** | [Updating Docs](runbooks/updating-docs.md) | Export automation and review cadence |
+
+---
+
+## System Overview
+
+{% if capabilities %}
+| Capability | Status | Details |
+|------------|--------|---------|
+{% for cap in capabilities %}
+| {{ cap.name }} | {{ cap.status }} | {{ cap.details }} |
+{% endfor %}
+{% endif %}
+
+<details>
+<summary><strong>Component Inventory</strong></summary>
+
+| Component | Count | Doc |
+|-----------|-------|-----|
+| EDR Sensors | {{ sensors.edr_count }} | [sensors.md](sensors.md) |
+| Extension Sensors | {{ sensors.extension_count }} | [sensors.md](sensors.md) |
+| Cloud Sensors | {{ sensors.cloud_count }} | [sensors.md](sensors.md) |
+| D&R Rules | {{ rules.total_count }} ({{ rules.enabled_count }} enabled, {{ rules.disabled_count }} disabled) | [detection-rules.md](detection-rules.md) |
+| AI Agents | {{ agents.total_count }} | [ai-agents.md](ai-agents.md) |
+| Extensions | {{ extensions | length }} | [data-pipeline.md](data-pipeline.md) |
+| Cloud Adapters | {{ adapters.active_count }} active, {{ adapters.disabled_count }} disabled | [data-pipeline.md](data-pipeline.md) |
+| Outputs | {{ outputs | length }} | [data-pipeline.md](data-pipeline.md) |
+| Lookups | {{ lookups | length }} | [data-pipeline.md](data-pipeline.md) |
+| Secrets | {{ secrets | length }} | [access-control.md](access-control.md) |
+| SOPs | {{ sops | length }} | [access-control.md](access-control.md) |
+| FP Rules | {{ fp_rules | length }} | [detection-rules.md](detection-rules.md) |
+
+</details>
+
+---
+
+## Key Resources
+
+| Resource | Access |
+|----------|--------|
+| LimaCharlie Web UI | `https://app.limacharlie.io` |
+| CLI Auth Check | `limacharlie auth whoami --output yaml` |
+| List Orgs | `limacharlie org list --output yaml` |
+| LimaCharlie Docs | [docs.limacharlie.io](https://docs.limacharlie.io) |
+
+{% if known_issues %}
+---
+
+> [!WARNING]
+> **Known Issues (as of {{ org.generated_at }})**
+{% for issue in known_issues %}
+> - {{ issue }}
+{% endfor %}
+{% endif %}
+
+---
+
+<details>
+<summary><strong>CLI Conventions & Gotchas</strong></summary>
+
+| Convention | Details |
+|------------|---------|
+| **OID** | Always use UUID `{{ org.oid }}`, never the org name |
+| **CLI Output** | Always append `--output yaml` to all `limacharlie` commands |
+| **Timestamps** | API parameters = epoch seconds (10 digits); event data = milliseconds (13 digits) |
+| **Enabled/Disabled** | Rules with `enabled: false` are deployed but inactive — review and enable manually |
+| **LCQL** | Never write queries by hand — always use `limacharlie ai generate-query` |
+| **D&R Rules** | Never write rules by hand — always use `limacharlie ai generate-detection` |
+
+</details>
