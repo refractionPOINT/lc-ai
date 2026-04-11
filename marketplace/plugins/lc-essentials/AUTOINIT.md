@@ -52,7 +52,7 @@ limacharlie feedback request-ack --channel ops-slack --question "Alert: lateral 
 limacharlie feedback request-question --channel web-default --question "What is the root cause?" --destination case --case-id 42 --oid <oid> --output yaml
 ```
 
-The feedback extension sends interactive approval prompts, acknowledgement requests, or free-form questions to channels (Slack, Telegram, Teams, Email, or built-in Web UI). Responses are dispatched to a case (as a note) or a playbook (as a trigger). Channel types: `web` (built-in, no output needed), `slack`, `email`, `telegram`, `ms_teams` (each requires a Tailored Output). Use `limacharlie feedback --ai-help` for full command reference.
+The feedback extension sends interactive approval prompts, acknowledgement requests, or free-form questions to channels (Slack, Telegram, Teams, Email, or built-in Web UI). Responses are dispatched to a case (as a note), a playbook (as a trigger), or an ai_agent (starts an AI session with the response data). Channel types: `web` (built-in, no output needed), `slack`, `email`, `telegram`, `ms_teams` (each requires a Tailored Output). Use `limacharlie feedback --ai-help` for full command reference.
 
 ## Required Tool
 
