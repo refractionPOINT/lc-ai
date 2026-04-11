@@ -37,6 +37,7 @@ teams:
       alert lifecycle.
     best_for: "Stable orgs wanting defense-in-depth with specialist agents"
     prerequisites: [ext-cases]
+    optional_extensions: [ext-feedback]  # Containment agent can request human approval via feedback channels when directed by SOPs
 
     agents:
       triage:
@@ -141,6 +142,7 @@ teams:
       Four agents handle the complete alert lifecycle without specialized tiers.
     best_for: "Smaller orgs or getting started fast"
     prerequisites: [ext-cases]
+    optional_extensions: [ext-feedback]  # Responder agent can request human approval via feedback channels when directed by SOPs
 
     agents:
       triage:
@@ -202,6 +204,7 @@ teams:
       to reduce noise. Migrate to Tiered SOC once volume is manageable.
     best_for: "New orgs with noisy detections, first days/weeks"
     prerequisites: [ext-cases]
+    optional_extensions: [ext-feedback]  # Containment agent can request human approval via feedback channels when directed by SOPs
 
     agents:
       bulk-triage:

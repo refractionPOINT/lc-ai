@@ -82,6 +82,33 @@ hives:
              limacharlie case update --case-number <case_number> --status resolved --oid <oid> --output yaml
              ```
 
+          ## Human-in-the-Loop Approval via ext-feedback (Optional)
+
+          If the organization has `ext-feedback` subscribed and a feedback channel configured,
+          you can request human approval before executing containment actions instead of acting
+          autonomously. This is especially useful for HIGH/MEDIUM severity cases where you would
+          otherwise only document recommendations.
+
+          Check if ext-feedback is available:
+          ```bash
+          limacharlie extension list --oid <oid> --output yaml | grep ext-feedback
+          ```
+
+          If available and an SOP directs you to use it, request approval before isolating:
+          ```bash
+          limacharlie feedback request-approval \
+            --channel <channel_name> \
+            --question "Case #<case_number>: Isolate sensor <hostname> (<sid>)?" \
+            --destination case --case-id <case_number> \
+            --timeout 300 --timeout-choice denied \
+            --oid <oid> --output yaml
+          ```
+
+          The approval response will be recorded as a case note. The timeout ensures the workflow
+          does not hang indefinitely — if no one responds within 5 minutes, the request is auto-denied.
+          Only use feedback approval when directed by an SOP or when the severity does not warrant
+          immediate auto-containment. For CRITICAL severity, continue to auto-contain immediately.
+
           ## Important Rules
           - NEVER fabricate data. Only act on confirmed IOCs with `malicious` verdict.
           - Only auto-contain for CRITICAL severity. For all others, document recommendations.

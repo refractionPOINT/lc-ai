@@ -35,6 +35,25 @@ limacharlie case export --case-number <case_number> --with-data ./case-export --
 
 The cases extension creates cases from detections via D&R rules and extension requests. Cases can also be created without detections for ad-hoc investigations. Use `limacharlie case --ai-help` for full command reference. See the `case-investigation` skill for the full investigation workflow.
 
+### Feedback CLI
+
+The Feedback extension (`ext-feedback`) has first-class CLI support via `limacharlie feedback`:
+```bash
+# Channel management
+limacharlie feedback channel list --oid <oid> --output yaml
+limacharlie feedback channel add --name ops-slack --type slack --output-name my-slack-output --oid <oid> --output yaml
+limacharlie feedback channel add --name web-default --type web --oid <oid> --output yaml
+limacharlie feedback channel remove --name old-channel --oid <oid> --output yaml
+
+# Feedback requests
+limacharlie feedback request-approval --channel ops-slack --question "Isolate host-01?" --destination case --case-id 42 --oid <oid> --output yaml
+limacharlie feedback request-approval --channel ops-slack --question "Block IP?" --destination playbook --playbook block-ip --timeout 300 --timeout-choice denied --oid <oid> --output yaml
+limacharlie feedback request-ack --channel ops-slack --question "Alert: lateral movement detected" --destination case --case-id 42 --oid <oid> --output yaml
+limacharlie feedback request-question --channel web-default --question "What is the root cause?" --destination case --case-id 42 --oid <oid> --output yaml
+```
+
+The feedback extension sends interactive approval prompts, acknowledgement requests, or free-form questions to channels (Slack, Telegram, Teams, Email, or built-in Web UI). Responses are dispatched to a case (as a note) or a playbook (as a trigger). Channel types: `web` (built-in, no output needed), `slack`, `email`, `telegram`, `ms_teams` (each requires a Tailored Output). Use `limacharlie feedback --ai-help` for full command reference.
+
 ## Required Tool
 
 **ALWAYS use the `limacharlie` CLI via Bash** for all LimaCharlie API operations. Never call MCP tools directly.

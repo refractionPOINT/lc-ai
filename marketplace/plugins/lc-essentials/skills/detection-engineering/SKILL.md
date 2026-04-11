@@ -340,6 +340,26 @@ limacharlie dr set --key apt-x-process-encoded-powershell --input-file /tmp/rule
 | Medium (4-6) | report + tag (3-day TTL) |
 | Low (1-3) | report only |
 
+### Human-in-the-Loop Approval via ext-feedback
+
+For high-impact response actions (sensor isolation, IOC blocking), consider gating the action behind a human approval step using the Feedback extension (`ext-feedback`). Instead of executing the action directly, the D&R response sends a feedback request to an operator via Slack, Telegram, Teams, Email, or a web UI. The operator approves or denies, and the response is dispatched to a playbook that executes the action.
+
+To generate a response that uses feedback approval:
+
+```bash
+limacharlie ai generate-response --description "Send a feedback approval request to ext-feedback on channel 'ops-slack' asking whether to isolate the host. Use feedback_destination playbook with playbook_name 'isolate-host'. Include the routing.sid in approved_content. Set timeout_seconds to 300 with timeout_choice denied." --oid <oid> --output yaml
+```
+
+This produces a response using `extension request` to `ext-feedback` with action `request_simple_approval`. The `timeout_seconds` and `timeout_choice` ensure the workflow auto-denies if no one responds within the timeout, preventing indefinite hangs.
+
+**When to use feedback approval:**
+- Sensor isolation or network containment
+- Blocking IOCs in production lookup tables
+- Any destructive or hard-to-reverse action
+- When the user explicitly wants human-in-the-loop
+
+**Prerequisites:** The organization must have `ext-feedback` subscribed and at least one channel configured. Use `/init-feedback` to set this up.
+
 ### Troubleshooting
 
 | Problem | Solution |
