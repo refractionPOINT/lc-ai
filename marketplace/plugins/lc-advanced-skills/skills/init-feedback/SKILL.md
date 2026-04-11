@@ -226,7 +226,7 @@ Ask the user for:
 1. **SMTP Host** — server address, optionally with port (e.g., `smtp.example.com:587`). Defaults to port 587.
 2. **Recipient Email** — where feedback emails are sent (e.g., `soc@example.com`)
 3. **From Email** — sender address (e.g., `limacharlie@example.com`)
-4. **Username** (optional) — SMTP authentication username
+4. **Username** (optional) — SMTP authentication username (`username` field)
 5. **Password** (optional) — SMTP authentication password
 6. **Channel name** — a short name (e.g., `email-ops`)
 7. **Output name** — name for the Tailored Output (e.g., `feedback-email`)
@@ -238,7 +238,7 @@ cat > /tmp/feedback-email-output.yaml << 'EOF'
 dest_host: "<SMTP_HOST>"
 dest_email: "<RECIPIENT_EMAIL>"
 from_email: "<FROM_EMAIL>"
-user_name: "<USERNAME>"
+username: "<USERNAME>"
 password: "<PASSWORD>"
 EOF
 limacharlie output create \
@@ -249,7 +249,7 @@ limacharlie output create \
   --oid <oid> --output yaml
 ```
 
-Omit `user_name` and `password` from the config file if no SMTP authentication is needed.
+Omit `username` and `password` from the config file if no SMTP authentication is needed.
 
 Add the channel:
 
