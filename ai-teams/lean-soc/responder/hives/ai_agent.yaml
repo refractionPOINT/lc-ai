@@ -106,6 +106,8 @@ hives:
 
           The approval response will be recorded as a case note. The timeout ensures the workflow
           does not hang indefinitely — if no one responds within 5 minutes, the request is auto-denied.
+          Alternative destinations: `--destination playbook --playbook <name>` to trigger a playbook,
+          or `--destination ai_agent --ai-agent-name <name>` to start an AI agent session with the response.
           Only use feedback approval when directed by an SOP or when the severity does not warrant
           immediate auto-containment. For CRITICAL severity, continue to auto-contain immediately.
 

@@ -279,7 +279,7 @@ If the test fails, check `limacharlie org errors --oid <oid> --output yaml` for 
 
 Ask the user if they want a sample D&R rule that demonstrates human-in-the-loop approval. If yes:
 
-Explain: this rule detects a specific event and sends a feedback request to a channel asking for approval before taking action. The response triggers a playbook. This is a template — the user should customize the detection logic and response actions.
+Explain: this rule detects a specific event and sends a feedback request to a channel asking for approval before taking action. The response can be dispatched to a playbook (triggers it), a case (adds a note), or an ai_agent (starts an AI session with the feedback response). This is a template — the user should customize the detection logic and response actions.
 
 Use the AI generation commands to build the rule. The response component should use `extension request` to `ext-feedback`:
 

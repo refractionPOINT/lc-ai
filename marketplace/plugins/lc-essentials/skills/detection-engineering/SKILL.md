@@ -342,7 +342,7 @@ limacharlie dr set --key apt-x-process-encoded-powershell --input-file /tmp/rule
 
 ### Human-in-the-Loop Approval via ext-feedback
 
-For high-impact response actions (sensor isolation, IOC blocking), consider gating the action behind a human approval step using the Feedback extension (`ext-feedback`). Instead of executing the action directly, the D&R response sends a feedback request to an operator via Slack, Telegram, Teams, Email, or a web UI. The operator approves or denies, and the response is dispatched to a playbook that executes the action.
+For high-impact response actions (sensor isolation, IOC blocking), consider gating the action behind a human approval step using the Feedback extension (`ext-feedback`). Instead of executing the action directly, the D&R response sends a feedback request to an operator via Slack, Telegram, Teams, Email, or a web UI. The operator approves or denies, and the response is dispatched to a destination: a playbook that executes the action, a case note, or an ai_agent that starts an AI session with the feedback response data.
 
 To generate a response that uses feedback approval:
 
