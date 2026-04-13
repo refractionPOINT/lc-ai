@@ -157,15 +157,15 @@ _SEVERITY_EMOJIS = {
 
 
 def _api_get(sdk, path):
-    """GET request to the ext-cases REST API."""
+    """GET request to the ext-cases REST API using the SDK auth."""
     try:
         oid = sdk._oid
-        jwt = sdk._jwt
-        sep = "&" if "?" in path else "?"
-        url = f"{_CASES_API}{path}{sep}oid={oid}"
-        req = urllib.request.Request(url, headers={"Authorization": f"Bearer {jwt}"})
-        with urllib.request.urlopen(req) as resp:
-            return json.loads(resp.read().decode("utf-8"))
+        return sdk._apiCall(
+            path.lstrip('/'),
+            'GET',
+            altRoot=_CASES_API,
+            queryParams={"oid": oid}
+        )
     except Exception:
         return None
 
@@ -199,13 +199,16 @@ def playbook(sdk, data):
     slack_token = Hive(sdk, "secret").get("slack-api-token").data["secret"]
     slack_channel = Hive(sdk, "secret").get("slack-notification-channel").data["secret"]
 
+    # ext-playbook nests the D&R respond data under a "data" key.
+    data = data.get("data", data)
+
     action = data.get("action", "unknown")
     case_number = data.get("case_number", "?")
     case_id = data.get("case_id", "")
     by = data.get("by", "system")
     oid = sdk._oid
 
-    # Fetch full case for richer context.
+    # Fetch full case for richer context (may fail; event data is primary).
     case = _fetch_case(sdk, case_number)
 
     # Determine effective severity.
@@ -284,20 +287,19 @@ def playbook(sdk, data):
 
     blocks.append({"type": "section", "fields": fields})
 
-    # Case summary or conclusion.
-    if case:
-        text = None
-        if action == "case_closed":
-            text = case.get("conclusion") or case.get("summary")
-        else:
-            text = case.get("summary")
-        if text:
-            if len(text) > 300:
-                text = text[:300] + "\u2026"
-            blocks.append({
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": f">>> {text}"},
-            })
+    # Summary or conclusion: prefer event data, fall back to API.
+    summary_text = None
+    if action == "case_closed":
+        summary_text = data.get("summary") or (case or {}).get("conclusion") or (case or {}).get("summary")
+    else:
+        summary_text = data.get("summary") or (case or {}).get("summary")
+    if summary_text:
+        if len(summary_text) > 300:
+            summary_text = summary_text[:300] + "\u2026"
+        blocks.append({
+            "type": "section",
+            "text": {"type": "mrkdwn", "text": f">>> {summary_text}"},
+        })
 
     # Context line: detection count, tags, SLA.
     if case:
@@ -393,19 +395,24 @@ event-type-specific metadata fields using Go template syntax (`{{ .event.FIELD }
 template syntax to reference event fields. Bare strings like `event.case_id` are passed
 as literals, NOT resolved from the event.
 
+**IMPORTANT**: The `event:` routing filter in D&R detect blocks does NOT gate extension
+events reliably. All general rules with a matching `op` will fire for every extension event
+regardless of the `event:` value. To ensure each rule fires only for its intended action,
+use `op: is` on `event/action` as the primary detection filter.
+
 #### ext-cases Audit Event Structure
 
 Events from ext-cases have these top-level fields: `action`, `case_id`, `case_number`,
 `event_id`, `oid`, `by`, `ts`, and `metadata` (event-type-specific).
 
 Metadata by event type:
-- **case_created**: always: `severity`, `detection_cat`, `detection_priority`; optional: `detect_id`, `detection_source`, `sid`, `hostname`, `summary`
+- **case_created**: `severity`, `detection_cat`, `detection_priority`, `summary`
 - **case_resolved / case_closed**: `from` (old status), `to` (new status); `case_closed` also includes `summary` when set
 - **case_severity_upgraded**: `from` (old severity), `to` (new severity), `reason`
 
 **IMPORTANT**: Only template metadata fields that are **always present**. Optional fields
-(like `summary`, `hostname`) cause Go template errors when absent, which silently prevents
-the extension request from being sent. The playbook fetches optional data (like summary)
+(like `hostname`) cause Go template errors when absent, which silently prevents
+the extension request from being sent. The playbook fetches optional data
 directly from the ext-cases REST API instead.
 
 #### case_created
@@ -417,8 +424,9 @@ rule = {
     'data': {
         'detect': {
             'event': 'case_created',
-            'op': 'exists',
-            'path': 'event/case_id'
+            'op': 'is',
+            'path': 'event/action',
+            'value': 'case_created'
         },
         'respond': [{
             'action': 'extension request',
@@ -433,7 +441,8 @@ rule = {
                     'case_number': '{{ .event.case_number }}',
                     'by': '{{ .event.by }}',
                     'severity': '{{ .event.metadata.severity }}',
-                    'detection_cat': '{{ .event.metadata.detection_cat }}'
+                    'detection_cat': '{{ .event.metadata.detection_cat }}',
+                    'summary': '{{ .event.metadata.summary }}'
                 }
             },
             'suppression': {
@@ -459,8 +468,9 @@ rule = {
     'data': {
         'detect': {
             'event': 'case_resolved',
-            'op': 'exists',
-            'path': 'event/case_id'
+            'op': 'is',
+            'path': 'event/action',
+            'value': 'case_resolved'
         },
         'respond': [{
             'action': 'extension request',
@@ -501,8 +511,9 @@ rule = {
     'data': {
         'detect': {
             'event': 'case_severity_upgraded',
-            'op': 'exists',
-            'path': 'event/case_id'
+            'op': 'is',
+            'path': 'event/action',
+            'value': 'case_severity_upgraded'
         },
         'respond': [{
             'action': 'extension request',
@@ -544,8 +555,9 @@ rule = {
     'data': {
         'detect': {
             'event': 'case_closed',
-            'op': 'exists',
-            'path': 'event/case_id'
+            'op': 'is',
+            'path': 'event/action',
+            'value': 'case_closed'
         },
         'respond': [{
             'action': 'extension request',
