@@ -137,133 +137,219 @@ from limacharlie import Hive
 
 
 _CASES_API = "https://cases.limacharlie.io"
+_WEB_UI = "https://app.limacharlie.io"
+
+_SEVERITY_COLORS = {
+    "critical": "#E01E5A",
+    "high": "#E87722",
+    "medium": "#ECB22E",
+    "low": "#2EB67D",
+    "info": "#36C5F0",
+}
+
+_SEVERITY_EMOJIS = {
+    "critical": ":rotating_light:",
+    "high": ":fire:",
+    "medium": ":warning:",
+    "low": ":large_blue_circle:",
+    "info": ":information_source:",
+}
 
 
-def _fetch_case_summary(sdk, case_number):
-    """Fetch the case summary from ext-cases REST API."""
+def _api_get(sdk, path):
+    """GET request to the ext-cases REST API using the SDK auth."""
     try:
         oid = sdk._oid
-        jwt = sdk._jwt
-        url = f"{_CASES_API}/api/v1/cases/{case_number}?oid={oid}"
-        req = urllib.request.Request(url, headers={"Authorization": f"Bearer {jwt}"})
-        with urllib.request.urlopen(req) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-            return data.get("case", {}).get("summary") or None
+        return sdk._apiCall(
+            path.lstrip('/'),
+            'GET',
+            altRoot=_CASES_API,
+            queryParams={"oid": oid}
+        )
     except Exception:
         return None
+
+
+def _fetch_case(sdk, case_number):
+    """Fetch full case details from ext-cases API."""
+    data = _api_get(sdk, f"/api/v1/cases/{case_number}")
+    return data.get("case") if data else None
+
+
+def _fetch_detections(sdk, case_number):
+    """Fetch detections linked to the case."""
+    data = _api_get(sdk, f"/api/v1/cases/{case_number}/detections")
+    return data.get("detections", []) if data else []
+
+
+def _format_duration(seconds):
+    """Format seconds into a human-readable duration."""
+    if not seconds:
+        return None
+    if seconds < 60:
+        return f"{seconds}s"
+    if seconds < 3600:
+        return f"{seconds // 60}m"
+    hours = seconds // 3600
+    mins = (seconds % 3600) // 60
+    return f"{hours}h {mins}m" if mins else f"{hours}h"
 
 
 def playbook(sdk, data):
     slack_token = Hive(sdk, "secret").get("slack-api-token").data["secret"]
     slack_channel = Hive(sdk, "secret").get("slack-notification-channel").data["secret"]
 
+    # ext-playbook nests the D&R respond data under a "data" key.
+    data = data.get("data", data)
+
     action = data.get("action", "unknown")
     case_number = data.get("case_number", "?")
     case_id = data.get("case_id", "")
     by = data.get("by", "system")
+    oid = sdk._oid
 
+    # Fetch full case for richer context (may fail; event data is primary).
+    case = _fetch_case(sdk, case_number)
+
+    # Determine effective severity.
+    severity = data.get("severity") or (case or {}).get("severity") or "info"
+    if action == "case_severity_upgraded":
+        severity = data.get("to_severity") or severity
+
+    sev_color = _SEVERITY_COLORS.get(severity, "#808080")
+    sev_emoji = _SEVERITY_EMOJIS.get(severity, "")
+    case_link = f"{_WEB_UI}/cases/queue?caseOid={oid}&caseNumber={case_number}"
+
+    # Action-specific configuration.
     configs = {
         "case_created": {
-            "emoji": ":new:",
-            "color": "#36A64F",
-            "label": "New Case Created",
+            "color": sev_color,
+            "title": f":new: New Case #{case_number}",
         },
         "case_resolved": {
-            "emoji": ":white_check_mark:",
             "color": "#2EB67D",
-            "label": "Case Resolved",
+            "title": f":white_check_mark: Case #{case_number} Resolved",
         },
         "case_severity_upgraded": {
-            "emoji": ":warning:",
-            "color": "#ECB22E",
-            "label": "Severity Upgraded",
+            "color": sev_color,
+            "title": f":chart_with_upwards_trend: Case #{case_number} Escalated",
         },
         "case_closed": {
-            "emoji": ":lock:",
             "color": "#808080",
-            "label": "Case Closed",
+            "title": f":lock: Case #{case_number} Closed",
         },
     }
-    cfg = configs.get(
-        action,
-        {
-            "emoji": ":clipboard:",
-            "color": "#808080",
-            "label": action.replace("_", " ").title(),
-        },
-    )
+    cfg = configs.get(action, {
+        "color": "#808080",
+        "title": f"Case #{case_number} Updated",
+    })
 
+    blocks = []
+
+    # Title.
+    blocks.append({
+        "type": "section",
+        "text": {"type": "mrkdwn", "text": f"*{cfg['title']}*"},
+    })
+
+    # Main fields.
     fields = [
-        {"type": "mrkdwn", "text": f"*Case:* #{case_number}"},
+        {"type": "mrkdwn", "text": f"*Severity:* {sev_emoji} {severity.capitalize()}"},
         {"type": "mrkdwn", "text": f"*By:* {by}"},
     ]
 
-    # Event-specific fields.
     if action == "case_created":
-        severity = data.get("severity")
-        if severity:
-            fields.append({"type": "mrkdwn", "text": f"*Severity:* {severity}"})
         detection_cat = data.get("detection_cat")
         if detection_cat:
-            fields.append({"type": "mrkdwn", "text": f"*Detection:* {detection_cat}"})
+            fields.append({"type": "mrkdwn", "text": f"*Detection:* `{detection_cat}`"})
 
     elif action == "case_severity_upgraded":
-        from_val = data.get("from_severity")
-        to_val = data.get("to_severity")
-        if from_val and to_val:
-            fields.append(
-                {"type": "mrkdwn", "text": f"*Severity:* {from_val} \u2192 {to_val}"}
-            )
+        from_sev = data.get("from_severity", "?")
+        to_sev = data.get("to_severity", "?")
+        f_emoji = _SEVERITY_EMOJIS.get(from_sev, "")
+        t_emoji = _SEVERITY_EMOJIS.get(to_sev, "")
+        fields.append({"type": "mrkdwn", "text": f"*Change:* {f_emoji} {from_sev} \u2192 {t_emoji} {to_sev}"})
         reason = data.get("reason")
         if reason:
             fields.append({"type": "mrkdwn", "text": f"*Reason:* {reason}"})
 
     elif action in ("case_resolved", "case_closed"):
-        from_val = data.get("from_status")
-        to_val = data.get("to_status")
-        if from_val and to_val:
-            fields.append(
-                {"type": "mrkdwn", "text": f"*Status:* {from_val} \u2192 {to_val}"}
-            )
+        from_s = data.get("from_status")
+        to_s = data.get("to_status")
+        if from_s and to_s:
+            fields.append({"type": "mrkdwn", "text": f"*Status:* {from_s} \u2192 {to_s}"})
+        # Show classification verdict if available.
+        if case:
+            classification = case.get("classification")
+            if classification and classification != "pending":
+                cls_emoji = ":white_check_mark:" if classification == "true_positive" else ":x:"
+                fields.append({"type": "mrkdwn", "text": f"*Verdict:* {cls_emoji} {classification.replace('_', ' ').title()}"})
 
-    blocks = [
-        {
+    blocks.append({"type": "section", "fields": fields})
+
+    # Summary or conclusion: prefer event data, fall back to API.
+    summary_text = None
+    if action == "case_closed":
+        summary_text = data.get("summary") or (case or {}).get("conclusion") or (case or {}).get("summary")
+    else:
+        summary_text = data.get("summary") or (case or {}).get("summary")
+    if summary_text:
+        if len(summary_text) > 300:
+            summary_text = summary_text[:300] + "\u2026"
+        blocks.append({
             "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": f"{cfg['emoji']} *{cfg['label']}*: Case *#{case_number}*",
-            },
-        },
-        {"type": "section", "fields": fields},
-    ]
+            "text": {"type": "mrkdwn", "text": f">>> {summary_text}"},
+        })
 
-    # Fetch case summary from ext-cases API.
-    summary = _fetch_case_summary(sdk, case_number)
-    if summary:
-        blocks.append(
-            {
-                "type": "section",
-                "text": {"type": "mrkdwn", "text": f"*Summary:* {summary}"},
-            }
-        )
+    # Context line: detection count, tags, SLA.
+    if case:
+        ctx_parts = []
+        det_count = case.get("detection_count") or 0
+        if det_count:
+            ctx_parts.append(f":bar_chart: {det_count} detection{'s' if det_count != 1 else ''}")
+        tags = case.get("tags") or []
+        if tags:
+            ctx_parts.append(":label: " + " ".join(f"`{t}`" for t in tags[:5]))
+        if action in ("case_resolved", "case_closed"):
+            ttr = _format_duration(case.get("ttr_seconds"))
+            if ttr:
+                ctx_parts.append(f":stopwatch: Resolved in {ttr}")
+        if ctx_parts:
+            blocks.append({
+                "type": "context",
+                "elements": [{"type": "mrkdwn", "text": "  \u00b7  ".join(ctx_parts)}],
+            })
 
-    # Context footer.
-    case_id_short = case_id[:8] if case_id else "?"
-    blocks.append(
-        {
-            "type": "context",
-            "elements": [
-                {"type": "mrkdwn", "text": f"Case ID: `{case_id_short}...`"}
-            ],
-        }
-    )
+    # Affected hosts for new or escalated cases.
+    if action in ("case_created", "case_severity_upgraded"):
+        detections = _fetch_detections(sdk, case_number)
+        if detections:
+            hostnames = sorted(set(d.get("hostname") for d in detections if d.get("hostname")))
+            if hostnames:
+                display = ", ".join(f"`{h}`" for h in hostnames[:5])
+                if len(hostnames) > 5:
+                    display += f" +{len(hostnames) - 5} more"
+                blocks.append({
+                    "type": "context",
+                    "elements": [{"type": "mrkdwn", "text": f":computer: *Hosts:* {display}"}],
+                })
 
+    # View Case button.
+    button = {
+        "type": "button",
+        "text": {"type": "plain_text", "text": "View Case", "emoji": True},
+        "url": case_link,
+    }
+    if severity in ("critical", "high"):
+        button["style"] = "danger"
+    blocks.append({"type": "actions", "elements": [button]})
+
+    # Build payload.
     attachment = {"color": cfg["color"], "blocks": blocks}
-
     payload = {
         "channel": slack_channel,
         "attachments": [attachment],
-        "text": f"{cfg['label']}: Case #{case_number}",
+        "text": f"{cfg['title']} \u2014 {severity.capitalize()} severity",
     }
 
     req = urllib.request.Request(
@@ -309,19 +395,24 @@ event-type-specific metadata fields using Go template syntax (`{{ .event.FIELD }
 template syntax to reference event fields. Bare strings like `event.case_id` are passed
 as literals, NOT resolved from the event.
 
+**IMPORTANT**: The `event:` routing filter in D&R detect blocks does NOT gate extension
+events reliably. All general rules with a matching `op` will fire for every extension event
+regardless of the `event:` value. To ensure each rule fires only for its intended action,
+use `op: is` on `event/action` as the primary detection filter.
+
 #### ext-cases Audit Event Structure
 
 Events from ext-cases have these top-level fields: `action`, `case_id`, `case_number`,
 `event_id`, `oid`, `by`, `ts`, and `metadata` (event-type-specific).
 
 Metadata by event type:
-- **case_created**: always: `severity`, `detection_cat`, `detection_priority`; optional: `detect_id`, `detection_source`, `sid`, `hostname`, `summary`
+- **case_created**: `severity`, `detection_cat`, `detection_priority`, `summary`
 - **case_resolved / case_closed**: `from` (old status), `to` (new status); `case_closed` also includes `summary` when set
 - **case_severity_upgraded**: `from` (old severity), `to` (new severity), `reason`
 
 **IMPORTANT**: Only template metadata fields that are **always present**. Optional fields
-(like `summary`, `hostname`) cause Go template errors when absent, which silently prevents
-the extension request from being sent. The playbook fetches optional data (like summary)
+(like `hostname`) cause Go template errors when absent, which silently prevents
+the extension request from being sent. The playbook fetches optional data
 directly from the ext-cases REST API instead.
 
 #### case_created
@@ -333,8 +424,9 @@ rule = {
     'data': {
         'detect': {
             'event': 'case_created',
-            'op': 'exists',
-            'path': 'event/case_id'
+            'op': 'is',
+            'path': 'event/action',
+            'value': 'case_created'
         },
         'respond': [{
             'action': 'extension request',
@@ -349,7 +441,8 @@ rule = {
                     'case_number': '{{ .event.case_number }}',
                     'by': '{{ .event.by }}',
                     'severity': '{{ .event.metadata.severity }}',
-                    'detection_cat': '{{ .event.metadata.detection_cat }}'
+                    'detection_cat': '{{ .event.metadata.detection_cat }}',
+                    'summary': '{{ .event.metadata.summary }}'
                 }
             },
             'suppression': {
@@ -375,8 +468,9 @@ rule = {
     'data': {
         'detect': {
             'event': 'case_resolved',
-            'op': 'exists',
-            'path': 'event/case_id'
+            'op': 'is',
+            'path': 'event/action',
+            'value': 'case_resolved'
         },
         'respond': [{
             'action': 'extension request',
@@ -417,8 +511,9 @@ rule = {
     'data': {
         'detect': {
             'event': 'case_severity_upgraded',
-            'op': 'exists',
-            'path': 'event/case_id'
+            'op': 'is',
+            'path': 'event/action',
+            'value': 'case_severity_upgraded'
         },
         'respond': [{
             'action': 'extension request',
@@ -460,8 +555,9 @@ rule = {
     'data': {
         'detect': {
             'event': 'case_closed',
-            'op': 'exists',
-            'path': 'event/case_id'
+            'op': 'is',
+            'path': 'event/action',
+            'value': 'case_closed'
         },
         'respond': [{
             'action': 'extension request',
