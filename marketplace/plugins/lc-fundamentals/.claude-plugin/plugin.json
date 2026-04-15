@@ -1,0 +1,9 @@
+{
+  "name": "lc-fundamentals",
+  "version": "1.0.0",
+  "description": "LimaCharlie platform concept map — orients LLMs to recognize platform terminology and route to the correct skill.",
+  "author": {
+    "name": "LimaCharlie",
+    "email": "support@limacharlie.io"
+  }
+}
