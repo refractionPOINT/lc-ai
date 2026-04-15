@@ -214,6 +214,29 @@ Sensor selectors use [bexpr](https://github.com/hashicorp/go-bexpr) syntax. Use 
 
 Not all extensions have a configuration. To check subscriptions: `limacharlie extension list --oid <oid> --output yaml`.
 
+### Extension Config as Feature Configuration
+
+Several LimaCharlie features visible in the web UI are configured as **extension configs** in the `extension_config` hive. When a user refers to these by their web UI name, use the corresponding extension config commands:
+
+| Web UI Feature | Extension Name | CLI Commands |
+|---|---|---|
+| Artifact Collection Rules | `ext-artifact` | `limacharlie extension config-get/config-set --name ext-artifact` |
+| File & Registry Integrity Monitoring | `ext-integrity` | `limacharlie extension config-get/config-set --name ext-integrity` |
+| EPP / Defender Integration | `ext-epp` | `limacharlie extension config-get/config-set --name ext-epp` |
+| Exfil Watch | `ext-exfil` | `limacharlie extension config-get/config-set --name ext-exfil` |
+
+To list all extension configs for an org: `limacharlie extension config-list --oid <oid> --output yaml`
+To view an extension's config schema: `limacharlie extension schema --name <ext-name> --oid <oid> --output yaml`
+
+### Copying Extension Configs Between Orgs
+
+1. Export from source: `limacharlie extension config-get --name <ext-name> --oid <source-oid> --output yaml`
+2. Extract the `data:` section and write to a file
+3. Import to target: `limacharlie extension config-set --name <ext-name> --input-file <file> --oid <target-oid>`
+4. Enable if needed: `limacharlie hive enable --hive-name extension_config --key <ext-name> --oid <target-oid>`
+
+Note: the target org must already be subscribed to the extension (`limacharlie extension subscribe --name <ext-name> --oid <target-oid>`).
+
 ## Infrastructure Sync
 
 When using `limacharlie sync push`, **avoid using `--force`** unless you are certain you want to remove cloud resources not present in the local config file. Without `--force`, push only adds or updates resources — it never removes them. With `--force`, any resource in the cloud that is missing from the local file **will be deleted**, which can cause data loss if your local file is not a complete representation of the org's configuration.
