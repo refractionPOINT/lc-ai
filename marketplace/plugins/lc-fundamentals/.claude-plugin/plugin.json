@@ -1,0 +1,9 @@
+{
+  "name": "lc-fundamentals",
+  "version": "1.0.0",
+  "description": "LimaCharlie platform concept map and deep fundamentals — orients LLMs to core concepts, event model, routing object, behavioral detection patterns, stateful rules, suppression, output streams, FIM, event collection, and common gotchas.",
+  "author": {
+    "name": "LimaCharlie",
+    "email": "support@limacharlie.io"
+  }
+}
