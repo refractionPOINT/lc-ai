@@ -42,16 +42,11 @@ To see all permissions (verbose): `limacharlie auth whoami --show-perms --output
 
 **ALWAYS require the user to specify the organization or organizations they intend to operate on**, NEVER assume.
 
-### 1. Use the CLI Directly
-
-- **WRONG**: `mcp__plugin_lc-essentials_limacharlie__lc_call_tool(...)` or spawning an api-executor agent
-- **CORRECT**: `Bash("limacharlie <noun> <verb> --oid <oid> --output yaml")`
-
-### 2. Always Pass `--output yaml`
+### 1. Always Pass `--output yaml`
 
 All CLI commands should include `--output yaml` for machine-readable output that is more token-efficient than JSON.
 
-### 3. Use `--filter` to Reduce Output
+### 2. Use `--filter` to Reduce Output
 
 When you only need specific fields, use `--filter JMESPATH` to select them:
 ```bash
@@ -59,18 +54,18 @@ limacharlie sensor list --oid <oid> --filter "[].{sid:sid,hostname:hostname,plat
 ```
 This reduces token usage vs returning the full response.
 
-### 4. Use `--oid <uuid>` Per Command
+### 3. Use `--oid <uuid>` Per Command
 
 Every command that operates on an organization requires `--oid <uuid>`. Use `limacharlie org list --output yaml` to discover available orgs and their OIDs.
 
-### 5. Use `--ai-help` for Command Discovery
+### 4. Use `--ai-help` for Command Discovery
 
 When unsure about a command's flags or usage:
 ```bash
 limacharlie <command> --ai-help
 ```
 
-### 6. LCQL Query Handling
+### 5. LCQL Query Handling
 
 LCQL uses unique pipe-based syntax validated against org-specific schemas. **LLMs do NOT know correct LCQL syntax** — any manually written or AI-generated LCQL without using the generation tools will be invalid.
 
@@ -100,7 +95,7 @@ If a user asks for "example LCQL queries" or "LCQL syntax", explain that LCQL is
 
 Consider calling `limacharlie event types --oid <oid> --output yaml` before generating queries to understand available event types. On validation failure, re-call the generate command with the error message — never fix queries manually. After 3 failures, report the issue to the user.
 
-### 7. Never Generate D&R Rules Manually
+### 6. Never Generate D&R Rules Manually
 
 Use AI generation commands:
 1. `limacharlie ai generate-detection --description "..." --oid <oid> --output yaml` — Generate detection YAML
@@ -109,7 +104,7 @@ Use AI generation commands:
 
 D&R rules are stored across three hives: `dr-general` (custom rules), `dr-managed` (managed rules from subscriptions), and `dr-services` (service-provided rules). When listing or auditing rules, check all three to get the full picture.
 
-### 8. Never Calculate Timestamps Manually
+### 7. Never Calculate Timestamps Manually
 
 LLMs consistently produce incorrect timestamp values.
 
@@ -123,26 +118,26 @@ date -d '2025-01-15 00:00:00 UTC' +%s  # Specific date
 
 Always run bash to get timestamps FIRST, verify `start_time < end_time` and that historical timestamps are in the past, then use the captured values in API calls.
 
-### 9. OID is UUID, NOT Organization Name
+### 8. OID is UUID, NOT Organization Name
 
 - **WRONG**: `--oid "my-org-name"`
 - **CORRECT**: `--oid "c1ffedc0-ffee-4a1e-b1a5-abc123def456"`
 - Use `limacharlie org list --output yaml` to list all accessible orgs with their OIDs
 
-### 10. Timestamp Milliseconds vs Seconds
+### 9. Timestamp Milliseconds vs Seconds
 
 - Detection/event data: **milliseconds** (13 digits)
 - API parameters: **seconds** (10 digits)
 - **ALWAYS** divide by 1000 when using detection timestamps for API queries
 
-### 11. Never Fabricate Data
+### 10. Never Fabricate Data
 
 - Only report what APIs return
 - Never estimate, infer, or extrapolate data
 - Show "N/A" or "Data unavailable" for missing fields
 - Never calculate costs (no pricing data in API)
 
-### 12. Spawn Agents in Parallel
+### 11. Spawn Agents in Parallel
 
 When processing multiple organizations or items:
 - Use a SINGLE message with multiple Task calls
