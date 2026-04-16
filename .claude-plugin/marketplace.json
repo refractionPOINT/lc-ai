@@ -9,6 +9,16 @@
   },
   "plugins": [
     {
+      "name": "lc-fundamentals",
+      "description": "LimaCharlie platform concept map — orients LLMs to recognize platform terminology and route to the correct skill.",
+      "source": "./marketplace/plugins/lc-fundamentals",
+      "version": "1.0.0",
+      "author": {
+        "name": "LimaCharlie",
+        "email": "support@limacharlie.io"
+      }
+    },
+    {
       "name": "lc-essentials",
       "description": "Core LimaCharlie skills for CLI-based API access, detection engineering, sensor tasking, case investigation, and fleet health monitoring.",
       "source": "./marketplace/plugins/lc-essentials",
