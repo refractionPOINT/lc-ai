@@ -218,7 +218,7 @@ def playbook(sdk, data):
 
     sev_color = _SEVERITY_COLORS.get(severity, "#808080")
     sev_emoji = _SEVERITY_EMOJIS.get(severity, "")
-    case_link = f"{_WEB_UI}/cases/queue?caseOid={oid}&caseNumber={case_number}"
+    case_link = f"{_WEB_UI}/cases/{oid}/{case_number}"
 
     # Action-specific configuration.
     configs = {
