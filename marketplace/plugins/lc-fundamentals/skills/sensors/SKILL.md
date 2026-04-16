@@ -166,6 +166,46 @@ Non-EDR platforms include: `json`, `text`, `gcp`, `aws`, `office365`, `okta`, `c
 | `okta` | `plat==okta` | Okta |
 | `crowdstrike` | `plat==crowdstrike` | CrowdStrike |
 
+## System Tags
+
+LimaCharlie provides system-level tags that control sensor behavior:
+
+| Tag | Effect |
+|-----|--------|
+| `lc:latest` | Forces latest sensor version (ignores org-assigned version). Use to test-deploy on a representative set. |
+| `lc:stable` | Forces stable sensor version. Use to hold specific sensors back during an org-wide upgrade. |
+| `lc:experimental` | Runs experimental sensor version. Used when troubleshooting with the LimaCharlie team. |
+| `lc:no_kernel` | Kernel component will not load on the host. |
+| `lc:debug` | Uses debug version of sensor. |
+| `lc:limit-update` | Sensor won't update version at runtime — only changes on restart/reboot. |
+| `lc:sleeper` | Disables all functionality except cloud connection. Minimal system impact ($0.10/30d). |
+
+### Sleeper Mode
+
+Sleeper mode lets you pre-deploy sensors at near-zero cost ($0.10/30 days per sensor) and activate them on-demand:
+
+1. Create an installation key with the `lc:sleeper` tag
+2. Deploy sensors fleet-wide — they enter sleeper mode within ~10 minutes
+3. To activate: remove the `lc:sleeper` tag and ensure org quota accommodates the sensor count
+4. Sensors resume full EDR within ~10 minutes
+
+**Requirements**: org must have billing enabled (quota >= 3). No binary change or reboot needed.
+
+**Gotcha**: there is a ~10-minute delay when applying or removing `lc:sleeper`. It is not instant.
+
+## Device ID vs Sensor ID
+
+- **SID** (Sensor ID): unique per sensor installation. Changes if the sensor is reinstalled.
+- **DID** (Device ID): hardware-derived identifier in `routing/did`. Persists across reinstalls on the same machine.
+
+Use DID to track a device across sensor reinstalls. The `entire_device: true` parameter on tag actions applies tags to ALL sensors sharing a Device ID.
+
+## Tag Gotchas
+
+- **Tag TTL is per-application**: each `add tag` creates its own TTL timer. Reapplying a tag with a new TTL does not extend the original — it creates a new entry.
+- **`entire_device: true`**: applies the tag to ALL sensors sharing the same Device ID, not just the targeted sensor.
+- **Tags appear in every event**: tags are included in `routing/tags` of every event from the sensor, so they can be used in D&R rule detection logic via the `is tagged` operator.
+
 ## Checking Sensor Health
 
 ### Online Status

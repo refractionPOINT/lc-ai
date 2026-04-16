@@ -159,6 +159,44 @@ For tasks that need a synchronous response with a timeout:
 limacharlie task request --sid <sid> --command '<task_command>' --timeout <seconds> --oid <oid> --output yaml
 ```
 
+## Network Isolation
+
+There are two ways to isolate a sensor from the network. They have critically different behavior:
+
+### D&R Action: `isolate network` (Persistent)
+
+Set via D&R rule response action. **Persistent** — sets a cloud flag so the sensor remains isolated even after reboot. Only allows traffic to the LimaCharlie cloud.
+
+```yaml
+# In a D&R rule response
+- action: isolate network
+
+# To remove isolation
+- action: rejoin network
+```
+
+### Sensor Command: `segregate_network` (Stateless)
+
+Sent via direct tasking. **Stateless** — resets on reboot. The sensor returns to normal networking after restart.
+
+```bash
+limacharlie task send --sid <sid> --task segregate_network --oid <oid> --output yaml
+limacharlie task send --sid <sid> --task rejoin_network --oid <oid> --output yaml
+```
+
+**Always prefer `isolate network` (D&R action) for reliable isolation.** The `segregate_network` command is only useful for quick, temporary isolation where you want the sensor to rejoin automatically on reboot.
+
+### How Isolation Works
+
+When isolated, the sensor blocks all network traffic except to the LimaCharlie cloud. You can still:
+- Task the sensor (investigate, collect files, run commands)
+- Receive telemetry from the sensor
+- Remove the isolation when ready
+
+### Seal / Unseal
+
+Sealing enables tamper-resistance, preventing direct modifications to the EDR sensor on the endpoint. Like isolation, the `seal` sensor command is stateless (resets on reboot), but the D&R action `seal` is persistent.
+
 ## Critical Rules
 
 - **Always verify sensors are EDR** before tasking (platform + architecture check)
@@ -166,3 +204,4 @@ limacharlie task request --sid <sid> --command '<task_command>' --timeout <secon
 - **D&R rules before reliable tasks** when using automated response handling
 - **Use bash for timestamps**: `date -d '+7 days' +%s` for TTL calculations
 - **ext-reliable-tasking must be subscribed** — 403 errors indicate the extension is missing
+- **`segregate_network` resets on reboot** — use D&R `isolate network` for persistent isolation

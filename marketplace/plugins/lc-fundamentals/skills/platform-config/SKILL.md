@@ -139,7 +139,9 @@ The target org must already be subscribed to the extension.
 
 ## Lookups
 
-Key-value dictionaries queryable at runtime in D&R rules.
+Key-value dictionaries queryable at runtime in D&R rules for enrichment and detection logic. Referenced in rules via the `lookup` operator with `resource: hive://lookup/<name>`.
+
+### CLI Operations
 
 ```bash
 # List lookups
@@ -153,6 +155,44 @@ limacharlie lookup set --key <name> --input-file /tmp/lookup.yaml --oid <oid> --
 
 # Delete a lookup
 limacharlie lookup delete --key <name> --confirm --oid <oid>
+```
+
+### Lookup Data Formats
+
+Lookups support three data formats in their payload:
+
+| Format | Description | Use Case |
+|--------|-------------|----------|
+| `lookup_data` | Direct JSON `{ "key": { metadata } }` | Structured data with per-key metadata |
+| `newline_content` | Keys separated by newlines (empty metadata) | Simple blocklists/allowlists |
+| `yaml_content` | YAML string with dictionary keys and metadata | Human-readable configs |
+
+### How Lookups Work in D&R Rules
+
+When a D&R rule uses `op: lookup`, the value at `path` is looked up in the referenced resource. If the key exists, the rule matches and the **metadata dictionary** for that key is returned. The metadata is accessible in suppression keys via the `.mtd` namespace.
+
+**Gotcha**: lookups return the metadata dict `{}` on match — if the key has no metadata, you get an empty dict. The match itself is the meaningful signal, not the returned value.
+
+**Gotcha**: the `.mtd` key name for `hive://lookup/my-list` is `.mtd.my_list` (hyphens become underscores).
+
+### Lookup Manager Extension
+
+The Lookup Manager extension (`ext-lookup-manager`) auto-refreshes lookups every 24 hours from remote sources (URLs or ARLs). Pre-configured public lookups are available from the [lc-public-lookups GitHub repo](https://github.com/refractionpoint/lc-public-lookups), including Tor exit nodes, AlienVault IP reputation, and more.
+
+### IaC Format
+
+```yaml
+hives:
+  lookup:
+    my-blocklist:
+      data:
+        lookup_data:
+          8.8.8.8: {}
+          1.1.1.1: { category: dns }
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags: [blocklist]
 ```
 
 ## Secrets
@@ -319,3 +359,13 @@ limacharlie sync pull --oid <oid>
 ```
 
 **Avoid `--force`** on push unless certain — it deletes cloud resources not present in the local config file.
+
+## Gotchas Summary
+
+| Gotcha | Detail |
+|--------|--------|
+| REST API `usr_mtd` REPLACES entirely | Hive metadata updates via API replace the full metadata object, they don't merge. Always read current state first. |
+| `--check-perm` needs `--oid` | `limacharlie auth whoami --check-perm X` without `--oid` always returns `has_perm: false` |
+| Secret values are write-only | `secret list` shows names only, you cannot read back secret values |
+| Prefer dedicated CLI over hive | Use `limacharlie dr`, `limacharlie fp`, `limacharlie lookup` etc. instead of generic `limacharlie hive` when available |
+| Extension config = web UI features | Artifact collection, FIM, EPP, exfil are all extension configs, not separate APIs |

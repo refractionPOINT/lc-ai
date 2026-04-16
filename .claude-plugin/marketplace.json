@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "lc-fundamentals",
-      "description": "LimaCharlie platform concept map — orients LLMs to recognize platform terminology and route to the correct skill.",
+      "description": "LimaCharlie platform concept map and deep fundamentals — orients LLMs to core concepts, event model, routing object, behavioral detection patterns, stateful rules, suppression, output streams, FIM, event collection, and common gotchas.",
       "source": "./marketplace/plugins/lc-fundamentals",
       "version": "1.0.0",
       "author": {

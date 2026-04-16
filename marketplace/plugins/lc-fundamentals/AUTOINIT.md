@@ -52,15 +52,70 @@ All data in LimaCharlie flows through one of four streams:
 - **`event`**: real-time telemetry from sensors — process execution (NEW_PROCESS), DNS queries (DNS_REQUEST), network connections (NETWORK_CONNECTIONS), file operations, etc.
 - **`detect`**: alerts generated when D&R rules match events (via the `report` action)
 - **`audit`**: platform management events — config changes, user actions, API calls
-- **`deployment`**: sensor lifecycle events — installs, uninstalls, version updates
+- **`deployment`**: sensor lifecycle events — installs, uninstalls, version updates, cloning
 
 ### Event Structure
 
-Events have two top-level objects:
-- `routing`: consistent metadata (sensor ID, timestamp, hostname, platform, organization)
-- `event`: event-type-specific data (file paths, command lines, network addresses, hashes)
+Every event has two top-level objects:
+- **`routing`**: consistent metadata envelope (always present, same structure regardless of event type)
+- **`event`**: event-type-specific payload (varies by `event_type`)
 
 Field paths follow the pattern `event/FIELD_NAME` or `routing/FIELD_NAME`.
+
+### The Routing Object (Critical)
+
+The `routing` object is the backbone of all LimaCharlie data. It is present in every event and contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `oid` | UUID | Organization ID |
+| `sid` | UUID | Sensor ID |
+| `event_type` | string | Event type (NEW_PROCESS, DNS_REQUEST, etc.) |
+| `event_time` | integer | Timestamp in **milliseconds** (13 digits) |
+| `event_id` | UUID | Unique event identifier |
+| `hostname` | string | Sensor hostname |
+| `iid` | UUID | Installation Key ID |
+| `did` | UUID | **Device ID** — hardware-derived, persists across sensor reinstalls. Distinct from SID. |
+| `ext_ip` | string | External IP |
+| `int_ip` | string | Internal IP |
+| `plat` | integer | Platform (Windows=268435456, Linux=536870912, macOS=805306368) |
+| `arch` | integer | Architecture |
+| `tags` | list | Sensor tags at event time |
+| `this` | hash | Hash of the **current process/object** generating this event |
+| `parent` | hash | Hash of the **parent process** |
+| `target` | hash | Hash of the **target object** (optional, present for cross-process operations) |
+
+#### The Three Process Correlation Hashes
+
+`routing/this`, `routing/parent`, and `routing/target` are the keys to process tree navigation and stateful detection rules:
+
+- **`this`**: identifies the process/object that generated the event. Used to correlate all events from the same process.
+- **`parent`**: identifies the parent process. Used by `with child` / `with descendant` stateful rules to build process trees (e.g., detecting `cmd.exe → calc.exe`).
+- **`target`**: identifies a target object in cross-process operations (e.g., the target of a `SENSITIVE_PROCESS_ACCESS`). Not always present.
+
+These hashes are NOT PIDs — they are stable identifiers that persist across events and enable stateful rule correlation.
+
+#### Device ID vs Sensor ID
+
+- **SID** (Sensor ID): unique per sensor installation. Changes if the sensor is reinstalled.
+- **DID** (Device ID): hardware-derived identifier. Persists across reinstalls on the same physical/virtual machine. Use DID to track a device across sensor reinstalls. The `entire_device: true` tag action applies tags to all sensors sharing a DID.
+
+### Timestamps: Milliseconds vs Seconds
+
+- **Event data** (`routing/event_time`, detection timestamps): **milliseconds** (13 digits, e.g., `1656959942437`)
+- **API parameters** (`--start`, `--end` for search/replay): **seconds** (10 digits, e.g., `1656959942`)
+- **Always divide by 1000** when using event timestamps for API queries
+
+### Understanding Latency
+
+The `routing.latency` field in detections is the delta between `routing/event_time` and detection creation time. **This is NOT D&R engine processing time** — the D&R engine processes events in under 100ms. The latency value includes ALL upstream delays:
+
+- Third-party platform delays (Microsoft 365 events can be delayed hours in Microsoft's pipeline)
+- Sensor sleep/wake cycles (laptop sleeps for 12 hours → events arrive with 12h latency)
+- Network interruptions (sensor buffers locally, transmits on reconnect)
+- OS-level delays (macOS/Windows delay writing to internal logs)
+
+**Diagnostic approach**: look at the **minimum** latency value for a sensor, not the maximum. If minimum latency is hundreds of milliseconds, the LimaCharlie pipeline is healthy — high maximum alongside low minimum indicates source-side delays.
 
 ### Data Flow: Event to Detection
 
@@ -69,6 +124,15 @@ Field paths follow the pattern `event/FIELD_NAME` or `routing/FIELD_NAME`.
 3. The `report` response action creates a **Detection** — inheriting the event's routing and adding detection metadata (name, severity, extracted IOCs)
 
 Detection field paths: `detect/FIELD_NAME` (event data), `routing/FIELD_NAME`, or top-level fields like `cat` (category), `priority`, `detect_id`.
+
+### The Four Output Stream Structures
+
+Each stream has a **different schema** — they are NOT interchangeable:
+
+- **Event stream**: canonical `{ routing: {...}, event: {...} }` two-level structure
+- **Detection stream**: flat with `cat`, `detect` (event copy), `detect_id`, `priority`, `detect_mtd`, `detect_data` (extracted IOCs), `source_rule`, `gen_time`
+- **Audit stream**: flat with `oid`, `ts`, `etype`, `ident`, `entity`, `mtd`, `origin` (api/ui/cli/system) — does NOT use the routing/event split
+- **Deployment stream**: uses routing/event structure but with deployment-specific event types (`sensor_installed`, `sensor_clone`, `sensor_over_quota`, `deleted_sensor`)
 
 ## D&R Rules (Detection & Response)
 
