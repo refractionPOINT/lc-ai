@@ -136,6 +136,20 @@ The `ai-agents/` directory contains autonomous AI agents that run inside LimaCha
 
 **Manually**: See each agent's README for step-by-step instructions.
 
+### Running Agents from the CLI
+
+Once deployed, the same `ai_agent` Hive record can be invoked ad-hoc from the LimaCharlie CLI as a **template**, with per-run overrides for prompt, model, budget, tools, environment, and credentials:
+
+```bash
+# Start a run of the deployed agent with a cheaper budget.
+limacharlie ai start-session --definition l1-bot --max-budget-usd 0.50
+
+# Attach and stream the agent's output live.
+limacharlie ai session attach --id <SESSION_ID>
+```
+
+See the [CLI reference](https://docs.limacharlie.io/9-ai-sessions/cli/) for the full command set.
+
 ## Repository Structure
 
 ```

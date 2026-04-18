@@ -68,3 +68,42 @@ Unlike D&R suppression which silently drops excess requests, debounce guarantees
 ## Installation
 
 Use the `lc-deployer` skill from the [lc-essentials](../marketplace/plugins/lc-essentials/) plugin to install and remove agents.
+
+## Running Agents Manually from the CLI
+
+Once an `ai_agent.yaml` is deployed to a Hive, the same definition can be invoked ad-hoc from the LimaCharlie CLI without waiting for a D&R event. The Hive record is treated as a **template** — individual fields (prompt, model, budget, tools, environment, credentials) can be overridden for a single run.
+
+```bash
+# Run the deployed agent as-is.
+limacharlie ai start-session --definition l1-bot
+
+# Swap the prompt for an ad-hoc question, keep everything else from the template.
+limacharlie ai start-session --definition l1-bot \
+  --prompt "Investigate sensor srv-01 for persistence mechanisms"
+
+# Cap cost and lower max turns for a cheap exploratory run.
+limacharlie ai start-session --definition l1-bot \
+  --max-budget-usd 0.50 --max-turns 10
+
+# Provide the data the agent would normally get from a D&R event.
+limacharlie ai start-session --definition l1-bot \
+  --data '{"hostname": "srv-01", "alert_id": "abc-123"}'
+```
+
+Scalars and lists replace the template value. `--env KEY=VALUE` (repeatable) merges with the template's environment, with the override winning on key collisions. Override values may be literal strings or `hive://secret/<name>` references — the same syntax the YAML uses.
+
+To watch what the agent does in real time, attach to the returned session:
+
+```bash
+limacharlie ai session attach --id <SESSION_ID>
+```
+
+Or start and attach in one step:
+
+```bash
+SID=$(limacharlie ai start-session --definition l1-bot \
+        --output json | jq -r '.session_id')
+limacharlie ai session attach --id "$SID"
+```
+
+See the [CLI reference](https://docs.limacharlie.io/9-ai-sessions/cli/) for the full list of override flags and `attach` options.
