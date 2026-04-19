@@ -10,12 +10,6 @@ hives:
         respond:
           - action: start ai agent
             definition: hive://ai_agent/case-investigator
-            suppression:
-              is_global: true
-              keys:
-                - case-investigator-rate-limit
-              max_count: 20
-              period: 1m
       usr_mtd:
         enabled: true
         expiry: 0

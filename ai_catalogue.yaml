@@ -513,7 +513,6 @@ agents:
       type: per_event
       events:
         - case_detection_added
-      suppression: "20/1m"
       debounce: true
 
   malware-analysis:

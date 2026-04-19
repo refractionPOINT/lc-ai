@@ -15,9 +15,6 @@ Webhook adapter emits "case_detection_added" event
 D&R rule matches (event=case_detection_added)
       |
       v
-Suppression check (max 20/min across the org)
-      |
-      v
 Debounce check (key = case-investigator-<case_number>)
       |   -- only one run per case at a time
       |   -- new detections mid-run queue and re-fire when the session ends
@@ -103,7 +100,6 @@ Use the `lc-deployer` skill to install and manage this agent. See the
 | `ttl_seconds` | `1800` | Hard timeout (30 minutes) |
 | `one_shot` | `true` | Session terminates after completing |
 | `debounce_key` | `case-investigator-{{ .event.case_number }}` | One run per case at a time; pending detections re-fire on completion |
-| Suppression | `20/min` | Maximum AI agent invocations per minute across the org (global) |
 
 ## What the agent does NOT do
 
