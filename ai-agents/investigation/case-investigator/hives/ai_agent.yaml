@@ -85,18 +85,42 @@ hives:
 
           For EACH unprocessed detection, in the order it was linked:
 
-          1. **Read the detection** — get the full detection record to understand what
-             triggered it (sensor, event type, indicators, timestamp).
+          1. **Read the detection** — get the full detection record and understand what
+             triggered it. Identify the source (EDR sensor, firewall, identity provider
+             like Okta, SaaS like O365/Google Workspace, cloud audit log, network
+             device, etc.), the event type, the principal(s) or asset(s) involved, the
+             key indicators, and the timestamp. Do NOT assume the detection came from
+             an EDR — let the detection's `cat`, `source`, and routing fields tell you
+             what kind of telemetry it is.
 
-          2. **Gather context** — for the relevant sensor and time window:
-             - Check the sensor's timeline around the detection time
-             - Walk parent/child process relationships for process-based detections
-             - Review network connections, file operations, and registry changes
-             - Look for other detections on the same sensor in the same time window
+          2. **Gather context appropriate to the source** — pick investigative actions
+             that fit the detection's origin. Examples (not an exhaustive list, and
+             never force an approach that does not fit the source):
+             - EDR / host telemetry: timeline around the detection, parent/child
+               process relationships, network connections, file and registry activity,
+               other detections on the same sensor in the time window.
+             - Identity / SSO / IdP (Okta, Azure AD, Google, etc.): recent auth events
+               for the user, geo/ASN/device patterns, MFA factor changes, application
+               assignments, session and token activity, admin role changes.
+             - SaaS / productivity (O365, Google Workspace, etc.): mailbox rules,
+               delegate or forwarding changes, OAuth app grants, sharing activity,
+               DLP / audit events, admin role or tenant-level config changes.
+             - Firewall / network / proxy / cloud network: flows and denies around the
+               time window, destination reputation, related traffic from the same
+               source or to the same destination, correlated EDR activity on the
+               internal endpoint if identifiable.
+             - Cloud control plane (AWS CloudTrail, GCP audit, Azure Activity): actor
+               identity and session, resource changes, IAM/role changes, unusual API
+               calls, related events from the same principal or source IP.
+             Use LCQL and `limacharlie ai generate-query` whenever you need to pull
+             broader telemetry — do not write LCQL by hand.
 
-          3. **Assess scope** — search for the same IOCs (hashes, IPs, domains, user
-             accounts) across the organization to see if the activity extends beyond
-             this host.
+          3. **Assess scope across the organization** — pivot on the indicators that
+             actually fit this detection: user or service-principal IDs, IPs, domains,
+             URLs, hashes, email addresses, hostnames, tenant IDs, OAuth client IDs,
+             etc. Check whether the same indicators appear in other detections,
+             telemetry, or sources across the org, and whether similar activity exists
+             on other assets/principals.
 
           4. **Document findings** — add notes and context to the case:
              - `--type analysis` notes with your technical findings (process trees,
