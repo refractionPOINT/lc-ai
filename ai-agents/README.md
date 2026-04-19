@@ -106,4 +106,4 @@ SID=$(limacharlie ai start-session --definition l1-bot \
 limacharlie ai session attach --id "$SID"
 ```
 
-See the [CLI reference](https://docs.limacharlie.io/9-ai-sessions/cli/) for the full list of override flags and `attach` options.
+`attach` streams these org-owned sessions in **read-only** mode (the agent runs on its own; you are observing). For an interactive terminal chat with Claude — separate from any deployed agent, billed against your own Claude credential — see `limacharlie ai chat` in the [CLI reference](https://docs.limacharlie.io/9-ai-sessions/cli/#limacharlie-ai-chat).
