@@ -503,6 +503,18 @@ agents:
       suppression: "10/1m"
       debounce: true
 
+  case-investigator:
+    display_name: "Case Investigator"
+    description: "Incrementally investigates detections added to an existing case, checkpointing progress so new detections never re-trigger past work"
+    category: investigation
+    model: opus
+    max_budget_usd: 3.00
+    trigger:
+      type: per_event
+      events:
+        - case_detection_added
+      debounce: true
+
   malware-analysis:
     display_name: "Malware Analysis"
     description: "Deep binary forensics via LCRE and Ghidra"

@@ -796,6 +796,7 @@ limacharlie case add-note --case-number <case_number> --type analysis --input-fi
 | `general` | General observations and facts | "Process rundll32.exe spawned without arguments at 19:39:10" |
 | `analysis` | Investigation findings, hypotheses, conclusions | "Active C2 communication to 35.232.8.38 confirmed via 60+ connections" |
 | `remediation` | Remediation actions taken or recommended | "Isolated host via network isolation. Recommend password reset for compromised account." |
+| `recommendation` | Suggested follow-up actions or improvements beyond immediate remediation | "Recommend rolling out MFA across the engineering VPN group and adding a D&R rule to alert on future rundll32 without arguments." |
 | `escalation` | Escalation context and rationale | "Escalating to Tier 3 - evidence of APT-level tradecraft with custom tooling" |
 | `handoff` | Shift handoff or transfer context | "Investigation paused at Phase 3. Org-wide IOC search complete, lateral movement analysis pending." |
 | `to_stakeholder` | Notes/communications sent TO external stakeholders (e.g. customers, management) | "Notified customer of confirmed breach. Provided initial IOC list and recommended password resets." |
@@ -1040,6 +1041,6 @@ limacharlie case bulk-update --numbers <num1>,<num2>,<num3> \
 
 **Entity types**: `ip`, `domain`, `hash`, `url`, `user`, `email`, `file`, `process`, `registry`, `other`
 
-**Note types**: `general`, `analysis`, `remediation`, `escalation`, `handoff`, `to_stakeholder`, `from_stakeholder`
+**Note types**: `general`, `analysis`, `remediation`, `recommendation`, `escalation`, `handoff`, `to_stakeholder`, `from_stakeholder`
 
 **Tag management**: `limacharlie case tag set/add/remove --case-number <number> --tag <tag> --oid <oid>`

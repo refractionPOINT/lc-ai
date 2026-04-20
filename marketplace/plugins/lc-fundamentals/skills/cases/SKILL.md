@@ -96,7 +96,7 @@ limacharlie case add-note --case-number <number> --type analysis \
 
 Note content supports Markdown formatting.
 
-**Valid note types:** `general`, `analysis`, `remediation`, `escalation`, `handoff`, `to_stakeholder`, `from_stakeholder`
+**Valid note types:** `general`, `analysis`, `remediation`, `recommendation`, `escalation`, `handoff`, `to_stakeholder`, `from_stakeholder`
 
 Notes support an `is_public` flag — when true, the note may be shared externally.
 
@@ -206,4 +206,4 @@ limacharlie case report --from 2025-01-01T00:00:00Z --to 2025-02-01T00:00:00Z --
 | **Severity** | `critical`, `high`, `medium`, `low`, `info` |
 | **Verdict** | `malicious`, `suspicious`, `benign`, `unknown`, `informational` |
 | **Entity Types** | `ip`, `domain`, `hash`, `url`, `user`, `email`, `file`, `process`, `registry`, `other` |
-| **Note Types** | `general`, `analysis`, `remediation`, `escalation`, `handoff`, `to_stakeholder`, `from_stakeholder` |
+| **Note Types** | `general`, `analysis`, `remediation`, `recommendation`, `escalation`, `handoff`, `to_stakeholder`, `from_stakeholder` |

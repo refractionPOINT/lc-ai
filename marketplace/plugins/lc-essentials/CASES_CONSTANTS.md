@@ -74,6 +74,7 @@ Used for all evidence types: detections, entities, telemetry references, and art
 | `general` | General investigation notes |
 | `analysis` | Technical analysis findings |
 | `remediation` | Remediation steps taken or recommended |
+| `recommendation` | Suggested follow-up actions or improvements beyond immediate remediation |
 | `escalation` | Escalation rationale and context |
 | `handoff` | Shift handoff or analyst transition notes |
 | `to_stakeholder` | Notes/communications sent TO external stakeholders (e.g. customers, management) |

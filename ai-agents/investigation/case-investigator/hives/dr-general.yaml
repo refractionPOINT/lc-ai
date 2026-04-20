@@ -1,0 +1,17 @@
+version: 3
+hives:
+  dr-general:
+    case-investigator-on-detection-added:
+      data:
+        detect:
+          event: case_detection_added
+          op: exists
+          path: event/case_id
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/case-investigator
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - ai-agent:case-investigator
