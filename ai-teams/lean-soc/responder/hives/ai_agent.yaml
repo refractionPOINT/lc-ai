@@ -138,3 +138,5 @@ hives:
         tags:
           - ai-team:lean-soc:responder
           - ai-team:api-key:responder
+          - ai-rel:lean-soc:role:agent:responder
+          - ai-rel:global:depends-on:secret:responder

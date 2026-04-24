@@ -356,3 +356,6 @@ hives:
           - ai-team:exposure-team:scanner
           - ai-team:exposure-team:sends-to:risk-analyst
           - ai-team:api-key:exposure-scanner
+          - ai-rel:exposure-team:role:agent:scanner
+          - ai-rel:exposure-team:sends-to:agent:risk-analyst
+          - ai-rel:global:depends-on:secret:exposure-scanner

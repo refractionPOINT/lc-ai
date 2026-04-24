@@ -267,3 +267,5 @@ hives:
         tags:
           - ai-team:exposure-team:risk-analyst
           - ai-team:api-key:exposure-risk-analyst
+          - ai-rel:exposure-team:role:agent:risk-analyst
+          - ai-rel:global:depends-on:secret:exposure-risk-analyst

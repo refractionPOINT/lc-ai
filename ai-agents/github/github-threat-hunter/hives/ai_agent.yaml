@@ -344,3 +344,5 @@ hives:
         tags:
           - ai-agent:github-threat-hunter
           - ai-agent:api-key:github-threat-hunter
+          - ai-rel:standalone:role:agent:github-threat-hunter
+          - ai-rel:global:depends-on:secret:github-threat-hunter

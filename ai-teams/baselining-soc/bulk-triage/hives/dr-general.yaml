@@ -16,3 +16,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:baselining-soc:bulk-triage
+          - ai-rel:baselining-soc:role:agent:bulk-triage

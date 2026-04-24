@@ -1,5 +1,36 @@
 # Catalog of AI agents and AI teams available in this repository.
 #
+# ---------------------------------------------------------------------------
+# Relationship tags on deployed agent records
+# ---------------------------------------------------------------------------
+# Every agent pushed to an org carries tags describing what it is and how it
+# relates to other things in the org. Two tag vocabularies coexist on every
+# record today:
+#
+#   ai-rel:<scope>:<verb>:<kind>:<id>    canonical, rich; all new consumers
+#   ai-team:... / ai-agent:...           legacy; kept in sync for back-compat
+#
+# See marketplace/plugins/lc-advanced-skills/skills/lc-deployer/SKILL.md for
+# the full grammar. Summary:
+#   <scope>  = team name (e.g. tiered-soc), "standalone", or "global"
+#   <verb>   = role | sends-to | reads-from | writes-to | triggers-on
+#              | depends-on | enriches
+#   <kind>   = agent | sensor | adapter | output | rule | hive
+#              | secret | case-tag | extension | team
+#
+# Example tags on tiered-soc/l2-analyst:
+#   ai-rel:tiered-soc:role:agent:l2-analyst
+#   ai-rel:tiered-soc:sends-to:agent:containment
+#   ai-rel:global:depends-on:secret:soc-l2-analyst
+#
+# The `sends_to` field on each agent below is a human-readable summary and
+# must be kept in sync by hand with the `ai-rel:<team>:sends-to:agent:<target>`
+# (and legacy `ai-team:<team>:sends-to:<target>`) tags in that agent's
+# hives/ai_agent.yaml file. Tags on the hive record are the operational source
+# of truth — the catalogue is documentation. Richer relationships
+# (reads-from, writes-to, depends-on, …) are authored directly on the hive yaml.
+# ---------------------------------------------------------------------------
+#
 # How to read cost fields:
 #
 #   max_budget_usd        Hard per-run cap enforced by the runtime. A session is

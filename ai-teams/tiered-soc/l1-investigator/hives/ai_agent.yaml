@@ -171,3 +171,7 @@ hives:
           - ai-team:tiered-soc:sends-to:l2-analyst
           - ai-team:tiered-soc:sends-to:malware-analyst
           - ai-team:api-key:soc-l1-investigator
+          - ai-rel:tiered-soc:role:agent:l1-investigator
+          - ai-rel:tiered-soc:sends-to:agent:l2-analyst
+          - ai-rel:tiered-soc:sends-to:agent:malware-analyst
+          - ai-rel:global:depends-on:secret:soc-l1-investigator

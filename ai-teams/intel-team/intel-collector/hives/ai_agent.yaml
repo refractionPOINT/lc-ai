@@ -455,3 +455,6 @@ hives:
           - ai-team:intel-team:collector
           - ai-team:intel-team:sends-to:analyzer
           - ai-team:api-key:intel-collector
+          - ai-rel:intel-team:role:agent:collector
+          - ai-rel:intel-team:sends-to:agent:analyzer
+          - ai-rel:global:depends-on:secret:intel-collector

@@ -231,3 +231,6 @@ hives:
           - ai-team:mdr-hunting-pipeline-team:intel-scout
           - ai-team:mdr-hunting-pipeline-team:sends-to:detection-engineer
           - ai-team:api-key:mdr-api-key
+          - ai-rel:mdr-hunting-pipeline-team:role:agent:intel-scout
+          - ai-rel:mdr-hunting-pipeline-team:sends-to:agent:detection-engineer
+          - ai-rel:global:depends-on:secret:mdr-api-key

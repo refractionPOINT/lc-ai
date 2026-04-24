@@ -133,3 +133,5 @@ hives:
         tags:
           - ai-team:lean-soc:reporter
           - ai-team:api-key:lean-reporter
+          - ai-rel:lean-soc:role:agent:reporter
+          - ai-rel:global:depends-on:secret:lean-reporter

@@ -21,3 +21,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:tiered-soc:triage
+          - ai-rel:tiered-soc:role:agent:triage

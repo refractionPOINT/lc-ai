@@ -22,3 +22,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:tiered-soc:l2-analyst
+          - ai-rel:tiered-soc:role:agent:l2-analyst

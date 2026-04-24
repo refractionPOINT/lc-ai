@@ -21,3 +21,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:tiered-soc:l1-investigator
+          - ai-rel:tiered-soc:role:agent:l1-investigator

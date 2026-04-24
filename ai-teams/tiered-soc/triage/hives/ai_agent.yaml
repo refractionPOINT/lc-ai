@@ -141,3 +141,6 @@ hives:
           - ai-team:tiered-soc:triage
           - ai-team:tiered-soc:sends-to:l1-investigator
           - ai-team:api-key:soc-triage
+          - ai-rel:tiered-soc:role:agent:triage
+          - ai-rel:tiered-soc:sends-to:agent:l1-investigator
+          - ai-rel:global:depends-on:secret:soc-triage

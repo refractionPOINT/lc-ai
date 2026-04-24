@@ -27,3 +27,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:bas-team:reviewer
+          - ai-rel:bas-team:role:agent:reviewer

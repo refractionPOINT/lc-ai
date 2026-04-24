@@ -27,3 +27,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:tiered-soc:containment
+          - ai-rel:tiered-soc:role:agent:containment

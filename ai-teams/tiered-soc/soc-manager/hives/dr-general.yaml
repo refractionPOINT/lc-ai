@@ -16,3 +16,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:tiered-soc:soc-manager
+          - ai-rel:tiered-soc:role:agent:soc-manager

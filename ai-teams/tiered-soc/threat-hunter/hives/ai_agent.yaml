@@ -142,3 +142,6 @@ hives:
           - ai-team:tiered-soc:threat-hunter
           - ai-team:tiered-soc:sends-to:l1-investigator
           - ai-team:api-key:threat-hunter
+          - ai-rel:tiered-soc:role:agent:threat-hunter
+          - ai-rel:tiered-soc:sends-to:agent:l1-investigator
+          - ai-rel:global:depends-on:secret:threat-hunter

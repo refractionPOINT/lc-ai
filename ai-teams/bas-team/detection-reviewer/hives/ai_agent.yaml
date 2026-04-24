@@ -611,3 +611,5 @@ hives:
         tags:
           - ai-team:bas-team:reviewer
           - ai-team:api-key:bas-reviewer
+          - ai-rel:bas-team:role:agent:reviewer
+          - ai-rel:global:depends-on:secret:bas-reviewer

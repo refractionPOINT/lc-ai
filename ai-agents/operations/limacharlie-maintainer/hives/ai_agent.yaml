@@ -343,3 +343,5 @@ hives:
         tags:
           - ai-agent:limacharlie-maintainer
           - ai-agent:api-key:limacharlie-maintainer
+          - ai-rel:standalone:role:agent:limacharlie-maintainer
+          - ai-rel:global:depends-on:secret:limacharlie-maintainer

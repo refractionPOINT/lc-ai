@@ -16,3 +16,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:intel-team:collector
+          - ai-rel:intel-team:role:agent:collector

@@ -138,3 +138,5 @@ hives:
         tags:
           - ai-agent:basic-triage
           - ai-agent:api-key:basic-triage
+          - ai-rel:standalone:role:agent:basic-triage
+          - ai-rel:global:depends-on:secret:basic-triage

@@ -149,3 +149,5 @@ hives:
         tags:
           - ai-team:baselining-soc:containment
           - ai-team:api-key:containment
+          - ai-rel:baselining-soc:role:agent:containment
+          - ai-rel:global:depends-on:secret:containment

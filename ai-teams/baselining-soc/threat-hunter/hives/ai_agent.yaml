@@ -141,3 +141,5 @@ hives:
         tags:
           - ai-team:baselining-soc:threat-hunter
           - ai-team:api-key:threat-hunter
+          - ai-rel:baselining-soc:role:agent:threat-hunter
+          - ai-rel:global:depends-on:secret:threat-hunter

@@ -108,3 +108,5 @@ hives:
         tags:
           - ai-team:baselining-soc:soc-manager
           - ai-team:api-key:soc-manager
+          - ai-rel:baselining-soc:role:agent:soc-manager
+          - ai-rel:global:depends-on:secret:soc-manager

@@ -22,3 +22,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:baselining-soc:l2-analyst
+          - ai-rel:baselining-soc:role:agent:l2-analyst

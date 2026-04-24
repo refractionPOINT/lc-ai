@@ -168,3 +168,8 @@ hives:
           - ai-team:tiered-soc:sends-to:threat-hunter
           - ai-team:tiered-soc:sends-to:malware-analyst
           - ai-team:api-key:soc-l2-analyst
+          - ai-rel:tiered-soc:role:agent:l2-analyst
+          - ai-rel:tiered-soc:sends-to:agent:containment
+          - ai-rel:tiered-soc:sends-to:agent:threat-hunter
+          - ai-rel:tiered-soc:sends-to:agent:malware-analyst
+          - ai-rel:global:depends-on:secret:soc-l2-analyst
