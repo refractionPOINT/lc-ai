@@ -272,3 +272,5 @@ hives:
         tags:
           - ai-agent:case-investigator
           - ai-agent:api-key:case-investigator
+          - ai-rel:standalone:role:agent:case-investigator
+          - ai-rel:global:depends-on:secret:case-investigator

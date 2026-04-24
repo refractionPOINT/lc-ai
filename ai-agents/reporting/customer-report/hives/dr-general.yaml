@@ -16,3 +16,4 @@ hives:
         expiry: 0
         tags:
           - ai-agent:customer-report
+          - ai-rel:standalone:role:agent:customer-report

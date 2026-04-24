@@ -140,3 +140,6 @@ hives:
           - ai-team:lean-soc:triage
           - ai-team:lean-soc:sends-to:investigator
           - ai-team:api-key:lean-triage
+          - ai-rel:lean-soc:role:agent:triage
+          - ai-rel:lean-soc:sends-to:agent:investigator
+          - ai-rel:global:depends-on:secret:lean-triage

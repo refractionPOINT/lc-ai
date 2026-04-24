@@ -16,3 +16,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:mdr-hunting-pipeline-team:tenant-profiler
+          - ai-rel:mdr-hunting-pipeline-team:role:agent:tenant-profiler

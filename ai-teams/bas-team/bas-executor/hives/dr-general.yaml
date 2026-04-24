@@ -16,3 +16,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:bas-team:executor
+          - ai-rel:bas-team:role:agent:executor

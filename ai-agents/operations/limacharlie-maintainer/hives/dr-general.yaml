@@ -16,3 +16,4 @@ hives:
         expiry: 0
         tags:
           - ai-agent:limacharlie-maintainer
+          - ai-rel:standalone:role:agent:limacharlie-maintainer

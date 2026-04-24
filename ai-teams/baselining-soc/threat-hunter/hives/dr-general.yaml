@@ -27,3 +27,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:baselining-soc:threat-hunter
+          - ai-rel:baselining-soc:role:agent:threat-hunter

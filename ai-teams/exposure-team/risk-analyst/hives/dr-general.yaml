@@ -27,3 +27,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:exposure-team:risk-analyst
+          - ai-rel:exposure-team:role:agent:risk-analyst

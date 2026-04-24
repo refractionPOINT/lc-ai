@@ -387,3 +387,5 @@ hives:
         tags:
           - ai-team:intel-team:engineer
           - ai-team:api-key:intel-engineer
+          - ai-rel:intel-team:role:agent:engineer
+          - ai-rel:global:depends-on:secret:intel-engineer

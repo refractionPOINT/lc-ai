@@ -16,3 +16,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:exposure-team:asset-discovery
+          - ai-rel:exposure-team:role:agent:asset-discovery

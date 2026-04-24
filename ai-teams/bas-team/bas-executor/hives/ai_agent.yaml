@@ -311,3 +311,6 @@ hives:
           - ai-team:bas-team:executor
           - ai-team:bas-team:sends-to:reviewer
           - ai-team:api-key:bas-executor
+          - ai-rel:bas-team:role:agent:executor
+          - ai-rel:bas-team:sends-to:agent:reviewer
+          - ai-rel:global:depends-on:secret:bas-executor

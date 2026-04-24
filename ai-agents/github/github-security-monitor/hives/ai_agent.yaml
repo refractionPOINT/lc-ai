@@ -218,3 +218,5 @@ hives:
         tags:
           - ai-agent:github-security-monitor
           - ai-agent:api-key:github-security-monitor
+          - ai-rel:standalone:role:agent:github-security-monitor
+          - ai-rel:global:depends-on:secret:github-security-monitor

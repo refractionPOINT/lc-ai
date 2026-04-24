@@ -21,3 +21,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:lean-soc:investigator
+          - ai-rel:lean-soc:role:agent:investigator

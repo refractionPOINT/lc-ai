@@ -315,3 +315,5 @@ hives:
         tags:
           - ai-team:mdr-hunting-pipeline-team:threat-hunter
           - ai-team:api-key:mdr-api-key
+          - ai-rel:mdr-hunting-pipeline-team:role:agent:threat-hunter
+          - ai-rel:global:depends-on:secret:mdr-api-key

@@ -27,3 +27,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:intel-team:engineer
+          - ai-rel:intel-team:role:agent:engineer

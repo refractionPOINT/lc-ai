@@ -169,3 +169,8 @@ hives:
           - ai-team:baselining-soc:sends-to:threat-hunter
           - ai-team:baselining-soc:sends-to:malware-analyst
           - ai-team:api-key:soc-l2-analyst
+          - ai-rel:baselining-soc:role:agent:l2-analyst
+          - ai-rel:baselining-soc:sends-to:agent:containment
+          - ai-rel:baselining-soc:sends-to:agent:threat-hunter
+          - ai-rel:baselining-soc:sends-to:agent:malware-analyst
+          - ai-rel:global:depends-on:secret:soc-l2-analyst

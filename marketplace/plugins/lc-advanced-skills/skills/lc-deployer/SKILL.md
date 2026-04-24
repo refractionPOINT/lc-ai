@@ -75,23 +75,100 @@ To discover available SOCs, list the directories under `ai-teams/` in the lc-ai 
 
 ### Tag Convention
 
-Every `ai_agent` hive record in a SOC carries two kinds of tags:
+Every `ai_agent` hive record carries structured tags that describe **what the agent is** and **how it relates** to other things in the org. Two tag vocabularies coexist on every record today:
 
-| Tag Type | Format | Example |
-|----------|--------|---------|
-| **Identity** | `ai-team:<soc-name>:<role>` | `ai-team:tiered-soc:l1-investigator` |
-| **Relationship** | `ai-team:<soc-name>:sends-to:<target-role>` | `ai-team:tiered-soc:sends-to:l2-analyst` |
-| **API Key** | `ai-team:api-key:<agent-name>` | `ai-team:api-key:soc-l1-investigator` |
+- **`ai-rel:…`** — the canonical relationship grammar. All new work should read and emit these. Rich enough to describe edges from an agent to any other LC entity (other agents, sensors, outputs, D&R rules, case tags, secrets, extensions, …).
+- **`ai-team:…`** / **`ai-agent:…`** — legacy identity and `sends-to` tags. Kept in sync automatically during deployment so older consumers (the main webapp graph, existing scripts) don't break. Do not drop these from existing records.
 
-- The **identity tag** names the agent's role within the SOC.
-- Each **`sends-to` tag** declares a directed edge: this agent's output feeds `<target-role>` (via D&R trigger, case escalation, or data dependency).
-- The **`api-key` tag** names the agent whose LimaCharlie API key secret is in `hive://secret/<agent-name>`. The secret name matches the agent's hive key. This is SOC-independent: shared agents carry one `api-key` tag regardless of how many SOCs reference them.
-- Schedule-only agents with no downstream consumers (reporter, soc-manager, shift-reporter) have an identity tag but no `sends-to` tags.
-- Terminal agents (responder, containment) also have no `sends-to` tags.
+#### The `ai-rel` grammar
 
-**Reconstructing the flow graph**: List all `ai_agent` records, parse identity tags as nodes, parse `sends-to` tags as directed edges, and group by SOC name. This works even when multiple SOCs coexist in the same org because the SOC name is embedded in every tag.
+```
+ai-rel:<scope>:<verb>:<kind>:<id>
+```
 
-**Multi-SOC coexistence**: When tiered-soc and baselining-soc are installed in the same org, some agents share the same hive key (e.g., `soc-l2-analyst`). Each SOC contributes its own identity and `sends-to` tags, so the record carries tags from both SOCs simultaneously. See the "Install a SOC" section for the tag-merging procedure.
+| Segment | Values | Notes |
+|---------|--------|-------|
+| `<scope>` | team name (`tiered-soc`, `intel-team`, …), `standalone`, `global` | Use the team name for in-team edges. Use `standalone` for ungrouped ai-agents. Use `global` for cross-scope references (secrets, extensions, anything not specific to one team). |
+| `<verb>` | `role`, `sends-to`, `reads-from`, `writes-to`, `triggers-on`, `depends-on`, `enriches` | See verb table below. |
+| `<kind>` | `agent`, `sensor`, `adapter`, `output`, `rule`, `hive`, `secret`, `case-tag`, `extension`, `team` | The entity type of the other end. |
+| `<id>` | entity-specific | Agent role for `agent`, secret name for `secret`, case tag string for `case-tag`, etc. Sensors accept selector form (`plat:windows`) as well as literal SIDs. |
+
+**Verb reference:**
+
+| Verb | Direction | Typical uses |
+|------|-----------|--------------|
+| `role` | self | Membership / identity within `<scope>`. Every agent has exactly one per scope it participates in. |
+| `sends-to` | agent → agent | Handoff / mention / case-tag-triggered next step. |
+| `reads-from` | agent → sensor, adapter, output, hive | Ingest or context source. |
+| `writes-to` | agent → output, hive, case-tag | Artifact destination. |
+| `triggers-on` | agent → rule, case-tag, event | Invocation condition (used when the D&R wiring is external to the agent's own rule). |
+| `depends-on` | agent → secret, extension | Hard prerequisite — if missing, the agent cannot operate. |
+| `enriches` | agent → case, case-tag | Side effect that downstream agents key on (e.g. appending a `needs-malware-analysis` tag that another agent triggers on). |
+
+**Worked example — `tiered-soc/l2-analyst`:**
+
+```yaml
+tags:
+  # legacy (kept for backward compat)
+  - ai-team:tiered-soc:l2-analyst
+  - ai-team:tiered-soc:sends-to:containment
+  - ai-team:tiered-soc:sends-to:threat-hunter
+  - ai-team:tiered-soc:sends-to:malware-analyst
+  - ai-team:api-key:soc-l2-analyst
+  # canonical ai-rel grammar
+  - ai-rel:tiered-soc:role:agent:l2-analyst
+  - ai-rel:tiered-soc:sends-to:agent:containment
+  - ai-rel:tiered-soc:sends-to:agent:threat-hunter
+  - ai-rel:tiered-soc:sends-to:agent:malware-analyst
+  - ai-rel:global:depends-on:secret:soc-l2-analyst
+```
+
+**Standalone agents** (not part of a team, under `ai-agents/`) use `standalone` as the scope:
+
+```yaml
+tags:
+  - ai-agent:case-investigator
+  - ai-agent:api-key:case-investigator
+  - ai-rel:standalone:role:agent:case-investigator
+  - ai-rel:global:depends-on:secret:case-investigator
+```
+
+#### Legacy → canonical mapping (reference)
+
+When you write new agents or read existing ones, these are the exact correspondences that must be hand-maintained in each agent's hive yaml:
+
+| Legacy tag | Canonical tag |
+|------------|---------------|
+| `ai-team:<team>:<role>` | `ai-rel:<team>:role:agent:<role>` |
+| `ai-team:<team>:sends-to:<target>` | `ai-rel:<team>:sends-to:agent:<target>` |
+| `ai-team:api-key:<secret>` | `ai-rel:global:depends-on:secret:<secret>` |
+| `ai-agent:<name>` | `ai-rel:standalone:role:agent:<name>` |
+| `ai-agent:api-key:<secret>` | `ai-rel:global:depends-on:secret:<secret>` |
+
+#### Authoring richer relationships
+
+The legacy vocabulary only expresses identity + agent→agent. The canonical vocabulary can express anything. When authoring or editing an agent, add extra `ai-rel:` tags for any of these that apply — they unlock a richer relationship graph for any consumer (ops dashboards, analytics, agent catalogues):
+
+- An agent that reads specific outputs to gather context → `ai-rel:<scope>:reads-from:output:<output-name>`
+- An agent that pulls from a sensor subset → `ai-rel:<scope>:reads-from:sensor:plat:windows` (selector) or `ai-rel:<scope>:reads-from:sensor:sid:<sid>`
+- An agent that writes into a hive (e.g. a lookup table it maintains) → `ai-rel:<scope>:writes-to:hive:lookup:<key>`
+- An agent triggered by a specific case tag → `ai-rel:<scope>:triggers-on:case-tag:needs-escalation`
+- An agent that adds case tags for downstream agents → `ai-rel:<scope>:writes-to:case-tag:needs-malware-analysis`
+- An agent that requires an extension → `ai-rel:global:depends-on:extension:ext-cases`
+
+The only hard requirement today is the mapping table above — every agent must carry the canonical equivalent of each legacy tag it has. Additional `ai-rel:` tags are optional and purely descriptive.
+
+#### Reconstructing the flow graph
+
+List all `ai_agent` records, parse `ai-rel:…` tags, and build nodes/edges from them:
+
+- `ai-rel:<scope>:role:agent:<role>` → node `(<scope>, agent, <role>)`, agent record resolved by hive key.
+- `ai-rel:<scope>:<verb>:<kind>:<id>` (with `<verb>` ≠ `role`) → edge `(from: this agent) → (to: resolve <scope>/<kind>/<id>)`, labelled by `<verb>`. Resolve the target against the appropriate source: `agent` → another `ai_agent` record in the same scope; `sensor`, `output`, `adapter` → the LC org's corresponding API; `secret`, `extension` → auxiliary nodes.
+- Group by `<scope>` for layout. `global` edges cross scopes and point to shared resources.
+
+Fall back to `ai-team:` / `ai-agent:` parsing only if no `ai-rel:` tags are present (some very old records).
+
+**Multi-scope coexistence**: When tiered-soc and baselining-soc are installed in the same org, some agents share the same hive key (e.g., `soc-l2-analyst`). Each SOC contributes its own `role` and `sends-to` tags under its own `<scope>`, so the record carries tags from both scopes simultaneously. See the "Install a SOC" section for the tag-merging procedure.
 
 ---
 
@@ -360,7 +437,7 @@ For each shared key where you saved prior tags:
    limacharlie hive get --hive-name ai_agent --key <shared-key> --oid <oid> --output yaml
    ```
 
-2. Identify tags from the **other** SOC that were lost (tags that do NOT start with `ai-team:<current-soc>:`).
+2. Identify tags from the **other** SOC that were lost. A tag belongs to a specific scope if it starts with `ai-team:<scope>:` or `ai-rel:<scope>:` — anything in a scope other than the currently-pushed SOC must be preserved. Tags with scope `global` (e.g. `ai-rel:global:depends-on:secret:...`) and any `ai-team:api-key:...` entries are SOC-independent and must also be preserved.
 
 3. Write the merged record back with all tags from both SOCs:
    ```bash
@@ -368,7 +445,18 @@ For each shared key where you saved prior tags:
    echo '<full record JSON with merged tags>' | limacharlie hive set --hive-name ai_agent --key <shared-key> --oid <oid>
    ```
 
-**Example**: Installing baselining-soc when tiered-soc is already present. The `soc-l2-analyst` key previously had tags `[ai-team:tiered-soc:l2-analyst, ai-team:tiered-soc:sends-to:containment, ai-team:tiered-soc:sends-to:threat-hunter]`. After pushing baselining-soc, it only has `[ai-team:baselining-soc:l2-analyst, ai-team:baselining-soc:sends-to:containment, ai-team:baselining-soc:sends-to:threat-hunter]`. Merge both sets so the record has all six tags.
+**Example**: Installing baselining-soc when tiered-soc is already present. The `soc-l2-analyst` key previously carried the tiered-soc tags:
+
+```
+ai-team:tiered-soc:l2-analyst
+ai-team:tiered-soc:sends-to:containment
+ai-team:tiered-soc:sends-to:threat-hunter
+ai-rel:tiered-soc:role:agent:l2-analyst
+ai-rel:tiered-soc:sends-to:agent:containment
+ai-rel:tiered-soc:sends-to:agent:threat-hunter
+```
+
+After pushing baselining-soc, the record is overwritten with only the baselining-soc equivalents. Merge both sets so the record carries the full twelve tags (six per scope) plus any `global` / `api-key` tags.
 
 ### Step 7: Verify Installation
 
@@ -475,7 +563,7 @@ Before deleting records, check whether another SOC shares any hive keys with the
 | `dr-general` | `soc-l2-on-case-escalated`, `malware-analyst-on-mention`, `containment-on-mention`, `threat-hunter-on-mention`, `soc-manager-hourly`, `soc-shift-reporter-daily` |
 
 For each hive key in the SOC being removed:
-- **If the key is shared** and the other SOC is still installed: read the record, remove only the departing SOC's tags (tags starting with `ai-team:<soc-being-removed>:`), keep the other SOC's tags, and write the record back. Do NOT delete the record.
+- **If the key is shared** and the other SOC is still installed: read the record, remove only the departing SOC's tags (any tag starting with `ai-team:<soc-being-removed>:` **or** `ai-rel:<soc-being-removed>:`), keep the other SOC's tags and all `global` / `api-key` tags, and write the record back. Do NOT delete the record.
 - **If the key is NOT shared** (unique to this SOC): delete the record entirely.
 
 ### Step 3: Remove Non-Shared Hive Entries
@@ -495,7 +583,7 @@ For shared keys where the other SOC is still installed, strip only the departing
 ```bash
 # Read the current record
 limacharlie hive get --hive-name ai_agent --key <shared-key> --oid <oid> --output yaml
-# Remove tags starting with ai-team:<soc-being-removed>: and write back
+# Remove tags starting with ai-team:<soc-being-removed>: or ai-rel:<soc-being-removed>: and write back
 echo '<record JSON with only the remaining SOCs tags>' | limacharlie hive set --hive-name ai_agent --key <shared-key> --oid <oid>
 ```
 

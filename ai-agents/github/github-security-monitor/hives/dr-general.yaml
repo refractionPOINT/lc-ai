@@ -21,6 +21,7 @@ hives:
         expiry: 0
         tags:
           - ai-agent:github-security-monitor
+          - ai-rel:standalone:role:agent:github-security-monitor
     github-monitor-branch-prot-bypassed:
       data:
         detect:
@@ -41,6 +42,7 @@ hives:
         expiry: 0
         tags:
           - ai-agent:github-security-monitor
+          - ai-rel:standalone:role:agent:github-security-monitor
     github-monitor-2fa-disabled:
       data:
         detect:
@@ -61,6 +63,7 @@ hives:
         expiry: 0
         tags:
           - ai-agent:github-security-monitor
+          - ai-rel:standalone:role:agent:github-security-monitor
     github-monitor-oauth-restrictions-disabled:
       data:
         detect:
@@ -81,6 +84,7 @@ hives:
         expiry: 0
         tags:
           - ai-agent:github-security-monitor
+          - ai-rel:standalone:role:agent:github-security-monitor
     github-monitor-secret-scanning-disabled:
       data:
         detect:
@@ -101,6 +105,7 @@ hives:
         expiry: 0
         tags:
           - ai-agent:github-security-monitor
+          - ai-rel:standalone:role:agent:github-security-monitor
     github-monitor-dependabot-disabled:
       data:
         detect:
@@ -121,6 +126,7 @@ hives:
         expiry: 0
         tags:
           - ai-agent:github-security-monitor
+          - ai-rel:standalone:role:agent:github-security-monitor
     github-monitor-repo-visibility:
       data:
         detect:
@@ -141,6 +147,7 @@ hives:
         expiry: 0
         tags:
           - ai-agent:github-security-monitor
+          - ai-rel:standalone:role:agent:github-security-monitor
     github-monitor-repo-destroyed:
       data:
         detect:
@@ -161,6 +168,7 @@ hives:
         expiry: 0
         tags:
           - ai-agent:github-security-monitor
+          - ai-rel:standalone:role:agent:github-security-monitor
     github-monitor-app-installed:
       data:
         detect:
@@ -181,6 +189,7 @@ hives:
         expiry: 0
         tags:
           - ai-agent:github-security-monitor
+          - ai-rel:standalone:role:agent:github-security-monitor
     github-monitor-deploy-key:
       data:
         detect:
@@ -201,3 +210,4 @@ hives:
         expiry: 0
         tags:
           - ai-agent:github-security-monitor
+          - ai-rel:standalone:role:agent:github-security-monitor

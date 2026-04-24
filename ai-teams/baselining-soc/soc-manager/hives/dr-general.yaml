@@ -16,3 +16,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:baselining-soc:soc-manager
+          - ai-rel:baselining-soc:role:agent:soc-manager

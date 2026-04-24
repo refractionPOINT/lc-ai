@@ -169,3 +169,6 @@ hives:
           - ai-team:lean-soc:investigator
           - ai-team:lean-soc:sends-to:responder
           - ai-team:api-key:lean-investigator
+          - ai-rel:lean-soc:role:agent:investigator
+          - ai-rel:lean-soc:sends-to:agent:responder
+          - ai-rel:global:depends-on:secret:lean-investigator

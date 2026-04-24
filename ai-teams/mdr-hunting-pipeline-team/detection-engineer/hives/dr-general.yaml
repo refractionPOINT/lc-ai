@@ -27,3 +27,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:mdr-hunting-pipeline-team:detection-engineer
+          - ai-rel:mdr-hunting-pipeline-team:role:agent:detection-engineer

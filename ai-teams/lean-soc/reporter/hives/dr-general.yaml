@@ -16,3 +16,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:lean-soc:reporter
+          - ai-rel:lean-soc:role:agent:reporter

@@ -16,3 +16,4 @@ hives:
         expiry: 0
         tags:
           - ai-team:baselining-soc:shift-reporter
+          - ai-rel:baselining-soc:role:agent:shift-reporter

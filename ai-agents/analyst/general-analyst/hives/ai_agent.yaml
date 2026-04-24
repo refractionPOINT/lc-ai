@@ -189,3 +189,5 @@ hives:
         tags:
           - ai-agent:general-analyst
           - ai-agent:api-key:general-analyst
+          - ai-rel:standalone:role:agent:general-analyst
+          - ai-rel:global:depends-on:secret:general-analyst

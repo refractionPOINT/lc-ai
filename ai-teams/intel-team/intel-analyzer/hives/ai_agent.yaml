@@ -235,3 +235,6 @@ hives:
           - ai-team:intel-team:analyzer
           - ai-team:intel-team:sends-to:engineer
           - ai-team:api-key:intel-analyzer
+          - ai-rel:intel-team:role:agent:analyzer
+          - ai-rel:intel-team:sends-to:agent:engineer
+          - ai-rel:global:depends-on:secret:intel-analyzer

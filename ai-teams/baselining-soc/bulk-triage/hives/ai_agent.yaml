@@ -213,3 +213,7 @@ hives:
           - ai-team:baselining-soc:sends-to:l2-analyst
           - ai-team:baselining-soc:sends-to:malware-analyst
           - ai-team:api-key:soc-bulk-triage
+          - ai-rel:baselining-soc:role:agent:bulk-triage
+          - ai-rel:baselining-soc:sends-to:agent:l2-analyst
+          - ai-rel:baselining-soc:sends-to:agent:malware-analyst
+          - ai-rel:global:depends-on:secret:soc-bulk-triage

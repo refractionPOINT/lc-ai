@@ -15,3 +15,4 @@ hives:
         expiry: 0
         tags:
           - ai-agent:case-investigator
+          - ai-rel:standalone:role:agent:case-investigator

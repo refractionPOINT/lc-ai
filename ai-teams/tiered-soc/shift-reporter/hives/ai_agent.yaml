@@ -131,3 +131,5 @@ hives:
         tags:
           - ai-team:tiered-soc:shift-reporter
           - ai-team:api-key:soc-shift-reporter
+          - ai-rel:tiered-soc:role:agent:shift-reporter
+          - ai-rel:global:depends-on:secret:soc-shift-reporter
