@@ -1,0 +1,115 @@
+framework: hipaa
+framework_version: Security Rule (45 CFR Part 164)
+generated: '2026-04-17'
+source: compliance/hipaa/hipaa-limacharlie-implementation.md
+counts:
+  dr_rules: 62
+  artifact_rules: 12
+  fim_rules: 19
+  exfil_rules: 3
+recommended:
+  dr_rules:
+  - hipaa-164-312-b-audit-policy-changed
+  - hipaa-164-312-b-auditd-tamper-linux
+  - hipaa-164-312-b-auth-failed-macos
+  - hipaa-164-312-b-event-log-cleared
+  - hipaa-164-312-b-eventlog-service-stop-windows
+  - hipaa-164-312-b-failed-auth-linux
+  - hipaa-164-312-b-failed-logon-windows
+  - hipaa-164-312-b-log-tamper-macos
+  - hipaa-308-a-3-terminated-user-activity-linux
+  - hipaa-308-a-3-terminated-user-activity-windows
+  - hipaa-308-a-3-terminated-user-login-macos
+  - hipaa-308-a-3-user-deleted-windows
+  - hipaa-308-a-5-account-lockout-windows
+  - hipaa-308-a-5-brute-force-windows
+  - hipaa-308-a-5-defender-rtp-disabled
+  - hipaa-308-a-5-defender-threat
+  - hipaa-308-a-5-yara-detection
+  - hipaa-308-a-6-critical-threat-tag
+  - hipaa-308-a-6-isolate-on-credential-dump
+  - hipaa-308-a-6-isolate-on-ransomware-precursor
+  - hipaa-312-a-1-lsass-access
+  - hipaa-312-a-1-privilege-escalation-linux
+  - hipaa-312-a-1-privileged-group-add-windows
+  - hipaa-312-a-1-privileged-service-windows
+  - hipaa-312-a-1-rdp-logon
+  - hipaa-312-a-1-special-privilege-logon
+  - hipaa-312-a-1-ssh-login-macos
+  - hipaa-312-a-1-sudo-macos
+  - hipaa-312-a-2-i-user-created-windows
+  - hipaa-312-a-2-i-user-mgmt-linux
+  - hipaa-312-a-2-i-user-mgmt-macos
+  - hipaa-312-a-2-iii-autologoff-config-change-linux
+  - hipaa-312-a-2-iii-autologoff-config-change-macos
+  - hipaa-312-a-2-iii-autologoff-config-change-windows
+  - hipaa-312-a-2-iv-bitlocker-disabled-windows
+  - hipaa-312-a-2-iv-filevault-disabled-macos
+  - hipaa-312-c-2-unsigned-binary
+  - hipaa-312-c-autorun-change-windows
+  - hipaa-312-c-cron-modification-linux
+  - hipaa-312-c-driver-change
+  - hipaa-312-c-ephi-file-modified-macos
+  - hipaa-312-c-ephi-touched-by-lolbin-windows
+  - hipaa-312-c-fim-hit
+  - hipaa-312-c-launchd-modification-macos
+  - hipaa-312-c-new-service-windows
+  - hipaa-312-c-ransomware-precursor-windows
+  - hipaa-312-c-scheduled-task-windows
+  - hipaa-312-c-service-change
+  - hipaa-312-c-thread-injection
+  - hipaa-312-d-ntlm-auth
+  - hipaa-312-d-password-change-linux
+  - hipaa-312-d-password-change-macos
+  - hipaa-312-d-password-change-windows
+  - hipaa-312-e-bad-domain-dns
+  - hipaa-312-e-ephi-staging-windows
+  - hipaa-312-e-firewall-changed-linux
+  - hipaa-312-e-firewall-changed-macos
+  - hipaa-312-e-firewall-changed-windows
+  - hipaa-312-e-plaintext-egress
+  - hipaa-312-e-suspicious-outbound
+  - hipaa-400-removable-media-mount
+  - hipaa-400-sensor-offline
+  artifact_rules:
+  - hipaa-artifact-authlog
+  - hipaa-mul-auth
+  - hipaa-mul-launch
+  - hipaa-mul-privilege
+  - hipaa-mul-security
+  - hipaa-mul-sessions
+  - hipaa-wel-defender
+  - hipaa-wel-firewall
+  - hipaa-wel-powershell
+  - hipaa-wel-security
+  - hipaa-wel-system
+  - hipaa-wel-taskscheduler
+  fim_rules:
+  - hipaa-fim-linux-audit
+  - hipaa-fim-linux-auth
+  - hipaa-fim-linux-ephi
+  - hipaa-fim-linux-identity
+  - hipaa-fim-linux-inactivity-policy
+  - hipaa-fim-linux-persistence
+  - hipaa-fim-linux-ssh-keys
+  - hipaa-fim-macos-ephi
+  - hipaa-fim-macos-identity
+  - hipaa-fim-macos-inactivity-policy
+  - hipaa-fim-macos-keychains
+  - hipaa-fim-macos-launch-daemons
+  - hipaa-fim-macos-ssh-keys
+  - hipaa-fim-windows-ephi
+  - hipaa-fim-windows-grouppolicy
+  - hipaa-fim-windows-inactivity-policy
+  - hipaa-fim-windows-powershell-profiles
+  - hipaa-fim-windows-registry-persistence
+  - hipaa-fim-windows-system
+  exfil_rules:
+  - hipaa-linux-events
+  - hipaa-macos-events
+  - hipaa-windows-events
+usage: Read by the compliance-gap skill as the canonical baseline for diff-ing against
+  the org's currently-deployed state. Rule names are the exact `name:` field from
+  the implementation doc's D&R rules, and the top-level keys of artifact / FIM / exfil
+  rule-map entries. Organizations that have renamed deployed rules should expect name-drift
+  candidates rather than direct matches.

@@ -1,0 +1,104 @@
+framework: soc2
+framework_version: TSC 2017 (with 2022 Points of Focus)
+generated: '2026-04-17'
+source: compliance/soc2/soc2-limacharlie-implementation.md
+counts:
+  dr_rules: 55
+  artifact_rules: 10
+  fim_rules: 17
+  exfil_rules: 3
+recommended:
+  dr_rules:
+  - soc2-a1-2-backup-service-stop
+  - soc2-a1-2-critical-launchd-stop-macos
+  - soc2-a1-2-critical-service-stop-linux
+  - soc2-a1-2-mass-process-termination
+  - soc2-c1-1-keychain-access-macos
+  - soc2-c1-1-ntds-access
+  - soc2-c1-1-sam-hive-access-windows
+  - soc2-c1-1-shadow-access-linux
+  - soc2-c1-2-secure-delete
+  - soc2-cc6-1-auth-failed-macos
+  - soc2-cc6-1-brute-force-windows
+  - soc2-cc6-1-failed-logon-windows
+  - soc2-cc6-1-password-change-linux
+  - soc2-cc6-1-ssh-login-macos
+  - soc2-cc6-2-user-created-windows
+  - soc2-cc6-2-user-mgmt-linux
+  - soc2-cc6-2-user-mgmt-macos
+  - soc2-cc6-3-privilege-escalation-linux
+  - soc2-cc6-3-privileged-service-windows
+  - soc2-cc6-3-special-privilege-logon
+  - soc2-cc6-3-sudo-macos
+  - soc2-cc6-3-user-added-to-group-windows
+  - soc2-cc6-6-rdp-logon
+  - soc2-cc6-7-removable-media-mount
+  - soc2-cc6-7-suspicious-outbound
+  - soc2-cc6-8-defender-events
+  - soc2-cc6-8-encoded-powershell
+  - soc2-cc6-8-lolbin-execution-linux
+  - soc2-cc6-8-lolbin-execution-windows
+  - soc2-cc6-8-osascript-network-macos
+  - soc2-cc6-8-unsigned-binary
+  - soc2-cc6-8-yara-detection
+  - soc2-cc7-1-audit-policy-changed
+  - soc2-cc7-1-auditd-tamper-linux
+  - soc2-cc7-1-event-log-cleared
+  - soc2-cc7-1-eventlog-service-stop-windows
+  - soc2-cc7-1-fim-hit
+  - soc2-cc7-1-log-tamper-macos
+  - soc2-cc7-2-cron-modification-linux
+  - soc2-cc7-2-launchd-modification-macos
+  - soc2-cc7-2-lsass-access
+  - soc2-cc7-2-suspicious-named-pipe
+  - soc2-cc7-2-thread-injection
+  - soc2-cc7-3-critical-threat-tag
+  - soc2-cc7-4-isolate-on-credential-dump
+  - soc2-cc8-1-autorun-change-windows
+  - soc2-cc8-1-driver-change
+  - soc2-cc8-1-firewall-changed-linux
+  - soc2-cc8-1-firewall-changed-macos
+  - soc2-cc8-1-firewall-changed-windows
+  - soc2-cc8-1-service-change
+  - soc2-cc9-1-ransomware-extension
+  - soc2-cc9-1-shadowcopy-deletion-windows
+  - soc2-cc9-1-timemachine-deletion-macos
+  - soc2-cc9-2-remote-support-tool
+  artifact_rules:
+  - soc2-artifact-authlog
+  - soc2-mul-auth
+  - soc2-mul-privilege
+  - soc2-mul-sessions
+  - soc2-mul-system
+  - soc2-wel-additional
+  - soc2-wel-defender
+  - soc2-wel-powershell
+  - soc2-wel-security
+  - soc2-wel-system
+  fim_rules:
+  - soc2-fim-linux-audit
+  - soc2-fim-linux-auth
+  - soc2-fim-linux-boot
+  - soc2-fim-linux-identity
+  - soc2-fim-linux-persistence
+  - soc2-fim-linux-ssh-keys
+  - soc2-fim-macos-boot
+  - soc2-fim-macos-identity
+  - soc2-fim-macos-kernel-extensions
+  - soc2-fim-macos-keychains
+  - soc2-fim-macos-launch-daemons
+  - soc2-fim-macos-ssh-keys
+  - soc2-fim-windows-boot
+  - soc2-fim-windows-grouppolicy
+  - soc2-fim-windows-powershell-profiles
+  - soc2-fim-windows-registry-persistence
+  - soc2-fim-windows-system
+  exfil_rules:
+  - soc2-linux-events
+  - soc2-macos-events
+  - soc2-windows-events
+usage: Read by the compliance-gap skill as the canonical baseline for diff-ing against
+  the org's currently-deployed state. Rule names are the exact `name:` field from
+  the implementation doc's D&R rules, and the top-level keys of artifact / FIM / exfil
+  rule-map entries. Organizations that have renamed deployed rules should expect name-drift
+  candidates rather than direct matches.

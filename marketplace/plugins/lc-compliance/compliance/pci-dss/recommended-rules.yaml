@@ -1,0 +1,115 @@
+framework: pci-dss
+framework_version: v4.0
+generated: '2026-04-17'
+source: compliance/pci-dss/pci-dss-limacharlie-implementation.md
+counts:
+  dr_rules: 57
+  artifact_rules: 13
+  fim_rules: 23
+  exfil_rules: 3
+recommended:
+  dr_rules:
+  - pci-1-firewall-changed-linux
+  - pci-1-firewall-changed-macos
+  - pci-1-firewall-changed-windows
+  - pci-1-unexpected-outbound-cde
+  - pci-10-audit-log-fim-linux
+  - pci-10-audit-log-fim-windows
+  - pci-10-audit-policy-changed-windows
+  - pci-10-auditd-tamper-linux
+  - pci-10-auth-failed-macos
+  - pci-10-brute-force-windows
+  - pci-10-cde-data-access
+  - pci-10-cde-sensor-offline
+  - pci-10-cron-modification-linux
+  - pci-10-defender-rtp-disabled
+  - pci-10-event-log-cleared
+  - pci-10-eventlog-service-stop-windows
+  - pci-10-failed-logon-windows
+  - pci-10-failed-ssh-linux-adapter
+  - pci-10-launchd-modification-macos
+  - pci-10-log-tamper-macos
+  - pci-10-new-service-windows
+  - pci-10-password-change-linux
+  - pci-10-password-change-windows
+  - pci-10-privilege-escalation-linux
+  - pci-10-scheduled-task-windows
+  - pci-10-special-privilege-logon
+  - pci-10-sudo-macos
+  - pci-10-user-added-to-group-windows
+  - pci-10-user-created-windows
+  - pci-10-user-deleted-windows
+  - pci-10-user-mgmt-linux
+  - pci-10-user-mgmt-macos
+  - pci-11-encoded-powershell
+  - pci-11-isolate-on-credential-dump
+  - pci-11-lolbin-execution-linux
+  - pci-11-lolbin-execution-windows
+  - pci-11-lsass-access
+  - pci-11-osascript-network-macos
+  - pci-11-suspicious-named-pipe
+  - pci-11-thread-injection
+  - pci-2-autorun-change-windows
+  - pci-2-default-account-logon-windows
+  - pci-2-driver-change
+  - pci-2-fim-hit
+  - pci-2-root-ssh-linux
+  - pci-2-service-change
+  - pci-5-defender-threat
+  - pci-5-removable-media-mount
+  - pci-5-yara-detection
+  - pci-6-unsigned-binary
+  - pci-7-account-lockout-windows
+  - pci-7-privileged-service-windows
+  - pci-7-rdp-logon-cde
+  - pci-7-ssh-login-cde-macos
+  - pci-8-mfa-unusual-source
+  - pci-8-ntlm-auth
+  - pci-8-service-account-interactive-linux
+  artifact_rules:
+  - pci-artifact-authlog
+  - pci-mul-auth
+  - pci-mul-privilege
+  - pci-mul-sessions
+  - pci-mul-system
+  - pci-wel-defender
+  - pci-wel-firewall
+  - pci-wel-powershell
+  - pci-wel-rdp
+  - pci-wel-security
+  - pci-wel-sysmon
+  - pci-wel-system
+  - pci-wel-taskscheduler
+  fim_rules:
+  - pci-fim-linux-audit
+  - pci-fim-linux-auth
+  - pci-fim-linux-boot
+  - pci-fim-linux-cde-data
+  - pci-fim-linux-identity
+  - pci-fim-linux-persistence
+  - pci-fim-linux-ssh-keys
+  - pci-fim-linux-time-sync
+  - pci-fim-macos-boot
+  - pci-fim-macos-cde-data
+  - pci-fim-macos-identity
+  - pci-fim-macos-kernel-extensions
+  - pci-fim-macos-keychains
+  - pci-fim-macos-launch-daemons
+  - pci-fim-macos-ssh-keys
+  - pci-fim-macos-time-sync
+  - pci-fim-windows-audit-logs
+  - pci-fim-windows-boot
+  - pci-fim-windows-cde-data
+  - pci-fim-windows-grouppolicy
+  - pci-fim-windows-powershell-profiles
+  - pci-fim-windows-registry-persistence
+  - pci-fim-windows-system
+  exfil_rules:
+  - pci-linux-events
+  - pci-macos-events
+  - pci-windows-events
+usage: Read by the compliance-gap skill as the canonical baseline for diff-ing against
+  the org's currently-deployed state. Rule names are the exact `name:` field from
+  the implementation doc's D&R rules, and the top-level keys of artifact / FIM / exfil
+  rule-map entries. Organizations that have renamed deployed rules should expect name-drift
+  candidates rather than direct matches.

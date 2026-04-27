@@ -1,0 +1,63 @@
+framework: cmmc
+framework_version: v2
+generated: '2026-04-17'
+source: compliance/cmmc/cmmc-limacharlie-implementation.md
+counts:
+  dr_rules: 31
+  artifact_rules: 7
+  fim_rules: 5
+  exfil_rules: 1
+recommended:
+  dr_rules:
+  - cmmc-ac-account-lockout
+  - cmmc-ac-privileged-service
+  - cmmc-ac-special-privilege-logon
+  - cmmc-ac-user-added-to-admin-group
+  - cmmc-ac-user-created
+  - cmmc-ac-user-deleted
+  - cmmc-au-audit-policy-changed
+  - cmmc-au-brute-force
+  - cmmc-au-defender-rtp-disabled
+  - cmmc-au-event-log-cleared
+  - cmmc-au-eventlog-service-stop
+  - cmmc-au-failed-logon
+  - cmmc-au-rdp-logon
+  - cmmc-cm-autorun-change
+  - cmmc-cm-driver-change
+  - cmmc-cm-fim-critical-change
+  - cmmc-cm-firewall-changed
+  - cmmc-cm-service-change
+  - cmmc-ia-ntlm-auth
+  - cmmc-ia-password-change
+  - cmmc-ir-critical-threat-isolate
+  - cmmc-si-after-hours-logon
+  - cmmc-si-defender-threat
+  - cmmc-si-encoded-powershell
+  - cmmc-si-lolbin-execution
+  - cmmc-si-lsass-access
+  - cmmc-si-new-service-installed
+  - cmmc-si-scheduled-task-created
+  - cmmc-si-suspicious-named-pipe
+  - cmmc-si-thread-injection
+  - cmmc-si-yara-detection
+  artifact_rules:
+  - cmmc-wel-defender
+  - cmmc-wel-firewall
+  - cmmc-wel-powershell
+  - cmmc-wel-security
+  - cmmc-wel-sysmon
+  - cmmc-wel-system
+  - cmmc-wel-taskscheduler
+  fim_rules:
+  - cmmc-fim-boot
+  - cmmc-fim-group-policy
+  - cmmc-fim-powershell-profiles
+  - cmmc-fim-registry-security
+  - cmmc-fim-system-files
+  exfil_rules:
+  - cmmc-windows-events
+usage: Read by the compliance-gap skill as the canonical baseline for diff-ing against
+  the org's currently-deployed state. Rule names are the exact `name:` field from
+  the implementation doc's D&R rules, and the top-level keys of artifact / FIM / exfil
+  rule-map entries. Organizations that have renamed deployed rules should expect name-drift
+  candidates rather than direct matches.

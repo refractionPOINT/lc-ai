@@ -1,0 +1,129 @@
+framework: cis-v8
+framework_version: v8
+generated: '2026-04-17'
+source: compliance/cis-v8/cis-v8-limacharlie-implementation.md
+counts:
+  dr_rules: 70
+  artifact_rules: 14
+  fim_rules: 23
+  exfil_rules: 3
+recommended:
+  dr_rules:
+  - cis-1-1-sensor-asset-record
+  - cis-10-1-defender-config-change
+  - cis-10-1-defender-threat
+  - cis-10-1-yara-detection
+  - cis-10-2-defender-rtp-disabled
+  - cis-10-3-volume-mount
+  - cis-10-5-module-mem-disk-mismatch
+  - cis-10-5-thread-injection
+  - cis-10-7-encoded-powershell
+  - cis-10-7-lolbin-execution-linux
+  - cis-10-7-lolbin-execution-windows
+  - cis-10-7-osascript-network-macos
+  - cis-10-7-shadow-copy-delete
+  - cis-10-7-suspicious-named-pipe
+  - cis-13-6-nonstandard-ssh-port
+  - cis-13-6-suspicious-outbound
+  - cis-13-7-isolate-on-credential-dump
+  - cis-13-7-isolate-on-ransomware-indicator
+  - cis-16-7-office-macro-spawn
+  - cis-16-7-office-temp-document
+  - cis-17-3-critical-tag
+  - cis-17-4-audit-tamper-to-case
+  - cis-18-1-pentest-activity
+  - cis-2-3-unauthorized-binary
+  - cis-2-5-unsigned-in-system-path
+  - cis-2-7-script-interpreter-linux
+  - cis-2-7-script-interpreter-macos
+  - cis-2-7-script-interpreter-windows
+  - cis-3-13-archive-staging
+  - cis-3-13-cloud-exfil-cli
+  - cis-3-14-credential-tool-linux
+  - cis-3-14-keychain-access-macos
+  - cis-3-14-lsass-access
+  - cis-3-14-shadow-read-linux
+  - cis-4-4-firewall-changed-linux
+  - cis-4-4-firewall-changed-macos
+  - cis-4-4-firewall-changed-windows
+  - cis-4-7-default-account-enabled-windows
+  - cis-4-8-service-change
+  - cis-4-9-dns-config-change
+  - cis-5-1-user-created-windows
+  - cis-5-1-user-deleted-windows
+  - cis-5-1-user-mgmt-linux
+  - cis-5-1-user-mgmt-macos
+  - cis-5-3-interactive-logon-windows
+  - cis-5-4-privileged-logon-windows
+  - cis-6-8-privilege-escalation-linux
+  - cis-6-8-sudo-macos
+  - cis-6-8-user-added-to-group-windows
+  - cis-7-5-vulnerable-binary-load
+  - cis-8-11-account-lockout-windows
+  - cis-8-11-audit-policy-changed
+  - cis-8-11-brute-force-windows
+  - cis-8-2-auditd-tamper-linux
+  - cis-8-2-auth-failed-macos
+  - cis-8-2-event-log-cleared
+  - cis-8-2-eventlog-service-stop-windows
+  - cis-8-2-failed-logon-windows
+  - cis-8-2-failed-ssh-linux-adapter
+  - cis-8-2-log-tamper-macos
+  - cis-8-4-time-change-unix
+  - cis-8-4-time-change-windows
+  - cis-8-6-dns-telemetry
+  - cis-8-8-powershell-scriptblock
+  - cis-9-1-unsupported-browser
+  - cis-9-2-malicious-domain-dns
+  - cis-9-3-browser-spawning-shell-macos
+  - cis-9-3-browser-spawning-shell-windows
+  - cis-9-4-browser-extension-change
+  - cis-9-6-disallowed-filetype-download
+  artifact_rules:
+  - cis-artifact-authlog
+  - cis-mul-auth
+  - cis-mul-filevault
+  - cis-mul-privilege
+  - cis-mul-sessions
+  - cis-mul-system
+  - cis-wel-bitlocker
+  - cis-wel-defender
+  - cis-wel-firewall
+  - cis-wel-powershell
+  - cis-wel-security
+  - cis-wel-sysmon
+  - cis-wel-system
+  - cis-wel-taskscheduler
+  fim_rules:
+  - cis-fim-linux-audit
+  - cis-fim-linux-auth
+  - cis-fim-linux-boot
+  - cis-fim-linux-browser-extensions
+  - cis-fim-linux-dns
+  - cis-fim-linux-identity
+  - cis-fim-linux-persistence
+  - cis-fim-linux-ssh-keys
+  - cis-fim-macos-boot
+  - cis-fim-macos-browser-extensions
+  - cis-fim-macos-dns
+  - cis-fim-macos-identity
+  - cis-fim-macos-kernel-extensions
+  - cis-fim-macos-keychains
+  - cis-fim-macos-launch-daemons
+  - cis-fim-macos-ssh-keys
+  - cis-fim-windows-autorun-policy
+  - cis-fim-windows-boot
+  - cis-fim-windows-browser-extensions
+  - cis-fim-windows-grouppolicy
+  - cis-fim-windows-powershell-profiles
+  - cis-fim-windows-registry-persistence
+  - cis-fim-windows-system
+  exfil_rules:
+  - cis-linux-events
+  - cis-macos-events
+  - cis-windows-events
+usage: Read by the compliance-gap skill as the canonical baseline for diff-ing against
+  the org's currently-deployed state. Rule names are the exact `name:` field from
+  the implementation doc's D&R rules, and the top-level keys of artifact / FIM / exfil
+  rule-map entries. Organizations that have renamed deployed rules should expect name-drift
+  candidates rather than direct matches.
