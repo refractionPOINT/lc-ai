@@ -8,7 +8,8 @@ Three interactive skills for day-to-day compliance engineering against LimaCharl
 |---|---|---|
 | `compliance-lookup` | Look up how LimaCharlie covers a specific compliance control | "how does LC cover PCI 10.2.1.4?", "show me NIST AU-2 coverage" |
 | `compliance-gap` | Run an ad-hoc gap analysis against a live org; output to chat | Pre-audit sanity check, exploring coverage, producing a one-off punch list |
-| `compliance-deploy` | Guided deployment of a framework's reviewer agent + (optional) starter rule subset | First-time setup, demos, refreshing after impl-doc updates |
+| `compliance-deploy` | Guided deployment of a framework's case-reviewer agent (+ optional ~10-rule starter subset for demos) | First-time reviewer-agent setup, demos, refreshing after impl-doc updates |
+| `compliance-baseline-deploy` | Deploy the FULL recommended rule baseline (50–110+ rules) for a framework | Customer just installed the plugin and wants the framework's rules in their org |
 
 Invocation follows the Claude Code plugin convention:
 
@@ -16,7 +17,10 @@ Invocation follows the Claude Code plugin convention:
 /lc-compliance:compliance-lookup <framework> <control-id>
 /lc-compliance:compliance-gap <framework> [--oid <oid>]
 /lc-compliance:compliance-deploy <framework> [--oid <oid>] [--with-rules]
+/lc-compliance:compliance-baseline-deploy <framework> [--oid <oid>] [--apply] [--overwrite] [--kinds dr,fim,artifact,exfil]
 ```
+
+`compliance-baseline-deploy` defaults to a dry-run plan; pass `--apply` to actually push rules.
 
 ## Skill vs. reviewer agent — when to use which
 
@@ -25,7 +29,8 @@ Invocation follows the Claude Code plugin convention:
 | Continuous per-case compliance classification | **Agent** (`<framework>-compliance-reviewer`) — fires on every `case_created` |
 | Ad-hoc "what does LC do for this one control?" | **Skill** (`compliance-lookup`) |
 | Ad-hoc "what am I missing?" before an audit | **Skill** (`compliance-gap`) |
-| First-time deployment or refresh | **Skill** (`compliance-deploy`) |
+| First-time reviewer-agent deployment | **Skill** (`compliance-deploy`) |
+| Push the full framework rule baseline into an org | **Skill** (`compliance-baseline-deploy`) |
 
 The two shapes serve different moments. The agent owns continuous, event-driven evidence production (cases, notes, tags persisted in the LC org that auditors rely on). Skills own request-driven interactive work that engineers run during development without wanting backend artifacts.
 
