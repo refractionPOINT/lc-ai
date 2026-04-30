@@ -1,0 +1,184 @@
+{# Template: architecture.md.j2
+   System topology and data flow diagrams. Expects: org, sensors, rules, agents, adapters, managed_packs, sops, lookups, payloads, outputs.
+   See config-schema.yaml for the full data structure reference. #}
+# Architecture Overview
+
+> [!NOTE]
+> Diagrams reflect the current configuration as of {{ org.generated_at }}. Verify with `limacharlie sensor list --oid {{ org.oid }} --output yaml`.
+
+---
+
+## System Topology
+
+```mermaid
+graph TB
+    subgraph Sources["Data Sources"]
+{% if sensors.edr %}
+        EDR["EDR Sensors ({{ sensors.edr_count }})"]
+{% endif %}
+{% if sensors.cloud %}
+        CLOUD["Cloud Sensors ({{ sensors.cloud_count }})"]
+{% endif %}
+        WH["Webhook Ingestion"]
+    end
+
+    subgraph Platform["LimaCharlie Platform"]
+        subgraph Engine["D&R Engine"]
+{% for cat_name, cat_rules in rules.categories.items() %}
+{% set cat_display = cat_rules[0].display_name if cat_rules else cat_name %}
+            {{ cat_name | upper }}["{{ cat_display }}<br/>{{ cat_rules | length }} rules"]
+{% endfor %}
+        end
+
+{% if managed_packs %}
+        subgraph Managed["Managed Rule Packs"]
+{% for pack in managed_packs %}
+            {{ pack.extension | replace('-', '_') | upper }}["{{ pack.name }}"]
+{% endfor %}
+        end
+{% endif %}
+
+        subgraph Data["Data Services"]
+            LKP["Lookups ({{ lookups | length }})"]
+            PAY["Payloads ({{ payloads | length }})"]
+        end
+    end
+
+    subgraph AI["AI Agent Layer"]
+{% for team_key, team in agents.teams.items() %}
+        {{ team_key | upper }}["{{ team.display_name }}<br/>{{ team.agents | length }} agents"]
+{% endfor %}
+{% if agents.standalone %}
+        STANDALONE["Standalone<br/>{{ agents.standalone | length }} agents"]
+{% endif %}
+    end
+
+    subgraph Outputs["Outputs & Integrations"]
+        CASES["ext-cases"]
+{% for output in outputs %}
+        OUT_{{ loop.index }}["{{ output.name }}<br/>({{ output.module }})"]
+{% endfor %}
+    end
+
+    Sources --> Engine
+{% if managed_packs %}
+    Managed --> Engine
+{% endif %}
+    Engine --> AI
+    Engine --> Outputs
+    AI --> CASES
+    Data --> Engine
+```
+
+---
+
+## Data Flow: Telemetry Ingestion
+
+```mermaid
+flowchart TD
+{% for s in sensors.edr %}
+    EDR{{ loop.index }}["{{ s.hostname_short }}"] -->|telemetry| LC["LimaCharlie Cloud"]
+{% endfor %}
+    WH["Webhook Adapter"] -->|events| LC
+{% for s in sensors.cloud %}
+{% if s.is_online %}
+    CLOUD{{ loop.index }}["{{ s.hostname }}"] -->|events| LC
+{% else %}
+    CLOUD{{ loop.index }}["{{ s.hostname }}<br/>(disabled)"] -.->|disabled| LC
+{% endif %}
+{% endfor %}
+
+    LC --> DRE["D&R Engine"]
+    DRE --> MATCH{"Rule Match?"}
+    MATCH -->|Yes| DET["Generate Detection"]
+    MATCH -->|No| STORE["Store in Insight<br/>(queryable via LCQL)"]
+    DET --> CASES["ext-cases"]
+    DET --> TRIG["AI Agent Trigger"]
+    DET --> OUT["Outputs"]
+```
+
+{% for team_key, team in agents.teams.items() %}
+---
+
+## Data Flow: {{ team.display_name }}
+
+```mermaid
+flowchart TD
+{% for agent in team.agents %}
+{% if agent.schedule %}
+    SCHED_{{ loop.index }}["{{ agent.schedule }}"] --> {{ agent.key | replace('-', '_') }}["{{ agent.key }}<br/>model: {{ agent.model }} | budget: ${{ agent.budget }}"]
+{% endif %}
+{% endfor %}
+{% for agent in team.agents %}
+{% if not agent.schedule and agent.trigger_type == 'tag' %}
+    TAG_{{ loop.index }}["tag: {{ agent.trigger_detail }}"] --> {{ agent.key | replace('-', '_') }}["{{ agent.key }}<br/>model: {{ agent.model }} | budget: ${{ agent.budget }}"]
+{% elif not agent.schedule and agent.trigger_type == 'mention' %}
+    MENTION_{{ loop.index }}["mention: {{ agent.trigger_detail }}"] --> {{ agent.key | replace('-', '_') }}["{{ agent.key }}<br/>model: {{ agent.model if agent.model else '—' }}"]
+{% endif %}
+{% endfor %}
+```
+{% endfor %}
+
+---
+
+## Infrastructure
+
+| Component | Platform | Status | Details |
+|-----------|----------|--------|---------|
+{% for s in sensors.edr %}
+| {{ s.hostname_short }} | {{ s.platform }} | {{ "Online" if s.is_online else "Offline" }}{{ " (isolated)" if s.is_isolated else "" }} | Sensor v{{ s.version }}, enrolled {{ s.enrolled }} |
+{% endfor %}
+{% for s in sensors.cloud %}
+| {{ s.hostname }} | {{ s.type }} | {{ "Active" if s.is_online else "**Disabled**" }} | Cloud sensor adapter |
+{% endfor %}
+
+> [!NOTE]
+> Internal/external IP addresses are redacted from documentation. Use `limacharlie sensor list --oid {{ org.oid }} --output yaml` to retrieve full sensor details.
+
+---
+
+## Cloud Integrations
+
+{% if adapters.disabled %}
+| Adapter | Type | Platform | Status |
+|---------|------|----------|--------|
+{% for a in adapters.active[:3] %}
+| {{ a.key }} | {{ a.type }} | {{ a.platform }} | Active |
+{% endfor %}
+{% for a in adapters.disabled %}
+| {{ a.key }} | {{ a.type }} | {{ a.platform }} | **Disabled** |
+{% endfor %}
+
+> [!WARNING]
+{% for a in adapters.disabled %}
+> The **{{ a.key }}** adapter ({{ a.type }}) is currently **disabled**.
+{% endfor %}
+{% else %}
+All cloud adapters are active. See [data-pipeline.md](data-pipeline.md) for details.
+{% endif %}
+
+---
+
+## Key Design Decisions
+
+> [!TIP]
+{% set decision_num = [1] %}
+{% for team_key, team in agents.teams.items() %}
+{% if 'baselining' in team_key %}
+> {{ decision_num[0] }}. **Baselining SOC** — The org uses the baselining-soc template, which aggressively creates FP rules during initial onboarding to reduce noise before transitioning to a full tiered SOC.
+{% set _ = decision_num.append(decision_num.pop() + 1) %}
+{% endif %}
+{% endfor %}
+{% if rules.disabled_count > 0 %}
+> {{ decision_num[0] }}. **AI-generated rules deploy disabled** — Rules created by automation are deployed in a disabled state, requiring human review before activation.
+{% set _ = decision_num.append(decision_num.pop() + 1) %}
+{% endif %}
+{% if sensors.edr_isolated %}
+> {{ decision_num[0] }}. **Isolated EDR sensors** — {{ sensors.edr_isolated | length }} sensor(s) are network-isolated. Verify if this is intentional.
+{% set _ = decision_num.append(decision_num.pop() + 1) %}
+{% endif %}
+{% for sop in sops %}
+> {{ decision_num[0] }}. **SOP: {{ sop.key }}** — {{ sop.description }}
+{% set _ = decision_num.append(decision_num.pop() + 1) %}
+{% endfor %}
+> {{ decision_num[0] }}. **Inter-agent communication via ext-cases** — Agents signal each other through case tags and mentions. D&R rules watch for these changes and trigger the next agent in the pipeline.

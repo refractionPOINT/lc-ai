@@ -1,0 +1,160 @@
+{# Template: runbook-admin.md.j2
+   Day-to-day CLI operations runbook. Expects: org, agents (for scheduled agent disable table).
+   See config-schema.yaml for the full data structure reference. #}
+# Common Admin Tasks
+
+Day-to-day CLI operations for the **{{ org.name }}** organization.
+
+> All commands use `--oid {{ org.oid }}`. Set as a variable for convenience:
+> ```bash
+> export LC_OID="{{ org.oid }}"
+> ```
+
+---
+
+## Sensor Management
+
+```bash
+# List all sensors with status
+limacharlie sensor list --oid $LC_OID \
+  --filter "[].{hostname:hostname,sid:sid,online:is_online,isolated:is_isolated}" --output yaml
+
+# Get details for a specific sensor
+limacharlie sensor get --sid <SID> --oid $LC_OID --output yaml
+
+# Isolate a sensor (network containment)
+limacharlie sensor isolate --sid <SID> --oid $LC_OID
+
+# De-isolate a sensor
+limacharlie sensor rejoin --sid <SID> --oid $LC_OID
+
+# Add a tag
+limacharlie tag add --sid <SID> --tag <tag> --oid $LC_OID
+
+# Remove a tag
+limacharlie tag remove --sid <SID> --tag <tag> --oid $LC_OID
+```
+
+See [Sensor Deployment](https://docs.limacharlie.io/2-sensors-deployment/) and [Endpoint Commands](https://docs.limacharlie.io/8-reference/endpoint-commands/).
+
+---
+
+## D&R Rule Management
+
+```bash
+# List all rules
+limacharlie dr list --oid $LC_OID --output yaml
+
+# Get a rule definition
+limacharlie dr get --key "<rule-name>" --oid $LC_OID --output yaml
+
+# Enable a disabled rule (after review)
+limacharlie dr set --name "<rule-name>" --enabled true --oid $LC_OID
+
+# Disable a rule
+limacharlie dr set --name "<rule-name>" --enabled false --oid $LC_OID
+
+# Validate before deploying
+limacharlie dr validate --detect detect.yaml --respond respond.yaml --oid $LC_OID
+
+# List FP rules
+limacharlie dr fp list --oid $LC_OID --output yaml
+```
+
+> [!CAUTION]
+> **Never write D&R rules or LCQL queries manually.** Always use the AI generation tools.
+
+See [D&R Overview](https://docs.limacharlie.io/3-detection-response/) and [Detection Operators](https://docs.limacharlie.io/8-reference/detection-logic-operators/).
+
+---
+
+## AI Agent Management
+
+```bash
+# List all agents
+limacharlie hive list --hive-name ai_agent --oid $LC_OID --output yaml
+
+# Get agent definition
+limacharlie hive get --hive-name ai_agent --key <agent-key> --oid $LC_OID --output yaml
+
+# View AI sessions
+limacharlie ai sessions list --oid $LC_OID --output yaml
+
+# Rotate Anthropic API key (zero-downtime)
+limacharlie secret set --key anthropic-key --value "<NEW-KEY>" --oid $LC_OID
+```
+
+{% if agents.scheduled %}
+### Disable an Agent
+
+Disable the agent's trigger D&R rule (not the agent definition):
+
+| Agent | Trigger Rule to Disable |
+|-------|------------------------|
+{% for agent in agents.scheduled %}
+| {{ agent.key }} | `{{ agent.trigger_rule }}` |
+{% endfor %}
+{% endif %}
+
+See [AI Sessions](https://docs.limacharlie.io/9-ai-sessions/) and [D&R Sessions](https://docs.limacharlie.io/9-ai-sessions/dr-sessions/).
+
+---
+
+## Case Management
+
+```bash
+# List recent cases
+limacharlie case list --oid $LC_OID --output yaml
+
+# Get case details
+limacharlie case get --id <case_number> --oid $LC_OID --output yaml
+
+# Add a note to a case
+limacharlie case add-note --id <case_number> --content "Note text" --type analysis --oid $LC_OID
+
+# Update case status
+limacharlie case update --id <case_number> --status acknowledged --oid $LC_OID
+
+# Export case with data
+limacharlie case export --id <case_number> --with-data ./case-export --oid $LC_OID
+```
+
+See [ext-cases](https://docs.limacharlie.io/5-integrations/extensions/limacharlie/cases/).
+
+---
+
+## LCQL Queries
+
+> [!CAUTION]
+> **Never write LCQL queries manually.** LCQL uses org-specific pipe-separated syntax.
+
+```bash
+# Generate a query from natural language
+limacharlie ai generate-query --prompt "show all NEW_PROCESS events in the last hour" \
+  --oid $LC_OID --output yaml
+
+# Validate before running (mandatory)
+limacharlie search validate --query "<generated-query>" --oid $LC_OID --output yaml
+
+# Run the query (calculate timestamps with bash first!)
+START=$(date -d '1 hour ago' +%s)
+END=$(date +%s)
+limacharlie search run --query "<validated-query>" --start $START --end $END \
+  --oid $LC_OID --output yaml
+```
+
+See [LCQL Documentation](https://docs.limacharlie.io/4-data-queries/).
+
+---
+
+## Troubleshooting Quick Reference
+
+| Symptom | Check | Fix |
+|---------|-------|-----|
+| Agent not firing | Is the trigger D&R rule enabled? | Enable the rule |
+| Agent fires but fails | Is the Anthropic API key valid? | Rotate `anthropic-key` secret |
+| Agent fires but no LC API access | Is the agent's LC API key valid? | Check/rotate the agent's secret |
+| No detections on a sensor | Is the sensor online? | Check sensor status |
+| Sensor offline | Is the VM running? | Check cloud console |
+| Rule not matching | Is the rule enabled? | Check `enabled` field |
+| FP rule too broad | Review FP rule pattern | Delete with `limacharlie dr fp delete` |
