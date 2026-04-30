@@ -1,0 +1,114 @@
+framework: iso-27001
+framework_version: ISO/IEC 27001:2022
+generated: '2026-04-17'
+source: compliance/iso-27001/iso-27001-limacharlie-implementation.md
+counts:
+  dr_rules: 63
+  artifact_rules: 12
+  fim_rules: 17
+  exfil_rules: 3
+recommended:
+  dr_rules:
+  - iso-5-26-critical-threat-tag
+  - iso-5-26-isolate-on-credential-dump
+  - iso-5-28-evidence-tag
+  - iso-8-10-mass-file-delete
+  - iso-8-10-secure-delete-tool
+  - iso-8-12-cloud-upload-cli
+  - iso-8-12-dns-exfil
+  - iso-8-12-removable-media-mount
+  - iso-8-15-audit-policy-changed
+  - iso-8-15-auditd-tamper-linux
+  - iso-8-15-event-log-cleared
+  - iso-8-15-eventlog-service-stop-windows
+  - iso-8-15-failed-auth-macos
+  - iso-8-15-failed-logon-windows
+  - iso-8-15-log-tamper-macos
+  - iso-8-16-brute-force-windows
+  - iso-8-17-time-source-change
+  - iso-8-18-privileged-util-linux
+  - iso-8-18-privileged-util-macos
+  - iso-8-18-privileged-util-windows
+  - iso-8-19-msi-install-user-path
+  - iso-8-19-package-install-linux
+  - iso-8-19-package-install-macos
+  - iso-8-2-privilege-escalation-linux
+  - iso-8-2-privileged-service-windows
+  - iso-8-2-special-privilege-logon
+  - iso-8-2-sudo-macos
+  - iso-8-2-user-added-to-group-windows
+  - iso-8-2-user-created-windows
+  - iso-8-2-user-deleted-windows
+  - iso-8-2-user-mgmt-linux
+  - iso-8-2-user-mgmt-macos
+  - iso-8-20-firewall-changed-linux
+  - iso-8-20-firewall-changed-macos
+  - iso-8-20-firewall-changed-windows
+  - iso-8-20-suspicious-outbound
+  - iso-8-22-internal-lateral
+  - iso-8-23-download-execute-linux
+  - iso-8-23-encoded-powershell
+  - iso-8-23-lolbin-download-windows
+  - iso-8-23-malicious-domain
+  - iso-8-23-osascript-network-macos
+  - iso-8-5-account-lockout-windows
+  - iso-8-5-ntlm-auth
+  - iso-8-5-password-change-linux
+  - iso-8-5-password-change-windows
+  - iso-8-5-rdp-logon
+  - iso-8-5-ssh-login-macos
+  - iso-8-7-defender-rtp-disabled
+  - iso-8-7-defender-threat
+  - iso-8-7-lsass-access
+  - iso-8-7-suspicious-named-pipe
+  - iso-8-7-thread-injection
+  - iso-8-7-unsigned-binary
+  - iso-8-7-yara-detection
+  - iso-8-9-autorun-change-windows
+  - iso-8-9-cron-modification-linux
+  - iso-8-9-driver-change
+  - iso-8-9-fim-hit
+  - iso-8-9-launchd-modification-macos
+  - iso-8-9-new-service-windows
+  - iso-8-9-scheduled-task-windows
+  - iso-8-9-service-change
+  artifact_rules:
+  - iso-artifact-authlog
+  - iso-mul-auth
+  - iso-mul-privilege
+  - iso-mul-sessions
+  - iso-mul-system
+  - iso-wel-defender
+  - iso-wel-firewall
+  - iso-wel-powershell
+  - iso-wel-security
+  - iso-wel-sysmon
+  - iso-wel-system
+  - iso-wel-taskscheduler
+  fim_rules:
+  - iso-fim-linux-audit
+  - iso-fim-linux-auth
+  - iso-fim-linux-boot
+  - iso-fim-linux-identity
+  - iso-fim-linux-persistence
+  - iso-fim-linux-ssh-keys
+  - iso-fim-macos-boot
+  - iso-fim-macos-identity
+  - iso-fim-macos-kernel-extensions
+  - iso-fim-macos-keychains
+  - iso-fim-macos-launch-daemons
+  - iso-fim-macos-ssh-keys
+  - iso-fim-windows-boot
+  - iso-fim-windows-grouppolicy
+  - iso-fim-windows-powershell-profiles
+  - iso-fim-windows-registry-persistence
+  - iso-fim-windows-system
+  exfil_rules:
+  - iso-linux-events
+  - iso-macos-events
+  - iso-windows-events
+usage: Read by the compliance-gap skill as the canonical baseline for diff-ing against
+  the org's currently-deployed state. Rule names are the exact `name:` field from
+  the implementation doc's D&R rules, and the top-level keys of artifact / FIM / exfil
+  rule-map entries. Organizations that have renamed deployed rules should expect name-drift
+  candidates rather than direct matches.

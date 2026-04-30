@@ -1,0 +1,23 @@
+version: 3
+hives:
+  dr-general:
+    nist-800-53-compliance-reviewer-trigger:
+      data:
+        detect:
+          event: case_created
+          op: exists
+          path: event/case_id
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/nist-800-53-compliance-reviewer
+            suppression:
+              is_global: true
+              keys:
+                - nist-800-53-compliance-reviewer-rate-limit
+              max_count: 10
+              period: 1m
+      usr_mtd:
+        enabled: true
+        expiry: 0
+        tags:
+          - ai-agent:nist-800-53-compliance-reviewer

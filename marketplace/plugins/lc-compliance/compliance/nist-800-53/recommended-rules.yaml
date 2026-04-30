@@ -1,0 +1,99 @@
+framework: nist-800-53
+framework_version: Rev 5
+generated: '2026-04-17'
+source: compliance/nist-800-53/nist-800-53-limacharlie-implementation.md
+counts:
+  dr_rules: 48
+  artifact_rules: 12
+  fim_rules: 17
+  exfil_rules: 3
+recommended:
+  dr_rules:
+  - nist-ac-account-lockout-windows
+  - nist-ac-privilege-escalation-linux
+  - nist-ac-privileged-service-windows
+  - nist-ac-rdp-logon
+  - nist-ac-special-privilege-logon
+  - nist-ac-ssh-login-macos
+  - nist-ac-sudo-macos
+  - nist-ac-user-added-to-group-windows
+  - nist-ac-user-created-windows
+  - nist-ac-user-deleted-windows
+  - nist-ac-user-mgmt-linux
+  - nist-ac-user-mgmt-macos
+  - nist-au-audit-policy-changed
+  - nist-au-auditd-tamper-linux
+  - nist-au-auth-failed-macos
+  - nist-au-brute-force-windows
+  - nist-au-defender-rtp-disabled
+  - nist-au-event-log-cleared
+  - nist-au-eventlog-service-stop-windows
+  - nist-au-failed-logon-windows
+  - nist-au-log-tamper-macos
+  - nist-cm-autorun-change-windows
+  - nist-cm-driver-change
+  - nist-cm-firewall-changed-linux
+  - nist-cm-firewall-changed-macos
+  - nist-cm-firewall-changed-windows
+  - nist-cm-service-change
+  - nist-ia-ntlm-auth
+  - nist-ia-password-change-linux
+  - nist-ia-password-change-windows
+  - nist-ir-critical-threat-tag
+  - nist-ir-isolate-on-credential-dump
+  - nist-sc-suspicious-outbound
+  - nist-si-cron-modification-linux
+  - nist-si-defender-threat
+  - nist-si-encoded-powershell
+  - nist-si-fim-hit
+  - nist-si-launchd-modification-macos
+  - nist-si-lolbin-execution-linux
+  - nist-si-lolbin-execution-windows
+  - nist-si-lsass-access
+  - nist-si-new-service-windows
+  - nist-si-osascript-network-macos
+  - nist-si-scheduled-task-windows
+  - nist-si-suspicious-named-pipe
+  - nist-si-thread-injection
+  - nist-si-unsigned-binary
+  - nist-si-yara-detection
+  artifact_rules:
+  - nist-artifact-authlog
+  - nist-mul-auth
+  - nist-mul-privilege
+  - nist-mul-sessions
+  - nist-mul-system
+  - nist-wel-defender
+  - nist-wel-firewall
+  - nist-wel-powershell
+  - nist-wel-security
+  - nist-wel-sysmon
+  - nist-wel-system
+  - nist-wel-taskscheduler
+  fim_rules:
+  - nist-fim-linux-audit
+  - nist-fim-linux-auth
+  - nist-fim-linux-boot
+  - nist-fim-linux-identity
+  - nist-fim-linux-persistence
+  - nist-fim-linux-ssh-keys
+  - nist-fim-macos-boot
+  - nist-fim-macos-identity
+  - nist-fim-macos-kernel-extensions
+  - nist-fim-macos-keychains
+  - nist-fim-macos-launch-daemons
+  - nist-fim-macos-ssh-keys
+  - nist-fim-windows-boot
+  - nist-fim-windows-grouppolicy
+  - nist-fim-windows-powershell-profiles
+  - nist-fim-windows-registry-persistence
+  - nist-fim-windows-system
+  exfil_rules:
+  - nist-linux-events
+  - nist-macos-events
+  - nist-windows-events
+usage: Read by the compliance-gap skill as the canonical baseline for diff-ing against
+  the org's currently-deployed state. Rule names are the exact `name:` field from
+  the implementation doc's D&R rules, and the top-level keys of artifact / FIM / exfil
+  rule-map entries. Organizations that have renamed deployed rules should expect name-drift
+  candidates rather than direct matches.
