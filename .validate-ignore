@@ -1,0 +1,22 @@
+# Substring patterns matched against errors emitted by scripts/validate.py.
+# Errors containing any pattern below are suppressed (they were pre-existing
+# when CI was first added and are tracked separately for fix-up — see
+# refractionPOINT/tracking#4229).
+#
+# To remove an entry: fix the underlying issue, then delete the line. Do NOT
+# add new entries to silence regressions — that defeats the point of CI.
+
+# lc-essentials/limacharlie-call deleted in #85 with no replacement
+baseline regression: skill 'lc-essentials/limacharlie-call'
+
+# Frontmatter YAML invalid (unquoted colon in description)
+lc-essentials/skills/web-ui-link/SKILL.md: frontmatter YAML invalid
+
+# Frontmatter name does not match directory
+lc-essentials/skills/investigation-creation/SKILL.md: name 'case-investigation'
+
+# bash fence wraps a WebFetch(...) tool call instead of bash
+lc-fundamentals/skills/adapters/SKILL.md: bash block #6
+
+# Markdown leak into code block
+lc-essentials/skills/sensor-tasking/SKILL.md: bash block #4
