@@ -26,12 +26,30 @@ ROOT = Path(__file__).resolve().parent.parent
 MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 PLUGINS_DIR = ROOT / "marketplace" / "plugins"
 BASELINE_REF = "master"
+IGNORE_FILE = ROOT / ".validate-ignore"
 
+
+def _load_ignores() -> list[str]:
+    if not IGNORE_FILE.exists():
+        return []
+    return [
+        line.strip()
+        for line in IGNORE_FILE.read_text().splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+
+
+IGNORES = _load_ignores()
 errors: list[str] = []
 warnings: list[str] = []
+suppressed: list[str] = []
 
 
 def err(msg: str) -> None:
+    for pat in IGNORES:
+        if pat in msg:
+            suppressed.append(msg)
+            return
     errors.append(msg)
 
 
@@ -231,6 +249,18 @@ def validate_bash(skill_files: list[Path]) -> None:
 
 # ---------- 6. baseline regression: deleted skills vs master ----------
 
+def _resolve_baseline_ref() -> str | None:
+    """Try BASELINE_REF, fall back to origin/<ref>. Returns None if neither exists."""
+    for candidate in (BASELINE_REF, f"origin/{BASELINE_REF}"):
+        r = subprocess.run(
+            ["git", "rev-parse", "--verify", "--quiet", candidate],
+            capture_output=True, text=True, cwd=ROOT,
+        )
+        if r.returncode == 0:
+            return candidate
+    return None
+
+
 def list_skills_at(ref: str) -> set[str]:
     """Returns 'plugin/skill' set from ref:marketplace/plugins/*/skills/*/SKILL.md."""
     r = subprocess.run(
@@ -249,7 +279,11 @@ def list_skills_at(ref: str) -> set[str]:
 
 
 def validate_baseline() -> None:
-    base = list_skills_at(BASELINE_REF)
+    ref = _resolve_baseline_ref()
+    if ref is None:
+        warn(f"baseline: ref '{BASELINE_REF}' not found locally — skipping regression check")
+        return
+    base = list_skills_at(ref)
     head = list_skills_at("HEAD")
     if not base:
         return
@@ -287,7 +321,8 @@ def main() -> int:
         print(f"ERROR {e}")
     print()
     print(f"{len(plugin_dirs)} plugins, {len(skill_files)} skills checked — "
-          f"{len(errors)} errors, {len(warnings)} warnings")
+          f"{len(errors)} errors, {len(warnings)} warnings, "
+          f"{len(suppressed)} suppressed via .validate-ignore")
     return 1 if errors else 0
 
 
