@@ -54,18 +54,20 @@ find / -path "*/lc-compliance/.claude-plugin/plugin.json" 2>/dev/null | head -1 
 
 ## Pre-flight checklist
 
-Before assembling the deploy plan, confirm the org has the extensions each rule kind requires:
+Before assembling the deploy plan, confirm the org has the extensions each rule kind requires. The reliable probe is `extension schema` — it succeeds only when the extension is subscribed AND the org's extension subscription record is healthy. `extension list` is NOT a reliable probe: it shows extensions whose hive records exist even when the underlying subscription is incomplete on a brand-new org.
 
 | Rule kind | Required extension | How to check |
 |---|---|---|
 | `dr` (D&R rules) | none — built-in | always available |
-| `fim` (FIM rules) | `ext-integrity` | `limacharlie --oid <oid> extension list --output yaml \| grep ext-integrity` |
-| `artifact` (artifact collection) | `ext-artifact` | same pattern, look for `ext-artifact` |
-| `exfil` (exfil routing) | `ext-exfil` | same pattern, look for `ext-exfil` |
+| `fim` (FIM rules) | `ext-integrity` | `limacharlie --oid <oid> extension schema --name ext-integrity --output yaml` (succeeds = subscribed) |
+| `artifact` (artifact collection) | `ext-artifact` | `limacharlie --oid <oid> extension schema --name ext-artifact --output yaml` |
+| `exfil` (exfil routing) | `ext-exfil` | `limacharlie --oid <oid> extension schema --name ext-exfil --output yaml` |
 
-If a required extension is not subscribed, do NOT silently skip — surface the gap to the user and ask whether to:
+If `extension schema` errors with `failed to get extension <name>: ... no such entity`, the extension is not subscribed. In that case, do NOT silently skip — surface the gap to the user and ask whether to:
 1. Skip that kind for this run (`--kinds` excludes it)
-2. Have the user subscribe via the web UI / CLI and re-run
+2. Have the user subscribe via `limacharlie --oid <oid> extension subscribe --name <ext-name>` and re-run
+
+> **Note on paid resources.** Some extensions (`ext-integrity`, `ext-exfil`, `ext-artifact`) are gated by paid LC resources (`replicant/integrity`, `replicant/exfil`, `replicant/logging`). The `extension config-set` API used by this skill stores rules regardless of paid-resource state — but the rules will not *fire* until the resource is active. Configuration storage and rule firing are separately gated, so DO NOT block the deploy on paid-resource subscription. If you want to detect this for a warning, the legacy commands `integrity list` / `exfil list` / `logging list` return `org not registered to service` when the paid resource is inactive (and they are otherwise unused by this skill).
 
 ## Workflow
 
@@ -95,19 +97,27 @@ For each rule name in the baseline:
 
 ### Step 3 — Query the org for currently-deployed state
 
+All three of the non-D&R kinds live in the `extension_config` hive — read them via `extension config-get`, NOT via `integrity list` / `exfil list` / `logging list` (those commands target a legacy service path that returns `org not registered to service` on modern orgs even when rules are deployed). The `hive get --partition-name` form referenced in older guidance does not exist on the current CLI.
+
 ```bash
 # D&R rules currently in the general namespace
 limacharlie --oid <oid> dr list --namespace general --output yaml
 
-# FIM rules (skip if ext-integrity not subscribed)
-limacharlie --oid <oid> integrity list --output yaml 2>/dev/null
+# FIM rules — read from ext-integrity config (data.fim_rules)
+limacharlie --oid <oid> extension config-get --name ext-integrity --output yaml 2>/dev/null
 
-# Artifact + exfil — read from extension config hive
-limacharlie --oid <oid> hive get --hive-name extension-config --partition-name ext-artifact --output yaml 2>/dev/null
-limacharlie --oid <oid> hive get --hive-name extension-config --partition-name ext-exfil --output yaml 2>/dev/null
+# Artifact rules — read from ext-artifact config (data.log_rules)
+limacharlie --oid <oid> extension config-get --name ext-artifact --output yaml 2>/dev/null
+
+# Exfil rules — read from ext-exfil config (data.exfil_rules.list)
+limacharlie --oid <oid> extension config-get --name ext-exfil --output yaml 2>/dev/null
 ```
 
+If any `extension config-get` call returns `RECORD_NOT_FOUND`, treat that kind as having zero deployed rules (the extension is subscribed but no config record exists yet — that's a clean slate, not an error).
+
 Build a set of currently-deployed rule names per kind. Anything in the deployed set whose name does NOT appear in the recommended baseline is "deployed extra" and stays untouched.
+
+For exfil specifically: orgs commonly ship with default rules (`default-chrome`, `default-linux`, `default-macos`, `default-windows`). These count as "deployed extras" and MUST be preserved on update — see Step 6.
 
 ### Step 4 — Compute the deploy plan
 
@@ -157,18 +167,18 @@ Print a structured plan, even in `--apply` mode. Required, do not skip:
 
 If this is dry-run, STOP HERE.
 
-### Step 6 — Build sync-push files and apply (only with `--apply`)
+### Step 6 — Build deploy files and apply (only with `--apply`)
 
-For each kind, assemble a sync-push YAML in the proper format. The hive each kind goes into:
+D&R rules use `sync push --hive-dr-general`. FIM, artifact, and exfil all live in the `extension_config` hive and are pushed via `extension config-set --name <ext>`. Do NOT use the legacy `sync push --integrity` / `--artifact` / `--exfil` flags — they target a deprecated service path and return `No changes` even when the input file is well-formed and the rules differ from what's deployed.
 
-| Kind | Hive | `--hive-*` flag |
+| Kind | Storage | Push command |
 |---|---|---|
-| D&R | `dr-general` | `--hive-dr-general` |
-| FIM | `integrity` | `--hive-integrity` |
-| Artifact | `extension-config` (partition `ext-artifact`) | `--hive-extension-config` |
-| Exfil | `extension-config` (partition `ext-exfil`) | `--hive-extension-config` |
+| D&R | hive `dr-general`, key = rule name | `limacharlie --oid <oid> sync push --config-file <file> --hive-dr-general` |
+| FIM | hive `extension_config`, key = `ext-integrity`, body = `data.fim_rules.<name>` | `limacharlie --oid <oid> extension config-set --name ext-integrity --input-file <file>` |
+| Artifact | hive `extension_config`, key = `ext-artifact`, body = `data.log_rules.<name>` | `limacharlie --oid <oid> extension config-set --name ext-artifact --input-file <file>` |
+| Exfil | hive `extension_config`, key = `ext-exfil`, body = `data.exfil_rules.list.<name>` | `limacharlie --oid <oid> extension config-set --name ext-exfil --input-file <file>` |
 
-The sync-push file shape (mirrors what the bundled `agent/hives/dr-general.yaml` uses for the reviewer trigger):
+#### D&R sync-push file shape
 
 ```yaml
 version: 3
@@ -176,7 +186,7 @@ hives:
   dr-general:
     <rule-name>:
       data:
-        <rule-yaml-from-impl-doc>
+        <rule-yaml-from-impl-doc minus the top-level `name:` field>
       usr_mtd:
         enabled: true
         expiry: 0
@@ -185,24 +195,102 @@ hives:
           - compliance-baseline
 ```
 
-Write each kind's file to a temp location (e.g., `/tmp/lc-compliance-deploy-<framework>-<kind>-<timestamp>.yaml`) and push:
+#### Extension-config file shapes
 
-```bash
-limacharlie --oid <oid> sync push \
-    --config-file /tmp/lc-compliance-deploy-<framework>-dr.yaml \
-    --hive-dr-general
+For all three extension-config kinds, include `usr_mtd: {enabled: true}` at the top level so the config record lands enabled in one step. Without this, the record stores as `enabled: false` and you'd need a follow-up `hive enable`.
+
+**ext-integrity** (FIM):
+
+```yaml
+data:
+  fim_rules:
+    <rule-name>:
+      filters:
+        platforms: [windows]   # or linux / macos
+        tags: []               # optional sensor tag filter
+      patterns:
+        - <pattern1>
+        - <pattern2>
+usr_mtd:
+  enabled: true
+  expiry: 0
+  tags:
+    - compliance:<framework>
+    - compliance-baseline
 ```
 
-Push each kind separately so a failure in one kind doesn't block the others. After each push, print the exact command that ran and the CLI's exit status.
+**ext-artifact** (log_rules / artifact collection):
 
-If `--overwrite` is NOT set: before pushing, filter the sync file to remove rule names already present in the org. Idempotency comes from this filter step, not from sync-push semantics — `sync push` will overwrite by default.
+```yaml
+data:
+  log_rules:
+    <rule-name>:
+      days_retention: 90
+      filters:
+        platforms: [windows]
+        tags: []
+      is_delete_after: false
+      is_ignore_cert: false
+      patterns:
+        - "wel://Security:*"
+usr_mtd:
+  enabled: true
+  expiry: 0
+  tags:
+    - compliance:<framework>
+    - compliance-baseline
+```
+
+**ext-exfil** (event-routing rules) — MERGE-ONLY: an existing config-get may return rules like `default-chrome`, `default-linux`, `default-macos`, `default-windows` that LC ships with the extension. The skill MUST preserve every existing key under `data.exfil_rules.list` and add the framework's rules alongside them. Overwriting drops the defaults and breaks the org's existing exfil pipeline.
+
+```yaml
+data:
+  exfil_rules:
+    list:
+      # ↓ All existing entries from `extension config-get --name ext-exfil`, kept verbatim
+      default-windows: { events: [...], filters: { platforms: [windows], tags: [] } }
+      default-linux:   { events: [...], filters: { platforms: [linux], tags: [] } }
+      # ↑ then add the framework's rules
+      <framework>-windows-events:
+        events: [NEW_PROCESS, ...]
+        filters:
+          platforms: [windows]
+          tags: []
+usr_mtd:
+  enabled: true
+  expiry: 0
+  tags:
+    - compliance:<framework>
+    - compliance-baseline
+```
+
+#### Push procedure
+
+Write each kind's file to a temp location (e.g., `/tmp/lc-compliance-deploy-<framework>-<kind>-<timestamp>.yaml`) and push the appropriate command from the table above. After each push, print the exact command that ran and the CLI's exit status.
+
+Push each kind separately so a failure in one kind doesn't block the others.
+
+If `--overwrite` is NOT set: before pushing, filter the deploy file to remove rule names already present in the org. Idempotency comes from this filter step. For the extension-config kinds, the filter applies to keys under `data.<rules-key>.<name>`; the existing config map is then merged with the filtered new rules before `config-set`.
 
 ### Step 7 — Verify post-deploy
 
 Re-query the org and count actual landed rules per kind. Compare against the deploy plan's "to add" counts:
 
 ```bash
-limacharlie --oid <oid> dr list --namespace general --output yaml | yq '.[] | .name' | grep -c "^<framework>-"
+# D&R rules
+limacharlie --oid <oid> dr list --namespace general --output yaml | grep -c "^<framework>-"
+
+# FIM rules — count keys under data.fim_rules
+limacharlie --oid <oid> extension config-get --name ext-integrity --output yaml \
+    | grep -c "^    <framework>-fim-"
+
+# Artifact rules — count keys under data.log_rules
+limacharlie --oid <oid> extension config-get --name ext-artifact --output yaml \
+    | grep -c "^    <framework>-"
+
+# Exfil rules — count framework-prefixed keys under data.exfil_rules.list
+limacharlie --oid <oid> extension config-get --name ext-exfil --output yaml \
+    | grep -cE "^      <framework>-"
 ```
 
 Print a verification table:
@@ -246,7 +334,9 @@ Do NOT auto-tag sensors. Scope decisions belong to the customer.
 - **Print every write command before and after running it** so the user has an audit trail in chat.
 - **One org per invocation.** This skill targets exactly one `--oid`. Never iterate orgs in a loop.
 - **Halt on missing rule blocks.** If `recommended-rules.yaml` lists a name with no YAML in the impl doc, stop — do not skip silently and do not invent the rule.
-- **Halt on extension gaps unless `--kinds` excludes that kind.** Don't pretend to deploy FIM rules to an org without `ext-integrity`.
+- **Halt if the extension itself is not subscribed (per `extension schema`) unless `--kinds` excludes that kind.** Don't pretend to deploy FIM rules without `ext-integrity` subscribed.
+- **Warn but do NOT halt on inactive paid resources.** Rule storage and rule firing are separately gated. If `replicant/integrity` isn't active, FIM rules will store fine but won't produce `FIM_HIT` events until the customer subscribes the resource. Surface this as a warning.
+- **Preserve existing exfil rules.** Defaults like `default-chrome`, `default-linux`, etc. must be kept under `data.exfil_rules.list` when adding framework rules. Always merge; never replace.
 - **Never modify "deployed extras."** Rules in the org that aren't in the baseline are out of scope.
 
 ## Non-goals
