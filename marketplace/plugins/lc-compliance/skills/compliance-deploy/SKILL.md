@@ -105,12 +105,12 @@ Read `${CLAUDE_PLUGIN_ROOT}/compliance/<framework>/recommended-rules.yaml` and p
 
 ```bash
 # D&R rules — sync push
-limacharlie --oid <oid> sync push --config-file <dr.yaml> --hive-dr-general
+limacharlie --oid <oid> sync push --config-file /tmp/starter-dr.yaml --hive-dr-general
 
 # FIM, artifact, exfil — extension config-set (include usr_mtd.enabled: true in input file)
-limacharlie --oid <oid> extension config-set --name ext-integrity --input-file <fim.yaml>
-limacharlie --oid <oid> extension config-set --name ext-artifact  --input-file <artifact.yaml>
-limacharlie --oid <oid> extension config-set --name ext-exfil     --input-file <exfil.yaml>
+limacharlie --oid <oid> extension config-set --name ext-integrity --input-file /tmp/starter-fim.yaml
+limacharlie --oid <oid> extension config-set --name ext-artifact  --input-file /tmp/starter-artifact.yaml
+limacharlie --oid <oid> extension config-set --name ext-exfil     --input-file /tmp/starter-exfil.yaml
 ```
 
 For ext-exfil specifically, MERGE the new rules into the existing `data.exfil_rules.list` map (preserve `default-chrome`, `default-linux`, etc.) — read current state with `extension config-get --name ext-exfil` first.

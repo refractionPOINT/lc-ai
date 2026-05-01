@@ -42,7 +42,7 @@
       "name": "lc-compliance",
       "description": "Interactive compliance skills for LimaCharlie: control-to-capability lookups, ad-hoc gap analysis, and guided agent deployment across CMMC, NIST 800-53, PCI DSS, HIPAA, SOC 2, ISO 27001, and CIS v8. Bundles framework reference docs and case-reviewer agent manifests.",
       "source": "./marketplace/plugins/lc-compliance",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": {
         "name": "LimaCharlie",
         "email": "support@limacharlie.io"
