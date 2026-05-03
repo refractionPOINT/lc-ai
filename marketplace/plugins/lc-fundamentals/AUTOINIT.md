@@ -211,6 +211,8 @@ limacharlie ai-skill delete --key <name> --oid <oid>
 ### AI Memory CLI
 
 AI agent memories (the `ai_memory` hive) are partial-merge: each agent has one record (keyed by its agent identifier via `--key`), and individual memories within that record are addressed by `--memory-name`. A `set` on one memory leaves the other memories on the same record untouched.
+
+The agent identifier passed to `--key` is the name/email/ident from the caller's JWT — for API-key auth this is typically the **API Key name**, for user OAuth it's the user's email. So when an agent is authenticated through an API key called `triage-bot`, its memories live under `--key triage-bot`. List records with `ai-memory list-records` to see what's already in use.
 ```bash
 limacharlie ai-memory list-records --oid <oid> --output yaml             # All agent records
 limacharlie ai-memory list --key <agent_id> --oid <oid> --output yaml
