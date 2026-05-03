@@ -38,12 +38,6 @@ limacharlie auth whoami --oid <oid> --check-perm ai_agent.operate --output yaml
 ```
 To see all permissions (verbose): `limacharlie auth whoami --show-perms --output yaml`
 
-To inspect or migrate config file locations:
-```bash
-limacharlie config show-paths        # Print all resolved config/data file paths
-limacharlie config migrate --dry-run # Preview migration from legacy ~/.limacharlie to ~/.limacharlie.d/
-```
-
 ## Critical Rules
 
 **ALWAYS require the user to specify the organization or organizations they intend to operate on**, NEVER assume.
