@@ -78,15 +78,6 @@ limacharlie ai-memory delete --key <agent_id> --memory-name <name> --oid <oid>
 limacharlie ai-memory delete-record --key <agent_id> --oid <oid>         # Wipe an entire agent's memories
 ```
 
-### Attaching to a Live AI Session
-
-`limacharlie ai session attach` connects to a running AI agent session via WebSocket. Use it to monitor progress, send interactive prompts, or replay history of an automated D&R-triggered session:
-```bash
-limacharlie ai session attach --id <session_id> --oid <oid>            # Live stream + history
-limacharlie ai session attach --id <session_id> -i --oid <oid>          # Interactive (stdin → prompts)
-limacharlie ai session attach --id <session_id> --read-only --oid <oid> # Org-scoped read-only stream
-```
-
 ### Hive Schema Inspection
 
 Before writing a Hive record, inspect its schema:

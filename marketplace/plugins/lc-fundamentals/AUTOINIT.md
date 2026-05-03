@@ -220,15 +220,6 @@ limacharlie ai-memory delete --key <agent_id> --memory-name <name> --oid <oid>
 limacharlie ai-memory delete-record --key <agent_id> --oid <oid>         # Wipe an entire agent's memories
 ```
 
-### Attaching to a Live AI Session
-
-`limacharlie ai session attach` connects to a running AI agent session via WebSocket. Use it to monitor progress, send interactive prompts, or replay history of an automated D&R-triggered session:
-```bash
-limacharlie ai session attach --id <session_id> --oid <oid>            # Live stream + history
-limacharlie ai session attach --id <session_id> -i --oid <oid>          # Interactive (stdin → prompts)
-limacharlie ai session attach --id <session_id> --read-only --oid <oid> # Org-scoped read-only stream
-```
-
 ### Hive Schema Inspection
 
 Before writing a Hive record, inspect its schema:
@@ -508,7 +499,7 @@ Run Claude AI within LimaCharlie's security context:
 - **D&R-Driven Sessions**: automated, fire-and-forget sessions triggered by D&R rule `start ai agent` response action. Used for automated triage, investigation, and enrichment.
 - **User Sessions**: interactive sessions via the web UI or API. Used for ad-hoc investigation and analysis.
 
-AI agent configurations are stored in the `ai_agent` Hive. Reusable capabilities live in the `ai_skill` Hive, and per-agent memory in the `ai_memory` Hive. Sessions use Bring-Your-Own-Key (Anthropic API key stored as a Secret). Live monitoring or interactive prompting of an in-flight session is available via `limacharlie ai session attach --id <session_id>` (use `-i` for interactive, `--read-only` for org-scoped streaming).
+AI agent configurations are stored in the `ai_agent` Hive. Reusable capabilities live in the `ai_skill` Hive, and per-agent memory in the `ai_memory` Hive. Sessions use Bring-Your-Own-Key (Anthropic API key stored as a Secret).
 
 ## Cases
 
