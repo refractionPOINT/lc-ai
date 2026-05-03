@@ -54,6 +54,43 @@ limacharlie feedback request-question --channel web-default --question "What is 
 
 The feedback extension sends interactive approval prompts, acknowledgement requests, or free-form questions to channels (Slack, Telegram, Teams, Email, or built-in Web UI). Responses are dispatched to a case (as a note), a playbook (as a trigger), or an ai_agent (starts an AI session with the response data). Channel types: `web` (built-in, no output needed), `slack`, `email`, `telegram`, `ms_teams` (each requires a Tailored Output). Use `limacharlie feedback --ai-help` for full command reference.
 
+### AI Skills CLI
+
+AI skills (reusable agent capabilities, stored in the `ai_skill` hive) have a dedicated top-level command:
+```bash
+limacharlie ai-skill list --oid <oid> --output yaml
+limacharlie ai-skill get --key <name> --oid <oid> --output yaml
+limacharlie ai-skill set --key <name> --input-file skill.yaml --oid <oid>
+limacharlie ai-skill enable --key <name> --oid <oid>
+limacharlie ai-skill disable --key <name> --oid <oid>
+limacharlie ai-skill delete --key <name> --oid <oid>
+```
+
+### AI Memory CLI
+
+AI agent memories (the `ai_memory` hive) are partial-merge: each agent has one record (keyed by its agent identifier via `--key`), and individual memories within that record are addressed by `--memory-name`. A `set` on one memory leaves the other memories on the same record untouched.
+
+The agent identifier passed to `--key` is the name/email/ident from the caller's JWT — for API-key auth this is typically the **API Key name**, for user OAuth it's the user's email. So when an agent is authenticated through an API key called `triage-bot`, its memories live under `--key triage-bot`. List records with `ai-memory list-records` to see what's already in use.
+```bash
+limacharlie ai-memory list-records --oid <oid> --output yaml             # All agent records
+limacharlie ai-memory list --key <agent_id> --oid <oid> --output yaml
+limacharlie ai-memory get --key <agent_id> --memory-name <name> --oid <oid> --output yaml
+limacharlie ai-memory set --key <agent_id> --memory-name <name> --content "..." --oid <oid>
+limacharlie ai-memory delete --key <agent_id> --memory-name <name> --oid <oid>
+limacharlie ai-memory delete-record --key <agent_id> --oid <oid>         # Wipe an entire agent's memories
+```
+
+### Hive Schema Inspection
+
+Before writing a Hive record, inspect its schema:
+```bash
+limacharlie hive schema --hive-name <hive_name> --oid <oid> --output yaml
+```
+Then validate the record against the schema before committing:
+```bash
+limacharlie hive validate --hive-name <hive_name> --key <key> --input-file <file> --oid <oid>
+```
+
 ## Required Tool
 
 **ALWAYS use the `limacharlie` CLI via Bash** for all LimaCharlie API operations. Never call MCP tools directly.
@@ -95,6 +132,8 @@ To see all permissions (verbose): `limacharlie auth whoami --show-perms --output
 ### 2. Always Pass `--output yaml`
 
 All CLI commands should include `--output yaml` for machine-readable output that is more token-efficient than JSON.
+
+Available formats: `json`, `yaml`, `toon`, `csv`, `table`, `jsonl`. `toon` (Token-Oriented Object Notation) is even more token-efficient than YAML for tabular array data — use it when piping large list outputs back into the model.
 
 ### 3. Use `--filter` to Reduce Output
 

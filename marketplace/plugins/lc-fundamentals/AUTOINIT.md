@@ -46,6 +46,8 @@ To see all permissions (verbose): `limacharlie auth whoami --show-perms --output
 
 All CLI commands should include `--output yaml` for machine-readable output that is more token-efficient than JSON.
 
+Available formats: `json`, `yaml`, `toon`, `csv`, `table`, `jsonl`. `toon` (Token-Oriented Object Notation) is even more token-efficient than YAML for tabular array data — use it when piping large list outputs back into the model.
+
 ### 2. Use `--filter` to Reduce Output
 
 When you only need specific fields, use `--filter JMESPATH` to select them:
@@ -193,6 +195,43 @@ limacharlie feedback request-question --channel web-default --question "What is 
 ```
 
 The feedback extension sends interactive approval prompts, acknowledgement requests, or free-form questions to channels (Slack, Telegram, Teams, Email, or built-in Web UI). Responses are dispatched to a case (as a note), a playbook (as a trigger), or an ai_agent (starts an AI session with the response data). Channel types: `web` (built-in, no output needed), `slack`, `email`, `telegram`, `ms_teams` (each requires a Tailored Output). Use `limacharlie feedback --ai-help` for full command reference.
+
+### AI Skills CLI
+
+AI skills (reusable agent capabilities, stored in the `ai_skill` hive) have a dedicated top-level command:
+```bash
+limacharlie ai-skill list --oid <oid> --output yaml
+limacharlie ai-skill get --key <name> --oid <oid> --output yaml
+limacharlie ai-skill set --key <name> --input-file skill.yaml --oid <oid>
+limacharlie ai-skill enable --key <name> --oid <oid>
+limacharlie ai-skill disable --key <name> --oid <oid>
+limacharlie ai-skill delete --key <name> --oid <oid>
+```
+
+### AI Memory CLI
+
+AI agent memories (the `ai_memory` hive) are partial-merge: each agent has one record (keyed by its agent identifier via `--key`), and individual memories within that record are addressed by `--memory-name`. A `set` on one memory leaves the other memories on the same record untouched.
+
+The agent identifier passed to `--key` is the name/email/ident from the caller's JWT — for API-key auth this is typically the **API Key name**, for user OAuth it's the user's email. So when an agent is authenticated through an API key called `triage-bot`, its memories live under `--key triage-bot`. List records with `ai-memory list-records` to see what's already in use.
+```bash
+limacharlie ai-memory list-records --oid <oid> --output yaml             # All agent records
+limacharlie ai-memory list --key <agent_id> --oid <oid> --output yaml
+limacharlie ai-memory get --key <agent_id> --memory-name <name> --oid <oid> --output yaml
+limacharlie ai-memory set --key <agent_id> --memory-name <name> --content "..." --oid <oid>
+limacharlie ai-memory delete --key <agent_id> --memory-name <name> --oid <oid>
+limacharlie ai-memory delete-record --key <agent_id> --oid <oid>         # Wipe an entire agent's memories
+```
+
+### Hive Schema Inspection
+
+Before writing a Hive record, inspect its schema:
+```bash
+limacharlie hive schema --hive-name <hive_name> --oid <oid> --output yaml
+```
+Then validate the record against the schema before committing:
+```bash
+limacharlie hive validate --hive-name <hive_name> --key <key> --input-file <file> --oid <oid>
+```
 
 ## Standard Operating Procedures (SOPs)
 
@@ -409,10 +448,12 @@ Key Hive types:
 - `cloud-sensors`: cloud sensor (adapter) configurations
 - `query`: saved LCQL queries
 - `ai_agent`: AI agent/session configurations
+- `ai_skill`: reusable AI agent capabilities (managed via `limacharlie ai-skill ...`)
+- `ai_memory`: AI agent memory entries, partial-merge per-memory writes (managed via `limacharlie ai-memory ...`)
 - `extension_config`: extension configurations
 - `sop`: standard operating procedures
 
-Records can be referenced across the platform using `hive://<type>/<key>` URIs (e.g., `hive://secret/my-api-key`).
+Each Hive's schema can be inspected with `limacharlie hive schema --hive-name <name> --oid <oid>`. Records can be referenced across the platform using `hive://<type>/<key>` URIs (e.g., `hive://secret/my-api-key`).
 
 ## Lookups
 
@@ -460,7 +501,7 @@ Run Claude AI within LimaCharlie's security context:
 - **D&R-Driven Sessions**: automated, fire-and-forget sessions triggered by D&R rule `start ai agent` response action. Used for automated triage, investigation, and enrichment.
 - **User Sessions**: interactive sessions via the web UI or API. Used for ad-hoc investigation and analysis.
 
-AI agent configurations are stored in the `ai_agent` Hive. Sessions use Bring-Your-Own-Key (Anthropic API key stored as a Secret).
+AI agent configurations are stored in the `ai_agent` Hive. Reusable capabilities live in the `ai_skill` Hive, and per-agent memory in the `ai_memory` Hive. Sessions use Bring-Your-Own-Key (Anthropic API key stored as a Secret).
 
 ## Cases
 
