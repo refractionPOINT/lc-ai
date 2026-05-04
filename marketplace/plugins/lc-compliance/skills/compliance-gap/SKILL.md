@@ -64,25 +64,29 @@ Read these once per invocation (they cache within the session):
 
 2. **Load the recommended rule set.** Read `compliance/<framework>/recommended-rules.yaml`. Extract four lists from `recommended.`: `dr_rules`, `artifact_rules`, `fim_rules`, `exfil_rules`.
 
-3. **Query the org's current state** via the LC CLI. Use `--output yaml` on every command.
+3. **Query the org's current state** via the LC CLI. Use `--output yaml` on every command. FIM, artifact, and exfil rules all live in the `extension_config` hive — use `extension config-get --name <ext>`, NOT `integrity list` / `exfil list` / `logging list` (those return `org not registered to service` on modern orgs even when the extension is subscribed and rules are deployed).
 
    ```bash
    limacharlie --oid <oid> dr list --namespace general --output yaml
    limacharlie --oid <oid> dr list --namespace managed --output yaml
-   limacharlie --oid <oid> extension config-list --output yaml  # artifact + exfil
-   limacharlie --oid <oid> integrity list --output yaml 2>/dev/null || echo "ext-integrity not subscribed"
+   limacharlie --oid <oid> extension config-get --name ext-integrity --output yaml 2>/dev/null \
+       || echo "ext-integrity not subscribed or no FIM config"
+   limacharlie --oid <oid> extension config-get --name ext-artifact --output yaml 2>/dev/null \
+       || echo "ext-artifact not subscribed or no artifact config"
+   limacharlie --oid <oid> extension config-get --name ext-exfil --output yaml 2>/dev/null \
+       || echo "ext-exfil not subscribed or no exfil config"
    limacharlie --oid <oid> sensor list --output yaml
    ```
 
-   Skip the ones that fail (e.g., `ext-integrity` returns an error if not subscribed — capture as a gap, don't abort).
+   To distinguish "extension not subscribed" from "extension subscribed but no config record yet", probe `extension schema --name <ext>`: success = subscribed (treat as zero deployed rules), error with `no such entity` = not subscribed (capture as a gap). Don't abort the whole report on one extension miss.
 
 4. **Compute the gap for each category.**
 
    **Telemetry (Exfil) gap** — For each platform in {windows, linux, macos}, compare the org's current `ext-exfil.data.exfil_rules.list.<name>.events` against the recommended exfil rule's events. Missing events → telemetry gap.
 
-   **Artifact collection gap** — Diff recommended `artifact_rules` names against `ext-artifact` keys in the org.
+   **Artifact collection gap** — Diff recommended `artifact_rules` names against the keys under `ext-artifact.data.log_rules` in the org.
 
-   **FIM gap** — Diff recommended `fim_rules` against the `integrity list` output.
+   **FIM gap** — Diff recommended `fim_rules` against the keys under `ext-integrity.data.fim_rules` in the org.
 
    **D&R rule gap** — Diff recommended `dr_rules` against the union of general + managed namespace dr rule names.
 

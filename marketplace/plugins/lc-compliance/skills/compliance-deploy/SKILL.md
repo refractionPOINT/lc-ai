@@ -101,13 +101,19 @@ limacharlie --oid <oid> sync push \
 
 ### Step 4 — If `--with-rules`, deploy a starter rule subset
 
-Read `${CLAUDE_PLUGIN_ROOT}/compliance/<framework>/recommended-rules.yaml` and pick ~5 D&R rules, ~3 FIM rules, ~1 artifact rule, ~1 exfil rule as a starter set. Extract those specific blocks from `${CLAUDE_PLUGIN_ROOT}/compliance/<framework>/<framework>-limacharlie-implementation.md` into a temp YAML file and sync:
+Read `${CLAUDE_PLUGIN_ROOT}/compliance/<framework>/recommended-rules.yaml` and pick ~5 D&R rules, ~3 FIM rules, ~1 artifact rule, ~1 exfil rule as a starter set. Extract those specific blocks from `${CLAUDE_PLUGIN_ROOT}/compliance/<framework>/<framework>-limacharlie-implementation.md`. Push each kind through its proper API path (mirror `compliance-baseline-deploy` Step 6 — don't use legacy `sync push --integrity` / `--artifact` / `--exfil` flags, they silently no-op on modern orgs):
 
 ```bash
-limacharlie --oid <oid> sync push \
-    --config-file <starter-rules.yaml> \
-    --hive-dr-general --hive-integrity --hive-extension-config
+# D&R rules — sync push
+limacharlie --oid <oid> sync push --config-file /tmp/starter-dr.yaml --hive-dr-general
+
+# FIM, artifact, exfil — extension config-set (include usr_mtd.enabled: true in input file)
+limacharlie --oid <oid> extension config-set --name ext-integrity --input-file /tmp/starter-fim.yaml
+limacharlie --oid <oid> extension config-set --name ext-artifact  --input-file /tmp/starter-artifact.yaml
+limacharlie --oid <oid> extension config-set --name ext-exfil     --input-file /tmp/starter-exfil.yaml
 ```
+
+For ext-exfil specifically, MERGE the new rules into the existing `data.exfil_rules.list` map (preserve `default-chrome`, `default-linux`, etc.) — read current state with `extension config-get --name ext-exfil` first.
 
 Prompt the user to confirm which rules to include — DON'T assume. Starter-subset intent is partial coverage for demos / smoke tests, not a production rollout.
 
