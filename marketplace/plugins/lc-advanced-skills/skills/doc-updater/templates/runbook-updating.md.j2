@@ -1,0 +1,157 @@
+{# Template: runbook-updating.md.j2
+   Documentation maintenance procedures. Expects: org.
+   See config-schema.yaml for the full data structure reference. #}
+# Updating This Documentation
+
+Procedures for keeping this documentation in sync with the **{{ org.name }}** organization configuration.
+
+---
+
+<details>
+<summary><strong>Export Script</strong></summary>
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+OID="{{ org.oid }}"
+EXPORT_DIR="./exports/$(date +%Y-%m-%d)"
+mkdir -p "$EXPORT_DIR"
+
+echo "=== Exporting {{ org.name }} org configuration ==="
+
+echo "Exporting sensors..."
+limacharlie sensor list --oid "$OID" --output yaml > "$EXPORT_DIR/sensors.yaml"
+
+echo "Exporting D&R rules..."
+limacharlie dr list --oid "$OID" --output yaml > "$EXPORT_DIR/dr-rules.yaml"
+
+echo "Exporting FP rules..."
+limacharlie dr fp list --oid "$OID" --output yaml > "$EXPORT_DIR/fp-rules.yaml" 2>/dev/null || echo "{}" > "$EXPORT_DIR/fp-rules.yaml"
+
+echo "Exporting AI agents..."
+limacharlie hive list --hive-name ai_agent --oid "$OID" --output yaml > "$EXPORT_DIR/ai-agents.yaml"
+
+echo "Exporting extensions..."
+limacharlie extension list --oid "$OID" --output yaml > "$EXPORT_DIR/extensions.yaml"
+
+echo "Exporting cloud adapters..."
+limacharlie cloud-adapter list --oid "$OID" --output yaml > "$EXPORT_DIR/cloud-adapters.yaml"
+
+echo "Exporting outputs..."
+limacharlie output list --oid "$OID" --output yaml > "$EXPORT_DIR/outputs.yaml"
+
+echo "Exporting installation keys..."
+limacharlie installation-key list --oid "$OID" --output yaml > "$EXPORT_DIR/installation-keys.yaml"
+
+echo "Exporting secret names..."
+limacharlie secret list --oid "$OID" --output yaml > "$EXPORT_DIR/secrets.yaml"
+
+echo "Exporting SOPs..."
+limacharlie sop list --oid "$OID" --output yaml > "$EXPORT_DIR/sops.yaml"
+
+echo "Exporting lookups..."
+limacharlie lookup list --oid "$OID" --output yaml > "$EXPORT_DIR/lookups.yaml"
+
+echo "Exporting tags..."
+limacharlie tag list --oid "$OID" --output yaml > "$EXPORT_DIR/tags.yaml"
+
+echo "Exporting payloads..."
+limacharlie payload list --oid "$OID" --output yaml > "$EXPORT_DIR/payloads.yaml"
+
+echo ""
+echo "=== Export complete: $EXPORT_DIR ==="
+ls -la "$EXPORT_DIR"
+```
+
+</details>
+
+---
+
+<details>
+<summary><strong>GitHub Actions Workflow</strong></summary>
+
+```yaml
+# .github/workflows/update-docs.yaml
+name: Update LC Org Documentation
+on:
+  schedule:
+    - cron: '0 8 * * 1'  # Every Monday at 8 AM UTC
+  workflow_dispatch:
+
+jobs:
+  export-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install LimaCharlie CLI
+        run: pip install limacharlie
+
+      - name: Export org configuration
+        env:
+          LC_API_KEY: {% raw %}${{ secrets.LC_API_KEY }}{% endraw %}
+          LC_OID: {{ org.oid }}
+        run: bash scripts/export-org-config.sh
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git diff --quiet exports/ || echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add exports/
+          git commit -m "chore: weekly org config export $(date +%Y-%m-%d)"
+          git push
+```
+
+</details>
+
+---
+
+## Manual Update Procedures
+
+### When to Update Each File
+
+| File | Update When | Verify With |
+|------|-------------|-------------|
+| `sensors.md` | Sensor added/removed/status changed | `limacharlie sensor list --oid $OID --output yaml` |
+| `detection-rules.md` | Rule added/removed/enabled/disabled | `limacharlie dr list --oid $OID --output yaml` |
+| `ai-agents.md` | Agent added/modified/removed | `limacharlie hive list --hive-name ai_agent --oid $OID --output yaml` |
+| `data-pipeline.md` | Extension subscribed/unsubscribed, output changed | `limacharlie extension list --oid $OID --output yaml` |
+| `access-control.md` | Key rotated, secret added, SOP changed | `limacharlie secret list --oid $OID --output yaml` |
+| `architecture.md` | Significant topology change | Review all exports |
+
+---
+
+## Documentation Standards
+
+> [!CAUTION]
+> **Sensitive Data Rules:**
+> - **NEVER** include secret values, API key tokens, or webhook secrets
+> - **NEVER** include external/internal IP addresses or full FQDNs
+> - **NEVER** include connection strings
+> - Installation key UUIDs and sensor SIDs are safe to document
+
+> [!NOTE]
+> **Formatting Standards:**
+> - Use `--oid` and `--output yaml` in all CLI commands
+> - Use the full OID UUID — never the org name
+> - Use Mermaid diagrams for data flows
+> - Use collapsible `<details>` for large tables
+> - Link to official LC docs (verified URLs only)
+
+---
+
+## Review Cadence
+
+| Frequency | Action |
+|-----------|--------|
+| Weekly | Run export script, check for drift |
+| Monthly | Full review of all documentation against live state |
+| On change | Update docs immediately when making org changes |
+| Quarterly | Review architecture diagrams and data flow accuracy |

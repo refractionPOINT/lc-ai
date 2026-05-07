@@ -1,0 +1,6 @@
+{
+  "name": "lc-advanced-skills",
+  "version": "1.2.0",
+  "description": "Advanced LimaCharlie skills for MSSP reporting, fleet coverage, threat intelligence, adapter management, IaC, onboarding, and HTML dashboards. Requires lc-essentials plugin.",
+  "private": true
+}

@@ -1,0 +1,250 @@
+# Config Schema Reference
+#
+# This file documents the expected data structure that the doc-updater agent
+# (or any exporter) must produce for doc-renderer.py to consume.
+#
+# The renderer enriches this with computed fields (counts, capability tables,
+# review queues) — you only need to provide the raw data below.
+#
+# Security: NEVER include secret values, API key tokens, webhook URLs,
+# or IP addresses in this file. Only include names and metadata.
+
+org:
+  name: "white-sands"                     # Organization display name
+  oid: "b85fd2bd-ae21-4c1f-8a42-b90b51aeddeb"  # Organization UUID
+  generated_at: "2026-04-07"              # ISO date of generation (optional, defaults to today)
+
+sensors:
+  edr:                                    # List of EDR endpoint sensors
+    - hostname_short: "win10-b85fd2bd"    # Short hostname (no FQDN)
+      sid: "5f005553-0fd8-40b2-b6ff-f9878893b95b"
+      platform: "Windows (x86_64)"        # Human-readable platform string
+      version: "5.0.1"                    # Sensor version (without lc_sensor_ prefix)
+      is_online: true
+      is_isolated: true
+      enrolled: "2026-03-30"              # Enrollment date (YYYY-MM-DD)
+
+  cloud:                                  # List of cloud sensors (adapters)
+    - hostname: "defender"
+      sid: "7cfe1844-d9fa-4e9a-a1e0-7039559201a3"
+      type: "Azure Event Hub"             # Adapter type
+      platform: "MS Defender"             # Platform/product name
+      is_online: false
+      enrolled: "2026-03-30"
+      tags:
+        - "defender"
+
+  extensions:                             # List of extension sensors
+    - hostname: "ext-cases"
+      sid: "37db628d-42c8-4883-9059-8b514f575965"
+      is_online: true
+
+rules:
+  categories:                             # D&R rules grouped by category
+    threat_detection:                     # Category key (snake_case)
+      - name: "Evil.exe detected - kill process and tag endpoint"
+        display_name: "Threat Detection"  # Human-readable category name (on first rule only)
+        event: "NEW_PROCESS"              # Event type(s) — string or comma-separated
+        enabled: true
+        response: "Report + deny-tree + tag suspicious (10min TTL)"
+        # Optional fields for intel/MDR rules:
+        source: ""                        # Intel source (ThreatFox, SigmaHQ, CISA KEV, etc.)
+        mitre: ""                         # MITRE ATT&CK technique IDs
+        level: ""                         # Severity level (Critical, High, Medium, Low)
+        malware_families: ""              # Malware families covered
+        cve: ""                           # CVE identifier
+        metadata: {}                      # Additional metadata
+
+    system:
+      - name: "Sensor clone"
+        display_name: "System"
+        event: "sensor_clone"
+        target: "deployment"              # Optional: deployment, schedule
+        enabled: true
+        response: "Report"
+
+    ai_triggers:
+      - name: "soc-bulk-triage-hourly"
+        display_name: "AI Triggers"
+        trigger_type: "schedule"          # schedule or event
+        schedule: "Every 1h"              # For scheduled triggers
+        agent: "soc-bulk-triage"          # Agent key
+        team: "Baselining SOC"            # Team name
+        suppression: ""                   # Suppression description
+        enabled: true
+
+    intel_pipeline:
+      - name: "intel-lookup-domain-match"
+        display_name: "Intel Pipeline"
+        event: "DNS_REQUEST"
+        enabled: false
+        source: "ThreatFox"
+        mitre: "T1071.001"
+        level: "Critical"
+        response: "Report"
+        lookup_table: "intel-ioc-domains" # For lookup-based rules
+
+    mdr_hunting:
+      - name: "mdr-cisa-kev-cve-2026-3502-trueconf-tampering"
+        display_name: "MDR Hunting"
+        event: "NEW_PROCESS"
+        enabled: false
+        source: "CISA KEV"
+        cve: "CVE-2026-3502"
+        level: "Critical"
+        response: "Report + tag"
+
+    data_pipeline:
+      - name: "hayabusa-to-output"
+        display_name: "Data Pipeline"
+        event: "hayabusa_artifact"
+        enabled: false
+        response: "Output + report"
+        dest_output: "hayabusa-artifacts-tailored"
+
+  managed_packs:                          # Managed rule pack extensions
+    - name: "Soteria EDR"
+      extension: "soteria-rules-edr"
+      docs_url: "https://docs.limacharlie.io/3-detection-response/managed-rulesets/soteria/edr/"
+    - name: "Soteria AWS"
+      extension: "soteria-rules-aws"
+      docs_url: "https://docs.limacharlie.io/3-detection-response/managed-rulesets/soteria/aws/"
+    - name: "Soteria O365"
+      extension: "soteria-rules-o365"
+      docs_url: "https://docs.limacharlie.io/3-detection-response/managed-rulesets/soteria/m365/"
+
+  fp_rules: []                            # List of FP rules (name + description)
+
+agents:
+  teams:                                  # Agent teams (keyed by team slug)
+    baselining_soc:
+      display_name: "Baselining SOC"
+      description: "Automated detection triage, investigation, containment, and reporting for newly-onboarded orgs."
+      agents:
+        - name: "SOC Bulk Triage"
+          key: "soc-bulk-triage"
+          model: "opus"
+          budget: 5.0                     # max_budget_usd
+          ttl: 1800                       # ttl_seconds
+          trigger_rule: "soc-bulk-triage-hourly"
+          schedule: "Every 1h"            # Empty string for on-demand
+          trigger_type: "schedule"        # schedule, tag, mention
+          trigger_detail: ""              # Tag name or mention keyword
+          purpose: "Hourly detection triage, FP rule creation, case escalation"
+        - name: "SOC L2 Analyst"
+          key: "soc-l2-analyst"
+          model: "opus"
+          budget: 5.0
+          ttl: 1800
+          trigger_rule: "soc-l2-on-needs-review"
+          schedule: ""
+          trigger_type: "tag"
+          trigger_detail: "needs-l2-review"
+          purpose: "Deep investigation, scope assessment, lateral movement detection"
+      inter_agent_tags:                   # Tags used for inter-agent communication
+        - tag: "needs-l2-review"
+          meaning: "Case needs deep investigation"
+          set_by: "soc-bulk-triage"
+          consumed_by: "soc-l2-analyst"
+      mentions:                           # Mention-based triggers within this team
+        - mention: "malware-analyst"
+          agent: "malware-analyst"
+          set_by: "soc-l2-analyst"
+
+  standalone:                             # Agents not in a team
+    - name: "General Analyst"
+      key: "general-analyst"
+      model: "opus"
+      budget: 5.0
+      ttl: 1800
+      trigger_rule: "general-analyst-on-mention"
+      schedule: ""
+      trigger_type: "mention"
+      trigger_detail: "general-analyst"
+      purpose: "Versatile on-demand analyst for ad-hoc investigations"
+
+extensions:                               # Subscribed extensions grouped by category
+  - name: "ext-velociraptor"
+    category: "Security Analysis & DFIR"
+    description: "Velociraptor DFIR agent for forensic collection and VQL queries"
+    docs_url: "https://docs.limacharlie.io/5-integrations/extensions/third-party/velociraptor/"
+  - name: "ext-cases"
+    category: "Security Operations"
+    description: "SOC case management"
+    docs_url: "https://docs.limacharlie.io/5-integrations/extensions/limacharlie/cases/"
+
+adapters:
+  active:
+    - key: "audit-logs"
+      type: "webhook"
+      platform: "json"
+      hostname: "audit-logs"
+      installation_key: "204d26ca-ef06-4563-abb4-bd66affaf5a2"
+      tags: []
+  disabled:
+    - key: "defender"
+      type: "azure_event_hub"
+      platform: "msdefender"
+      hostname: "defender"
+      installation_key: "30701837-f324-4f6c-b9e2-5da602e53ad9"
+      tags: ["defender"]
+
+outputs:
+  - name: "audit-logs"
+    module: "webhook"
+    stream: "audit"
+    created_by: "Demo-Env-Prod"
+
+lookups:
+  - name: "bas-history"
+    purpose: "BAS simulation history"
+    managed_by: "bas-reviewer agent"
+  - name: "intel-ioc-domains"
+    purpose: "Malicious domains from ThreatFox"
+    managed_by: "intel-collector agent"
+
+payloads:
+  - name: "ext-atomic-red-team-prepare.bat"
+    size: "3.3 KB"
+    created_by: "ext-atomic-red-team"
+    category: "Atomic Red Team"
+
+secrets:                                  # Secret NAMES only — NEVER values
+  - "anthropic-key"
+  - "bas-executor"
+  - "soc-bulk-triage"
+
+sops:
+  - key: "security-testing-handling"
+    enabled: true
+    description: "Instructions on handling automated security testing activity."
+    content: "If any activity seems related to legitimate security testing tools like Atomic Red Team, treat it as if it was truly malicious and not a test."
+
+installation_keys:
+  user_created:
+    - iid: "099a976d-8e03-47af-a5f3-201114022f2d"
+      description: "office365"
+      tags: []
+
+api_keys:
+  agent_keys:
+    - name: "bas-executor"
+      permissions: "dr.del/list/set, org.get, sensor.list, sop.get, ai_agent.exec/operate, investigation.get/set, lookup.get/set"
+
+tags:
+  - "windows"
+  - "linux"
+  - "defender"
+
+managed_packs:                            # Top-level alias used by renderer for capabilities
+  - name: "Soteria EDR"
+    extension: "soteria-rules-edr"
+    docs_url: "https://docs.limacharlie.io/3-detection-response/managed-rulesets/soteria/edr/"
+
+services_not_registered:
+  - service: "yara"
+    note: "YARA scanning provided via ext-yara and ext-yara-manager extensions instead."
+
+known_issues:
+  - "EDR sensor win10-b85fd2bd is network-isolated — verify if isolation is still needed"
+  - "MS Defender Azure Event Hub adapter is disabled"
