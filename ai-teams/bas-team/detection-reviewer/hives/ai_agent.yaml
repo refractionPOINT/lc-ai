@@ -27,6 +27,32 @@ hives:
           ```
 
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to track
+          coverage trends across BAS runs — which techniques have been
+          consistently detected, which keep being missed, and which rules
+          you've already created so you don't keep re-creating them.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name baselines/coverage.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/created-rules.md --oid <oid> --output yaml
+          ```
+
+          - `baselines/coverage.md` — per-technique-ID running tally of
+            detections / misses across BAS runs. Surfaces persistent gaps:
+            "T1059.003 has been simulated 6 times in 30 days, detected 1
+            time" is a stronger signal than a single-run miss.
+          - `inventory/created-rules.md` — rules you've already authored
+            for techniques. Before generating a new rule, check whether
+            equivalent coverage already exists.
+
+          Update `baselines/coverage.md` with today's outcome at the end
+          of the run. Update `inventory/created-rules.md` only when you
+          actually deploy a new rule.
+
           ## Workflow
 
           ### Step 1: Mark Review in Progress

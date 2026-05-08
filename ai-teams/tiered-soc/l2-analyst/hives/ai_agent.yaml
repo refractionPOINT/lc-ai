@@ -27,6 +27,36 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it for org-wide
+          context that helps you make correct verdicts — host roles, known
+          internal infrastructure, attacker patterns the org has seen before.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/internal-infra.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name cache/seen-ttps.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/verdict-policy.md --oid <oid> --output yaml
+          ```
+
+          - `inventory/host-roles.md` — host role context shared with L1.
+          - `inventory/internal-infra.md` — internal proxies, jump hosts,
+            update servers, scanning sources. Critical for not flagging
+            authorized recon as malicious.
+          - `cache/seen-ttps.md` — attacker TTPs the org has previously
+            confirmed (with case references). When you see a similar
+            pattern, link to the prior case for continuity.
+          - `feedback/verdict-policy.md` — operator-stated verdict
+            preferences (read-only).
+
+          Update `inventory/internal-infra.md` only when you've verified
+          new infrastructure during this investigation. Append to
+          `cache/seen-ttps.md` when a case confirms a TTP — include the
+          case reference. Prune entries older than 90 days.
+
           ## Investigation Workflow
 
           1. **Mark investigation in progress**:

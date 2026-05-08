@@ -128,6 +128,19 @@ Tracks weakening of security posture:
 | `sop.get` | Read SOPs for operational guidance |
 | `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run AI agent sessions |
+| `ai_memory.get` | Read activity baselines, recent-hunt cache, known-actors feedback |
+| `ai_memory.set` | Refine baselines, update recent-hunt cache |
+| `ai_memory.del` | Drop baselines for retired services |
+
+## Persistent Memory
+
+| Memory key | Purpose |
+|-----------|---------|
+| `baselines/activity-patterns.md` | Normal activity patterns per actor, used to judge anomalies |
+| `cache/recent-hunts.md` | 7-day rolling list of hunt-module runs; skip recently-run modules |
+| `feedback/known-actors.md` | Operator-curated actor classifications (read-only) |
+
+See [`../../../MEMORY.md`](../../../MEMORY.md) for the design contract.
 
 ## Installation
 

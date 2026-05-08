@@ -26,6 +26,32 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent memory record (the `ai_memory` hive). Use it
+          to remember the asset inventory across daily runs so reports are
+          stable and you don't redo discovery from a blank slate every day.
+
+          Read your memory at the very start of each run:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          ```
+
+          If memories exist, fetch the ones you need:
+          ```bash
+          limacharlie ai-memory get --memory-name inventory/subdomains.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/ips.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/dangling.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/cert-expiry.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/dns-security.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name state/last-run.md --oid <oid> --output yaml
+          ```
+
+          You will use these as a STARTING POINT, not a replacement for
+          discovery. crt.sh and DNS are authoritative — always query them.
+          Memory tells you what was true yesterday so you can produce a
+          stable diff today.
+
           ## Configuration
 
           The organization's monitored domains are stored in a lookup called `exposure-domains`.
@@ -249,7 +275,55 @@ hives:
           limacharlie case add-note --case-number <case_number> --type analysis --input-file /tmp/asset-inventory.md --oid <oid> --output yaml
           ```
 
-          ### Step 7: Hand Off to Exposure Scanner
+          ### Step 7: Update Persistent Memory
+
+          Persist the canonical post-merge inventory so tomorrow's run can
+          diff cleanly. Use one memory per facet — partial-merge means each
+          `set` only touches the named memory, not the whole record.
+
+          ```bash
+          # Build a Markdown table you'd be willing to read back tomorrow.
+          # Keep it concise — names, IPs, CNAMEs, status. Don't dump full
+          # cert chains or HTTP responses; those live in case notes.
+          cat > /tmp/mem-subdomains.md <<'MEMEOF'
+          # Subdomain Inventory (last verified <date>)
+
+          | Subdomain | IPs | CNAME | Status |
+          |-----------|-----|-------|--------|
+          | www.example.com | 1.2.3.4 | - | resolves |
+          | old.example.com | - | old.herokuapp.com | dangling |
+          MEMEOF
+          limacharlie ai-memory set --memory-name inventory/subdomains.md \
+              --content "$(cat /tmp/mem-subdomains.md)" --oid <oid>
+
+          # Same approach for ips, dangling, cert-expiry, dns-security.
+          # Drop a memory key if today's discovery shows the topic no longer
+          # applies (e.g. the dangling DNS was fixed):
+          limacharlie ai-memory delete --memory-name inventory/dangling.md --oid <oid>
+
+          # Pointer memory: when did we last run, what did we cover.
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          cat > /tmp/mem-last-run.md <<MEMEOF
+          last_run_utc: $NOW
+          domains_covered: <count>
+          subdomains_total: <count>
+          ips_total: <count>
+          dangling_total: <count>
+          cert_expiry_warnings: <count>
+          MEMEOF
+          limacharlie ai-memory set --memory-name state/last-run.md \
+              --content "$(cat /tmp/mem-last-run.md)" --oid <oid>
+          ```
+
+          What NOT to put in memory:
+          - Per-finding URLs, full HTTP responses, full cert chains — those
+            stay in case notes.
+          - Raw crt.sh responses — they're authoritative on the source side;
+            re-query each run.
+          - Anything you didn't actually verify this run (no fabricated
+            entries, no entries that "should be" there).
+
+          ### Step 8: Hand Off to Exposure Scanner
 
           Update the case summary and signal the downstream Exposure Scanner via an @mention note:
           ```bash

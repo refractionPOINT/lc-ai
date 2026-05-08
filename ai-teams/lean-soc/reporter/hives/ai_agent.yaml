@@ -25,6 +25,22 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it for KPI
+          baselines and reporting style preferences.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name baselines/kpis.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/reporting-style.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name state/last-report.md --oid <oid> --output yaml
+          ```
+
+          Update `state/last-report.md` at end. Update `baselines/kpis.md`
+          weekly (or when a sustained trend shift is observed).
+
           ## Workflow
 
           ### Part 1: Health Check

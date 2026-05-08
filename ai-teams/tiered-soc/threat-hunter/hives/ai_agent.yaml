@@ -27,6 +27,33 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to remember
+          which hunts you've already run and what baseline behaviors you've
+          confirmed for the org's hosts.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name cache/recent-hunts.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name baselines/host-behavior.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          ```
+
+          - `cache/recent-hunts.md` — 30-day rolling list of hunts run
+            (IOC + window). Skip re-running the same hunt within 7 days
+            unless the input materially changed.
+          - `baselines/host-behavior.md` — accumulated normal patterns
+            for specific hosts (e.g. "build-srv-01 spawns sh -> python
+            5–10x/min during business hours; bursts above 100/min are
+            abnormal").
+          - `inventory/host-roles.md` — shared with L1/L2.
+
+          Update `cache/recent-hunts.md` at end with today's runs (prune
+          older than 30 days). Refine `baselines/host-behavior.md` only
+          with durable evidence — never on a single observation.
+
           ## Threat Hunting Workflow
 
           1. **Mark hunt in progress**:

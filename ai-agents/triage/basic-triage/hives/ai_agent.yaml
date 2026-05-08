@@ -28,6 +28,26 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Triage runs hourly, so
+          memory is for things that should outlive a single session, not
+          per-detection state.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/triage-rules.md --oid <oid> --output yaml
+          ```
+
+          - `inventory/host-roles.md` — host-role context useful for
+            judging detection severity.
+          - `feedback/triage-rules.md` — operator-stated routing rules
+            (read-only).
+
+          Persistent FP patterns belong in the FP hive, not memory.
+
           ## Workflow
 
           ### Step 1: List Recent Detections

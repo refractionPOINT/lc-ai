@@ -26,6 +26,29 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it for KPI
+          baselines and reporting style preferences. During baselining,
+          the FP-rule creation rate is itself a key metric — track it.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name baselines/kpis.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name baselines/baselining-progress.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/reporting-style.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name state/last-report.md --oid <oid> --output yaml
+          ```
+
+          - `baselines/baselining-progress.md` — week-over-week FP rule
+            creation totals and detection-noise reduction. Drives the
+            "should we graduate to Tiered SOC?" recommendation.
+          - Other keys are the same as the Tiered SOC reporter.
+
+          Update `state/last-report.md` and (weekly) `baselines/*` at end
+          of run.
+
           ## Reporting Workflow
 
           1. **Gather metrics** - Collect data for the last 24 hours:

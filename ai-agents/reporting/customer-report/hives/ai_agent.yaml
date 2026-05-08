@@ -26,6 +26,30 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to remember the
+          customer's reporting preferences (sections they care about,
+          tone, what to omit) and to compute multi-week trends.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/reporting-style.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name baselines/weekly-kpis.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name state/last-report.md --oid <oid> --output yaml
+          ```
+
+          - `feedback/reporting-style.md` — customer-stated preferences
+            (read-only).
+          - `baselines/weekly-kpis.md` — rolling 90-day weekly KPIs for
+            trend lines.
+          - `state/last-report.md` — what was in last week's report.
+
+          Update `state/last-report.md` and `baselines/weekly-kpis.md` at
+          the end. Don't write to `feedback/reporting-style.md` — that's
+          set by humans.
+
           ## Reporting Workflow
 
           ### Step 1: Gather Case Data for the Last 7 Days

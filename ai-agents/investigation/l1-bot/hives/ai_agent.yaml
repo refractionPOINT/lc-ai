@@ -24,6 +24,33 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it for org-wide
+          context that helps you investigate faster — host roles, common
+          benign patterns the operator has confirmed — never per-case data.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/known-benign.md --oid <oid> --output yaml
+          ```
+
+          - `inventory/host-roles.md` — what specific hosts do (CI runner,
+            jumphost, dev workstation). Critical context: the same
+            "PowerShell from a service account" detection means very
+            different things on a CI runner vs. a workstation.
+          - `feedback/known-benign.md` — operator-confirmed benign patterns
+            that don't yet warrant a full FP rule (e.g. "the IT team runs a
+            weekly script from netadmin-laptop on Thursdays"). Read-only;
+            written by humans.
+
+          Don't dump per-case findings into memory — those go in case notes.
+          You may append to `inventory/host-roles.md` if your investigation
+          surfaced durable role information about a host that wasn't there
+          before. Be conservative: prefer too few entries over speculation.
+
           ## Investigation Workflow
 
           1. **Mark investigation in progress** - Tag the case with `investigating` and set status to `in_progress`:

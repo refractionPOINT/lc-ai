@@ -113,6 +113,9 @@ Note: The BAS Executor has a 30-minute TTL due to waiting for ART preparation, t
 | `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
 | `ai_agent.exec` | Trigger Detection Reviewer via @mention |
+| `ai_memory.get` | Read rotation state and operator-set exclusions |
+| `ai_memory.set` | Update rotation state at end of run |
+| `ai_memory.del` | Drop rotation entries older than 30 days |
 
 ### bas-reviewer
 
@@ -134,6 +137,21 @@ Note: The BAS Executor has a 30-minute TTL due to waiting for ART preparation, t
 | `sop.get` | Read SOPs |
 | `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
+| `ai_memory.get` | Read coverage baselines and created-rules inventory |
+| `ai_memory.set` | Update coverage baselines and rules inventory |
+| `ai_memory.del` | Drop entries for retired techniques/rules |
+
+## Persistent Memory
+
+| Agent | Memory key | Purpose |
+|-------|-----------|---------|
+| BAS Executor | `state/rotation.md` | 30-day rolling rotation log; ensures real coverage rotation |
+| BAS Executor | `feedback/excluded-hosts.md` | Operator-set host exclusions (read-only) |
+| BAS Executor | `feedback/excluded-techniques.md` | Operator-set technique exclusions (read-only) |
+| Detection Reviewer | `baselines/coverage.md` | Per-technique detection/miss tally across runs |
+| Detection Reviewer | `inventory/created-rules.md` | Rules already authored for given techniques |
+
+See [`../../MEMORY.md`](../../MEMORY.md) for the design contract.
 
 ## Operator Controls
 

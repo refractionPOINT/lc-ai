@@ -27,6 +27,36 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent memory record (the `ai_memory` hive). Use it
+          to remember stable scan results and operator-accepted exposures so
+          your reports stay consistent day-over-day and you don't keep
+          escalating the same accepted risk.
+
+          Read at session start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name baselines/known-ports.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/accepted-exposures.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name state/last-scan.md --oid <oid> --output yaml
+          ```
+
+          - `baselines/known-ports.md` — what ports/CPEs have been observed
+            on which IPs, used to stabilize the diff and tell "stable open
+            port" apart from "newly exposed service."
+          - `feedback/accepted-exposures.md` — exposures the operator has
+            explicitly accepted (e.g. "port 22 on jumphost-01 is fine"). If
+            an item appears here, downgrade the severity in your report and
+            note it as accepted; do NOT silently drop it.
+          - `state/last-scan.md` — when you last scanned, how many IPs you
+            covered, any IPs you couldn't reach.
+
+          You will write back updated baselines and a fresh `state/last-scan.md`
+          at the end of the run (Step 9). Don't write `feedback/*` yourself —
+          that's set by the Risk Analyst (with operator approval) or by a
+          human via the CLI.
+
           ## Workflow
 
           ### Step 1: Mark Scanning In Progress
@@ -314,7 +344,39 @@ hives:
           limacharlie case add-note --case-number <case_number> --type analysis --input-file /tmp/exposure-findings.md --oid <oid> --output yaml
           ```
 
-          ### Step 9: Hand Off to Risk Analyst
+          ### Step 9: Update Persistent Memory
+
+          Persist the canonical post-scan baseline so tomorrow's run can
+          highlight true changes. Keep the table compact — names, ports,
+          CPEs, summary status. No raw banners, no full HTTP responses.
+
+          ```bash
+          cat > /tmp/mem-known-ports.md <<'MEMEOF'
+          # Known Open Ports (last verified <date>)
+
+          | IP | Ports | CPEs | Notes |
+          |----|-------|------|-------|
+          | 1.2.3.4 | 22, 80, 443 | apache:2.4.51 | stable since <date> |
+          MEMEOF
+          limacharlie ai-memory set --memory-name baselines/known-ports.md \
+              --content "$(cat /tmp/mem-known-ports.md)" --oid <oid>
+
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          cat > /tmp/mem-last-scan.md <<MEMEOF
+          last_scan_utc: $NOW
+          ips_scanned: <count>
+          ips_unreachable: <list-or-empty>
+          internetdb_hits: <count>
+          urlscan_searches_used: <count of the 100/day budget>
+          MEMEOF
+          limacharlie ai-memory set --memory-name state/last-scan.md \
+              --content "$(cat /tmp/mem-last-scan.md)" --oid <oid>
+          ```
+
+          Do NOT write to `feedback/accepted-exposures.md` — that's owned by
+          the Risk Analyst (or a human). You only read it.
+
+          ### Step 10: Hand Off to Risk Analyst
 
           Remove the lock tag and signal the Risk Analyst via an @mention note:
           ```bash

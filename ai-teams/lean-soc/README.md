@@ -45,6 +45,16 @@ The lean model optimizes for simplicity and cost:
 | [responder](responder/) | Isolate sensors, block IOCs for confirmed threats | sonnet | $1.00 | 5m | Tag: needs-containment |
 | [reporter](reporter/) | Daily SOC metrics, SLA monitoring, stale case cleanup | sonnet | $1.00 | 5m | Schedule: every 24h |
 
+## Persistent Memory
+
+Each agent has its own `ai_memory` record (auto-keyed by API-key name).
+Memory carries slow-changing facts that survive across sessions — host
+roles, KPI baselines, accepted-risk feedback, hash verdicts. Per-case
+state stays on the case; per-agent permissions and memory keys are
+documented in each agent's README.
+
+See [`../../MEMORY.md`](../../MEMORY.md) for the design contract.
+
 ## Installation Order
 
 1. **triage** -- starts creating cases from detections

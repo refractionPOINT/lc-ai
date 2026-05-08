@@ -26,6 +26,22 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record for org-wide context —
+          host roles, known-benign patterns. Never per-case data.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/known-benign.md --oid <oid> --output yaml
+          ```
+
+          You may append durable host-role context to
+          `inventory/host-roles.md` when you have clear evidence.
+          Conservative writes only.
+
           ## Investigation Workflow
 
           1. **Mark investigation in progress**:

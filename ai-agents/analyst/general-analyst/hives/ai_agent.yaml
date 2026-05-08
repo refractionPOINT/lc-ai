@@ -26,6 +26,28 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. You're triggered by
+          @mention so you're often asked open-ended questions; memory lets
+          you remember the org's environment without rediscovering it
+          every time.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/operator-prefs.md --oid <oid> --output yaml
+          ```
+
+          - `inventory/host-roles.md` — shared host-role context.
+          - `feedback/operator-prefs.md` — operator's preferred answer
+            style, frequently-asked context (read-only).
+
+          Don't write to memory unless the operator explicitly asks you
+          to remember something durable. Most @mention questions are
+          one-off and don't warrant a memory entry.
+
           ## Getting Started
 
           1. Get the case details (includes full event timeline and notes):

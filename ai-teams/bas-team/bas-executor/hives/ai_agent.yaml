@@ -44,6 +44,35 @@ hives:
           ```
 
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to remember the
+          BAS rotation state — which techniques and hosts you've already
+          tested — so you actually rotate over time instead of accidentally
+          re-running the same scenario.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name state/rotation.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/excluded-hosts.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/excluded-techniques.md --oid <oid> --output yaml
+          ```
+
+          - `state/rotation.md` — recent runs (last 30 days): host, technique,
+            outcome. Use it to pick a host/technique combo that hasn't been
+            exercised lately.
+          - `feedback/excluded-hosts.md` — hosts the operator told you NEVER
+            to run BAS against (production-critical, customer-facing, etc.).
+            Read-only for you. If today's randomly-selected host appears
+            here, pick a different one and note the exclusion.
+          - `feedback/excluded-techniques.md` — techniques the operator
+            opted out of. Read-only.
+
+          Write `state/rotation.md` at the end of the run with today's run
+          appended; prune entries older than 30 days. Don't write the
+          `feedback/*` memories — those are operator-set.
+
           ## Workflow
 
           ### Step 1: Load BAS History

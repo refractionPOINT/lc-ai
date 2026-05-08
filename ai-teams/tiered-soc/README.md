@@ -64,6 +64,16 @@ Costs assume typical session lengths. Actual costs depend on investigation compl
 | [soc-manager](soc-manager/) | SLA monitoring, stale case cleanup | sonnet | $0.50 | 5m | Schedule: every 1h |
 | [shift-reporter](shift-reporter/) | Daily SOC summary with metrics | sonnet | $1.00 | 5m | Schedule: every 24h |
 
+## Persistent Memory
+
+Each agent has its own `ai_memory` record (auto-keyed by API-key name).
+Memory carries slow-changing facts that survive across sessions — host
+roles, internal infrastructure, hash verdicts, do-not-isolate hosts,
+KPI baselines, accumulated TTPs. Per-case state stays on the case;
+per-agent memory keys are documented in each agent's README.
+
+See [`../../MEMORY.md`](../../MEMORY.md) for the design contract.
+
 ## Installation Order
 
 Install agents in this order (the D&R rules reference agent definitions that must exist first):

@@ -36,6 +36,23 @@ This team is fundamentally different from single-org teams:
 
 Runs on a daily schedule but only performs a full refresh when the inventory is older than 7 days. Profiles all tenant orgs (sensors, platforms, extensions) and stores the result as the `mdr-tenant-inventory` org note in the central org. Other agents read this note instead of re-profiling.
 
+### Persistent Memory (Per-Agent)
+
+Each agent in the pipeline maintains its own `ai_memory` record so it can answer "what did I do yesterday?" without re-reading every case in the org. The org note remains the cross-agent contract; memory is each agent's private bookkeeping.
+
+| Agent | Memory key | Purpose |
+|-------|-----------|---------|
+| Tenant Profiler | `state/last-profile.md` | When the last full refresh ran, error list |
+| Tenant Profiler | `inventory/skipped-tenants.md` | Test/demo orgs the operator says to omit (read-only for the agent) |
+| Intel Scout | `cache/intel-fingerprints.md` | 14-day rolling list of intel IDs already reported, prevents stale re-reporting |
+| Intel Scout | `cache/source-health.md` | Per-source consecutive-failure counter; surfaces broken feeds |
+| Detection Engineer | `inventory/coverage-map.md` | TTP-by-tenant matrix of deployed rules; skip generation if covered |
+| Detection Engineer | `feedback/rule-quality.md` | Operator notes on rules that produced FPs (read-only for the agent) |
+| Threat Hunter | `cache/recent-hunts.md` | 30-day rolling list of hunts run; skip re-runs within 7 days |
+| Threat Hunter | `inventory/host-roles.md` | Durable host-role context (CI runner, jumphost, etc.) |
+
+See [`../../MEMORY.md`](../../MEMORY.md) for the design contract.
+
 ### Phase 1: Intel Scout
 
 Runs daily on a 24-hour schedule. Creates an INFO-level case in the central org as the daily pipeline report, then:
@@ -154,6 +171,9 @@ The User API Key's roles across tenant orgs should include:
 | `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow agents to run |
 | `ai_agent.exec` | Allow agents to trigger downstream agents |
+| `ai_memory.get` | Read persistent memory (coverage map, intel fingerprints, host roles) |
+| `ai_memory.set` | Write persistent memory at end of run |
+| `ai_memory.del` | Drop memories that no longer apply |
 
 ## Cost Profile
 

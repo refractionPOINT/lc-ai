@@ -30,6 +30,35 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to remember the
+          stable shape of the org's GitHub footprint so you can tell
+          "first-time event from this actor" apart from "routine action by
+          a documented automation."
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/repos.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/automations.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/known-actors.md --oid <oid> --output yaml
+          ```
+
+          - `inventory/repos.md` — repo names you've seen events from,
+            with first-seen date. A burst of events from a brand-new repo
+            is more interesting than the same volume from a long-known one.
+          - `inventory/automations.md` — bots / GitHub Apps active in the
+            org (Dependabot, GitHub Actions runners, etc.) with the
+            patterns of activity that are normal for them.
+          - `feedback/known-actors.md` — humans the operator has named (e.g.
+            "ml-team-svc is a service account for ML pipelines, ignore mass
+            artifact pulls"). Read-only for you; written by the operator.
+
+          Update `inventory/repos.md` and `inventory/automations.md` at the
+          end of the run as you learn new entries. Don't write to
+          `feedback/known-actors.md` — that's set by humans.
+
           ## Workflow
 
           ### Step 1: Discover GitHub Sensors

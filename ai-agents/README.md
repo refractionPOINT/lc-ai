@@ -65,6 +65,18 @@ This is useful for agents that should process events sequentially rather than in
 
 Unlike D&R suppression which silently drops excess requests, debounce guarantees the latest request will eventually be processed.
 
+## Persistent Memory
+
+Agents in this repo have persistent memory via the `ai_memory` hive. Each
+agent has its own record (auto-keyed by the API-key name) where it stores
+slow-changing facts that survive across sessions: asset inventories, operator
+feedback, cached verdicts. See [`../MEMORY.md`](../MEMORY.md) for the design
+contract — what to remember, what not to remember, naming convention, and the
+read–diff–update workflow every memory-using agent follows.
+
+Memory permissions (`ai_memory.get`, `ai_memory.set`, `ai_memory.del`) are
+listed in each agent's README and provisioned by `lc-deployer`.
+
 ## Installation
 
 Use the `lc-deployer` skill from the [lc-essentials](../marketplace/plugins/lc-essentials/) plugin to install and remove agents.

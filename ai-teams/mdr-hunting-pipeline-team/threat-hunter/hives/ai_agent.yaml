@@ -28,6 +28,34 @@ hives:
           ```
 
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to remember which
+          hunts you've already run so you don't waste budget re-running the
+          same query against the same window every day.
+
+          Read at session start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name cache/recent-hunts.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          ```
+
+          - `cache/recent-hunts.md` — a rolling list of hunts you've run in
+            the last 30 days (IOC + tenant_oid + window). Skip re-hunting
+            the same IOC in the same tenant within 7 days unless the IOC
+            list changed materially.
+          - `inventory/host-roles.md` — accumulated context about specific
+            hosts (e.g. "host-build-01 is a CI runner; high process churn is
+            normal", "host-jumphost-01 is the only public SSH ingress").
+            Apply this when judging hunt hits — don't open a case for a
+            "suspicious" pattern that's been documented as expected.
+
+          Update `cache/recent-hunts.md` at end of run; prune entries older
+          than 30 days. Update `inventory/host-roles.md` only when you've
+          gathered durable evidence that a host plays a specific role —
+          don't infer this from one detection.
+
           ## Workflow
 
           ### Step 1: Mark Hunting in Progress
@@ -263,7 +291,25 @@ hives:
           ```
 
 
-          ### Step 8: Close the Daily Report
+          ### Step 8: Update Persistent Memory
+
+          Persist what you hunted today so tomorrow doesn't re-do the same
+          work:
+          ```bash
+          # cache/recent-hunts.md format (one line per hunt):
+          #   <date> <tenant_oid> <ioc-or-rule> <window>
+          # Prune entries older than 30 days before writing back.
+          limacharlie ai-memory set --memory-name cache/recent-hunts.md \
+              --content "$(cat /tmp/mem-recent-hunts.md)" --oid <oid>
+          ```
+
+          Only update `inventory/host-roles.md` if today's hunting produced
+          durable evidence about a host's role (e.g., consistent CI runner
+          patterns over weeks, documented in case notes). Do NOT infer host
+          roles from a single hunt.
+
+
+          ### Step 9: Close the Daily Report
 
           Finalize the daily pipeline report:
 
