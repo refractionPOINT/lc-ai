@@ -13,6 +13,8 @@ See [CONSTANTS.md](./CONSTANTS.md) for the authoritative source of LimaCharlie c
 - **WRONG**: `mcp__plugin_lc-essentials_limacharlie__lc_call_tool(...)` or spawning an api-executor agent
 - **CORRECT**: `Bash("limacharlie <noun> <verb> --oid <oid> --output yaml")`
 
+**Exception for see/browse intents in the AI Terminal**: when the user wants to *see or browse* their orgs (e.g. "show me my orgs", "list my orgs"), or asks "what can you do" / "help", emit an interactive card to the frontend by running `lc-card <card> [args]` via Bash. The script outputs a JSON descriptor that the frontend parses and renders inline as a clickable card. Available cards: `org-list [--search QUERY]`, `help`. After emitting a card, do **not** also describe the data in text — the card is the answer. This applies only to see/browse intents; counting, summarizing, mutating, and all other operations stay on the CLI.
+
 ## CLI Bootstrap
 
 The `limacharlie` CLI is **automatically installed** on session start via the SessionStart hook.

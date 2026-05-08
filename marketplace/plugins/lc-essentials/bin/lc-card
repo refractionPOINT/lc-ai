@@ -1,0 +1,95 @@
+#!/usr/bin/env python3
+"""Emit a UI card descriptor for the LimaCharlie AI Terminal frontend.
+
+The frontend parses the JSON descriptor from a tool_result's content and
+renders the matching card inline in chat. The script is the single source of
+truth for the descriptor schema — see the `render-cards` skill for the
+catalog and usage guidance.
+
+Output is JSON on stdout with no trailing newline so the tool_result content
+is a clean payload the frontend extractor can JSON.parse directly.
+
+If invoked outside the ai-sessions runner (e.g. from a user's plain
+Claude Code install where lc-essentials is loaded but no card-rendering
+frontend exists), the script exits with a clear error directing the AI to
+answer via the LC CLI instead, so the user doesn't see a JSON dump.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+
+
+# Emit cards only when the runtime explicitly advertises card-rendering
+# support via LC_AI_TERMINAL_CARDS=1. The ai-sessions runner sets this when
+# launching the bridge (see internal/runner/process.go); external Claude
+# Code installs never have it set. Bails early so the rest of main() can
+# assume cards are available.
+def ensure_cards_enabled() -> None:
+    if os.environ.get("LC_AI_TERMINAL_CARDS") != "1":
+        sys.stderr.write("Cards are disabled in this session. Use other means to display the data.\n")
+        sys.exit(1)
+
+
+def org_list(args: argparse.Namespace) -> dict:
+    props: dict = {}
+    if args.search:
+        props["search"] = args.search
+    summary = (
+        f'Orgs matching "{args.search}"' if args.search else "Your accessible orgs"
+    )
+    return {
+        "summary": summary,
+        "ui": {"component": "OrgListCard", "version": 1, "props": props},
+    }
+
+
+def help_card(_: argparse.Namespace) -> dict:
+    return {
+        "summary": "Available slash commands",
+        "ui": {"component": "HelpCard", "version": 1, "props": {}},
+    }
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="lc-card",
+        description=(
+            "Emit a UI card descriptor for the LimaCharlie AI Terminal. "
+            "Output is the descriptor JSON to stdout."
+        ),
+    )
+    sub = parser.add_subparsers(dest="card", required=True)
+
+    p_orgs = sub.add_parser(
+        "org-list",
+        help="Render an interactive list of the user's accessible orgs.",
+    )
+    p_orgs.add_argument(
+        "--search",
+        help="Optional substring matched against org name, code, OID, or description.",
+    )
+    p_orgs.set_defaults(handler=org_list)
+
+    p_help = sub.add_parser(
+        "help",
+        help="Render the AI Terminal's slash command palette.",
+    )
+    p_help.set_defaults(handler=help_card)
+
+    return parser
+
+
+def main() -> int:
+    ensure_cards_enabled()
+    parser = build_parser()
+    args = parser.parse_args()
+    descriptor = args.handler(args)
+    sys.stdout.write(json.dumps(descriptor, separators=(",", ":")))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
