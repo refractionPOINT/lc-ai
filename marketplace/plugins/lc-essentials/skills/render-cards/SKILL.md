@@ -48,6 +48,12 @@ of truth for the descriptor schema.
 
 ## Available cards
 
+Each card section below documents its props as a JSON Schema fragment — the
+exact shape the frontend validates after `lc-card` translates your CLI args
+into the descriptor. Stay within the schema's bounds (e.g. `maxLength`,
+`maximum`) to avoid validation failures that drop you back to a raw JSON
+view.
+
 ### org-list
 
 The user wants to see / browse their accessible orgs as an interactive list.
@@ -55,9 +61,34 @@ The card has its own pagination, inline detail view, and search. Don't worry
 about pre-filtering or pre-paginating — emit it once and the user drives the
 rest.
 
-**Args**
+**Usage**
 
-- `--search QUERY` — optional substring matched against org name, code, OID, or description.
+```bash
+lc-card org-list [--search QUERY]
+```
+
+**Props schema**
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "search": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "Substring matched against org name, code, OID, or description."
+    },
+    "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "description": "Page size for the list view. Defaults to 5 when omitted."
+    }
+  },
+  "additionalProperties": false
+}
+```
 
 **Examples**
 
@@ -78,7 +109,17 @@ lc-card org-list --search acme
 The user wants a list of available local slash commands / shortcuts in the
 AI Terminal.
 
-**Args:** none.
+**Usage**
+
+```bash
+lc-card help
+```
+
+**Props schema**
+
+```json
+{ "type": "object", "properties": {}, "additionalProperties": false }
+```
 
 **Example**
 
