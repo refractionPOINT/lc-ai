@@ -104,6 +104,9 @@ Create an API key named `limacharlie-maintainer` with:
 | `sop.set` | Create starter SOUL.md on first run |
 | `ai_agent.get` | List AI sessions and transcripts |
 | `ai_agent.operate` | Allow the agent to run |
+| `ai_memory.get` | Read persistent memory at session start |
+| `ai_memory.set` | Update persistent memory with verified facts |
+| `ai_memory.del` | Drop memories that no longer apply |
 
 ## Configuration
 

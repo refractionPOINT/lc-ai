@@ -59,6 +59,9 @@ Session terminates (one_shot)
 | `sop.get` | Read SOPs for operational guidance |
 | `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
+| `ai_memory.get` | Read persistent memory at session start |
+| `ai_memory.set` | Update persistent memory with verified facts |
+| `ai_memory.del` | Drop memories that no longer apply |
 
 The note author must also have `ai_agent.exec` permission for the D&R rule to trigger.
 

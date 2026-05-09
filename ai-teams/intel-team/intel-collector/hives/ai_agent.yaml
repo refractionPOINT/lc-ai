@@ -25,6 +25,30 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. The `intel-seen` lookup
+          handles per-item dedup; memory carries prose-level context that's
+          awkward in a flat lookup.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name cache/source-health.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name state/last-collection.md --oid <oid> --output yaml
+          ```
+
+          - `cache/source-health.md` — per-source consecutive-failure
+            counter. If a source fails for 3+ days running, surface that in
+            today's case so a human can investigate the feed.
+          - `state/last-collection.md` — when collection last ran, totals
+            per source. Used by you and by the analyzer downstream as a
+            sanity reference.
+
+          Write back at the end. Do NOT mirror the seen-ledger keys into
+          memory — that's redundant with the lookup and would blow past the
+          1024-entry cap.
+
           ## Deduplication
 
           This pipeline runs daily. To avoid re-processing the same intelligence every day, you

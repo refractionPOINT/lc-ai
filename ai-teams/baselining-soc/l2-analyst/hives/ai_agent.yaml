@@ -27,6 +27,26 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it for org-wide
+          context that helps you make correct verdicts during the
+          baselining period: host roles, internal infrastructure, attacker
+          patterns the org has seen.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/internal-infra.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name cache/seen-ttps.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/verdict-policy.md --oid <oid> --output yaml
+          ```
+
+          See L2 Analyst commentary in `../../MEMORY.md` for what to write
+          back. During baselining, be EXTRA conservative about writing —
+          you're still learning what's normal in this org.
+
           ## Investigation Workflow
 
           1. **Mark investigation in progress**:

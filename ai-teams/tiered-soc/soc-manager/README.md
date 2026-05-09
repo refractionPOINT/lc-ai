@@ -50,6 +50,9 @@ Create an API key named `soc-manager` with these permissions:
 | `sop.get` | Read SOPs for operational guidance |
 | `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
+| `ai_memory.get` | Read persistent memory at session start |
+| `ai_memory.set` | Update persistent memory with verified facts |
+| `ai_memory.del` | Drop memories that no longer apply |
 
 ## Configuration
 

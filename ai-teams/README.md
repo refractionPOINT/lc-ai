@@ -70,6 +70,20 @@ Several mechanisms prevent infinite loops:
 5. **Debounce** -- `debounce_key` serializes sessions so only one runs at a time per key, with pending requests re-fired on completion (unlike suppression which drops excess requests)
 6. **SOC Manager** -- detects stale lock tags and cleans them up (Tiered and Baselining SOCs)
 
+## Persistent Memory
+
+Every agent has a persistent `ai_memory` record that survives across sessions.
+Memory is for slow-changing facts the agent accumulates over time — asset
+inventories, operator feedback, cached verdicts — never per-case state. See
+[`../MEMORY.md`](../MEMORY.md) for the full design contract: what belongs in
+memory, what doesn't, naming convention, partial-merge semantics, and
+cross-agent coordination rules.
+
+The exposure team is the canonical example: `asset-discovery` writes the
+subdomain/IP inventory once; on every subsequent run it reads memory, diffs
+against fresh data, and updates only what changed. The risk analyst remembers
+operator-accepted risks so the same finding doesn't re-escalate every day.
+
 ## Prerequisites
 
 All SOCs require:

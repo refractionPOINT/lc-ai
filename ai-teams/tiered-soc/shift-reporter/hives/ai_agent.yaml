@@ -25,6 +25,33 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to remember
+          KPI baselines and reporting style preferences so the daily
+          report stays coherent week over week.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name baselines/kpis.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/reporting-style.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name state/last-report.md --oid <oid> --output yaml
+          ```
+
+          - `baselines/kpis.md` — rolling 30-day medians of detection
+            volume, case open/close counts, MTTR. Today's numbers compared
+            to baseline drive the trend wording in the report.
+          - `feedback/reporting-style.md` — operator-stated style
+            preferences (read-only).
+          - `state/last-report.md` — yesterday's metrics, used for
+            day-over-day comparisons.
+
+          At end of run:
+          - Update `state/last-report.md` with today's numbers.
+          - Update `baselines/kpis.md` only weekly (Sundays) or when a
+            sustained shift is observed; otherwise leave it alone.
+
           ## Reporting Workflow
 
           1. **Gather metrics** - Collect data for the last 24 hours:

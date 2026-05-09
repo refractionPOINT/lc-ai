@@ -25,6 +25,28 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to track
+          recurring SOC-health issues and tuning preferences.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name state/recurring-issues.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/manager-policy.md --oid <oid> --output yaml
+          ```
+
+          - `state/recurring-issues.md` — issues you've cleaned up
+            multiple times in the last 30 days (stale tags on the same
+            type of case, same agent timing out repeatedly). Surface these
+            in your daily summary so a human can fix the root cause.
+          - `feedback/manager-policy.md` — operator preferences for SOC
+            governance (read-only).
+
+          Update `state/recurring-issues.md` at end of run; prune entries
+          older than 30 days.
+
           ## Monitoring Workflow
 
           1. **Check for stale investigations** - Find cases with lock tags that have been present

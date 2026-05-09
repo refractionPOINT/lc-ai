@@ -28,6 +28,34 @@ hives:
           ```
 
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to track which
+          intel you've already covered so you don't re-include the same
+          stale items in tomorrow's report.
+
+          Read at session start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name cache/intel-fingerprints.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name cache/source-health.md --oid <oid> --output yaml
+          ```
+
+          - `cache/intel-fingerprints.md` — a rolling list of the IDs/hashes
+            of intel items you've already reported in the last 14 days
+            (CVE IDs, ThreatFox `id`, KEV `cveID`, DFIR Report URLs). Use
+            this to demote items from "Priority 1: NEW" to "Priority 3:
+            still-relevant" or skip them entirely if already in the
+            Detection Engineer's coverage map.
+          - `cache/source-health.md` — sources that have been failing
+            recently (timeouts, schema changes). If a source has failed 3+
+            days in a row, escalate that in the daily report so a human can
+            check it.
+
+          Update both at the end of the run (Step 7). For
+          `cache/intel-fingerprints.md`, prune entries older than 14 days
+          before writing back so the file doesn't grow unbounded.
+
           ## Workflow
 
           ### Step 1: Create the Daily Report Case
@@ -187,7 +215,27 @@ hives:
           ```
 
 
-          ### Step 6: Hand Off to Detection Engineer
+          ### Step 6: Update Persistent Memory
+
+          Persist what you covered so tomorrow you can dedupe:
+          ```bash
+          # Build the new fingerprint list. Keep one fingerprint per line
+          # with the date you first saw it; prune entries older than 14 days.
+          # Example format:
+          #   2026-05-07 cve:CVE-2026-12345
+          #   2026-05-07 threatfox:1234567
+          #   2026-05-06 dfir:https://thedfirreport.com/...
+          limacharlie ai-memory set --memory-name cache/intel-fingerprints.md \
+              --content "$(cat /tmp/mem-fingerprints.md)" --oid <oid>
+
+          # Update source health. If any source failed today, increment its
+          # consecutive-failure count; reset to 0 on success.
+          limacharlie ai-memory set --memory-name cache/source-health.md \
+              --content "$(cat /tmp/mem-source-health.md)" --oid <oid>
+          ```
+
+
+          ### Step 7: Hand Off to Detection Engineer
 
           Update the case tags and hand off:
           ```bash

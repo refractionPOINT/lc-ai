@@ -36,6 +36,24 @@ hives:
           its procedures into your workflow.
 
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it for org-wide
+          context (host roles, known-benign patterns) — never per-case
+          data, which lives on the case itself.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/known-benign.md --oid <oid> --output yaml
+          ```
+
+          You may append durable role information to `inventory/host-roles.md`
+          when your investigation produces clear evidence of a host's role.
+          Be conservative — never infer role from a single observation.
+
+
           ## Workflow
 
           ### Step 1: Load the case and its history

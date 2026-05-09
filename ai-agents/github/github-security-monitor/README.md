@@ -85,6 +85,19 @@ The monitor looks for attack chains across events:
 | `ext.request` | Make requests to extensions (ext-cases) |
 | `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run AI agent sessions |
+| `ai_memory.get` | Read repo and automation inventories, known-actors feedback |
+| `ai_memory.set` | Update inventories with newly-seen repos/automations |
+| `ai_memory.del` | Drop inventory entries for retired repos |
+
+## Persistent Memory
+
+| Memory key | Purpose |
+|-----------|---------|
+| `inventory/repos.md` | Repos with first-seen date — surfaces brand-new repo activity |
+| `inventory/automations.md` | Bots / GitHub Apps and their normal activity patterns |
+| `feedback/known-actors.md` | Operator-curated actor classifications (read-only) |
+
+See [`../../../MEMORY.md`](../../../MEMORY.md) for the design contract.
 
 ## Installation
 

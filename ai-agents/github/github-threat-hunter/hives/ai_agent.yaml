@@ -25,6 +25,35 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to track which
+          hunt modules you've executed and what baselines you've already
+          learned about the org's GitHub activity.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name baselines/activity-patterns.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name cache/recent-hunts.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/known-actors.md --oid <oid> --output yaml
+          ```
+
+          - `baselines/activity-patterns.md` — accumulated normal-activity
+            patterns (e.g. "ml-pipeline-svc pulls ~200 artifacts/day around
+            02:00 UTC; bursts above 1000 are abnormal"). Use as a reference
+            when judging anomalies.
+          - `cache/recent-hunts.md` — 7-day rolling list of hunt-module
+            runs. Skip a module if its last successful run was within 24h
+            and the input data hasn't changed materially.
+          - `feedback/known-actors.md` — same memory the security-monitor
+            agent reads (operator-curated actor classifications). Honour
+            it.
+
+          Update `baselines/activity-patterns.md` only when today's data
+          gives you durable evidence to refine an existing baseline — never
+          flip a baseline based on a single day.
+
           ## Workflow
 
           ### Step 1: Discover GitHub Sensors

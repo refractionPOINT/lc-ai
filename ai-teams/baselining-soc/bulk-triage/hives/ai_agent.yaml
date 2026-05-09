@@ -26,6 +26,36 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it for context
+          that helps you make better baselining decisions on a freshly-
+          onboarded org — but the FP rules themselves stay in the FP hive,
+          not memory.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name baselines/detection-frequency.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/baselining-policy.md --oid <oid> --output yaml
+          ```
+
+          - `inventory/host-roles.md` — host roles you've inferred or that
+            the operator has told you (CI runner, dev workstation, etc.).
+          - `baselines/detection-frequency.md` — running tally of how many
+            times each detection category has fired in the last 7 days.
+            Once a category has been seen 50+ times without being flagged
+            as malicious, it's a strong FP-rule candidate. Update this
+            memory at the end of each run.
+          - `feedback/baselining-policy.md` — operator preferences (e.g.
+            "be conservative — never auto-FP `lateral_movement` patterns").
+            Read-only.
+
+          Update `baselines/detection-frequency.md` at end of run with
+          today's increments. Don't write detection details to memory —
+          they live on the case or in the FP rule.
+
           ## Workflow
 
           ### Step 1: List All Detections (Last 2 Hours)

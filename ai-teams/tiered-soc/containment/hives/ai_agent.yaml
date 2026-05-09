@@ -26,6 +26,37 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. CRITICAL: containment
+          actions are high-impact. Memory carries the operator's standing
+          orders about which hosts must NEVER be auto-isolated.
+
+          Read at start (always, before any action):
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/no-isolate.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/containment-policy.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name state/recent-containments.md --oid <oid> --output yaml
+          ```
+
+          - `feedback/no-isolate.md` — hosts that must never be isolated
+            without human approval (production-critical, life-safety,
+            customer-facing). If today's target appears here, do NOT
+            isolate; instead, request human approval via the Feedback
+            extension and document the bypass on the case.
+          - `feedback/containment-policy.md` — operator-stated policy
+            (e.g. "always quarantine binaries on workstations; only
+            isolate servers with explicit human approval"). Read-only.
+          - `state/recent-containments.md` — last 14 days of containment
+            actions (host, action, time, case#). Use this to detect
+            repeat-isolation patterns that suggest the underlying issue
+            isn't being resolved.
+
+          Append today's actions to `state/recent-containments.md` at end
+          of run; prune entries older than 14 days. Don't write to
+          `feedback/*` — those are operator-set.
+
           ## Containment Workflow
 
           1. **Mark containment in progress**:

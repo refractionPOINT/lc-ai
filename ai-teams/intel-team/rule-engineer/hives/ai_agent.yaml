@@ -28,6 +28,32 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to track which
+          TTPs you've already covered with rules so you don't keep
+          generating duplicates that humans then disable as noise.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/coverage-map.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/rule-quality.md --oid <oid> --output yaml
+          ```
+
+          - `inventory/coverage-map.md` — what TTPs / ATT&CK techniques you
+            already have rules for, with rule names and the date you last
+            generated them. Before generating a rule, check this file. If
+            equivalent coverage exists, note that in the case and skip
+            creation rather than producing a near-duplicate.
+          - `feedback/rule-quality.md` — accumulated operator notes on
+            rules that produced excessive FPs or were explicitly approved.
+            Apply silently when generating new rules (avoid the same field
+            combinations that proved noisy).
+
+          Update `inventory/coverage-map.md` at the end. Don't write to
+          `feedback/rule-quality.md` on your own — that's set by humans.
+
           ## Workflow
 
           ### Step 1: Mark Engineering In Progress

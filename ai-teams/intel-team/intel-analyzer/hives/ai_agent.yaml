@@ -27,6 +27,30 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to remember the
+          org's platform/adapter profile so you don't re-derive it every run
+          (sensor list rarely changes day-over-day) and to track which
+          themes you've already analyzed.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/platform-profile.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name cache/themes-covered.md --oid <oid> --output yaml
+          ```
+
+          - `inventory/platform-profile.md` — current EDR platforms and
+            adapter types in the org. ALWAYS verify with a fresh
+            `sensor list` and update the memory if the profile changed.
+            Memory is the starting point, not a substitute for verification.
+          - `cache/themes-covered.md` — 30-day rolling list of attack
+            themes you've already produced analysis for (e.g.
+            `2026-04-22 lateral-movement-via-rdp`). If today's intel maps
+            to an already-covered theme, reference the prior coverage and
+            extend rather than starting fresh.
+
           ## Workflow
 
           ### Step 1: Mark Analysis In Progress

@@ -73,6 +73,17 @@ The bulk triage is more expensive per-run than per-detection triage, but process
 | [soc-manager](soc-manager/) | SLA monitoring, stale case cleanup | sonnet | $0.50 | 5m | Schedule: every 1h |
 | [shift-reporter](shift-reporter/) | Daily SOC summary with FP baselining metrics | sonnet | $1.00 | 5m | Schedule: every 24h |
 
+## Persistent Memory
+
+Each agent has its own `ai_memory` record (auto-keyed by API-key name).
+Memory carries slow-changing facts that survive across sessions — during
+the baselining period it's especially valuable for host roles,
+detection-frequency tallies, and accumulated TTPs that should carry
+forward when the org graduates to the Tiered SOC. Per-case state stays
+on the case.
+
+See [`../../MEMORY.md`](../../MEMORY.md) for the design contract.
+
 ## Installation Order
 
 1. **bulk-triage** -- starts processing detections hourly and creating FP rules

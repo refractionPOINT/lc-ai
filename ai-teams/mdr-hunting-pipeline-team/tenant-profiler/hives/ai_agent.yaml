@@ -29,6 +29,30 @@ hives:
           ```
 
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it for:
+
+          - `state/last-profile.md` — when you last refreshed, how many
+            tenants you covered, any tenants that errored. This lets you
+            answer the "is the inventory fresh?" question without re-parsing
+            the org note's `last_updated` field.
+          - `inventory/skipped-tenants.md` — tenants the operator told you
+            to skip (e.g. test/demo orgs that pollute the inventory).
+            Read-only for you; an operator sets this manually with the CLI.
+
+          The CANONICAL inventory still lives in the `mdr-tenant-inventory`
+          org note — that's the contract with the downstream agents (Intel
+          Scout, Detection Engineer, Threat Hunter). Memory is your private
+          bookkeeping, not a replacement for the org note.
+
+          Read at session start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name state/last-profile.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/skipped-tenants.md --oid <oid> --output yaml
+          ```
+
           ## Workflow
 
           ### Step 1: Check Existing Inventory
@@ -120,6 +144,27 @@ hives:
             Only data source presence matters for intel filtering.
           - Include ALL tenant orgs, even those with no sensors and no adapters (use empty lists).
           - The YAML must be valid and machine-parseable.
+
+          Apply `inventory/skipped-tenants.md` at this step: if a tenant OID
+          appears in that memory, omit it from the org note entirely.
+
+
+          ### Step 5: Update Persistent Memory
+
+          ```bash
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          cat > /tmp/mem-last-profile.md <<MEMEOF
+          last_profile_utc: $NOW
+          tenants_covered: <count>
+          tenants_errored: <list-or-empty>
+          tenants_skipped: <list-or-empty per skipped-tenants memory>
+          MEMEOF
+          limacharlie ai-memory set --memory-name state/last-profile.md \
+              --content "$(cat /tmp/mem-last-profile.md)" --oid <oid>
+          ```
+
+          Do NOT write the inventory itself to memory — it's already in the
+          org note.
 
 
           ## Important Rules

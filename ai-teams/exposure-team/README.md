@@ -100,6 +100,9 @@ All sources are free with no API keys required:
 | `ai_agent.exec` | Asset Discovery, Exposure Scanner | Trigger downstream agents via @mention notes |
 | `lookup.get` | Asset Discovery, Risk Analyst | Read exposure-domains config and exposure-seen ledger |
 | `lookup.set` | Risk Analyst | Update exposure-seen ledger |
+| `ai_memory.get` | All | Read persistent memory (asset inventory, baselines, accepted risks) |
+| `ai_memory.set` | All | Write persistent memory at end of run |
+| `ai_memory.del` | All | Drop memories that no longer apply (e.g. fixed dangling DNS) |
 
 ## Configuration
 
@@ -169,6 +172,24 @@ previous scan. This enables change detection:
 - **New findings**: Not in previous scan → highlighted in report
 - **Resolved findings**: In previous scan but not current → noted as fixed
 - **Persistent findings**: In both scans → tracked as ongoing risk
+
+In addition to the lookup ledger, each agent maintains its own `ai_memory`
+record for prose-level context that's awkward to fit in a flat key/value
+lookup:
+
+| Agent | Memory key | Purpose |
+|-------|-----------|---------|
+| Asset Discovery | `inventory/subdomains.md`, `inventory/ips.md`, `inventory/dangling.md`, `inventory/cert-expiry.md`, `inventory/dns-security.md` | Stable view of the org's external surface |
+| Asset Discovery | `state/last-run.md` | When discovery last ran, what it covered |
+| Exposure Scanner | `baselines/known-ports.md` | Stable port/CPE map per IP, used to surface true changes |
+| Exposure Scanner | `state/last-scan.md` | When the scan ran, IPs covered, urlscan budget used |
+| Risk Analyst | `feedback/accepted-risks.md` | Operator-accepted exposures (explicit only) — downgrade severity, never re-escalate |
+| Risk Analyst | `feedback/reporting-style.md` | Operator-stated style preferences |
+| Risk Analyst | `state/last-report.md` | Yesterday's report counts, used for trend lines |
+
+See [`../../MEMORY.md`](../../MEMORY.md) for the design contract that all of
+these follow (read–diff–update workflow, what not to put in memory, partial
+merge semantics).
 
 ## Files
 

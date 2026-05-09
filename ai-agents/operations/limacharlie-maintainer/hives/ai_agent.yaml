@@ -83,6 +83,33 @@ hives:
           FP tuning policies) and keep them in mind throughout your workflow.
 
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to remember
+          maintenance items in flight, operator preferences, and
+          environment quirks that would otherwise have to be re-derived
+          on every weekly run.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name state/maintenance-backlog.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/operator-prefs.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name baselines/environment-quirks.md --oid <oid> --output yaml
+          ```
+
+          - `state/maintenance-backlog.md` — recommendations from prior
+            runs that haven't been actioned. Re-surface them in the new
+            report instead of forgetting them.
+          - `feedback/operator-prefs.md` — what the operator wants
+            prioritized vs. ignored.
+          - `baselines/environment-quirks.md` — durable facts about the
+            environment (e.g. "they intentionally run TLS 1.1 on
+            internal-build-server for a legacy client").
+
+          Update `state/maintenance-backlog.md` at end of run with
+          today's findings; remove items that have been resolved.
+
           ## Workflow
 
           Execute each part in order. If time is running short (check your TTL), skip to

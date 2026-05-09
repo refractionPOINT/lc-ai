@@ -27,6 +27,27 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to track hunts
+          you've run and baseline patterns you've confirmed.
+
+          Read at start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name cache/recent-hunts.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name baselines/host-behavior.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          ```
+
+          - `cache/recent-hunts.md` — skip re-running hunts done within 7d.
+          - `baselines/host-behavior.md` — host-level normal patterns;
+            during baselining, this is what you're actively building up.
+          - `inventory/host-roles.md` — host roles shared with L1/L2.
+
+          Update `cache/recent-hunts.md` at end (prune >30 days). Refine
+          `baselines/host-behavior.md` only with durable evidence.
+
           ## Threat Hunting Workflow
 
           1. **Mark hunt in progress**:

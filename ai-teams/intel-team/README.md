@@ -103,6 +103,9 @@ Agents signal each other by writing case notes with @mentions. D&R rules match o
 | `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
 | `ai_agent.exec` | Trigger Intel Analyzer via @mention note |
+| `ai_memory.get` | Read source-health memory and last-collection state |
+| `ai_memory.set` | Write source-health and state at end of run |
+| `ai_memory.del` | Drop memories that no longer apply |
 
 ### intel-analyzer
 
@@ -118,6 +121,9 @@ Agents signal each other by writing case notes with @mentions. D&R rules match o
 | `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run |
 | `ai_agent.exec` | Trigger Rule Engineer via @mention note |
+| `ai_memory.get` | Read platform-profile and themes-covered memory |
+| `ai_memory.set` | Write platform-profile and themes-covered memory |
+| `ai_memory.del` | Drop memories that no longer apply |
 
 ### intel-engineer
 
@@ -133,6 +139,25 @@ Agents signal each other by writing case notes with @mentions. D&R rules match o
 | `investigation.set` | Update case with report, close it |
 | `org_notes.*` | Read and write org notes |
 | `ai_agent.operate` | Allow the agent to run |
+| `ai_memory.get` | Read coverage-map and rule-quality feedback memory |
+| `ai_memory.set` | Write coverage-map memory at end of run |
+| `ai_memory.del` | Drop memories for retired rules |
+
+## Persistent Memory
+
+Each agent in the team has its own `ai_memory` record for prose-level
+context that doesn't fit cleanly in the existing `intel-seen` lookup ledger.
+
+| Agent | Memory key | Purpose |
+|-------|-----------|---------|
+| Intel Collector | `cache/source-health.md` | Per-source consecutive-failure counter |
+| Intel Collector | `state/last-collection.md` | When collection last ran, totals per source |
+| Intel Analyzer | `inventory/platform-profile.md` | Cached EDR/adapter profile (verified each run) |
+| Intel Analyzer | `cache/themes-covered.md` | 30-day rolling list of attack themes already analyzed |
+| Rule Engineer | `inventory/coverage-map.md` | TTPs already covered by rules; skip duplicates |
+| Rule Engineer | `feedback/rule-quality.md` | Operator notes on rule FPs (read-only for the agent) |
+
+See [`../../MEMORY.md`](../../MEMORY.md) for the design contract.
 
 ## Installation
 

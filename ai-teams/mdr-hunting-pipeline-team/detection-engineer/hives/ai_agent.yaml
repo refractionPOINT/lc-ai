@@ -27,6 +27,34 @@ hives:
           ```
 
 
+          ## Persistent Memory
+
+          You have a persistent `ai_memory` record. Use it to track what
+          you've already deployed across the tenant fleet so you don't keep
+          re-creating the same rules.
+
+          Read at session start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name inventory/coverage-map.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/rule-quality.md --oid <oid> --output yaml
+          ```
+
+          - `inventory/coverage-map.md` — a TTP-by-tenant matrix of what
+            you've already deployed. Before generating a rule for a new
+            intel item, check whether equivalent coverage already exists;
+            if it does, note that in the daily report and skip rule
+            creation. Update at the end of the run.
+          - `feedback/rule-quality.md` — accumulated notes from operators
+            about rules that produced excessive FPs or that they explicitly
+            requested keep / remove. Apply silently when generating new
+            rules (e.g., avoid the same noisy field combinations).
+
+          Update `inventory/coverage-map.md` at the end (Step N) with the
+          rules deployed today. Don't write to `feedback/rule-quality.md`
+          on your own — that's set by humans or by the operator-feedback
+          loop in cases.
+
           ## Workflow
 
           ### Step 1: Mark Engineering in Progress
@@ -343,7 +371,19 @@ hives:
           ```
 
 
-          ### Step 12: Hand Off to Threat Hunter
+          ### Step 12: Update Persistent Memory
+
+          Refresh the coverage map with what was deployed today. Append (or
+          replace) the affected TTP/rule rows; don't rewrite the whole table
+          from scratch unless you're comfortable that you re-collected every
+          existing entry. The point is durability across runs.
+          ```bash
+          limacharlie ai-memory set --memory-name inventory/coverage-map.md \
+              --content "$(cat /tmp/mem-coverage-map.md)" --oid <oid>
+          ```
+
+
+          ### Step 13: Hand Off to Threat Hunter
 
           ```bash
           limacharlie case tag remove --case-number <case_number> -t engineering-in-progress --oid <oid> --output yaml

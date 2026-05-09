@@ -26,6 +26,40 @@ hives:
           ```
           If a matching SOP is found, announce "Following SOP: [name]" and incorporate its procedures into your workflow.
 
+          ## Persistent Memory
+
+          You have a persistent memory record (the `ai_memory` hive). It's
+          where the team's risk decisions and reporting style accumulate over
+          time so reports stay coherent across daily runs.
+
+          Read at session start:
+          ```bash
+          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/accepted-risks.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name feedback/reporting-style.md --oid <oid> --output yaml
+          limacharlie ai-memory get --memory-name state/last-report.md --oid <oid> --output yaml
+          ```
+
+          - `feedback/accepted-risks.md` — exposures the operator has
+            explicitly accepted (e.g. "port 22 on jumphost-01 is intentional",
+            "self-signed cert on internal.dev.example.com is fine"). When you
+            see one of these in today's findings, downgrade severity by one
+            tier and tag it `accepted-risk` in the report — never re-escalate.
+          - `feedback/reporting-style.md` — accumulated style preferences
+            (which sections the operator wants, severity wording, what to
+            include in the executive summary). Apply silently.
+          - `state/last-report.md` — what you reported yesterday: trend
+            counts, escalations. Use it to compute multi-day trends ("3rd
+            consecutive day with new KEV findings").
+
+          You write back at the end (Step 9):
+          - Update `state/last-report.md` with today's counts.
+          - Append to `feedback/accepted-risks.md` ONLY when an operator
+            explicitly accepted something via case notes or a feedback
+            request — never assume acceptance.
+          - Update `feedback/reporting-style.md` ONLY when the operator
+            explicitly asks for a style change.
+
           ## Workflow
 
           ### Step 1: Mark Analysis In Progress
@@ -216,7 +250,42 @@ hives:
           dangling DNS) — not just new findings. The lookup is replaced entirely on each
           write, so omitting entries would lose them.
 
-          ### Step 9: Update Case and Close
+          ### Step 9: Update Persistent Memory
+
+          Save a compact summary of today's report so tomorrow you can compute
+          trend lines:
+          ```bash
+          NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          cat > /tmp/mem-last-report.md <<MEMEOF
+          last_report_utc: $NOW
+          critical: <count>
+          high: <count>
+          medium: <count>
+          low: <count>
+          new_since_yesterday: <count>
+          resolved_since_yesterday: <count>
+          escalated_case_numbers: <list-or-empty>
+          MEMEOF
+          limacharlie ai-memory set --memory-name state/last-report.md \
+              --content "$(cat /tmp/mem-last-report.md)" --oid <oid>
+          ```
+
+          If the case received a note from the operator accepting a finding
+          (e.g. "@exposure-risk-analyst port 22 on jumphost-01 is intentional"),
+          merge it into `feedback/accepted-risks.md`:
+          ```bash
+          # Read existing, append the new entry, write back. Keep entries
+          # one per line so the file stays diffable.
+          limacharlie ai-memory get --memory-name feedback/accepted-risks.md --oid <oid> --output yaml \
+              > /tmp/accepted-risks-existing.txt 2>/dev/null || true
+          # Merge in the new operator-stated acceptance and write back.
+          limacharlie ai-memory set --memory-name feedback/accepted-risks.md \
+              --content "$(cat /tmp/accepted-risks-merged.md)" --oid <oid>
+          ```
+          Only persist explicit operator acceptance — never infer it from
+          silence or repetition.
+
+          ### Step 10: Update Case and Close
 
           ```bash
           limacharlie case update --case-number <case_number> \

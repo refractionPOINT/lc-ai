@@ -51,6 +51,9 @@ Uses the shared User API Key (`mdr-api-key`) and UID (`mdr-uid`). Required permi
 | `sop.get` | Read SOPs |
 | `sop.get.mtd` | Read SOP metadata |
 | `ai_agent.operate` | Allow the agent to run |
+| `ai_memory.get` | Read persistent memory at session start |
+| `ai_memory.set` | Update persistent memory with verified facts |
+| `ai_memory.del` | Drop memories that no longer apply |
 
 ## Configuration
 
