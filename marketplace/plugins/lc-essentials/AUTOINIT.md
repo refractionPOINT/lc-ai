@@ -82,6 +82,11 @@ limacharlie ai-memory delete-record --key <agent_id> --oid <oid>         # Wipe 
 
 ### Hive Schema Inspection
 
+If you don't already know a hive name, list them first — never derive one from a CLI shortcut name (e.g. `limacharlie cloud-adapter` operates on the `cloud_sensor` hive, **not** `cloud_adapter`):
+```bash
+limacharlie hive list-types --output yaml
+```
+
 Before writing a Hive record, inspect its schema:
 ```bash
 limacharlie hive schema --hive-name <hive_name> --oid <oid> --output yaml
