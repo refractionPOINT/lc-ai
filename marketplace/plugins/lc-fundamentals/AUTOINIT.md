@@ -226,6 +226,11 @@ limacharlie ai-memory delete-record --key <agent_id> --oid <oid>         # Wipe 
 
 ### Hive Schema Inspection
 
+If you don't already know a hive name, list them first — never derive one from a CLI shortcut name (e.g. `limacharlie cloud-adapter` operates on the `cloud_sensor` hive, **not** `cloud_adapter`):
+```bash
+limacharlie hive list-types --output yaml
+```
+
 Before writing a Hive record, inspect its schema:
 ```bash
 limacharlie hive schema --hive-name <hive_name> --oid <oid> --output yaml
@@ -441,19 +446,22 @@ How LimaCharlie sends data to external systems. Each output subscribes to one or
 
 A single generic CRUD API for configuration records. Each Hive type (namespace) has its own set of records, validators, and schema. All Hive records share the same envelope format (name, data, enabled flag, metadata) but carry different JSON payloads.
 
-Key Hive types:
-- `dr-general` / `dr-managed` / `dr-services`: D&R rules
+Key Hive types (run `limacharlie hive list-types` for the authoritative list — do **not** guess hive names from CLI shortcut command names):
+- `dr-general` / `dr-managed` / `dr-service`: D&R rules
 - `fp`: false positive rules
 - `lookup`: key-value lookup tables
 - `secret`: encrypted credentials
 - `yara`: YARA rules
-- `cloud-sensors`: cloud sensor (adapter) configurations
+- `cloud_sensor`: cloud adapter configurations (managed via `limacharlie cloud-adapter` — the hive name is `cloud_sensor`, **not** `cloud_adapter`)
+- `external_adapter`: on-prem/external adapter configurations (managed via `limacharlie external-adapter`)
 - `query`: saved LCQL queries
+- `playbook`: playbook definitions (managed via `limacharlie playbook`)
 - `ai_agent`: AI agent/session configurations
-- `ai_skill`: reusable AI agent capabilities (managed via `limacharlie ai-skill ...`)
-- `ai_memory`: AI agent memory entries, partial-merge per-memory writes (managed via `limacharlie ai-memory ...`)
+- `ai_skill`: reusable AI agent capabilities (managed via `limacharlie ai-skill`)
+- `ai_memory`: AI agent memory entries, partial-merge per-memory writes (managed via `limacharlie ai-memory`)
 - `extension_config`: extension configurations
 - `sop`: standard operating procedures
+- `org_notes`: organization-level notes
 
 Each Hive's schema can be inspected with `limacharlie hive schema --hive-name <name> --oid <oid>`. Records can be referenced across the platform using `hive://<type>/<key>` URIs (e.g., `hive://secret/my-api-key`).
 

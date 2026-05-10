@@ -2554,7 +2554,7 @@ comment: 'A.8.22 — Internal RDP (3389) connections. Tune for admin workstation
 
 ### A.8.23 — DNS Lookup to Known-Malicious Domain
 
-Requires a populated hive lookup named `ti-malicious-domains`. Use `limacharlie hive set --name lookup --hive_name ti-malicious-domains --data <file>` or manage via ext-git-sync.
+Requires a populated hive lookup named `ti-malicious-domains`. Use `limacharlie lookup set --key ti-malicious-domains --input-file <file>` or manage via ext-git-sync.
 
 ```yaml
 name: iso-8-23-malicious-domain

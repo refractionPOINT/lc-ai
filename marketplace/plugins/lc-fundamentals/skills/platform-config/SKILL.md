@@ -14,7 +14,32 @@ How to work with LimaCharlie's configuration layer — Hive, outputs, extensions
 
 Hive provides a single CRUD API for all configuration records. Each record has an envelope (name, enabled flag, metadata) with JSON data.
 
+### Use the Dedicated CLI First
+
+**Reach for the shortcut command before the generic `hive` command** — it's safer (no chance of a wrong `--hive-name`) and the help text is type-specific. The shortcut name does **not** always match the underlying hive name; never construct a hive name from the shortcut.
+
+| Shortcut command | Underlying hive name |
+|------------------|----------------------|
+| `limacharlie dr` | `dr-general` (also `dr-managed`, `dr-service`) |
+| `limacharlie fp` | `fp` |
+| `limacharlie lookup` | `lookup` |
+| `limacharlie secret` | `secret` |
+| `limacharlie yara` | `yara` |
+| `limacharlie cloud-adapter` | **`cloud_sensor`** ← name mismatch |
+| `limacharlie external-adapter` | `external_adapter` |
+| `limacharlie playbook` | `playbook` |
+| `limacharlie sop` | `sop` |
+| `limacharlie ai-agent` | `ai_agent` |
+| `limacharlie ai-skill` | `ai_skill` |
+| `limacharlie ai-memory` | `ai_memory` (partial-merge writes per `--memory-name`) |
+| `limacharlie extension config-*` | `extension_config` |
+| `limacharlie search saved-*` | `query` |
+
+If unsure of a hive name, run `limacharlie hive list-types --output yaml` for the authoritative list.
+
 ### Generic Hive Operations
+
+Only fall back to these when there's no shortcut for the type you need:
 
 ```bash
 # List records in a hive
@@ -33,24 +58,6 @@ limacharlie hive delete --hive-name <hive_type> --key <name> --confirm --oid <oi
 limacharlie hive enable --hive-name <hive_type> --key <name> --oid <oid>
 limacharlie hive disable --hive-name <hive_type> --key <name> --oid <oid>
 ```
-
-### Key Hive Types
-
-| Hive Type | Description | Dedicated CLI |
-|-----------|-------------|--------------|
-| `dr-general` | Custom D&R rules | `limacharlie dr` |
-| `fp` | False positive rules | `limacharlie fp` |
-| `lookup` | Key-value lookups | `limacharlie lookup` |
-| `secret` | Encrypted credentials | `limacharlie secret` |
-| `yara` | YARA rules | `limacharlie yara` |
-| `cloud-sensors` | Cloud adapter configs | `limacharlie cloud-adapter` |
-| `query` | Saved LCQL queries | `limacharlie search saved-*` |
-| `ai_agent` | AI agent configs | Via hive commands |
-| `extension_config` | Extension configs | `limacharlie extension config-*` |
-| `sop` | Standard operating procedures | `limacharlie sop` |
-| `playbook` | Playbook definitions | Via hive commands |
-
-**Prefer dedicated CLI commands** over generic hive commands when available.
 
 ## Outputs
 
