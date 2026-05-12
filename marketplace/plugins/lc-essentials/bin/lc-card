@@ -20,6 +20,7 @@ import argparse
 import json
 import os
 import sys
+from typing import Callable
 
 
 # Emit cards only when the runtime explicitly advertises card-rendering
@@ -33,10 +34,14 @@ def ensure_cards_enabled() -> None:
         sys.exit(1)
 
 
+# --- Generic UI cards ------------------------------------------------------
+
 def org_list(args: argparse.Namespace) -> dict:
     props: dict = {}
     if args.search:
         props["search"] = args.search
+    if args.limit is not None:
+        props["limit"] = args.limit
     summary = (
         f'Orgs matching "{args.search}"' if args.search else "Your accessible orgs"
     )
@@ -53,6 +58,155 @@ def help_card(_: argparse.Namespace) -> dict:
     }
 
 
+# --- Resource cards --------------------------------------------------------
+#
+# Every resource has a single + list pair sharing a near-identical schema:
+#   - single: { oid?, <id_field>: required }
+#   - list:   { oid?, filter?, limit?: 1..50 (default 5) }
+# Vulnerability single is the lone exception (oneOf cve | sid) and gets its
+# own handler below.
+
+# (subcommand_prefix, component_base, id_field, id_type, id_help, label_singular, label_plural)
+RESOURCE_CARDS: list[tuple[str, str, str, type, str, str, str]] = [
+    ("adapter", "Adapter", "sensor_type", str,
+     "Sensor type / ingestion method id (e.g. s3, syslog, wel).",
+     "Adapter", "Adapters"),
+    ("ai-agent", "AiAgent", "name", str,
+     "AI agent hive record name.",
+     "AI agent", "AI agents"),
+    ("ai-memory", "AiMemory", "name", str,
+     "Owning agent id whose memory record to show.",
+     "AI memory", "AI memories"),
+    ("ai-skill", "AiSkill", "name", str,
+     "AI skill name / slug.",
+     "AI skill", "AI skills"),
+    ("api-key", "ApiKey", "name", str,
+     "API key friendly name.",
+     "API key", "API keys"),
+    ("artifact", "Artifact", "payload_id", str,
+     "Unique artifact id (Artifact.payload_id).",
+     "Artifact", "Artifacts"),
+    ("case", "Case", "case_number", int,
+     "Sequential case number within the org (integer >= 1).",
+     "Case", "Cases"),
+    ("cloud-sensor", "CloudSensor", "name", str,
+     "Cloud Sensor name.",
+     "Cloud sensor", "Cloud sensors"),
+    ("detection", "Detection", "detect_id", str,
+     "Detection atom id (assigned by the detections pipeline).",
+     "Detection", "Detections"),
+    ("dnr-rule", "DnrRule", "name", str,
+     "D&R rule name.",
+     "D&R rule", "D&R rules"),
+    ("extension", "Extension", "name", str,
+     "Extension machine name (e.g. cases, artifact) — not the human label.",
+     "Extension", "Extensions"),
+    ("fp-rule", "FpRule", "name", str,
+     "False Positive rule name.",
+     "FP rule", "FP rules"),
+    ("installation-key", "InstallationKey", "iid", str,
+     "Installation key id.",
+     "Installation key", "Installation keys"),
+    ("lookup", "Lookup", "name", str,
+     "Lookup hive record name.",
+     "Lookup", "Lookups"),
+    ("output", "Output", "name", str,
+     "Output name.",
+     "Output", "Outputs"),
+    ("payload", "Payload", "name", str,
+     "Payload name.",
+     "Payload", "Payloads"),
+    ("playbook", "Playbook", "name", str,
+     "Playbook hive record name.",
+     "Playbook", "Playbooks"),
+    ("role", "Role", "name", str,
+     "Role display name or GroupID — the wrapper resolves both.",
+     "Role", "Roles"),
+    ("secret", "Secret", "name", str,
+     "Secret hive record name.",
+     "Secret", "Secrets"),
+    ("sensor", "Sensor", "sid", str,
+     "Sensor ID (UUID).",
+     "Sensor", "Sensors"),
+    ("sop", "Sop", "name", str,
+     "SOP hive record name.",
+     "SOP", "SOPs"),
+    ("user", "User", "uid", str,
+     "User uid or email — the wrapper resolves both.",
+     "User", "Users"),
+    ("yara-rule", "YaraRule", "name", str,
+     "YARA rule name.",
+     "YARA rule", "YARA rules"),
+]
+
+
+def _add_oid(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--oid",
+        help=(
+            "Org id the card should scope to. Omit to let the frontend prompt "
+            "the user for an org via the picker."
+        ),
+    )
+
+
+def _make_single_handler(component: str, id_field: str, label: str) -> Callable[[argparse.Namespace], dict]:
+    def handler(args: argparse.Namespace) -> dict:
+        props: dict = {}
+        if args.oid is not None:
+            props["oid"] = args.oid
+        props[id_field] = getattr(args, id_field)
+        return {
+            "summary": f"{label} {props[id_field]}",
+            "ui": {"component": f"{component}Card", "version": 1, "props": props},
+        }
+    return handler
+
+
+def _make_list_handler(component: str, label_plural: str) -> Callable[[argparse.Namespace], dict]:
+    def handler(args: argparse.Namespace) -> dict:
+        props: dict = {}
+        if args.oid is not None:
+            props["oid"] = args.oid
+        if args.filter:
+            props["filter"] = args.filter
+        if args.limit is not None:
+            props["limit"] = args.limit
+        summary = (
+            f'{label_plural} matching "{args.filter}"' if args.filter else label_plural
+        )
+        return {
+            "summary": summary,
+            "ui": {"component": f"{component}ListCard", "version": 1, "props": props},
+        }
+    return handler
+
+
+# Vulnerability single is polymorphic — oneOf cve | sid. We accept both flags
+# and reject combinations that wouldn't satisfy the schema, rather than
+# silently emitting an invalid descriptor.
+def vulnerability_card(args: argparse.Namespace) -> dict:
+    if bool(args.cve) == bool(args.sid):
+        sys.stderr.write(
+            "vulnerability requires exactly one of --cve or --sid "
+            "(CVE-scoped view vs. endpoint-scoped view).\n"
+        )
+        sys.exit(2)
+    props: dict = {}
+    if args.oid is not None:
+        props["oid"] = args.oid
+    if args.cve:
+        props["cve"] = args.cve
+        summary = f"Vulnerability {args.cve}"
+    else:
+        props["sid"] = args.sid
+        summary = f"Vulnerabilities on sensor {args.sid}"
+    return {
+        "summary": summary,
+        "ui": {"component": "VulnerabilityCard", "version": 1, "props": props},
+    }
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="lc-card",
@@ -63,6 +217,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="card", required=True)
 
+    # --- Generic UI ---
     p_orgs = sub.add_parser(
         "org-list",
         help="Render an interactive list of the user's accessible orgs.",
@@ -71,6 +226,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--search",
         help="Optional substring matched against org name, code, OID, or description.",
     )
+    p_orgs.add_argument(
+        "--limit",
+        type=int,
+        help="Page size for the list view (1-100). Defaults to 5 when omitted.",
+    )
     p_orgs.set_defaults(handler=org_list)
 
     p_help = sub.add_parser(
@@ -78,6 +238,67 @@ def build_parser() -> argparse.ArgumentParser:
         help="Render the AI Terminal's slash command palette.",
     )
     p_help.set_defaults(handler=help_card)
+
+    # --- Resource cards: <resource> (single) + <resource>-list ---
+    for cmd, component, id_field, id_type, id_help, label_s, label_p in RESOURCE_CARDS:
+        p_single = sub.add_parser(
+            cmd,
+            help=f"Render the {label_s} detail card.",
+        )
+        _add_oid(p_single)
+        p_single.add_argument(
+            f"--{id_field.replace('_', '-')}",
+            dest=id_field,
+            required=True,
+            type=id_type,
+            help=id_help,
+        )
+        p_single.set_defaults(handler=_make_single_handler(component, id_field, label_s))
+
+        p_list = sub.add_parser(
+            f"{cmd}-list",
+            help=f"Render the {label_p} list card.",
+        )
+        _add_oid(p_list)
+        p_list.add_argument(
+            "--filter",
+            help="Case-insensitive substring filter applied client-side.",
+        )
+        p_list.add_argument(
+            "--limit",
+            type=int,
+            help="Page size for the list (1-50). Defaults to 5 when omitted.",
+        )
+        p_list.set_defaults(handler=_make_list_handler(component, label_p))
+
+    # Vulnerability single is polymorphic — distinct shape from the rest.
+    p_vuln = sub.add_parser(
+        "vulnerability",
+        help="Render a Vulnerability card scoped to a CVE or to a sensor.",
+    )
+    _add_oid(p_vuln)
+    p_vuln.add_argument("--cve", help='CVE identifier, e.g. "CVE-2024-1234".')
+    p_vuln.add_argument(
+        "--sid",
+        help="Sensor id — scope the card to one endpoint's vuln record.",
+    )
+    p_vuln.set_defaults(handler=vulnerability_card)
+
+    p_vuln_list = sub.add_parser(
+        "vulnerability-list",
+        help="Render the Vulnerabilities list card (CVEs across the org).",
+    )
+    _add_oid(p_vuln_list)
+    p_vuln_list.add_argument(
+        "--filter",
+        help="Case-insensitive substring filter applied to CVE ids.",
+    )
+    p_vuln_list.add_argument(
+        "--limit",
+        type=int,
+        help="Page size for the list (1-50). Defaults to 5 when omitted.",
+    )
+    p_vuln_list.set_defaults(handler=_make_list_handler("Vulnerability", "Vulnerabilities"))
 
     return parser
 
