@@ -20,6 +20,7 @@ import argparse
 import json
 import os
 import sys
+from typing import Callable
 
 
 # Emit cards only when the runtime explicitly advertises card-rendering
@@ -33,24 +34,306 @@ def ensure_cards_enabled() -> None:
         sys.exit(1)
 
 
+def _descriptor(component: str, summary: str, props: dict) -> dict:
+    return {"summary": summary, "ui": {"component": component, "version": 1, "props": props}}
+
+
+# --- Generic UI cards ------------------------------------------------------
+
+
 def org_list(args: argparse.Namespace) -> dict:
     props: dict = {}
     if args.search:
         props["search"] = args.search
-    summary = (
-        f'Orgs matching "{args.search}"' if args.search else "Your accessible orgs"
-    )
-    return {
-        "summary": summary,
-        "ui": {"component": "OrgListCard", "version": 1, "props": props},
-    }
+    summary = f'Orgs matching "{args.search}"' if args.search else "Your accessible orgs"
+    return _descriptor("OrgListCard", summary, props)
 
 
 def help_card(_: argparse.Namespace) -> dict:
-    return {
-        "summary": "Available slash commands",
-        "ui": {"component": "HelpCard", "version": 1, "props": {}},
-    }
+    return _descriptor("HelpCard", "Available slash commands", {})
+
+
+# --- Resource card builders ------------------------------------------------
+#
+# Most resource cards split into two: a single-record view keyed by `(oid,
+# name)` and a list view keyed by `oid` with optional `filter` + `limit`. The
+# two helpers below cover that shape so each card only spells out its label
+# and the exceptions get explicit handlers below.
+
+
+def _build_list_handler(component: str, noun: str) -> Callable[[argparse.Namespace], dict]:
+    def handler(args: argparse.Namespace) -> dict:
+        props: dict = {"oid": args.oid}
+        if getattr(args, "filter", None):
+            props["filter"] = args.filter
+        if getattr(args, "limit", None) is not None:
+            props["limit"] = args.limit
+        summary = f'{noun} list' + (f' filtered by "{args.filter}"' if props.get("filter") else "")
+        return _descriptor(component, summary, props)
+
+    return handler
+
+
+def _build_name_handler(component: str, noun: str) -> Callable[[argparse.Namespace], dict]:
+    def handler(args: argparse.Namespace) -> dict:
+        return _descriptor(
+            component,
+            f"{noun}: {args.name}",
+            {"oid": args.oid, "name": args.name},
+        )
+
+    return handler
+
+
+def _add_list_parser(
+    sub: argparse._SubParsersAction,
+    name: str,
+    component: str,
+    noun: str,
+    filter_help: str,
+) -> None:
+    p = sub.add_parser(name, help=f"Render an interactive list of {noun}.")
+    p.add_argument("--oid", required=True, help="Organization ID.")
+    p.add_argument("--filter", help=filter_help)
+    p.add_argument(
+        "--limit",
+        type=int,
+        help="Page size (1-50, default 5).",
+    )
+    p.set_defaults(handler=_build_list_handler(component, noun))
+
+
+def _add_name_parser(
+    sub: argparse._SubParsersAction,
+    name: str,
+    component: str,
+    noun: str,
+    name_help: str,
+) -> None:
+    p = sub.add_parser(name, help=f"Render a {noun} card.")
+    p.add_argument("--oid", required=True, help="Organization ID.")
+    p.add_argument("--name", required=True, help=name_help)
+    p.set_defaults(handler=_build_name_handler(component, noun))
+
+
+# Catalog of resource cards that follow the standard `(oid, name)` /
+# `(oid, [filter, limit])` shape. Format:
+#     (subcommand, component_singular, component_list, noun, name_help, filter_help)
+# Anything that deviates from the shape (sensor, installation-key, case,
+# vulnerability, etc.) gets an explicit handler below instead of an entry
+# here.
+_STANDARD_RESOURCES: list[tuple[str, str, str, str, str, str]] = [
+    (
+        "secret",
+        "SecretCard",
+        "SecretListCard",
+        "secret",
+        "Secret name (hive record name).",
+        "Substring filter on secret name (case-insensitive).",
+    ),
+    (
+        "dnr-rule",
+        "DnrRuleCard",
+        "DnrRuleListCard",
+        "D&R rule",
+        "D&R rule name (hive record name).",
+        "Substring filter on rule name (case-insensitive).",
+    ),
+    (
+        "fp-rule",
+        "FpRuleCard",
+        "FpRuleListCard",
+        "FP rule",
+        "FP rule name (hive record name).",
+        "Substring filter on rule name (case-insensitive).",
+    ),
+    (
+        "yara-rule",
+        "YaraRuleCard",
+        "YaraRuleListCard",
+        "YARA rule",
+        "YARA rule name (hive record name).",
+        "Substring filter on rule name (case-insensitive).",
+    ),
+    (
+        "lookup",
+        "LookupCard",
+        "LookupListCard",
+        "lookup",
+        "Lookup name (hive record name).",
+        "Substring filter on lookup name (case-insensitive).",
+    ),
+    (
+        "cloud-sensor",
+        "CloudSensorCard",
+        "CloudSensorListCard",
+        "cloud sensor",
+        "Cloud sensor name (hive record name).",
+        "Substring filter on cloud sensor name (case-insensitive).",
+    ),
+    (
+        "sop",
+        "SopCard",
+        "SopListCard",
+        "SOP",
+        "SOP name (hive record name).",
+        "Substring filter on SOP name or description (case-insensitive).",
+    ),
+    (
+        "ai-agent",
+        "AiAgentCard",
+        "AiAgentListCard",
+        "AI agent",
+        "AI agent name (hive record name).",
+        "Substring filter on agent name (case-insensitive).",
+    ),
+    (
+        "ai-skill",
+        "AiSkillCard",
+        "AiSkillListCard",
+        "AI skill",
+        "AI skill slug (hive record name).",
+        "Substring filter on skill name (case-insensitive).",
+    ),
+    (
+        "ai-memory",
+        "AiMemoryCard",
+        "AiMemoryListCard",
+        "AI memory",
+        "Owning agent ID — ai_memory records are keyed by the agent that wrote them.",
+        "Substring filter on agent id (case-insensitive).",
+    ),
+    (
+        "playbook",
+        "PlaybookCard",
+        "PlaybookListCard",
+        "playbook",
+        "Playbook name (hive record name).",
+        "Substring filter on playbook name (case-insensitive).",
+    ),
+    (
+        "api-key",
+        "ApiKeyCard",
+        "ApiKeyListCard",
+        "API key",
+        "API key friendly name.",
+        "Substring filter on key name (case-insensitive).",
+    ),
+    (
+        "output",
+        "OutputCard",
+        "OutputListCard",
+        "output",
+        "Output name.",
+        "Substring filter on output name / module / stream (case-insensitive).",
+    ),
+    (
+        "payload",
+        "PayloadCard",
+        "PayloadListCard",
+        "payload",
+        "Payload name.",
+        "Substring filter on payload name (case-insensitive).",
+    ),
+    (
+        "role",
+        "RoleCard",
+        "RoleListCard",
+        "role",
+        "Group ID or role display name — the smart wrapper resolves against both.",
+        "Substring filter on name + gid (case-insensitive).",
+    ),
+    (
+        "extension",
+        "ExtensionCard",
+        "ExtensionListCard",
+        "extension",
+        "Extension machine name (e.g. 'cases', 'artifact'), NOT human label.",
+        "Substring filter on name + label + description (case-insensitive).",
+    ),
+]
+
+
+def _add_standard_resource(sub: argparse._SubParsersAction, entry: tuple[str, str, str, str, str, str]) -> None:
+    subcmd, single_component, list_component, noun, name_help, filter_help = entry
+    _add_name_parser(sub, subcmd, single_component, noun, name_help)
+    _add_list_parser(sub, f"{subcmd}-list", list_component, noun, filter_help)
+
+
+# --- Special-keyed resource handlers ---------------------------------------
+
+
+def _sensor(args: argparse.Namespace) -> dict:
+    return _descriptor(
+        "SensorCard",
+        f"sensor: {args.sid}",
+        {"oid": args.oid, "sid": args.sid},
+    )
+
+
+def _installation_key(args: argparse.Namespace) -> dict:
+    return _descriptor(
+        "InstallationKeyCard",
+        f"installation key: {args.iid}",
+        {"oid": args.oid, "iid": args.iid},
+    )
+
+
+def _artifact(args: argparse.Namespace) -> dict:
+    return _descriptor(
+        "ArtifactCard",
+        f"artifact: {args.payload_id}",
+        {"oid": args.oid, "payload_id": args.payload_id},
+    )
+
+
+def _adapter(args: argparse.Namespace) -> dict:
+    return _descriptor(
+        "AdapterCard",
+        f"adapter: {args.sensor_type}",
+        {"oid": args.oid, "sensor_type": args.sensor_type},
+    )
+
+
+def _case(args: argparse.Namespace) -> dict:
+    return _descriptor(
+        "CaseCard",
+        f"case #{args.case_number}",
+        {"oid": args.oid, "case_number": args.case_number},
+    )
+
+
+def _vulnerability(args: argparse.Namespace) -> dict:
+    # Schema is polymorphic: oneOf { (oid, cve) | (oid, sid) }. The mutually
+    # exclusive group on the parser already enforces exactly-one; we just
+    # forward whichever the AI passed.
+    if args.cve:
+        return _descriptor(
+            "VulnerabilityCard",
+            f"vulnerability: {args.cve}",
+            {"oid": args.oid, "cve": args.cve},
+        )
+    return _descriptor(
+        "VulnerabilityCard",
+        f"vulnerabilities on sensor: {args.sid}",
+        {"oid": args.oid, "sid": args.sid},
+    )
+
+
+def _detection(args: argparse.Namespace) -> dict:
+    return _descriptor(
+        "DetectionCard",
+        f"detection: {args.detect_id}",
+        {"oid": args.oid, "detect_id": args.detect_id},
+    )
+
+
+def _user(args: argparse.Namespace) -> dict:
+    return _descriptor(
+        "UserCard",
+        f"user: {args.uid}",
+        {"oid": args.oid, "uid": args.uid},
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -63,21 +346,142 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="card", required=True)
 
-    p_orgs = sub.add_parser(
-        "org-list",
-        help="Render an interactive list of the user's accessible orgs.",
-    )
+    # Generic UI cards
+    p_orgs = sub.add_parser("org-list", help="Render an interactive list of the user's accessible orgs.")
     p_orgs.add_argument(
         "--search",
         help="Optional substring matched against org name, code, OID, or description.",
     )
     p_orgs.set_defaults(handler=org_list)
 
-    p_help = sub.add_parser(
-        "help",
-        help="Render the AI Terminal's slash command palette.",
-    )
+    p_help = sub.add_parser("help", help="Render the AI Terminal's slash command palette.")
     p_help.set_defaults(handler=help_card)
+
+    # Standard resource cards: (oid, name) singular + (oid, [filter, limit]) list
+    for entry in _STANDARD_RESOURCES:
+        _add_standard_resource(sub, entry)
+
+    # Sensor: --sid (UUID)
+    p_sensor = sub.add_parser("sensor", help="Render a single sensor card.")
+    p_sensor.add_argument("--oid", required=True, help="Organization ID.")
+    p_sensor.add_argument("--sid", required=True, help="Sensor ID (UUID).")
+    p_sensor.set_defaults(handler=_sensor)
+    _add_list_parser(
+        sub,
+        "sensor-list",
+        "SensorListCard",
+        "sensor",
+        "Substring filter on hostname / sid / tags (case-insensitive).",
+    )
+
+    # Installation key: --iid
+    p_ik = sub.add_parser("installation-key", help="Render a single installation key card.")
+    p_ik.add_argument("--oid", required=True, help="Organization ID.")
+    p_ik.add_argument("--iid", required=True, help="Installation key ID.")
+    p_ik.set_defaults(handler=_installation_key)
+    _add_list_parser(
+        sub,
+        "installation-key-list",
+        "InstallationKeyListCard",
+        "installation key",
+        "Substring filter on description / iid / tags (case-insensitive).",
+    )
+
+    # Artifact: --payload-id
+    p_art = sub.add_parser("artifact", help="Render a single artifact card.")
+    p_art.add_argument("--oid", required=True, help="Organization ID.")
+    p_art.add_argument("--payload-id", required=True, help="Artifact payload ID.")
+    p_art.set_defaults(handler=_artifact)
+    _add_list_parser(
+        sub,
+        "artifact-list",
+        "ArtifactListCard",
+        "artifact",
+        "Substring filter on artifact path / type / source (case-insensitive).",
+    )
+
+    # Adapter: --sensor-type
+    p_ad = sub.add_parser("adapter", help="Render a single adapter card.")
+    p_ad.add_argument("--oid", required=True, help="Organization ID.")
+    p_ad.add_argument(
+        "--sensor-type",
+        required=True,
+        help="Sensor type / ingestion method identifier (e.g. s3, syslog, wel).",
+    )
+    p_ad.set_defaults(handler=_adapter)
+    _add_list_parser(
+        sub,
+        "adapter-list",
+        "AdapterListCard",
+        "adapter",
+        "Substring filter on sensor_type (case-insensitive).",
+    )
+
+    # Case: --case-number (integer)
+    p_case = sub.add_parser("case", help="Render a single case card.")
+    p_case.add_argument("--oid", required=True, help="Organization ID.")
+    p_case.add_argument(
+        "--case-number",
+        type=int,
+        required=True,
+        help="Sequential case identifier (positive integer).",
+    )
+    p_case.set_defaults(handler=_case)
+    _add_list_parser(
+        sub,
+        "case-list",
+        "CaseListCard",
+        "case",
+        "Substring filter on summary / assignees / tags (case-insensitive).",
+    )
+
+    # Vulnerability: --cve XOR --sid
+    p_vuln = sub.add_parser(
+        "vulnerability",
+        help="Render a single vulnerability card scoped to a CVE or a sensor.",
+    )
+    p_vuln.add_argument("--oid", required=True, help="Organization ID.")
+    vuln_target = p_vuln.add_mutually_exclusive_group(required=True)
+    vuln_target.add_argument("--cve", help='CVE identifier, e.g. "CVE-2024-1234".')
+    vuln_target.add_argument("--sid", help="Sensor ID — scope to a single endpoint's vulns.")
+    p_vuln.set_defaults(handler=_vulnerability)
+    _add_list_parser(
+        sub,
+        "vulnerability-list",
+        "VulnerabilityListCard",
+        "vulnerability",
+        "Substring filter against CVE id (case-insensitive).",
+    )
+
+    # Detection: --detect-id
+    p_det = sub.add_parser("detection", help="Render a single detection card.")
+    p_det.add_argument("--oid", required=True, help="Organization ID.")
+    p_det.add_argument("--detect-id", required=True, help="Detection atom ID.")
+    p_det.set_defaults(handler=_detection)
+    _add_list_parser(
+        sub,
+        "detection-list",
+        "DetectionListCard",
+        "detection",
+        "Substring filter across category / source / rule / hostname / sid (case-insensitive).",
+    )
+
+    # User: --uid (or email)
+    p_user = sub.add_parser("user", help="Render a single user card.")
+    p_user.add_argument("--oid", required=True, help="Organization ID.")
+    p_user.add_argument(
+        "--uid",
+        required=True,
+        help="User ID or email — the smart wrapper resolves against both.",
+    )
+    p_user.set_defaults(handler=_user)
+    _add_list_parser(
+        sub,
+        "user-list",
+        "UserListCard",
+        "user",
+        "Substring filter on email + uid (case-insensitive).",
+    )
 
     return parser
 
