@@ -62,7 +62,8 @@ same two-card pattern unless noted:
   `--sensor-type`).
 - **`<resource>-list`** — paginated list view, requires `--oid`, optional
   `--filter STR` (case-insensitive substring) and `--limit N` (1-50,
-  default 5).
+  default 5). `org-list` is the exception: no `--oid`, optional `--search`,
+  optional `--limit N` (1-100, default 5).
 
 The list-card schema is identical across families:
 
@@ -90,7 +91,7 @@ for the exact id field name.
 User wants to see / browse their accessible orgs.
 
 ```bash
-lc-card org-list [--search QUERY]
+lc-card org-list [--search QUERY] [--limit N]
 ```
 
 ```json

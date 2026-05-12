@@ -38,6 +38,28 @@ def _descriptor(component: str, summary: str, props: dict) -> dict:
     return {"summary": summary, "ui": {"component": component, "version": 1, "props": props}}
 
 
+def _bounded_int(lo: int, hi: int | None = None) -> Callable[[str], int]:
+    """argparse `type=` factory that rejects out-of-range ints up front.
+
+    The frontend Ajv-validates `limit` (1-50 for resource lists, 1-100 for
+    org-list) and `case_number` (>=1). When the AI passes something outside
+    those bounds, the frontend silently drops back to raw JSON — a noisy UX
+    for what's a clean local check.
+    """
+
+    def _convert(raw: str) -> int:
+        try:
+            value = int(raw)
+        except ValueError as e:
+            raise argparse.ArgumentTypeError(f"expected an integer, got {raw!r}") from e
+        if value < lo or (hi is not None and value > hi):
+            bounds = f"{lo}-{hi}" if hi is not None else f">= {lo}"
+            raise argparse.ArgumentTypeError(f"must be {bounds}, got {value}")
+        return value
+
+    return _convert
+
+
 # --- Generic UI cards ------------------------------------------------------
 
 
@@ -45,6 +67,8 @@ def org_list(args: argparse.Namespace) -> dict:
     props: dict = {}
     if args.search:
         props["search"] = args.search
+    if args.limit is not None:
+        props["limit"] = args.limit
     summary = f'Orgs matching "{args.search}"' if args.search else "Your accessible orgs"
     return _descriptor("OrgListCard", summary, props)
 
@@ -97,7 +121,7 @@ def _add_list_parser(
     p.add_argument("--filter", help=filter_help)
     p.add_argument(
         "--limit",
-        type=int,
+        type=_bounded_int(1, 50),
         help="Page size (1-50, default 5).",
     )
     p.set_defaults(handler=_build_list_handler(component, noun))
@@ -352,6 +376,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--search",
         help="Optional substring matched against org name, code, OID, or description.",
     )
+    p_orgs.add_argument(
+        "--limit",
+        type=_bounded_int(1, 100),
+        help="Page size (1-100, default 5).",
+    )
     p_orgs.set_defaults(handler=org_list)
 
     p_help = sub.add_parser("help", help="Render the AI Terminal's slash command palette.")
@@ -422,7 +451,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_case.add_argument("--oid", required=True, help="Organization ID.")
     p_case.add_argument(
         "--case-number",
-        type=int,
+        type=_bounded_int(1),
         required=True,
         help="Sequential case identifier (positive integer).",
     )
