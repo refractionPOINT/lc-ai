@@ -100,8 +100,6 @@ limacharlie hive validate --hive-name <hive_name> --key <key> --input-file <file
 
 **ALWAYS use the `limacharlie` CLI via Bash** for all LimaCharlie API operations. Never call MCP tools directly.
 
-**Exception for see/browse intents in the AI Terminal**: when the user wants to *see or browse* their orgs (e.g. "show me my orgs", "list my orgs"), or asks "what can you do" / "help", emit an interactive card to the frontend by running `lc-card <card> [args]` via Bash. See the `render-cards` skill for the full pattern and the catalog of available cards. This applies only to see/browse intents; counting, summarizing, mutating, and all other operations stay on the CLI.
-
 ## CLI Bootstrap
 
 The `limacharlie` CLI is **automatically installed** on session start via the SessionStart hook.
