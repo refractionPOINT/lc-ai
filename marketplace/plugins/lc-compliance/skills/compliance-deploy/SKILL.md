@@ -77,19 +77,31 @@ Capture the `key` field from the JSON output — you'll need it in Step 2.
 
 ### Step 2 — Stage both secrets
 
+`limacharlie hive set` reads the record body from stdin (or from `--input-file`). It does NOT accept a `--data` flag — passing `--data '<json>'` fails with `No such option: --data`. Pipe the JSON instead:
+
 ```bash
 # LC API key (the one from Step 1)
-limacharlie --oid <oid> hive set --hive-name secret \
-    --key <framework>-compliance-reviewer \
-    --data '{"secret": "<lc-api-key>"}'
+printf '{"secret": "%s"}' "<lc-api-key>" | \
+    limacharlie --oid <oid> hive set \
+        --hive-name secret \
+        --key <framework>-compliance-reviewer
 
 # Anthropic API key
-limacharlie --oid <oid> hive set --hive-name secret \
-    --key anthropic-key \
-    --data '{"secret": "<sk-ant-...>"}'
+printf '{"secret": "%s"}' "<sk-ant-...>" | \
+    limacharlie --oid <oid> hive set \
+        --hive-name secret \
+        --key anthropic-key
 ```
 
-If the Anthropic secret already exists at `anthropic-key`, skip that second command.
+Use `printf` rather than `echo` so the value is passed literally (no surprise interpretation of backslashes in keys). Quote the placeholder so shell expansion doesn't mangle long keys.
+
+If the Anthropic secret already exists at `anthropic-key`, skip that second command. Confirm beforehand with:
+
+```bash
+limacharlie --oid <oid> hive get --hive-name secret --key anthropic-key 2>/dev/null \
+    && echo "anthropic-key already staged — skipping" \
+    || echo "anthropic-key not present — must stage"
+```
 
 ### Step 3 — Deploy the reviewer manifest
 
