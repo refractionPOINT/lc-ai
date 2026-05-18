@@ -117,15 +117,16 @@ Use `classify_offline_duration(hours_offline)` function.
 
 #### 3.3 Platform and EDR Identification
 
-Map platform codes to names using `get_platform_name(platform_code)`:
+Map platform codes to names using `get_platform_name(platform_code)`. Values are
+the canonical LCQL platform strings (see CONSTANTS.md), e.g.:
 - `268435456` → windows
 - `536870912` → linux
 - `805306368` → macos
-- `2147483648` → adapter
-- `2415919104` → extension
+- `2147483648` → text
+- `822083584` → harmony
 
 Determine if sensor is an EDR (can be tasked) using `is_edr_platform(platform_code, architecture)`:
-- EDR = Platform is Windows/Linux/macOS AND architecture is NOT `9` (usp_adapter)
+- EDR = a native endpoint platform (windows, linux, macos, ios, android, chrome, vpn) AND architecture is NOT `9` (usp_adapter)
 - A Linux sensor with `arch=9` is a USP adapter, NOT an EDR
 
 #### 3.4 New Sensor Detection (Shadow IT)

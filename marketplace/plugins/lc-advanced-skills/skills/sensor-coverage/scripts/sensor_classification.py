@@ -14,73 +14,74 @@ from typing import Dict, List, Any, Set, Tuple
 
 # Platform code mappings
 # Source of truth: CONSTANTS.md (the authoritative LimaCharlie platform
-# code reference). Keep this map in sync with that file.
+# code reference). Values are the canonical LCQL platform strings and must
+# match the "String" column in CONSTANTS.md exactly. Keep this in sync.
 # NOTE: the platform is the FULL high byte of the uint32, not the top nibble.
 # 0x30000000 is macos but 0x31000000 is harmony — never infer by nibble.
 PLATFORM_CODES = {
-    # EDR platforms
-    268435456: 'windows',       # 0x10000000
-    536870912: 'linux',         # 0x20000000
-    805306368: 'macos',         # 0x30000000
-    1073741824: 'ios',          # 0x40000000
-    1342177280: 'android',      # 0x50000000
-    1610612736: 'chromeos',     # 0x60000000
-    1879048192: 'vpn',          # 0x70000000
-    # USP adapter platforms
-    2147483648: 'adapter-text',      # 0x80000000
-    2415919104: 'adapter-json',      # 0x90000000
-    2684354560: 'cloud-gcp',         # 0xA0000000
-    2952790016: 'cloud-aws',         # 0xB0000000
-    3221225472: 'cloud-carbonblack', # 0xC0000000
-    3489660928: 'cloud-1password',   # 0xD0000000
-    3758096384: 'cloud-o365',        # 0xE0000000
-    4026531840: 'cloud-sophos',      # 0xF0000000
-    16777216: 'cloud-crowdstrike',   # 0x01000000
-    33554432: 'adapter-xml',         # 0x02000000
-    50331648: 'adapter-wel',         # 0x03000000
-    67108864: 'cloud-msdefender',    # 0x04000000
-    83886080: 'cloud-duo',           # 0x05000000
-    100663296: 'cloud-okta',         # 0x06000000
-    117440512: 'cloud-sentinelone',  # 0x07000000
-    134217728: 'cloud-github',       # 0x08000000
-    150994944: 'cloud-slack',        # 0x09000000
-    167772160: 'adapter-cef',        # 0x0A000000
-    184549376: 'adapter-lcevent',    # 0x0B000000
-    201326592: 'cloud-azuread',      # 0x0C000000
-    218103808: 'cloud-azuremonitor', # 0x0D000000
-    234881024: 'cloud-canarytoken',  # 0x0E000000
-    251658240: 'cloud-guardduty',    # 0x0F000000
-    285212672: 'cloud-itglue',       # 0x11000000
-    301989888: 'cloud-k8spods',      # 0x12000000
-    318767104: 'cloud-zeek',         # 0x13000000
-    335544320: 'cloud-macunifiedlog',     # 0x14000000
-    352321536: 'cloud-azureeventhub',     # 0x15000000
-    369098752: 'cloud-azurekeyvault',     # 0x16000000
-    385875968: 'cloud-azurek8s',          # 0x17000000
-    402653184: 'cloud-azurensg',          # 0x18000000
-    419430400: 'cloud-azuresqlaudit',     # 0x19000000
-    436207616: 'cloud-email',             # 0x1A000000
-    452984832: 'cloud-fortigate',         # 0x1B000000
-    469762048: 'cloud-trendworryfree',    # 0x1C000000
-    486539264: 'cloud-netscaler',         # 0x1D000000
-    503316480: 'cloud-paloaltofw',        # 0x1E000000
-    520093696: 'cloud-iis',               # 0x1F000000
-    553648128: 'cloud-hubspot',           # 0x21000000
-    570425344: 'cloud-zendesk',           # 0x22000000
-    587202560: 'cloud-pandadoc',          # 0x23000000
-    603979776: 'cloud-falconcloud',       # 0x24000000
-    620756992: 'cloud-mimecast',          # 0x25000000
-    637534208: 'cloud-sublime',           # 0x26000000
-    654311424: 'cloud-box',               # 0x27000000
-    671088640: 'cloud-cylance',           # 0x28000000
-    687865856: 'cloud-proofpoint',        # 0x29000000
-    704643072: 'cloud-entraid',           # 0x2A000000
-    721420288: 'cloud-wiz',               # 0x2B000000
-    738197504: 'cloud-bitwarden',         # 0x2C000000
-    754974720: 'cloud-trendmicro',        # 0x2D000000
-    771751936: 'cloud-otel',              # 0x2E000000
-    788529152: 'cloud-cortexxdr',         # 0x2F000000
-    822083584: 'cloud-harmony',           # 0x31000000
+    # Native endpoint platforms
+    268435456: 'windows',      # 0x10000000
+    536870912: 'linux',        # 0x20000000
+    805306368: 'macos',        # 0x30000000
+    1073741824: 'ios',         # 0x40000000
+    1342177280: 'android',     # 0x50000000
+    1610612736: 'chrome',      # 0x60000000
+    1879048192: 'vpn',         # 0x70000000
+    # USP adapter / cloud integration platforms
+    2147483648: 'text',                          # 0x80000000
+    2415919104: 'json',                          # 0x90000000
+    2684354560: 'gcp',                           # 0xA0000000
+    2952790016: 'aws',                           # 0xB0000000
+    3221225472: 'carbon_black',                  # 0xC0000000
+    3489660928: '1password',                     # 0xD0000000
+    3758096384: 'office365',                     # 0xE0000000
+    4026531840: 'sophos',                        # 0xF0000000
+    16777216: 'crowdstrike',                     # 0x01000000
+    33554432: 'xml',                             # 0x02000000
+    50331648: 'wel',                             # 0x03000000
+    67108864: 'msdefender',                      # 0x04000000
+    83886080: 'duo',                             # 0x05000000
+    100663296: 'okta',                           # 0x06000000
+    117440512: 'sentinel_one',                   # 0x07000000
+    134217728: 'github',                         # 0x08000000
+    150994944: 'slack',                          # 0x09000000
+    167772160: 'cef',                            # 0x0A000000
+    184549376: 'lc_event',                       # 0x0B000000
+    201326592: 'azure_ad',                       # 0x0C000000
+    218103808: 'azure_monitor',                  # 0x0D000000
+    234881024: 'canary_token',                   # 0x0E000000
+    251658240: 'guard_duty',                     # 0x0F000000
+    285212672: 'itglue',                         # 0x11000000
+    301989888: 'k8s_pods',                       # 0x12000000
+    318767104: 'zeek',                           # 0x13000000
+    335544320: 'mac_unified_logging',            # 0x14000000
+    352321536: 'azure_event_hub_namespace',      # 0x15000000
+    369098752: 'azure_key_vault',                # 0x16000000
+    385875968: 'azure_kubernetes_service',       # 0x17000000
+    402653184: 'azure_network_security_group',   # 0x18000000
+    419430400: 'azure_sql_audit',                # 0x19000000
+    436207616: 'email',                          # 0x1A000000
+    452984832: 'fortigate',                      # 0x1B000000
+    469762048: 'trend_worryfree',                # 0x1C000000
+    486539264: 'netscaler',                      # 0x1D000000
+    503316480: 'paloalto_fw',                    # 0x1E000000
+    520093696: 'iis',                            # 0x1F000000
+    553648128: 'hubspot',                        # 0x21000000
+    570425344: 'zendesk',                        # 0x22000000
+    587202560: 'pandadoc',                       # 0x23000000
+    603979776: 'falconcloud',                    # 0x24000000
+    620756992: 'mimecast',                       # 0x25000000
+    637534208: 'sublime',                        # 0x26000000
+    654311424: 'box',                            # 0x27000000
+    671088640: 'cylance',                        # 0x28000000
+    687865856: 'proofpoint',                     # 0x29000000
+    704643072: 'entraid',                        # 0x2A000000
+    721420288: 'wiz',                            # 0x2B000000
+    738197504: 'bitwarden',                      # 0x2C000000
+    754974720: 'trend_micro',                    # 0x2D000000
+    771751936: 'otel',                           # 0x2E000000
+    788529152: 'cortex_xdr',                     # 0x2F000000
+    822083584: 'harmony',                       # 0x31000000
 }
 
 # System tag prefixes to ignore when checking for user tags
