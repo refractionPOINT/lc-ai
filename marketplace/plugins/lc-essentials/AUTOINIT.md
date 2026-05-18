@@ -4,6 +4,8 @@
 
 See [CONSTANTS.md](./CONSTANTS.md) for the authoritative source of all LimaCharlie constants including platform codes, architecture codes, IOC types, timestamps, and billing amounts.
 
+**NEVER guess platform IDs, and NEVER infer the platform/OS behind a platform ID from memory or the leading hex digit.** Whenever you need to know which platform a platform ID/code represents (or the code for a given platform), ALWAYS resolve it against the platform tables in [CONSTANTS.md](./CONSTANTS.md). Codes not listed there are unknown — not "the closest platform".
+
 ## Raw REST API Calls (`limacharlie api`)
 
 **`limacharlie api` is an escape hatch** for endpoints that have no dedicated CLI command. Do NOT use it for operations that already have a CLI noun/verb.

@@ -6,6 +6,8 @@ This is the **authoritative source of truth** for LimaCharlie constants. Always 
 
 ## Platform Codes
 
+> **NEVER guess a platform ID, and NEVER infer the platform/OS behind one from memory, the leading hex digit, or pattern matching.** Platform codes are not guessable. Whenever you have a platform ID (or string) and need to know which platform/OS it represents — or you need the code for a given platform — resolve it ONLY against the tables in this file. If the exact code is not listed here, treat it as unknown; do not approximate to the "closest" platform.
+
 Platform codes are returned as `uint32` in sensor info responses.
 
 > **Encoding — read this before interpreting a platform code.** The platform lives in the **high byte** of the `uint32` (the top *two* hex digits, e.g. `0x31000000`). Do **NOT** infer the platform from the top nibble alone. `0x30000000` is macOS but `0x31000000` is Harmony — different platforms that merely share the leading `3`. Always match the *full* code against the tables below; if a code is not in these tables it is unknown, not "the closest family".

@@ -6,6 +6,8 @@ LimaCharlie is the Agentic SecOps Workspace. This document is the operational gu
 
 See [CONSTANTS.md](./CONSTANTS.md) for the authoritative source of LimaCharlie constants (platform codes, architecture codes, IOC types, timestamps, billing amounts, sensor selector fields). See [CASES_CONSTANTS.md](./CASES_CONSTANTS.md) for case status, severity, classification, entity types, verdicts, and note types.
 
+**NEVER guess platform IDs, and NEVER infer the platform/OS behind a platform ID from memory or the leading hex digit.** Whenever you need to know which platform a platform ID/code represents (or the code for a given platform), ALWAYS resolve it against the platform tables in [CONSTANTS.md](./CONSTANTS.md). Codes not listed there are unknown — not "the closest platform".
+
 ## Required Tool
 
 **ALWAYS use the `limacharlie` CLI via Bash** for all LimaCharlie API operations. Never call MCP tools directly, never spawn an api-executor agent.
