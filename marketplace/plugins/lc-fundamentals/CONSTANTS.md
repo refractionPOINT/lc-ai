@@ -2,11 +2,13 @@
 
 This is the **authoritative source of truth** for LimaCharlie constants. Always reference this file instead of hardcoding values or using values from other documentation.
 
-**Source:** [go-limacharlie/limacharlie/identification.go](https://github.com/refractionPOINT/go-limacharlie)
+**Source:** [go-essentials/lc/agentid.go](https://github.com/refractionPOINT/go-essentials/blob/master/lc/agentid.go) — this is the up-to-date authoritative list. (Note: `go-limacharlie/limacharlie/identification.go` exists but is stale and missing newer platforms; do not use it.)
 
 ## Platform Codes
 
 Platform codes are returned as `uint32` in sensor info responses.
+
+> **Encoding — read this before interpreting a platform code.** The platform lives in the **high byte** of the `uint32` (the top *two* hex digits, e.g. `0x31000000`). Do **NOT** infer the platform from the top nibble alone. `0x30000000` is macOS but `0x31000000` is Harmony — different platforms that merely share the leading `3`. Always match the *full* code against the tables below; if a code is not in these tables it is unknown, not "the closest family".
 
 | Platform | String | Hex | Decimal |
 |----------|--------|-----|---------|
@@ -49,6 +51,35 @@ Platform codes are returned as `uint32` in sensor info responses.
 | K8sPods | `k8s_pods` | 0x12000000 | 301989888 |
 | Zeek | `zeek` | 0x13000000 | 318767104 |
 | Mac Unified Logging | `mac_unified_logging` | 0x14000000 | 335544320 |
+| Azure Event Hub Namespace | `azure_event_hub_namespace` | 0x15000000 | 352321536 |
+| Azure Key Vault | `azure_key_vault` | 0x16000000 | 369098752 |
+| Azure Kubernetes Service | `azure_kubernetes_service` | 0x17000000 | 385875968 |
+| Azure Network Security Group | `azure_network_security_group` | 0x18000000 | 402653184 |
+| Azure SQL Audit | `azure_sql_audit` | 0x19000000 | 419430400 |
+| Email | `email` | 0x1A000000 | 436207616 |
+| Fortigate | `fortigate` | 0x1B000000 | 452984832 |
+| Trend Micro Worry-Free | `trend_worryfree` | 0x1C000000 | 469762048 |
+| Netscaler | `netscaler` | 0x1D000000 | 486539264 |
+| Palo Alto Firewall | `paloalto_fw` | 0x1E000000 | 503316480 |
+| IIS Logs | `iis` | 0x1F000000 | 520093696 |
+| HubSpot | `hubspot` | 0x21000000 | 553648128 |
+| Zendesk | `zendesk` | 0x22000000 | 570425344 |
+| PandaDoc | `pandadoc` | 0x23000000 | 587202560 |
+| Falcon Cloud | `falconcloud` | 0x24000000 | 603979776 |
+| Mimecast | `mimecast` | 0x25000000 | 620756992 |
+| Sublime | `sublime` | 0x26000000 | 637534208 |
+| Box | `box` | 0x27000000 | 654311424 |
+| Cylance | `cylance` | 0x28000000 | 671088640 |
+| Proofpoint | `proofpoint` | 0x29000000 | 687865856 |
+| Entra ID | `entraid` | 0x2A000000 | 704643072 |
+| Wiz | `wiz` | 0x2B000000 | 721420288 |
+| Bitwarden | `bitwarden` | 0x2C000000 | 738197504 |
+| Trend Micro | `trend_micro` | 0x2D000000 | 754974720 |
+| OpenTelemetry | `otel` | 0x2E000000 | 771751936 |
+| Cortex XDR | `cortex_xdr` | 0x2F000000 | 788529152 |
+| Harmony | `harmony` | 0x31000000 | 822083584 |
+
+> The gaps at `0x20000000` and `0x30000000` are intentional: those high-byte values are the endpoint platforms Linux and macOS (see the table above), so they are not reused for USP adapters.
 
 ## Architecture Codes
 
