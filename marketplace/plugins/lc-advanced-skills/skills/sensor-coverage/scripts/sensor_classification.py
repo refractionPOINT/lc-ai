@@ -13,8 +13,8 @@ from typing import Dict, List, Any, Set, Tuple
 
 
 # Platform code mappings
-# Source of truth: CONSTANTS.md (from go-essentials/lc/agentid.go — the
-# up-to-date authoritative list; go-limacharlie/identification.go is stale).
+# Source of truth: CONSTANTS.md (the authoritative LimaCharlie platform
+# code reference). Keep this map in sync with that file.
 # NOTE: the platform is the FULL high byte of the uint32, not the top nibble.
 # 0x30000000 is macos but 0x31000000 is harmony — never infer by nibble.
 PLATFORM_CODES = {

@@ -2,7 +2,7 @@
 
 This is the **authoritative source of truth** for LimaCharlie constants. Always reference this file instead of hardcoding values or using values from other documentation.
 
-**Source:** [go-essentials/lc/agentid.go](https://github.com/refractionPOINT/go-essentials/blob/master/lc/agentid.go) — this is the up-to-date authoritative list. (Note: `go-limacharlie/limacharlie/identification.go` exists but is stale and missing newer platforms; do not use it.)
+**Source:** Canonical LimaCharlie platform/architecture identification scheme, kept in sync with the LimaCharlie platform. This file is the authoritative reference — do not copy platform codes from SDK source or other docs, which may lag behind.
 
 ## Platform Codes
 
