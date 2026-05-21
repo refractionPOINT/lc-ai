@@ -8,6 +8,37 @@ See [CONSTANTS.md](./CONSTANTS.md) for the authoritative source of LimaCharlie c
 
 **NEVER guess platform IDs, and NEVER infer the platform/OS behind a platform ID from memory or the leading hex digit.** Whenever you need to know which platform a platform ID/code represents (or the code for a given platform), ALWAYS resolve it against the platform tables in [CONSTANTS.md](./CONSTANTS.md). Codes not listed there are unknown — not "the closest platform".
 
+## Hive Records Are Disabled By Default
+
+**Every new Hive record you create is disabled until you explicitly enable it.** This applies to almost every resource in LimaCharlie — D&R rules (`dr-general`), FP rules (`fp`), secrets (`secret`), lookups (`lookup`), playbooks (`playbook`), AI skills (`ai_skill`), AI agents (`ai_agent`), cloud adapters (`cloud_sensor`), external adapters (`external_adapter`), SOPs (`sop`), org notes (`org_notes`), YARA rules (`yara`), saved queries (`query`), extension configs (`extension_config`), etc.
+
+The CLI commands that create records (`limacharlie secret set`, `lookup set`, `playbook set`, `ai-skill set`, `cloud-adapter set`, `external-adapter set`, `fp set`, `note set`, `sop set`, `dr set`, `hive set`, …) do **not** auto-enable the record they write. If you `set` a record and then expect it to "just work" (a secret referenced by an output, a lookup queried by a D&R rule, a rule that should fire), it will silently do nothing because it is disabled.
+
+To create-and-enable in one shot, do **one** of the following — listed in order of preference:
+
+1. **Pass `--enabled` on the `set` command** (preferred — one-shot create + enable):
+   ```bash
+   limacharlie secret set --key my-key --input-file foo.yaml --enabled --oid <oid>
+   limacharlie lookup set --key my-list --input-file foo.yaml --enabled --oid <oid>
+   limacharlie hive   set --hive-name <hive_name> --key <key> --input-file foo.yaml --enabled --oid <oid>
+   limacharlie dr     set --key my-rule --input-file rule.yaml --enabled --oid <oid>
+   ```
+   The flag overrides any `usr_mtd.enabled` value in the input file.
+2. **Or include `usr_mtd.enabled: true` in the input file:**
+   ```yaml
+   data:
+     my_field: my_value
+   usr_mtd:
+     enabled: true
+   ```
+3. **Or call the matching `enable` subcommand right after the `set`** (use when you already have a `set` call you can't easily change):
+   ```bash
+   limacharlie secret enable --key my-key --oid <oid>
+   limacharlie hive enable --hive-name <hive_name> --key <key> --oid <oid>
+   ```
+
+When debugging "the record exists but nothing happens", check `usr_mtd.enabled` first — `limacharlie hive get --hive-name <hive_name> --key <key> --oid <oid> --output yaml`.
+
 ## Required Tool
 
 **ALWAYS use the `limacharlie` CLI via Bash** for all LimaCharlie API operations. Never call MCP tools directly, never spawn an api-executor agent.
