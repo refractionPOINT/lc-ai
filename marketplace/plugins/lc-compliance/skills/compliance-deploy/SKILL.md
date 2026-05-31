@@ -74,9 +74,9 @@ limacharlie --oid <oid> api-key create \
     --store-secret <framework>-compliance-reviewer
 ```
 
-This writes the key value to `hive://secret/<framework>-compliance-reviewer` (updated via etag if it already exists), so the `key` field never has to be captured and re-stored manually.
+This writes the key value to `hive://secret/<framework>-compliance-reviewer` (updated via etag if it already exists), so the `api_key` field never has to be captured and re-stored manually.
 
-> **Fallback (manual two-step)**: if `--store-secret` is unavailable, capture the `key` field from the JSON output and stage it as the secret in Step 2 alongside the Anthropic key.
+> **Fallback (manual two-step)**: if `--store-secret` is unavailable, capture the `api_key` field from the JSON output and stage it as the secret in Step 2 alongside the Anthropic key.
 
 ### Step 2 — Stage the Anthropic secret
 
