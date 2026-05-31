@@ -106,17 +106,20 @@ echo '{"data": {"secret": "<SLACK_CHANNEL_ID>"}, "usr_mtd": {"enabled": true}}' 
 
 ### Step 5: Create the Playbook API Key
 
-Create an LC API key with minimal permissions for the playbook to read secrets:
+Create an LC API key with minimal permissions for the playbook to read secrets, and atomically store its value as a secret with `--store-secret`. The secret name must be `cases-to-slack-api-key` (what the playbook reads); `--store-secret` creates it **enabled**:
 
 ```bash
 limacharlie api-key create \
   --name "cases-to-slack" \
   --permissions "secret.get,investigation.get" \
+  --store-secret cases-to-slack-api-key \
   --oid <oid> \
   --output yaml
 ```
 
-Capture the `api_key` value from the output and immediately store it as a secret:
+`--store-secret` writes the key value to `hive://secret/cases-to-slack-api-key` created enabled (updated via etag if it already exists), so the value never has to be captured manually.
+
+**Fallback (manual two-step)**: if `--store-secret` is unavailable, capture the `api_key` value from the output and store it as a secret with `enabled: true`:
 
 ```bash
 echo '{"data": {"secret": "<API_KEY_VALUE>"}, "usr_mtd": {"enabled": true}}' \

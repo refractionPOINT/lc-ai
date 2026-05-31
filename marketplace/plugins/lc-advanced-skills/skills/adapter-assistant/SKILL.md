@@ -92,6 +92,16 @@ The skill then guides you through creating, validating, and deploying adapter co
 
 #### Step 1: Check for Native LimaCharlie Adapter
 
+For a fast LOCAL view of supported adapter types and per-type config fields, ask the CLI directly (this complements — does not replace — the usp-adapters repo, which remains authoritative for field definitions):
+```bash
+# Supported types
+limacharlie cloud-adapter list-types --oid <oid> --output yaml
+limacharlie external-adapter list-types --oid <oid> --output yaml
+
+# Config field listing for one type
+limacharlie cloud-adapter schema --type <type> --oid <oid> --output yaml
+```
+
 Search local documentation:
 ```
 Glob("./docs/limacharlie/doc/Sensors/Adapters/Adapter_Types/*{keyword}*.md")
@@ -342,6 +352,15 @@ docker run -d --rm -p 514:514/udp refractionpoint/lc-adapter syslog \
 ```
 
 **Verify deployment:**
+
+One step — ask the adapter record for its own live sensor(s). This matches by the adapter's installation-key IID for you and reports clearly when no sensor exists yet (empty result = the adapter has not delivered any events):
+```bash
+limacharlie cloud-adapter sensors --key <adapter-record> --oid <oid> --output yaml
+# for an External Adapter record:
+limacharlie external-adapter sensors --key <adapter-record> --oid <oid> --output yaml
+```
+
+Equivalent manual lookup (matches the same IID by hand) if you only have the IID:
 ```bash
 limacharlie sensor list --selector "iid == \`<installation-key-iid>\`" --oid <oid> --output yaml
 ```
@@ -409,7 +428,9 @@ Task(
 | pubsub | varies | Cloud Sensor/On-prem | project_id, subscription_id, service_account_creds |
 | file | varies | On-prem | file_path, backfill |
 
-**IMPORTANT**: Always check the **usp-adapters repo** for authoritative field definitions:
+For a quick LOCAL listing of supported types and a given type's config fields, use `limacharlie cloud-adapter list-types` / `external-adapter list-types` and `limacharlie cloud-adapter schema --type <type>`.
+
+**IMPORTANT**: For authoritative field definitions, always check the **usp-adapters repo** (the local `schema` output complements but does not replace it):
 - URL: `https://github.com/refractionPOINT/usp-adapters`
 - Each adapter has a `client.go` with a `*Config` struct defining all valid fields
 - All Cloud Sensors require a nested structure with `client_options` containing `identity`, `platform`, and `sensor_seed_key`

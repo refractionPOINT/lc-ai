@@ -65,27 +65,24 @@ investigation.get,investigation.set,ext.request,ext.list,org_notes.read,
 sop.get,sop.get.mtd,ai_agent.operate
 ```
 
-Create the key and display it ONCE — it cannot be retrieved later:
+Create the key and atomically store its value as a secret with `--store-secret`. The secret name must equal the key name (`<framework>-compliance-reviewer`), and `--store-secret` creates it **enabled**:
 
 ```bash
 limacharlie --oid <oid> api-key create \
     --name <framework>-compliance-reviewer \
-    --permissions <comma-separated-list>
+    --permissions <comma-separated-list> \
+    --store-secret <framework>-compliance-reviewer
 ```
 
-Capture the `key` field from the JSON output — you'll need it in Step 2.
+This writes the key value to `hive://secret/<framework>-compliance-reviewer` (updated via etag if it already exists), so the `key` field never has to be captured and re-stored manually.
 
-### Step 2 — Stage both secrets
+> **Fallback (manual two-step)**: if `--store-secret` is unavailable, capture the `key` field from the JSON output and stage it as the secret in Step 2 alongside the Anthropic key.
+
+### Step 2 — Stage the Anthropic secret
 
 `limacharlie hive set` reads the record body from stdin (or from `--input-file`). It does NOT accept a `--data` flag — passing `--data '<json>'` fails with `No such option: --data`. Pipe the JSON instead:
 
 ```bash
-# LC API key (the one from Step 1)
-printf '{"secret": "%s"}' "<lc-api-key>" | \
-    limacharlie --oid <oid> hive set \
-        --hive-name secret \
-        --key <framework>-compliance-reviewer
-
 # Anthropic API key
 printf '{"secret": "%s"}' "<sk-ant-...>" | \
     limacharlie --oid <oid> hive set \
@@ -95,7 +92,9 @@ printf '{"secret": "%s"}' "<sk-ant-...>" | \
 
 Use `printf` rather than `echo` so the value is passed literally (no surprise interpretation of backslashes in keys). Quote the placeholder so shell expansion doesn't mangle long keys.
 
-If the Anthropic secret already exists at `anthropic-key`, skip that second command. Confirm beforehand with:
+(If you used the Step 1 fallback, also stage the LC API key here with the same `printf ... | limacharlie hive set --hive-name secret --key <framework>-compliance-reviewer` pattern.)
+
+If the Anthropic secret already exists at `anthropic-key`, skip the command above. Confirm beforehand with:
 
 ```bash
 limacharlie --oid <oid> hive get --hive-name secret --key anthropic-key 2>/dev/null \
