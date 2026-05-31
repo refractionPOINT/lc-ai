@@ -157,23 +157,26 @@ Each agent has a `secret.yaml` defining required secrets. For each secret:
 
 Offer to create the API key for the user automatically:
 
+Mint the key and store its value as a secret in a single atomic step with `--store-secret`. The secret name **must equal the agent's hive key** (what the agent's `ai_agent.yaml` references in `lc_api_key_secret`, e.g. `hive://secret/<agent-name>` means the secret key is `<agent-name>`):
+
 ```bash
 limacharlie api-key create \
   --name "<agent-name>" \
   --permissions "sensor.list,sensor.get,sensor.task,dr.list,dr.set,org.get,hive.get,ext.request,org_notes.get,org_notes.set,ai_agent.operate" \
+  --store-secret <agent-name> \
   --oid <oid> \
   --output yaml
 ```
 
-**IMPORTANT**: The secret key is only shown once at creation. Capture it and immediately store it.
+`--store-secret` writes the key value to `hive://secret/<agent-name>` created **enabled** (and updates it via etag if the secret already exists), so you never have to capture and re-store the value manually.
 
-Secrets are hive records and **must be created with `enabled: true`** to be usable. Use `hive set` with the full record format to ensure this:
+Adjust permissions based on what the agent needs. For case-based agents, also include permissions for cases operations.
+
+**Fallback (manual two-step)**: if `--store-secret` is unavailable, create the key, capture the value (it is only shown once), then store it with `enabled: true`:
 
 ```bash
 echo '{"data": {"secret": "<the-api-key-value>"}, "usr_mtd": {"enabled": true}}' | limacharlie hive set --hive-name secret --key <agent-name> --oid <oid>
 ```
-
-Adjust permissions based on what the agent needs. For case-based agents, also include permissions for cases operations.
 
 #### Anthropic API Key (`anthropic-key`)
 
@@ -296,22 +299,25 @@ If it already exists, ask the user if they want to reuse it or update it.
 
 For each agent in the SOC's installation order:
 
+Mint the key and store its value as a secret in one atomic step with `--store-secret`. The secret name must match what the agent's `ai_agent.yaml` references in its `lc_api_key_secret` field (e.g., `hive://secret/lean-triage` means the secret key is `lean-triage`) — the secret name is the same as the agent's hive key:
+
 ```bash
-# Create the API key with agent-specific permissions
+# Create the API key and atomically store its value as hive://secret/<agent-name>
 limacharlie api-key create \
   --name "<agent-key-name>" \
   --permissions "<comma-separated-permissions-from-readme>" \
+  --store-secret <agent-name> \
   --oid <oid> \
   --output yaml
 ```
 
-**Capture the key value** from the output and immediately store it as a secret (must be `enabled: true`):
+`--store-secret` creates the secret **enabled** (and updates it via etag if it already exists), so the key value never has to be captured manually. If the secret should carry tags that the agent already applies, pass each with `--store-secret-tag <tag>`.
+
+**Fallback (manual two-step)**: if `--store-secret` is unavailable, capture the key value from the output (it is only shown once) and store it as a secret with `enabled: true`:
 
 ```bash
 echo '{"data": {"secret": "<the-api-key-value>"}, "usr_mtd": {"enabled": true}}' | limacharlie hive set --hive-name secret --key <agent-name> --oid <oid>
 ```
-
-The secret name must match what the agent's `ai_agent.yaml` references in its `lc_api_key_secret` field (e.g., `hive://secret/lean-triage` means the secret key is `lean-triage`). The secret name is the same as the agent's hive key.
 
 ### Step 5b: Save Existing Tags (Multi-SOC Awareness)
 
