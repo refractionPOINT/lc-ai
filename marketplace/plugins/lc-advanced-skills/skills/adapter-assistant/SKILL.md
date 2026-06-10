@@ -427,6 +427,10 @@ Task(
 | falconcloud | json | Cloud Sensor/On-prem | client_id, client_secret |
 | pubsub | varies | Cloud Sensor/On-prem | project_id, subscription_id, service_account_creds |
 | file | varies | On-prem | file_path, backfill |
+| gmail | gmail | Cloud Sensor/On-prem | client_id, client_secret, refresh_token (single mailbox) or service_account_credentials, subject/subjects/discover_mailboxes (Workspace); collect_* capability flags |
+| threatlocker | json | Cloud Sensor/On-prem | api_key, instance; optional feeds (defaults: approval_request, unified_audit, system_audit) |
+| harmony | json | Cloud Sensor/On-prem | client_id, access_key; events.enabled / entities.queries blocks |
+| cato | cato | Cloud Sensor/On-prem | apikey, accountid |
 
 For a quick LOCAL listing of supported types and a given type's config fields, use `limacharlie cloud-adapter list-types` / `external-adapter list-types` and `limacharlie cloud-adapter schema --type <type>`.
 

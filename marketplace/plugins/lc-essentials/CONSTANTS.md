@@ -80,6 +80,10 @@ Platform codes are returned as `uint32` in sensor info responses.
 | OpenTelemetry | `otel` | 0x2E000000 | 771751936 |
 | Cortex XDR | `cortex_xdr` | 0x2F000000 | 788529152 |
 | Harmony | `harmony` | 0x31000000 | 822083584 |
+| ThreatLocker | `threatlocker` | 0x32000000 | 838860800 |
+| HaloPSA | `halopsa` | 0x33000000 | 855638016 |
+| Cato | `cato` | 0x34000000 | 872415232 |
+| Gmail | `gmail` | 0x35000000 | 889192448 |
 
 > The gaps at `0x20000000` and `0x30000000` are intentional: those high-byte values are the endpoint platforms Linux and macOS (see the table above), so they are not reused for USP adapters.
 

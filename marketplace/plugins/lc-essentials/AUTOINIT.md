@@ -314,6 +314,20 @@ To view an extension's config schema: `limacharlie extension schema --name <ext-
 
 Note: the target org must already be subscribed to the extension (`limacharlie extension subscribe --name <ext-name> --oid <target-oid>`).
 
+### Third-Party Response & Integration Extensions
+
+These marketplace extensions bridge external security and ITSM platforms. Workflow: subscribe (`limacharlie extension subscribe --name <ext> --oid <oid>`), set the config (`limacharlie extension config-set`), then invoke actions with `limacharlie extension request --name <ext> --action <action> --data '<json>'`. Discover an extension's exact config fields and action schemas with `limacharlie extension schema --name <ext> --oid <oid> --output yaml` — do not guess parameters.
+
+| Extension | Integrates With | Representative Actions |
+|---|---|---|
+| `ext-halopsa` | HaloPSA (PSA/ticketing) | `create_ticket`, `update_ticket`, `search_tickets`, `add_action`, `link_asset_to_ticket`, `lookup_client_site` |
+| `ext-threatlocker` | ThreatLocker (Application Control) | `approval_request_search`, `application_get_matching`, `computer_get`, `approval_request_permit` / `_reject` / `_ignore` |
+| `ext-sentinelone` | SentinelOne (EDR) | `list_agents`, `isolate_agent`, `list_threats`, `mitigate_threat`, `blocklist_hash`, generic `api_call` |
+| `ext-microsoft-response` | Microsoft Graph + Defender for Endpoint | `disable_user`, `revoke_sign_in_sessions`, `isolate_machine`, `stop_and_quarantine_file`, `create_indicator`, generic `api_call` |
+| `ext-servicenow` | ServiceNow (ITSM) | `create_incident`, `update_incident`, `add_note`, `mirror_case`, `pull_incident_changes`, `query_table` |
+
+Safety: the mutating actions in these extensions require explicit target selectors (ids or filters) — never construct a request intended to act on "everything", and confirm with the user before destructive actions (device wipe, mass mitigation).
+
 ## Infrastructure Sync
 
 When using `limacharlie sync push`, **avoid using `--force`** unless you are certain you want to remove cloud resources not present in the local config file. Without `--force`, push only adds or updates resources — it never removes them. With `--force`, any resource in the cloud that is missing from the local file **will be deleted**, which can cause data loss if your local file is not a complete representation of the org's configuration.
