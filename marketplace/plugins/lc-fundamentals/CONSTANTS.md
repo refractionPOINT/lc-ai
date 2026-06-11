@@ -95,7 +95,7 @@ Microsoft exposes the same products through multiple feeds with different format
 |---|---|---|---|
 | Defender raw endpoint telemetry (Device* events) | Defender XDR Streaming API → Event Hub | `azure_event_hub` | `msdefender` |
 | Defender XDR alerts (all Defender products + Entra ID Protection + Purview DLP) | Graph `security/alerts_v2` (polled) | `defender` | `msdefender` |
-| M365/O365 unified audit log (Exchange, SharePoint, Teams, Entra audit) | O365 Management Activity API | `o365` | `office365` |
+| M365/O365 unified audit log (Exchange, SharePoint, Teams, Entra audit) | O365 Management Activity API | `office365` | `office365` |
 | Entra ID full logs (SignInLogs, AuditLogs, ProvisioningLogs, …) | Entra diagnostic settings → Event Hub | `azure_event_hub` | `azure_ad` |
 | Entra ID Protection risk detections only | Graph `identityProtection/riskDetections` (polled) | `entraid` | `entraid` |
 | Azure activity/resource diagnostic logs | Azure Monitor → Event Hub | `azure_event_hub` | `azure_monitor` (or the resource-specific `azure_key_vault`, `azure_kubernetes_service`, `azure_network_security_group`, `azure_sql_audit`) |

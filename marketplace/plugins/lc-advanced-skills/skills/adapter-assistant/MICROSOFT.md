@@ -17,7 +17,7 @@ Find the row matching the data you want, then use EXACTLY that adapter type and 
 |---|---|---|---|
 | Defender raw endpoint telemetry (process, network, file, registry, logon, image-load events) | Defender XDR **Streaming API** → Event Hub | `azure_event_hub` | `msdefender` |
 | Defender XDR **alerts** (Defender for Endpoint/Office 365/Identity/Cloud Apps, Entra ID Protection, Purview DLP) | Microsoft Graph `security/alerts_v2` (polled) | `defender` | `msdefender` |
-| M365 / Office 365 **unified audit log** (Exchange, SharePoint, Teams, DLP, Entra directory & sign-in audit records) | Office 365 Management Activity API | `o365` | `office365` |
+| M365 / Office 365 **unified audit log** (Exchange, SharePoint, Teams, DLP, Entra directory & sign-in audit records) | Office 365 Management Activity API | `office365` | `office365` |
 | Entra ID **full log stream** (SignInLogs, AuditLogs, NonInteractiveUserSignInLogs, ProvisioningLogs, RiskyUsers, …) | Entra ID diagnostic settings → Event Hub | `azure_event_hub` | `azure_ad` |
 | Entra ID Protection **risk detections only** | Microsoft Graph `identityProtection/riskDetections` (polled) | `entraid` | `entraid` |
 | Azure **activity log / resource diagnostic logs** (generic) | Azure Monitor diagnostic settings → Event Hub | `azure_event_hub` | `azure_monitor` |
@@ -43,7 +43,7 @@ The webhook adapter can substitute for `azure_event_hub` as a transport (e.g. da
   - Crossing them silently breaks event-type and timestamp extraction.
 - **`evtx` is an adapter type, not a platform.** There is no `evtx` platform; EVTX file ingestion uses `platform: wel`.
 - **Platform strings keep legacy Microsoft product names.** Entra ID was Azure AD (`azure_ad`), Microsoft 365 was Office 365 (`office365`), Defender XDR was M365 Defender (`msdefender`). Do not "fix" these to modern names — `microsoft365`, `m365`, `defender_xdr` etc. are not valid platforms. Resolve all platform strings against CONSTANTS.md.
-- **Adapter type ≠ platform**, even when spelled identically. `entraid` is both an adapter type and a platform (they happen to pair); `azure_event_hub` is only an adapter type; `azure_ad` is only a platform.
+- **Adapter type ≠ platform**, even when spelled identically. `entraid` and `office365` are each both an adapter type and a platform (they happen to pair); `azure_event_hub` is only an adapter type; `azure_ad` is only a platform. The adapter type for the M365 audit log is `office365`, not `o365` (`o365` is only the source-code directory name in usp-adapters).
 
 ## What Each Parser Expects (troubleshooting)
 
@@ -186,7 +186,7 @@ entraid:
 
 When proposing a Microsoft ingestion plan, warn about these overlaps instead of recommending everything:
 
-- **Entra identity events appear in three feeds**: the M365 unified audit log (`Audit.AzureActiveDirectory` content type), the Entra Event Hub stream (SignInLogs/AuditLogs), and — for risk events — Graph riskDetections. Ingesting more than one duplicates identity telemetry. The Event Hub stream is the richest; `Audit.AzureActiveDirectory` is sufficient if the o365 adapter is already deployed.
+- **Entra identity events appear in three feeds**: the M365 unified audit log (`Audit.AzureActiveDirectory` content type), the Entra Event Hub stream (SignInLogs/AuditLogs), and — for risk events — Graph riskDetections. Ingesting more than one duplicates identity telemetry. The Event Hub stream is the richest; `Audit.AzureActiveDirectory` is sufficient if the office365 adapter is already deployed.
 - **Defender alerts appear in two feeds**: Graph `alerts_v2` (the `defender` adapter) and the Streaming API `AlertInfo`/`AlertEvidence` tables. Pick one.
 - **Entra ID Protection alerts** are included in Graph `alerts_v2` (`serviceSource: azureAdIdentityProtection`) — if the `defender` adapter is deployed, the `entraid` adapter adds detail but overlaps.
 - **WEL vs EDR sensor**: hosts running the LimaCharlie EDR agent already provide rich endpoint telemetry; the `wel` adapter is for hosts WITHOUT the EDR agent or for specific channels not otherwise collected.
