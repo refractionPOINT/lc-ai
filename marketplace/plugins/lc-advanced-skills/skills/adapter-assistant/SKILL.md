@@ -88,6 +88,8 @@ The skill then guides you through creating, validating, and deploying adapter co
 
 **This is the key capability** - the skill researches ANY data source dynamically, not just predefined ones.
 
+> **Microsoft sources — STOP and read the reference first.** If the data source is anything Microsoft (Defender, Office 365 / M365, Entra ID / Azure AD, Azure logs, Windows Event Logs, EVTX), do NOT research or guess: `Read("${CLAUDE_PLUGIN_ROOT}/skills/adapter-assistant/MICROSOFT.md")` and use exactly the adapter type + `platform` pairing from its decision matrix. Microsoft exposes the same products through multiple feeds with different formats, and picking the wrong `platform` (e.g. `json` instead of `msdefender`, or `azure_event_hub_namespace` for data merely transiting an Event Hub) silently breaks parsing.
+
 ### For ANY Data Source Request:
 
 #### Step 1: Check for Native LimaCharlie Adapter
@@ -422,8 +424,13 @@ Task(
 | webhook | json | Cloud Sensor | secret, client_options |
 | okta | json | Cloud Sensor | apikey, url |
 | s3 | varies | Cloud Sensor/On-prem | bucket_name, access_key, secret_key, prefix |
-| azure_event_hub | varies | Cloud Sensor/On-prem | connection_string |
-| office365 | json | Cloud Sensor | domain, tenant_id, publisher_id, client_id, client_secret, endpoint |
+| azure_event_hub | varies — match the feed streamed into the hub (`msdefender`, `azure_ad`, `azure_monitor`, …); see [MICROSOFT.md](./MICROSOFT.md) | Cloud Sensor/On-prem | connection_string (must include EntityPath) |
+| office365 | office365 | Cloud Sensor | domain, tenant_id, publisher_id, client_id, client_secret, endpoint, content_types |
+| defender | msdefender | Cloud Sensor | tenant_id, client_id, client_secret (Graph alerts_v2 polling) |
+| entraid | entraid | Cloud Sensor | tenant_id, client_id, client_secret (Graph riskDetections polling) |
+| ms_graph | json | Cloud Sensor | tenant_id, client_id, client_secret, url (custom Graph endpoint) |
+| wel | wel | On-prem (Windows only) | evt_sources |
+| evtx | wel (no `evtx` platform exists) | On-prem | file_path |
 | falconcloud | json | Cloud Sensor/On-prem | client_id, client_secret |
 | pubsub | varies | Cloud Sensor/On-prem | project_id, subscription_id, service_account_creds |
 | file | varies | On-prem | file_path, backfill |
@@ -605,6 +612,7 @@ For a quick LOCAL listing of supported types and a given type's config fields, u
 ## Reference
 
 For more details:
+- **Microsoft ecosystem (Defender, M365, Entra ID, Azure, WEL/EVTX)**: [MICROSOFT.md](./MICROSOFT.md) — authoritative adapter/platform decision matrix
 - Adapter usage: `./docs/limacharlie/doc/Sensors/Adapters/adapter-usage.md`
 - Adapter deployment: `./docs/limacharlie/doc/Sensors/Adapters/adapter-deployment.md`
 - Adapter types: `./docs/limacharlie/doc/Sensors/Adapters/Adapter_Types/`

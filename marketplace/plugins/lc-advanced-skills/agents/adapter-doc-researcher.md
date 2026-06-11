@@ -28,6 +28,10 @@ You will receive a prompt specifying:
 
 ## Research Workflow
 
+### Step 0: Microsoft sources — use the curated reference, not research
+
+If the adapter or product is Microsoft-ecosystem (defender, o365/office365, entraid, ms_graph, azure_event_hub, wel, evtx, or any Azure log source), FIRST `Read("${CLAUDE_PLUGIN_ROOT}/skills/adapter-assistant/MICROSOFT.md")` and treat its decision matrix as authoritative for the adapter type + `platform` pairing. Only research further to fill in details the reference doesn't cover (e.g. Azure-side setup steps); never substitute a different `platform` than the matrix specifies.
+
 ### Step 1: Search Local Documentation
 
 ```

@@ -142,10 +142,14 @@ limacharlie usp validate --platform text --input-file /tmp/usp-test.yaml --oid <
 | Webhook | `json` | `secret` |
 | Okta | `json` | `apikey`, `url` |
 | AWS S3 | varies | `bucket_name`, `access_key`, `secret_key` |
-| Azure Event Hub | varies | `connection_string` |
-| Office 365 | `json` | `domain`, `tenant_id`, `client_id`, `client_secret` |
+| Azure Event Hub | match the feed in the hub (`msdefender`, `azure_ad`, `azure_monitor`, …) | `connection_string` (must include `EntityPath`) |
+| Office 365 | `office365` | `domain`, `tenant_id`, `publisher_id`, `client_id`, `client_secret`, `endpoint` |
+| Defender (Graph alerts) | `msdefender` | `tenant_id`, `client_id`, `client_secret` |
+| Entra ID (risk detections) | `entraid` | `tenant_id`, `client_id`, `client_secret` |
 | CrowdStrike | `json` | `client_id`, `client_secret` |
 | GCP Pub/Sub | varies | `project_id`, `subscription_id`, `service_account_creds` |
+
+**Microsoft sources (Defender, M365, Entra ID, Azure, WEL/EVTX)**: the `platform` follows the *feed*, not the product, and each feed has a purpose-built parser — never default to `json`. Resolve the exact adapter type + platform pairing against the "Microsoft Source → Adapter + Platform Selection" table in `${CLAUDE_PLUGIN_ROOT}/CONSTANTS.md` before configuring.
 
 ## On-Prem Deployment
 
