@@ -191,11 +191,46 @@ When proposing a Microsoft ingestion plan, warn about these overlaps instead of 
 - **Entra ID Protection alerts** are included in Graph `alerts_v2` (`serviceSource: azureAdIdentityProtection`) — if the `defender` adapter is deployed, the `entraid` adapter adds detail but overlaps.
 - **WEL vs EDR sensor**: hosts running the LimaCharlie EDR agent already provide rich endpoint telemetry; the `wel` adapter is for hosts WITHOUT the EDR agent or for specific channels not otherwise collected.
 
+## Operational Notes — verified against official Microsoft documentation
+
+Latency, retention, licensing, and transport behaviors that LOOK like a broken adapter but are by design. Check these before troubleshooting, and set expectations when proposing an ingestion plan.
+
+### Latency, retention & backfill
+
+- **The M365 unified audit log is NOT real-time.** Microsoft offers no delivery SLA; most notifications arrive within ~1 hour, and core-workload (Exchange/SharePoint/OneDrive/Teams) availability is typically 60–90 minutes — longer for other services. A NEW subscription can take **up to 12 hours** to produce its first content, and enabling unified audit logging itself takes up to 60 minutes to take effect. Do not diagnose a fresh office365 adapter as broken inside these windows.
+- **M365 audit content is only retrievable for 7 days.** The office365 adapter's `start_time` cannot reach back more than 7 days; deeper historical backfill via the Management Activity API is impossible (Microsoft: "Content older than 7 days cannot be retrieved"). For older history, use Purview audit log search, not an adapter.
+- **The Defender XDR Streaming API ships events "as they occur".** No backfill capability is documented — expect data only from the moment streaming is configured in the Defender portal, not historical events.
+- **The azure_event_hub adapter starts at the LATEST hub offset and reads via the `$Default` consumer group** — neither is configurable. Backlog already sitting in the hub when the adapter starts is never read, and events published while the adapter is down are skipped on restart (it does not checkpoint). Give each adapter a dedicated Event Hub, and never attach other consumers to its `$Default` group: Microsoft's guidance is one consumer group per consuming application, and an epoch reader on a shared group disconnects other readers.
+- **One Event Hub per feed.** An adapter has exactly one `platform`, so never mix feeds (e.g. Defender streaming + Entra diagnostic logs) into the same hub — a single parser cannot handle both formats.
+- **Entra diagnostic settings require the Event Hubs namespace to be in the same tenant** as the Entra logs being streamed.
+
+### Licensing
+
+- **entraid adapter (riskDetections)**: the API requires Entra ID P1 or P2, and with P1 risk data is officially "Limited Information" — full detail and all risk reports require P2. Also, an empty feed may simply mean no risky events have occurred.
+- **Entra sign-in/audit log streaming does NOT require a premium license** — both are available in the Free tier per Microsoft's licensing table. Premium gates ProvisioningLogs and Microsoft Graph activity logs (and longer in-product retention). Do not tell users they need P1/P2 to stream SignInLogs.
+- **Defender streaming tables map to deployed products**: `Device*` tables come from Defender for Endpoint, `Email*` from Defender for Office 365, `Identity*` from Defender for Identity, `CloudAppEvents` from Defender for Cloud Apps. A tenant without a given product produces no rows for its tables — absent tables are not a parsing problem.
+
+### Government clouds (GCC / GCC High / DoD)
+
+- GCC High and DoD tenants use `graph.microsoft.us` / `dod-graph.microsoft.us` and `login.microsoftonline.us`. The `defender`, `entraid`, and `ms_graph` adapters hardcode the worldwide endpoints (`graph.microsoft.com`, `login.microsoftonline.com`) and therefore **do not work for GCC High / DoD tenants**.
+- The `office365` adapter DOES support government clouds via `endpoint: gcc-gov | gcc-high-gov | dod-gov`.
+- Plain GCC (not High) uses the **worldwide** endpoints per Microsoft — do not point GCC tenants at the `.us` endpoints.
+- Event Hub-based ingestion works in all clouds since it authenticates by connection string.
+
+### Azure NSG: flow logs ≠ resource logs
+
+- NSG/VNet **flow logs** (the actual IP-traffic records) are a Network Watcher feature written to an **Azure Storage account** — they are NOT a diagnostic-settings category and cannot be streamed to an Event Hub. If the user wants flow telemetry, plan around storage-based ingestion, not the `azure_network_security_group` platform.
+- Only the NSG **resource logs** (`NetworkSecurityGroupEvent`, `NetworkSecurityGroupRuleCounter` — rule-match events, not flows) stream via diagnostic settings → Event Hub with platform `azure_network_security_group`.
+- NSG flow logs are being retired (no new ones after June 30, 2025; retired September 30, 2027) in favor of VNet flow logs — which are also storage-based.
+
 ## Official Microsoft References
 
-- Defender XDR Streaming API: https://learn.microsoft.com/en-us/defender-xdr/streaming-api (supported tables: https://learn.microsoft.com/en-us/defender-xdr/supported-event-types)
+- Defender XDR Streaming API: https://learn.microsoft.com/en-us/defender-xdr/streaming-api (supported tables: https://learn.microsoft.com/en-us/defender-xdr/supported-event-types; Event Hub setup & table→product mapping: https://learn.microsoft.com/en-us/defender-xdr/configure-event-hub)
 - Graph security alerts_v2: https://learn.microsoft.com/en-us/graph/api/resources/security-alert
-- O365 Management Activity API: https://learn.microsoft.com/en-us/office/office-365-management-api/office-365-management-activity-api-reference
-- Entra ID log streaming: https://learn.microsoft.com/en-us/entra/identity/monitoring-health/howto-stream-logs-to-event-hub
-- Graph riskDetections: https://learn.microsoft.com/en-us/graph/api/resources/riskdetection
+- O365 Management Activity API: https://learn.microsoft.com/en-us/office/office-365-management-api/office-365-management-activity-api-reference (latency/retention FAQ: https://learn.microsoft.com/en-us/office/office-365-management-api/troubleshooting-the-office-365-management-activity-api)
+- Entra ID log streaming: https://learn.microsoft.com/en-us/entra/identity/monitoring-health/howto-stream-logs-to-event-hub (licensing table: https://learn.microsoft.com/en-us/entra/identity/monitoring-health/howto-access-activity-logs)
+- Graph riskDetections: https://learn.microsoft.com/en-us/graph/api/resources/riskdetection (license requirements: https://learn.microsoft.com/en-us/entra/id-protection/overview-identity-protection#license-requirements)
 - Azure Monitor → Event Hubs: https://learn.microsoft.com/en-us/azure/azure-monitor/essentials/stream-monitoring-data-event-hubs
+- Event Hubs consumer groups & epoch readers: https://learn.microsoft.com/en-us/azure/event-hubs/event-hubs-features
+- Microsoft Graph national cloud deployments: https://learn.microsoft.com/en-us/graph/deployments
+- NSG flow logs (storage-based, retiring): https://learn.microsoft.com/en-us/azure/network-watcher/nsg-flow-logs-overview (NSG resource log categories: https://learn.microsoft.com/en-us/azure/virtual-network/virtual-network-nsg-manage-log)
