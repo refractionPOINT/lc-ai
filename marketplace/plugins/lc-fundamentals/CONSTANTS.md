@@ -87,6 +87,30 @@ Platform codes are returned as `uint32` in sensor info responses.
 
 > The gaps at `0x20000000` and `0x30000000` are intentional: those high-byte values are the endpoint platforms Linux and macOS (see the table above), so they are not reused for USP adapters.
 
+### Microsoft Source → Adapter + Platform Selection
+
+Microsoft exposes the same products through multiple feeds with different formats, so the `platform` follows the **feed**, not the product. Resolve Microsoft ingestion ONLY against this table — never guess:
+
+| Data wanted | Feed | Adapter type | `platform` |
+|---|---|---|---|
+| Defender raw endpoint telemetry (Device* events) | Defender XDR Streaming API → Event Hub | `azure_event_hub` | `msdefender` |
+| Defender XDR alerts (all Defender products + Entra ID Protection + Purview DLP) | Graph `security/alerts_v2` (polled) | `defender` | `msdefender` |
+| M365/O365 unified audit log (Exchange, SharePoint, Teams, Entra audit) | O365 Management Activity API | `office365` | `office365` |
+| Entra ID full logs (SignInLogs, AuditLogs, ProvisioningLogs, …) | Entra diagnostic settings → Event Hub | `azure_event_hub` | `azure_ad` |
+| Entra ID Protection risk detections only | Graph `identityProtection/riskDetections` (polled) | `entraid` | `entraid` |
+| Azure activity/resource diagnostic logs | Azure Monitor → Event Hub | `azure_event_hub` | `azure_monitor` (or the resource-specific `azure_key_vault`, `azure_kubernetes_service`, `azure_network_security_group`, `azure_sql_audit`) |
+| Event Hub namespace's OWN diagnostic logs | diagnostic settings → Event Hub | `azure_event_hub` | `azure_event_hub_namespace` |
+| Live Windows Event Logs (host without EDR) | local WEL subscription | `wel` (Windows binary) | `wel` |
+| Offline `.evtx` files | local file | `evtx` | `wel` |
+| Custom Graph endpoint | Graph (polled, `url` config) | `ms_graph` | `json` + manual mapping |
+
+Hard rules:
+- **NEVER use `platform: json` for a Microsoft feed listed above** — each has a purpose-built parser; `json` breaks event-type/timestamp extraction and (for `msdefender`) per-device sensor splitting.
+- **NEVER use `azure_event_hub_namespace` for data merely transiting an Event Hub** — it is only for the namespace's own diagnostic logs.
+- **`azure_ad` ≠ `entraid`**: `azure_ad` parses the Event Hub `records` envelope; `entraid` parses Graph riskDetection objects. They are not interchangeable.
+- **There is no `evtx` platform** — EVTX files use `platform: wel`.
+- Platform strings keep legacy product names (`azure_ad`, `office365`, `msdefender`); modern names like `microsoft365` or `defender_xdr` are not valid platforms.
+
 ## Architecture Codes
 
 | Architecture | String | Hex | Decimal |
