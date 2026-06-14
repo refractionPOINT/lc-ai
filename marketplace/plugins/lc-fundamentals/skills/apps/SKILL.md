@@ -52,12 +52,25 @@ lc.onThemeChange(theme => { /* ... */ })    // live dark-mode updates
 - `path` is a site-relative LC path under `/v1`, e.g. `'/v1/who'` or
   `'/v1/orgs/<oid>/...'`. Absolute URLs / other hosts / writes to
   `/v1/hive/app/...` are rejected.
-- **Other LC services** (historical search, replay, cases, ai) live off the main
-  API. Reach one with `opts.service` and list it in `required_services` (below):
-  `await lc.api('GET', '/orgs/<oid>/cases', null, { service: 'cases' })`. The
-  parent brokers it (resolves the org's service URL, attaches the same scoped
-  JWT); the path is site-relative to that service (no `/v1`). A service you
-  didn't declare is rejected. Valid services: `search`, `replay`, `cases`, `ai`.
+- **Other LC services.** Some LimaCharlie APIs live off the main API on their own
+  hosts. Reach one by passing `opts.service` AND listing it in `required_services`
+  (a service you didn't declare is rejected with `denied`). The parent host-pins
+  the call and brokers it with the same scoped JWT — it does NOT rewrite your
+  path, so use the EXACT path/method the service expects (verify against
+  `/openapi`). Valid services:
+  - `search` — the historical-events query API (LCQL), the same backend as the
+    query console. Two steps: POST `/v1/search/` with a JSON body
+    (`{ oid, query, startTime, endTime, ... }`) to get a `queryId`, then poll
+    GET `/v1/search/<queryId>/`. This is the `search` service — NOT `replay`.
+  - `cases` — case management, e.g. GET `/orgs/<oid>/cases`.
+  - `ai` — AI sessions / agents.
+  - `replay` — sensor *telemetry* replay (rarely needed; NOT the query API).
+  ```js
+  const init = await lc.api('POST', '/v1/search/',
+    { oid, query, startTime, endTime }, { service: 'search' })
+  const page = await lc.api('GET', '/v1/search/' + init.queryId + '/',
+    null, { service: 'search' })
+  ```
 - On failure, `lc.api` rejects with `Error & { code, status }`; `code` is one of
   `denied | rate_limited | unauthorized | http | timeout | aborted | malformed`.
 - Limits: ~10 req/s (burst 20), 8 concurrent, 256 KB body.
