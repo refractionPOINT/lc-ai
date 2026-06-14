@@ -35,6 +35,12 @@ Full contract: `web-app-frontend/docs/ai-guides/apps-runtime-contract.md`.
    hold. Sensitive perms (`billing.ctrl`, `user.ctrl`, `apikey.ctrl`) trigger a
    severe warning to every viewer; write perms (`*.set`, `*.del`, `*.task`,
    `*.ctrl`) trigger a lesser one.
+7. **Declare every service you call.** Every distinct `service` you pass to
+   `lc.api(..., { service })` MUST appear in the record's `required_services`,
+   or the call fails at runtime with `denied` — the HTML and the record are
+   validated separately, so nothing auto-syncs them. When you add, remove, or
+   change a `{ service }` call, update `required_services` **in the same edit**.
+   (This is the #1 reason a working-looking app returns `denied`.)
 
 ## The `window.lc` runtime
 
