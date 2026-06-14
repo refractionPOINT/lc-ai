@@ -45,13 +45,19 @@ lc.ctx.user                                 // { id, email, displayName }
 lc.ctx.orgs                                 // [{ oid, name }]
 lc.ctx.context                              // embed identifiers, e.g. { sid }
 lc.ctx.theme                                // { mode, vars } (presentation only)
-await lc.api(method, path, body?)           // brokered LC API call -> JSON
+await lc.api(method, path, body?, opts?)    // brokered LC API call -> JSON
 lc.onThemeChange(theme => { /* ... */ })    // live dark-mode updates
 ```
 
 - `path` is a site-relative LC path under `/v1`, e.g. `'/v1/who'` or
   `'/v1/orgs/<oid>/...'`. Absolute URLs / other hosts / writes to
   `/v1/hive/app/...` are rejected.
+- **Other LC services** (historical search, replay, cases, ai) live off the main
+  API. Reach one with `opts.service` and list it in `required_services` (below):
+  `await lc.api('GET', '/orgs/<oid>/cases', null, { service: 'cases' })`. The
+  parent brokers it (resolves the org's service URL, attaches the same scoped
+  JWT); the path is site-relative to that service (no `/v1`). A service you
+  didn't declare is rejected. Valid services: `search`, `replay`, `cases`, `ai`.
 - On failure, `lc.api` rejects with `Error & { code, status }`; `code` is one of
   `denied | rate_limited | unauthorized | http | timeout | aborted | malformed`.
 - Limits: ~10 req/s (burst 20), 8 concurrent, 256 KB body.
@@ -134,6 +140,7 @@ UI is for running and managing apps, not editing HTML.
      "html": "<...the app body from above...>",
      "required_permissions": ["sensor.list"],
      "allowed_origins": [],
+     "required_services": [],
      "locations": ["standalone"],
      "expected_context": []
    }
@@ -144,7 +151,10 @@ UI is for running and managing apps, not editing HTML.
      `within_a_case`, `within_a_dr_rule`. For embeds, list the identifiers you
      read from `lc.ctx.context` in `expected_context` (e.g. `["sid"]`).
    - `allowed_origins`: only `https://host` origins (no path), and only if the
-     app must reach an external API directly. Empty = LC API only (safest).
+     app must reach an external (third-party) API directly. Empty = LC only (safest).
+   - `required_services`: first-party LC services the app calls via
+     `lc.api(..., { service })` — any of `search`, `replay`, `cases`, `ai`. Empty
+     = main API only. Declaring a service is required before the app can call it.
 
 3. **Set** the record (the `--key` is the app's stable id/slug):
 
@@ -170,5 +180,7 @@ UI is for running and managing apps, not editing HTML.
 - **Forgot to enable** → the app won't appear/run. Run `hive enable`.
 - **External fetch fails silently** → the origin isn't in `allowed_origins`
   (CSP blocked it). Add it, or route via `lc.api` if it's LC data.
+- **`lc.api(..., { service })` rejected with `denied`** → the service isn't in
+  `required_services` (or the org can't resolve it). Add it to the record.
 - **Unstyled / wrong colors** → you hardcoded styles or loaded an external
   sheet. Use `.lc-*` / `--lc-*`.
