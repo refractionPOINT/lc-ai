@@ -702,7 +702,26 @@ case sensitive: false
 
 ## Schedule Target
 
-Timed events triggered at intervals per-organization or per-sensor. Useful for periodic checks.
+Timed events triggered at intervals per-organization or per-sensor. Useful for periodic checks (sweeps, health probes, starting a scheduled AI agent).
+
+The `event:` is a **cadence token**, not an edr event type: `<interval>_per_org` or `<interval>_per_sensor`, where interval is one of `30m`, `1h`, `3h`, `6h`, `12h`, `24h`, `168h`. The detect **must still carry an `op`** — a schedule detect with no `op` is rejected with `missing op`. Use `op: exists` against `path: /` to match every firing:
+
+```yaml
+# Fire once per org every hour (e.g. to start a supervisory AI agent)
+target: schedule
+event: 1h_per_org
+op: exists
+path: /
+```
+
+```yaml
+respond:
+  - action: start ai agent
+    definition: hive://ai_agent/my-fde
+    debounce_key: fde-my-fde
+```
+
+A scheduled rule does NOT take a `tests` block (there is no event payload to simulate) — unlike per-event rules, where `tests` is mandatory.
 
 ## Billing Target
 
