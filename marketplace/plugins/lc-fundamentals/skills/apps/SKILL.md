@@ -23,7 +23,8 @@ Full contract: `web-app-frontend/docs/ai-guides/apps-runtime-contract.md`.
 1. Output is a **single self-contained `<body>` fragment**. Do NOT emit
    `<html>`, `<head>`, `<base>`, or `<meta http-equiv>` — the host owns those.
 2. **No external resources**: no `<script src>`, external stylesheets, CDNs, or
-   web fonts. Inline everything. (The CSP blocks external loads.)
+   web fonts. Inline everything. (The CSP blocks external loads.) For charts you
+   do NOT need a library — `lc.chart` (Chart.js) is injected for you.
 3. **All LimaCharlie data goes through `lc.api(...)`.** Never embed a token/API
    key, never prompt the user for credentials.
 4. **External network only to declared `allowed_origins`** via your own `fetch`.
@@ -52,6 +53,7 @@ lc.ctx.orgs                                 // [{ oid, name }]
 lc.ctx.context                              // embed identifiers, e.g. { sid }
 lc.ctx.theme                                // { mode, vars } (presentation only)
 await lc.api(method, path, body?, opts?)    // brokered LC API call -> JSON
+lc.chart(target, spec)                      // themed Chart.js wrapper (see Charts)
 lc.onThemeChange(theme => { /* ... */ })    // live dark-mode updates
 ```
 
@@ -62,14 +64,19 @@ lc.onThemeChange(theme => { /* ... */ })    // live dark-mode updates
   hosts. Reach one by passing `opts.service` AND listing it in `required_services`
   (a service you didn't declare is rejected with `denied`). The parent host-pins
   the call and brokers it with the same scoped JWT — it does NOT rewrite your
-  path, so use the EXACT path/method the service expects (verify against
-  `/openapi`). Valid services:
+  path, so use the EXACT path/method the service expects. **Each service serves
+  its own OpenAPI — fetch it live and read it before writing calls; do not guess
+  or trust a path from memory (these drift).** Valid services:
   - `search` — the historical-events query API (LCQL), the same backend as the
     query console. Two steps: POST `/v1/search/` with a JSON body
     (`{ oid, query, startTime, endTime, ... }`) to get a `queryId`, then poll
     GET `/v1/search/<queryId>/`. This is the `search` service — NOT `replay`.
-  - `cases` — case management, e.g. GET `/orgs/<oid>/cases`.
-  - `ai` — AI sessions / agents.
+  - `cases` — case management. Base `/api/v1/...` (e.g. GET `/api/v1/cases`,
+    GET `/api/v1/cases/{caseNumber}`, GET `/api/v1/dashboard/counts`). Spec:
+    `https://cases.limacharlie.io/openapi`.
+  - `ai` — AI Sessions / agents. Base `/v1/...` (e.g. GET `/v1/sessions`,
+    GET `/v1/org/sessions`). Host is `ai-sessions.limacharlie.io` (NOT
+    `ai.limacharlie.io`). Spec: `https://ai-sessions.limacharlie.io/openapi`.
   - `replay` — sensor *telemetry* replay (rarely needed; NOT the query API).
   ```js
   const init = await lc.api('POST', '/v1/search/',
@@ -91,6 +98,29 @@ Classes: `.lc-card .lc-btn (--primary/--danger) .lc-input .lc-select
 .lc-textarea .lc-label .lc-badge (--positive/--warning/--danger) .lc-table
 .lc-kpi (.lc-kpi__value/.lc-kpi__label) .lc-row .lc-col .lc-stack .lc-muted
 .lc-spinner`.
+
+Charts: use `lc.chart(target, spec)` — a themed **Chart.js v4** wrapper the host
+vendors into the iframe automatically (do NOT add a chart `<script src>`; it's
+CSP-blocked). `spec` is `{ type, data, options }` just like Chart.js; uncolored
+datasets get the host palette and the chart re-themes on dark mode. Give the
+canvas's container an explicit height.
+
+```html
+<div class="lc-card" style="height:260px"><canvas id="c"></canvas></div>
+<script>
+  (async () => {
+    await lc.ready
+    const oid = lc.ctx.orgs[0].oid
+    const s = await lc.api('GET', '/v1/sensors/' + oid)
+    const online = (s.sensors || []).filter((x) => x.is_online).length
+    lc.chart('c', {
+      type: 'doughnut',
+      data: { labels: ['Online', 'Offline'],
+        datasets: [{ data: [online, (s.sensors || []).length - online] }] },
+    })
+  })()
+</script>
+```
 
 ## Golden reference app
 
@@ -203,3 +233,6 @@ UI is for running and managing apps, not editing HTML.
   `required_services` (or the org can't resolve it). Add it to the record.
 - **Unstyled / wrong colors** → you hardcoded styles or loaded an external
   sheet. Use `.lc-*` / `--lc-*`.
+- **Chart is blank / invisible** → its container has no height. Put the
+  `<canvas>` in a sized box (e.g. `style="height:260px"`). Don't add an external
+  chart library — `lc.chart` (Chart.js) is already injected.
