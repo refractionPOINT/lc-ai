@@ -28,7 +28,8 @@ hives:
           ```bash
           cat > /tmp/soul-starter.yaml << 'SOULEOF'
           data:
-            document: |
+            description: Guiding principles for the LimaCharlie Maintainer agent
+            text: |
               # SOUL — Security Operations & Unified Logic
 
               This document guides the LimaCharlie Maintainer agent. Edit it to reflect
