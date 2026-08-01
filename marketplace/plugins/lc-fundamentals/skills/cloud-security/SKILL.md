@@ -264,7 +264,7 @@ limacharlie cloudsec compliance report --framework cis-gcp --oid <oid> --output 
 limacharlie cloudsec compliance assignments --oid <oid> --output yaml   # scoped assignments; report --assignment <id>
 ```
 
-Framework ids include `cis-aws`, `cis-azure`, `cis-gcp`, `soc2`, `pci-dss`, `hipaa`, `iso-27001`, `nist-csf`, `nist-ai-rmf`, `owasp-llm`. Per-control results are PASS / FAIL / NOT_ASSESSED / NOT_APPLICABLE.
+Framework ids include `cis-aws`, `cis-azure`, `cis-gcp`, `cis-m365`, `soc2`, `pci-dss`, `hipaa`, `iso-27001`, `nist-csf`, `nist-ai-rmf`, `owasp-llm` — run `compliance frameworks` for the live set rather than treating this list as closed. Per-control results are PASS / FAIL / NOT_ASSESSED / NOT_APPLICABLE. `cis-m365` (CIS Microsoft 365 Foundations Benchmark) is graded off the Microsoft Entra directory: it covers the benchmark's Entra chapter and reports NOT_ASSESSED for the admin centers that are not collected (Defender, Purview, Exchange, SharePoint, Teams), so read a control's description before telling a user something passed.
 
 ### CAASM (Third-Party Asset Inventory)
 
