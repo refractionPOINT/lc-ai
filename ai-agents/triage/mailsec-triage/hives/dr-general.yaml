@@ -1,0 +1,60 @@
+version: 3
+hives:
+  dr-general:
+    mailsec-triage-suspicious:
+      data:
+        detect:
+          target: log
+          event: EMAIL_MESSAGE
+          op: is
+          path: event/verdict/verdict
+          value: suspicious
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/mailsec-triage
+            debounce_key: "mailsec-triage-{{ .event.msg_uuid }}"
+            data:
+              oid: "{{ .routing.oid }}"
+              msg_uuid: "{{ .event.msg_uuid }}"
+              campaign_id: "{{ .event.campaign_id }}"
+            suppression:
+              is_global: true
+              keys:
+                - mailsec-triage-volume
+              max_count: 60
+              period: 1m
+      usr_mtd:
+        enabled: false
+        expiry: 0
+        tags:
+          - ai-agent:mailsec-triage
+          - email-security:private-beta
+    mailsec-triage-user-report:
+      data:
+        detect:
+          target: log
+          event: EMAIL_USER_REPORT
+          op: exists
+          path: event/report_id
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/mailsec-triage
+            debounce_key: "mailsec-triage-report-{{ .event.report_id }}"
+            data:
+              oid: "{{ .routing.oid }}"
+              report_id: "{{ .event.report_id }}"
+              msg_uuid: "{{ .event.original_msg_uuid }}"
+              reported_msg_uuid: "{{ .event.reported_msg_uuid }}"
+              campaign_id: "{{ .event.campaign_id }}"
+            suppression:
+              is_global: true
+              keys:
+                - mailsec-triage-volume
+              max_count: 60
+              period: 1m
+      usr_mtd:
+        enabled: false
+        expiry: 0
+        tags:
+          - ai-agent:mailsec-triage
+          - email-security:private-beta
