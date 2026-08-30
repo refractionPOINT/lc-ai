@@ -129,6 +129,7 @@ The `ai-agents/` directory contains autonomous AI agents that run inside LimaCha
 | Agent | Description |
 |-------|-------------|
 | [l1-bot](ai-agents/investigation/l1-bot/) | Automated L1 SOC analyst that investigates new cases and documents findings for L2 review |
+| [mailsec-triage](ai-agents/triage/mailsec-triage/) | Disabled-by-default Email Security message and user-report triage over the LimaCharlie CLI |
 
 ### Installing Agents
 

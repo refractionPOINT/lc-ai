@@ -480,6 +480,20 @@ teams:
         max_daily_usd: 18.00
 
 agents:
+  mailsec-triage:
+    display_name: "Email Security Triage"
+    description: "Disabled-by-default, provider-neutral Email Security message and user-report triage"
+    category: triage
+    model: customer-configured
+    max_budget_usd: 0.50
+    trigger:
+      type: per_event
+      events:
+        - EMAIL_MESSAGE:suspicious
+        - EMAIL_USER_REPORT
+      suppression: "60/1m shared"
+      debounce: true
+
   basic-triage:
     display_name: "Basic Triage"
     description: "Standalone detection triage and case routing"

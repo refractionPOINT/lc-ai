@@ -9,6 +9,7 @@ Runs without network access or LC credentials. Checks:
   5. bash -n on fenced ```bash blocks in SKILL.md
   6. baseline regression: skills present on master that disappear in this branch
      (without an accompanying BREAKING.md entry) cause a failure
+  7. safety invariants for the disabled-by-default mailsec-triage bundle
 """
 from __future__ import annotations
 
@@ -305,6 +306,98 @@ def validate_baseline() -> None:
         warn(f"baseline: skill '{s}' moved between plugins — verify intentional")
 
 
+# ---------- 7. mailsec-triage bundle safety ----------
+
+def validate_mailsec_triage() -> None:
+    """Load the real bundle and pin the controls that make it safe to install.
+
+    This intentionally inspects the checked-in YAML instead of reconstructing the
+    records in a test. A prior extension implementation tested copies of its install
+    logic and therefore could stay green while the production records drifted.
+    """
+    root = ROOT / "ai-agents" / "triage" / "mailsec-triage"
+    manifest_path = root / "mailsec-triage.yaml"
+    agent_path = root / "hives" / "ai_agent.yaml"
+    rules_path = root / "hives" / "dr-general.yaml"
+
+    try:
+        manifest = yaml.safe_load(manifest_path.read_text())
+        agent_doc = yaml.safe_load(agent_path.read_text())
+        rules_doc = yaml.safe_load(rules_path.read_text())
+    except (OSError, yaml.YAMLError) as e:
+        err(f"mailsec-triage: cannot load bundle: {e}")
+        return
+
+    includes = set(manifest.get("include", []))
+    expected_includes = {"hives/ai_agent.yaml", "hives/dr-general.yaml"}
+    if includes != expected_includes:
+        err("mailsec-triage: bundle must include exactly the agent and both trigger rules")
+
+    try:
+        agent = agent_doc["hives"]["ai_agent"]["mailsec-triage"]
+        data = agent["data"]
+    except (KeyError, TypeError) as e:
+        err(f"mailsec-triage: missing agent record field: {e}")
+        return
+
+    if agent.get("usr_mtd", {}).get("enabled") is not False:
+        err("mailsec-triage: agent must ship explicitly disabled")
+    for field in ("anthropic_secret", "provider", "credentials", "bedrock", "vertex"):
+        if field in data:
+            err(f"mailsec-triage: checked-in agent must not select or embed AI credential field {field!r}")
+    for field, expected in (("max_turns", 20), ("max_budget_usd", 0.5), ("ttl_seconds", 180)):
+        if data.get(field) != expected:
+            err(f"mailsec-triage: {field} must be {expected!r}, got {data.get(field)!r}")
+
+    prompt = data.get("prompt", "")
+    for required in ("--oid <oid>", "--output yaml", "mailsec report resolve"):
+        if required not in prompt:
+            err(f"mailsec-triage: prompt is missing required CLI contract {required!r}")
+    if "mailsec message eml" in prompt:
+        err("mailsec-triage: default playbook must not download raw EML")
+
+    try:
+        rules = rules_doc["hives"]["dr-general"]
+    except (KeyError, TypeError) as e:
+        err(f"mailsec-triage: missing trigger rules: {e}")
+        return
+    expected_rules = {"mailsec-triage-suspicious", "mailsec-triage-user-report"}
+    if set(rules) != expected_rules:
+        err(f"mailsec-triage: trigger set must be {sorted(expected_rules)!r}")
+        return
+
+    events = set()
+    suppressions = []
+    for name, rule in rules.items():
+        if rule.get("usr_mtd", {}).get("enabled") is not False:
+            err(f"mailsec-triage: trigger {name!r} must ship explicitly disabled")
+        try:
+            event = rule["data"]["detect"]["event"]
+            response = rule["data"]["respond"][0]
+            suppression = response["suppression"]
+        except (KeyError, IndexError, TypeError) as e:
+            err(f"mailsec-triage: trigger {name!r} is incomplete: {e}")
+            continue
+        events.add(event)
+        if response.get("definition") != "hive://ai_agent/mailsec-triage":
+            err(f"mailsec-triage: trigger {name!r} does not name the bundled agent")
+        suppressions.append(suppression)
+
+    if events != {"EMAIL_MESSAGE", "EMAIL_USER_REPORT"}:
+        err("mailsec-triage: triggers must cover suspicious messages and every user report")
+    if len(suppressions) == 2:
+        if suppressions[0] != suppressions[1]:
+            err("mailsec-triage: both triggers must share one suppression descriptor")
+        expected = {
+            "is_global": True,
+            "keys": ["mailsec-triage-volume"],
+            "max_count": 60,
+            "period": "1m",
+        }
+        if suppressions[0] != expected:
+            err(f"mailsec-triage: suppression must be the bounded org-global contract {expected!r}")
+
+
 # ---------- main ----------
 
 def main() -> int:
@@ -314,6 +407,7 @@ def main() -> int:
     validate_path_refs(skill_files)
     validate_bash(skill_files)
     validate_baseline()
+    validate_mailsec_triage()
 
     for w in warnings:
         print(f"WARN  {w}")
