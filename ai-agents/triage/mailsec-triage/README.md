@@ -51,6 +51,10 @@ the playbook is intentionally grounded in the parsed message model and indexed e
 ## Trigger semantics
 
 - `mailsec-triage-suspicious` runs on `EMAIL_MESSAGE` only when the deterministic scorer
+- `mailsec-triage-submitted` runs on `EMAIL_ACTION` where `action == submit_to_triage`
+  AND `result == ok` — the org's own automation asking for a look. The `result` filter is
+  load-bearing: an `alert_only` org still emits the action as audit, and matching the
+  action alone would start paid sessions for exactly the orgs that chose alert-only.
   says `suspicious`. `malicious` mail is already actionable through normal automations.
 - `mailsec-triage-user-report` runs on every `EMAIL_USER_REPORT`, without filtering on the
   scorer's verdict. A human report is new evidence and must not disappear because the

@@ -29,6 +29,45 @@ hives:
         tags:
           - ai-agent:mailsec-triage
           - email-security:private-beta
+    mailsec-triage-submitted:
+      data:
+        detect:
+          target: log
+          event: EMAIL_ACTION
+          op: and
+          rules:
+            - op: is
+              path: event/action
+              value: submit_to_triage
+            # result == ok is LOAD-BEARING, not decoration: an alert_only org still
+            # emits EMAIL_ACTION{action: submit_to_triage, result: alert_only} as
+            # AUDIT of what its policy withheld. Matching the action alone would
+            # start a paid AI session for exactly the orgs that chose alert-only,
+            # defeating the enforcement choke point from a repo where nothing in
+            # legion_mailsec would notice. See collector/remediate.go's coupling
+            # contract at the submit_to_triage arm.
+            - op: is
+              path: event/result
+              value: ok
+        respond:
+          - action: start ai agent
+            definition: hive://ai_agent/mailsec-triage
+            debounce_key: "mailsec-triage-{{ .event.msg_uuid }}"
+            data:
+              oid: "{{ .routing.oid }}"
+              msg_uuid: "{{ .event.msg_uuid }}"
+            suppression:
+              is_global: true
+              keys:
+                - mailsec-triage-volume
+              max_count: 60
+              period: 1m
+      usr_mtd:
+        enabled: false
+        expiry: 0
+        tags:
+          - ai-agent:mailsec-triage
+          - email-security:private-beta
     mailsec-triage-user-report:
       data:
         detect:

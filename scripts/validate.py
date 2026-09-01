@@ -361,7 +361,7 @@ def validate_mailsec_triage() -> None:
     except (KeyError, TypeError) as e:
         err(f"mailsec-triage: missing trigger rules: {e}")
         return
-    expected_rules = {"mailsec-triage-suspicious", "mailsec-triage-user-report"}
+    expected_rules = {"mailsec-triage-suspicious", "mailsec-triage-user-report", "mailsec-triage-submitted"}
     if set(rules) != expected_rules:
         err(f"mailsec-triage: trigger set must be {sorted(expected_rules)!r}")
         return
@@ -383,11 +383,11 @@ def validate_mailsec_triage() -> None:
             err(f"mailsec-triage: trigger {name!r} does not name the bundled agent")
         suppressions.append(suppression)
 
-    if events != {"EMAIL_MESSAGE", "EMAIL_USER_REPORT"}:
-        err("mailsec-triage: triggers must cover suspicious messages and every user report")
-    if len(suppressions) == 2:
-        if suppressions[0] != suppressions[1]:
-            err("mailsec-triage: both triggers must share one suppression descriptor")
+    if events != {"EMAIL_MESSAGE", "EMAIL_USER_REPORT", "EMAIL_ACTION"}:
+        err("mailsec-triage: triggers must cover suspicious messages, every user report, and the submit_to_triage action")
+    if len(suppressions) == 3:
+        if not (suppressions[0] == suppressions[1] == suppressions[2]):
+            err("mailsec-triage: every trigger must share one suppression descriptor")
         expected = {
             "is_global": True,
             "keys": ["mailsec-triage-volume"],
