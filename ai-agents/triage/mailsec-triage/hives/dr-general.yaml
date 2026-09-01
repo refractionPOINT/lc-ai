@@ -4,7 +4,7 @@ hives:
     mailsec-triage-suspicious:
       data:
         detect:
-          target: log
+          target: edr
           event: EMAIL_MESSAGE
           op: is
           path: event/verdict/verdict
@@ -32,7 +32,7 @@ hives:
     mailsec-triage-submitted:
       data:
         detect:
-          target: log
+          target: edr
           event: EMAIL_ACTION
           op: and
           rules:
@@ -71,7 +71,7 @@ hives:
     mailsec-triage-user-report:
       data:
         detect:
-          target: log
+          target: edr
           event: EMAIL_USER_REPORT
           op: exists
           path: event/report_id
