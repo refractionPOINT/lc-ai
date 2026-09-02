@@ -169,6 +169,10 @@ For immediate data collection from a small number of online sensors (up to 5), u
 | `os_packages` | Installed packages | Software inventory |
 | `reg_list [path]` | Registry values | Config/persistence |
 | `dir_list [path]` | Directory listing | File investigation |
+| `dir_find [path] -x [glob]` | Find files by size, mtime or hash | Bounded file hunting |
+| `file_grep [path] -p [literal]` | Literal search inside file contents | Secret/IOC hunting |
+| `artifact_get --root-dir [path]` | Collect multiple files as artifacts | Bounded evidence collection |
+| `container_list` | Container/image inventory (Linux only) | Container investigation |
 | `find_strings` | String search | Memory forensics |
 | `yara_scan --pid [pid]` | YARA scan process | Malware detection |
 | `yara_scan --filePath [path]` | YARA scan file | File analysis |
@@ -218,6 +222,9 @@ Any sensor command can be used as a task. Common ones:
 | `mem_strings --pid [pid]` | Strings from process memory |
 | `file_get [path]` | Get file contents |
 | `dir_list [path]` | List directory |
+| `dir_find [path] -x [glob]` | Find files by size, mtime or hash |
+| `file_grep [path] -p [literal]` | Literal search inside file contents |
+| `container_list` | Container/image inventory (Linux only) |
 | `netstat` | Network connections |
 | `run --shell-command [cmd]` | Execute shell command |
 | `deny_tree -p [process]` | Kill process tree |
