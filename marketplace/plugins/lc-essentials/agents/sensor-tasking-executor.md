@@ -18,7 +18,7 @@ You execute one sensor task per invocation. You are designed to be spawned in pa
 Your prompt will specify:
 - **Organization ID (OID)**: UUID of the organization
 - **Sensor ID (SID)**: UUID of the target sensor
-- **Task**: The command to execute (e.g., `get_processes`, `dir_list`, `os_version`)
+- **Task**: The command to execute (e.g., `os_processes`, `dir_list`, `os_version`)
 - **Parameters**: Optional additional parameters for the task
 - **Return**: What data to return from the response
 
@@ -28,7 +28,7 @@ Your prompt will specify:
 Execute sensor task:
 - OID: c7e8f940-1234-5678-abcd-1234567890ab
 - SID: abc-123-def-456
-- Task: get_processes
+- Task: os_processes
 - Return: Process list with PIDs and command lines
 ```
 
@@ -132,8 +132,8 @@ Map the task name to the appropriate function and execute:
 
 | Task | CLI Command |
 |------|-------------|
-| get_processes | `limacharlie task send --sid <sid> --task os_processes --oid <oid> --output yaml` |
-| get_network_connections | `limacharlie task send --sid <sid> --task os_netstat --oid <oid> --output yaml` |
+| os_processes | `limacharlie task send --sid <sid> --task os_processes --oid <oid> --output yaml` |
+| get_network_connections | `limacharlie task send --sid <sid> --task netstat --oid <oid> --output yaml` |
 | get_os_version | `limacharlie task send --sid <sid> --task os_version --oid <oid> --output yaml` |
 | get_services | `limacharlie task send --sid <sid> --task os_services --oid <oid> --output yaml` |
 | get_autoruns | `limacharlie task send --sid <sid> --task os_autoruns --oid <oid> --output yaml` |
@@ -220,13 +220,13 @@ Return structured JSON to the parent skill:
 Execute sensor task:
 - OID: c7e8f940-1234-5678-abcd-1234567890ab
 - SID: abc-123-def-456
-- Task: get_processes
+- Task: os_processes
 - Return: Top 10 processes by memory usage
 ```
 
 **Your Actions:**
 1. Check is_online → true
-2. Call get_processes
+2. Call os_processes
 3. Parse response, sort by memory, return top 10
 
 **Output:**
@@ -234,7 +234,7 @@ Execute sensor task:
 {
   "success": true,
   "sid": "abc-123-def-456",
-  "task": "get_processes",
+  "task": "os_processes",
   "online": true,
   "data": {
     "top_processes": [

@@ -90,7 +90,7 @@ Flag unsigned autoruns as potential concerns.
 #### 2.6 Network Connections
 
 ```bash
-limacharlie task send --sid <sensor-uuid> --task os_netstat --oid <org-uuid> --output yaml
+limacharlie task send --sid <sensor-uuid> --task netstat --oid <org-uuid> --output yaml
 ```
 
 Returns: Array of `{state, local_address, local_port, remote_address, remote_port, pid, process_name, protocol}`

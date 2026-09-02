@@ -64,7 +64,7 @@ Example requests:
 
 ### Challenge 1: Offline Agents
 
-**Direct tasking** (`get_processes`, `dir_list`, etc.) only works for **online** sensors. If a sensor is offline, the task fails immediately.
+**Direct tasking** (`os_processes`, `dir_list`, etc.) only works for **online** sensors. If a sensor is offline, the task fails immediately.
 
 **Reliable tasking** queues tasks for delivery when sensors come online. Tasks persist for a configurable TTL (default: 1 week).
 
@@ -159,7 +159,6 @@ For immediate data collection from a small number of online sensors (up to 5), u
 |--------------|-------------|------------|
 | `os_processes` | Running processes | Process investigation |
 | `os_kill_process` | Kill a process | Incident response |
-| `os_modules --pid [pid]` | Loaded modules | Malware analysis |
 | `netstat` | Active connections | C2 hunting |
 | `os_version` | OS details | Asset inventory |
 | `os_users` | System users | Account enumeration |
@@ -169,7 +168,11 @@ For immediate data collection from a small number of online sensors (up to 5), u
 | `os_packages` | Installed packages | Software inventory |
 | `reg_list [path]` | Registry values | Config/persistence |
 | `dir_list [path]` | Directory listing | File investigation |
-| `find_strings` | String search | Memory forensics |
+| `dir_find [path] -x [glob]` | Find files by size, mtime or hash | Bounded file hunting |
+| `file_grep [path] -p [literal]` | Literal search inside file contents | Secret/IOC hunting |
+| `artifact_get --root-dir [path]` | Collect multiple files as artifacts | Bounded evidence collection |
+| `container_list` | Container/image inventory (Linux only) | Container investigation |
+| `mem_find_string --pid [pid]` | Find a string in process memory | Memory forensics |
 | `yara_scan --pid [pid]` | YARA scan process | Malware detection |
 | `yara_scan --filePath [path]` | YARA scan file | File analysis |
 | `yara_scan --dirPath [path]` | YARA scan directory | Bulk scanning |
@@ -218,10 +221,13 @@ Any sensor command can be used as a task. Common ones:
 | `mem_strings --pid [pid]` | Strings from process memory |
 | `file_get [path]` | Get file contents |
 | `dir_list [path]` | List directory |
+| `dir_find [path] -x [glob]` | Find files by size, mtime or hash |
+| `file_grep [path] -p [literal]` | Literal search inside file contents |
+| `container_list` | Container/image inventory (Linux only) |
 | `netstat` | Network connections |
 | `run --shell-command [cmd]` | Execute shell command |
 | `deny_tree -p [process]` | Kill process tree |
-| `isolate_network` | Network isolation |
+| `segregate_network` | Network isolation |
 | `rejoin_network` | End network isolation |
 
 ### Step 4: Collecting Responses

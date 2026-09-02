@@ -311,7 +311,7 @@ D&R rules can correlate low-privilege user identity with privileged-function eve
 
 **LimaCharlie coverage:**
 - Artifact collection (`wel://`, `mul://`, file paths) retrieves forensically-relevant data on schedule or on demand
-- Sensor commands: `file_get`, `mem_dump`, `os_processes`, `os_services`, `os_autoruns` for live-response acquisition
+- Sensor commands: `file_get`, `mem_read`, `os_processes`, `os_services`, `os_autoruns` for live-response acquisition
 - **Velociraptor** extension for VQL-based DFIR artifact collection (NTFS MFT, browser history, shellbags, etc.)
 - Insight retention + immutable S3/GCS archival provides chain-of-custody for event-level evidence
 - Every API action is attributed in the `audit` stream — sustaining the chain of custody through analyst activity

@@ -37,7 +37,6 @@ limacharlie task send --sid <sid> --task <command> --oid <oid> --output yaml
 |---------|-------------|
 | `os_processes` | Running processes |
 | `os_kill_process --pid <pid>` | Kill a process |
-| `os_modules --pid <pid>` | Loaded modules |
 | `netstat` | Active network connections |
 | `os_version` | OS details |
 | `os_users` | System users |
@@ -48,16 +47,31 @@ limacharlie task send --sid <sid> --task <command> --oid <oid> --output yaml
 | `reg_list <path>` | Registry values (Windows) |
 | `dir_list <path>` | Directory listing |
 | `file_get <path>` | Retrieve file contents |
+| `dir_find <path> -x <glob>` | Find files by size, mtime or hash (bounded) |
+| `file_grep <path> -p <literal>` | Search file contents for a literal pattern (bounded) |
+| `artifact_get --root-dir <path>` | Collect multiple files as artifacts (bounded) |
+| `container_list` | Docker/containerd/Podman/CRI-O inventory (Linux only) |
 | `mem_map --pid <pid>` | Memory map of process |
 | `mem_strings --pid <pid>` | Strings from process memory |
-| `find_strings` | String search |
+| `mem_find_string --pid <pid>` | Find a string in process memory |
 | `yara_scan --pid <pid>` | YARA scan process |
 | `yara_scan --filePath <path>` | YARA scan file |
 | `yara_scan --dirPath <path>` | YARA scan directory |
 | `run --shell-command <cmd>` | Execute shell command |
 | `deny_tree -p <process>` | Kill process tree |
-| `isolate_network` | Network isolation |
+| `segregate_network` | Network isolation |
 | `rejoin_network` | End network isolation |
+
+`dir_find`, `file_grep` and `artifact_get --root-dir` are *bounded* searches.
+They stop at whichever budget is reached first and report that in the reply
+(`SCAN_IS_TRUNCATED`, `SCAN_STOPPED_REASON`), so an empty-looking result may
+just be a truncated one — always check those fields before concluding a host
+is clean. Defaults are deliberately small; widen with `--depth`, `--limit`,
+`--max-seconds` and `--max-files-scanned` rather than assuming a full sweep.
+
+Use `file_grep --no-content` when you only need to confirm a secret or
+indicator is present. It returns paths and offsets and never the file bytes,
+which keeps sensitive data on the host.
 
 ### Parallel Direct Tasking
 
