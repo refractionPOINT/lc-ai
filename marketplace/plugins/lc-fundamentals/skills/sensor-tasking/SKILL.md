@@ -37,7 +37,6 @@ limacharlie task send --sid <sid> --task <command> --oid <oid> --output yaml
 |---------|-------------|
 | `os_processes` | Running processes |
 | `os_kill_process --pid <pid>` | Kill a process |
-| `os_modules --pid <pid>` | Loaded modules |
 | `netstat` | Active network connections |
 | `os_version` | OS details |
 | `os_users` | System users |
@@ -54,13 +53,13 @@ limacharlie task send --sid <sid> --task <command> --oid <oid> --output yaml
 | `container_list` | Docker/containerd/Podman/CRI-O inventory (Linux only) |
 | `mem_map --pid <pid>` | Memory map of process |
 | `mem_strings --pid <pid>` | Strings from process memory |
-| `find_strings` | String search |
+| `mem_find_string --pid <pid>` | Find a string in process memory |
 | `yara_scan --pid <pid>` | YARA scan process |
 | `yara_scan --filePath <path>` | YARA scan file |
 | `yara_scan --dirPath <path>` | YARA scan directory |
 | `run --shell-command <cmd>` | Execute shell command |
 | `deny_tree -p <process>` | Kill process tree |
-| `isolate_network` | Network isolation |
+| `segregate_network` | Network isolation |
 | `rejoin_network` | End network isolation |
 
 `dir_find`, `file_grep` and `artifact_get --root-dir` are *bounded* searches.

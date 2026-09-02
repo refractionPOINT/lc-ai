@@ -148,7 +148,7 @@ hives:
           limacharlie sensor task --sid <sid> --task "os_kill_process -p <pid>" --oid <oid> --output yaml
 
           # List network connections
-          limacharlie sensor task --sid <sid> --task "os_net_connections" --oid <oid> --output yaml
+          limacharlie sensor task --sid <sid> --task "netstat" --oid <oid> --output yaml
 
           # Get file info
           limacharlie sensor task --sid <sid> --task "file_info -f <filepath>" --oid <oid> --output yaml
@@ -171,8 +171,8 @@ hives:
           # Collect several files at once as artifacts (bounded)
           limacharlie sensor task --sid <sid> --task "artifact_get --root-dir <dirpath> -x '*.conf' --max-files 10" --oid <oid> --output yaml
 
-          # Get DNS cache
-          limacharlie sensor task --sid <sid> --task "os_dns_resolve" --oid <oid> --output yaml
+          # Resolve a hostname from the endpoint
+          limacharlie sensor task --sid <sid> --task "dns_resolve -h <hostname>" --oid <oid> --output yaml
 
           # Get autoruns
           limacharlie sensor task --sid <sid> --task "os_autoruns" --oid <oid> --output yaml

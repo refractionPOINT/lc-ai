@@ -64,7 +64,7 @@ Example requests:
 
 ### Challenge 1: Offline Agents
 
-**Direct tasking** (`get_processes`, `dir_list`, etc.) only works for **online** sensors. If a sensor is offline, the task fails immediately.
+**Direct tasking** (`os_processes`, `dir_list`, etc.) only works for **online** sensors. If a sensor is offline, the task fails immediately.
 
 **Reliable tasking** queues tasks for delivery when sensors come online. Tasks persist for a configurable TTL (default: 1 week).
 
@@ -159,7 +159,6 @@ For immediate data collection from a small number of online sensors (up to 5), u
 |--------------|-------------|------------|
 | `os_processes` | Running processes | Process investigation |
 | `os_kill_process` | Kill a process | Incident response |
-| `os_modules --pid [pid]` | Loaded modules | Malware analysis |
 | `netstat` | Active connections | C2 hunting |
 | `os_version` | OS details | Asset inventory |
 | `os_users` | System users | Account enumeration |
@@ -173,7 +172,7 @@ For immediate data collection from a small number of online sensors (up to 5), u
 | `file_grep [path] -p [literal]` | Literal search inside file contents | Secret/IOC hunting |
 | `artifact_get --root-dir [path]` | Collect multiple files as artifacts | Bounded evidence collection |
 | `container_list` | Container/image inventory (Linux only) | Container investigation |
-| `find_strings` | String search | Memory forensics |
+| `mem_find_string --pid [pid]` | Find a string in process memory | Memory forensics |
 | `yara_scan --pid [pid]` | YARA scan process | Malware detection |
 | `yara_scan --filePath [path]` | YARA scan file | File analysis |
 | `yara_scan --dirPath [path]` | YARA scan directory | Bulk scanning |
@@ -228,7 +227,7 @@ Any sensor command can be used as a task. Common ones:
 | `netstat` | Network connections |
 | `run --shell-command [cmd]` | Execute shell command |
 | `deny_tree -p [process]` | Kill process tree |
-| `isolate_network` | Network isolation |
+| `segregate_network` | Network isolation |
 | `rejoin_network` | End network isolation |
 
 ### Step 4: Collecting Responses
