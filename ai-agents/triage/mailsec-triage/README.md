@@ -30,10 +30,11 @@ Recommended LimaCharlie API-key permissions:
 
 | Permission | Purpose |
 |---|---|
-| `org.get` | Basic organization context. |
 | `mailsec.get` | Read reports, parsed message details, campaigns, and sender history. |
+| `ai_agent.operate` | **Required.** The platform guardrail that lets a key be driven by an AI agent to take actions at all. The playbook checks it first and refuses the whole triage without it, so a leaked agent key that lacks it cannot act. It is distinct from `mailsec.act`, not implied by it. |
+| `org.get` | Basic organization context. |
 | `mailsec.set` | Resolve a report after reaching a supported disposition. |
-| `mailsec.act` | Optional. Quarantine a message or campaign. Omit for investigate-only operation. |
+| `mailsec.act` | Optional. Move mail (quarantine/banner/trash/restore) or write a verdict. Omit for an investigate-only agent — it is then refused, server-side and audited, if it tries to act. |
 
 Do not grant `mailsec.get.eml` to this agent. Raw EML is a separate privileged workflow;
 the playbook is intentionally grounded in the parsed message model and indexed evidence.
@@ -46,7 +47,7 @@ the playbook is intentionally grounded in the parsed message model and indexed e
 - Both triggers share a 60-per-minute org-local suppression key.
 - Message and report triggers use distinct work identifiers and per-work-item debounce keys.
 - Campaign actions are previewed before confirmation.
-- Action authority is only `mailsec.act` on the API key. The prompt is not a security boundary.
+- Action authority is the API key's permissions — `ai_agent.operate` to act at all, `mailsec.act` to move mail — enforced server-side and audited. The prompt is not a security boundary.
 
 ## Trigger semantics
 
@@ -64,13 +65,21 @@ User reports can lack `original_msg_uuid` when the original predates collection 
 outside protected scope. The playbook falls back to the forwarded report message and must
 surface that coverage gap rather than inventing an original.
 
-## Current P3 boundary
+## Current state
 
-The current API can resolve a report and can perform provider actions, but it does not yet
-persist the AI session's structured rationale into `ms_reports.ai_summary`, update the
-message with an `EMAIL_VERDICT` event in `mode: ai`, or send the reporter reply after that
-verdict. The playbook says this plainly and must not be used as evidence that the P3 binary
-gate has passed. Those server paths and the dual-provider live run remain separate gates.
+The server substrate an agent needs is shipped and live-verified: report resolve/reopen,
+provider actions, and the verdict write-back — `revise_verdict`, which stamps `mode: ai`
+with a structured rationale and emits an `EMAIL_VERDICT` event. (An earlier version of this
+note said the `mode: ai` write-back did not exist yet; it does.)
+
+The remaining gap is in the AGENT'S RUNTIME, not the server: an AI Sessions agent drives
+this substrate through the `limacharlie mailsec ...` CLI, and that command group must be
+present in the runtime's `limacharlie` install. Runtimes shipping an older CLI (observed:
+`v5.6.2`, which has no `mailsec` noun) let the agent start and investigate but not act — the
+agent will correctly report the coverage gap and leave the work for a human rather than
+fabricate. Persisting the rationale onto the report (`ms_reports.ai_summary`) and an
+agent-composed reporter reply are not yet wired. The full dual-provider live run remains a
+separate gate; do not read a working session as proof it has passed.
 
 ## Files
 
