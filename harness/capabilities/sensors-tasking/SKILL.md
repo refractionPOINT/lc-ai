@@ -23,3 +23,11 @@ Read the relevant bundled documentation before using unfamiliar schemas or opera
 - `2-sensors-deployment/endpoint-agent/versioning-upgrades.md`
 - `5-integrations/extensions/limacharlie/reliable-tasking.md`
 - `2-sensors-deployment/troubleshooting/non-responding-sensors.md`
+- `2-sensors-deployment/endpoint-agent/chrome/installation.md`
+- `2-sensors-deployment/endpoint-agent/docker/installation.md`
+- `2-sensors-deployment/endpoint-agent/edge/installation.md`
+- `2-sensors-deployment/endpoint-agent/linux/installation.md`
+- `2-sensors-deployment/endpoint-agent/macos/installation.md`
+- `2-sensors-deployment/endpoint-agent/windows/installation.md`
+- `2-sensors-deployment/sensor-tags.md`
+- `2-sensors-deployment/connectivity.md`

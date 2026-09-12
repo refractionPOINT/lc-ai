@@ -86,7 +86,11 @@
     "mailsec rule backtest",
     "mailsec message bulk-status",
     "mailsec message revise",
-    "sync push"
+    "sync push",
+    "ai session list",
+    "ai session get",
+    "ai start-session",
+    "ai chats list"
   ],
   "required_options": {
     "sop list": [

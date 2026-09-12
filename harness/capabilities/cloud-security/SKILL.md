@@ -25,3 +25,17 @@ Read the relevant bundled documentation before using unfamiliar schemas or opera
 - `cloud-security/caasm.md`
 - `cloud-security/cli.md`
 - `8-reference/cloud-security-api-iac.md`
+- `cloud-security/provider-setup/anthropic.md`
+- `cloud-security/provider-setup/auth0.md`
+- `cloud-security/provider-setup/aws.md`
+- `cloud-security/provider-setup/azure.md`
+- `cloud-security/provider-setup/cloudflare.md`
+- `cloud-security/provider-setup/entra.md`
+- `cloud-security/provider-setup/gcp.md`
+- `cloud-security/provider-setup/github.md`
+- `cloud-security/provider-setup/google-workspace.md`
+- `cloud-security/provider-setup/index.md`
+- `cloud-security/provider-setup/limacharlie.md`
+- `cloud-security/provider-setup/okta.md`
+- `cloud-security/provider-setup/onepassword.md`
+- `cloud-security/provider-setup/openai.md`
