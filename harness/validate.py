@@ -81,6 +81,10 @@ def validate(root, docs_root=None, cli=None):
             require(f'`{ref}`' in body, f'{cid}: undiscoverable reference {ref}')
             if docs_root:
                 safe_file(docs_root, ref)
+        if 'api_prefixes' in cap:
+            string_list(cap['api_prefixes'], f'{cid}.api_prefixes')
+            for prefix in cap['api_prefixes']:
+                require(re.fullmatch(r'[a-z0-9_-]+/\{oid\}(?:/[a-z0-9_-]+)*', prefix), f'{cid}: unsafe API prefix')
         mapped_roots.update(cap['cli_roots'])
     disk_ids = {p.parent.name for p in (root / 'capabilities').glob('*/SKILL.md')}
     require(ids == disk_ids, f'uncataloged or missing capability directories: {ids ^ disk_ids}')

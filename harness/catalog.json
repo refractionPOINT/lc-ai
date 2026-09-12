@@ -307,6 +307,9 @@
         "select stream and filter",
         "verify delivery",
         "diagnose errors"
+      ],
+      "api_prefixes": [
+        "outputs/{oid}"
       ]
     },
     {

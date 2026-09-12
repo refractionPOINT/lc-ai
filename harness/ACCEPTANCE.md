@@ -1,6 +1,6 @@
 # First-level capability acceptance
 
-This bundle is independent of the legacy marketplace. The catalog and CORE form the provider-neutral contract; capability bodies load on demand. Catalog `permissions` are discovery hints for common operations, not an exhaustive authorization policy or a list of permissions to grant. The executing API enforces operation-specific permissions and subscriptions independently.
+This bundle is independent of the legacy marketplace. The catalog and CORE form the provider-neutral contract; capability bodies load on demand. Optional `api_prefixes` lists reviewed API endpoint prefixes containing literal `{oid}` for capabilities with command gaps; the runtime must bind organization and reject arbitrary hosts/auth overrides. Catalog `permissions` are discovery hints for common operations, not an exhaustive authorization policy or a list of permissions to grant. The executing API enforces operation-specific permissions and subscriptions independently.
 
 The cutover scope is reliable native platform operation. Designing compliance programs, general threat-hunting methodologies and SOC strategy are deferred. Built-in reports, assessments and queries remain native operations.
 
