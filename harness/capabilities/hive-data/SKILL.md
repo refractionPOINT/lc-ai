@@ -9,7 +9,7 @@ Hive is typed configuration, not a free-form database. Identify hive, partition,
 
 Read lookup type and consumer requirements before changing values; a string lookup and structured lookup do not have interchangeable shapes. Use lookup-manager for managed external feeds when appropriate and verify refresh status as well as record content.
 
-List secret metadata first. Read values only when required for the authorized task and never print credentials in transcripts, logs or test fixtures. Use `hive://secret/<name>` or the consuming feature's documented secret-reference format; references are not interchangeable across every API. For deletion or rotation, inspect dependent adapters, outputs, extensions and agents and verify the consumer after the change. Do not claim a secret is unused solely because one resource list has no reference.
+Use secret metadata and references. This harness blocks secret value get/export operations so credentials do not enter model tool results. If a task requires entering, inspecting or rotating a value, use the secure user interface for that step and continue configuration with its stored reference; do not bypass the restriction through Hive, API, shell or SDK calls. Never place credentials in transcripts, logs or test fixtures. Use `hive://secret/<name>` or the consuming feature's documented secret-reference format; references are not interchangeable across every API. For deletion or rotation, inspect dependent adapters, outputs, extensions and agents and verify the consumer after the change. Do not claim a secret is unused solely because one resource list has no reference.
 
 ## References
 

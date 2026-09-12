@@ -253,7 +253,8 @@
         "3-detection-response/unit-tests.md",
         "8-reference/detection-logic-operators.md",
         "8-reference/response-actions.md",
-        "3-detection-response/false-positives.md"
+        "3-detection-response/false-positives.md",
+        "8-reference/schedule-events.md"
       ],
       "permissions": [
         "dr.list",

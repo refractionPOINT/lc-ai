@@ -16,7 +16,7 @@ Confirm exact organization, resource identifiers and requested change from conte
 
 Read before changing existing configuration, preserve unrelated fields, and validate the exact candidate using the relevant domain validator. Save relevant evidence and resource IDs with the task. An accepted request establishes submission only. Read back saved configuration and track asynchronous work to terminal state with bounded deadlines. Report pending, failed, denied, unsupported and partially completed outcomes explicitly. Reconcile ambiguous mutation outcomes before retrying.
 
-D&R uses the artifact workflow: prepare/execute `validate`, `test-positive`, `test-negative`, then `preview`, `apply` and `verify` for the same artifact, organization, resource key and namespace. A change to the artifact invalidates prior validation. Preview is not deployment and validation alone does not establish detection quality. Mail and cloud posture rules use their own schemas and validators.
+D&R deployment uses a full Hive envelope with `data`, explicit `usr_mtd.enabled`, preserved metadata and, for existing records, top-level `etag` copied from the current `sys_mtd.etag`. D&R uses the artifact workflow: prepare/execute `validate`, `test-positive`, `test-negative`, then `preview`, `apply` and `verify` for the same artifact, organization, resource key and namespace. A change to the artifact invalidates prior validation. Preview is not deployment and validation alone does not establish detection quality. Mail and cloud posture rules use their own schemas and validators.
 
 ## Scope and context
 
