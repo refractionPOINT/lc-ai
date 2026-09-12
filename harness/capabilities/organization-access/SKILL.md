@@ -19,3 +19,5 @@ Read the relevant bundled documentation before using unfamiliar schemas or opera
 - `7-administration/access/user-access.md`
 - `8-reference/permissions.md`
 - `7-administration/billing/options.md`
+- `7-administration/access/designing-access.md`
+- `7-administration/access/sso.md`

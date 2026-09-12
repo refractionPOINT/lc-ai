@@ -26,3 +26,13 @@ Read the relevant bundled documentation before using unfamiliar schemas or opera
 - `email-security/user-reports.md`
 - `email-security/troubleshooting.md`
 - `email-security/cli.md`
+- `email-security/ai-triage.md`
+- `email-security/api-reference.md`
+- `email-security/automation.md`
+- `email-security/detections.md`
+- `email-security/index.md`
+- `email-security/ioc-feeds.md`
+- `email-security/pipeline.md`
+- `email-security/provider-setup/google-workspace.md`
+- `email-security/provider-setup/microsoft-365.md`
+- `email-security/providers.md`

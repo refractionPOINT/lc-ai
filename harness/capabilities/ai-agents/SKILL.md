@@ -26,3 +26,5 @@ Read the relevant bundled documentation before using unfamiliar schemas or opera
 - `9-ai-sessions/memory.md`
 - `9-ai-sessions/org-notes.md`
 - `9-ai-sessions/grid.md`
+- `9-ai-sessions/runner-environment.md`
+- `9-ai-sessions/user-sessions.md`

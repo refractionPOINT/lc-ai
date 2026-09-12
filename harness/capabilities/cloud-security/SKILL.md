@@ -39,3 +39,11 @@ Read the relevant bundled documentation before using unfamiliar schemas or opera
 - `cloud-security/provider-setup/okta.md`
 - `cloud-security/provider-setup/onepassword.md`
 - `cloud-security/provider-setup/openai.md`
+- `cloud-security/api-reference.md`
+- `cloud-security/automation.md`
+- `cloud-security/code-scanning.md`
+- `cloud-security/compliance.md`
+- `cloud-security/index.md`
+- `cloud-security/mcp.md`
+- `cloud-security/providers.md`
+- `cloud-security/remediation-sla.md`
