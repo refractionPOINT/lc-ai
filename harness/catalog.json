@@ -1,0 +1,910 @@
+{
+  "schema_version": 1,
+  "version": "1.0.0",
+  "capabilities": [
+    {
+      "id": "organization-access",
+      "name": "Organization and access",
+      "description": "Resolve organizations, inspect identity and permissions, manage users, groups, API keys, quotas and billing.",
+      "keywords": [
+        "organization",
+        "org",
+        "oid",
+        "access",
+        "permission",
+        "rbac",
+        "api key",
+        "group",
+        "user",
+        "billing",
+        "quota",
+        "audit",
+        "identity"
+      ],
+      "cli_roots": [
+        "auth",
+        "org",
+        "user",
+        "group",
+        "api-key",
+        "billing",
+        "audit",
+        "config"
+      ],
+      "instructions": "capabilities/organization-access/SKILL.md",
+      "references": [
+        "7-administration/access/api-keys.md",
+        "7-administration/access/user-access.md",
+        "8-reference/permissions.md",
+        "7-administration/billing/options.md",
+        "7-administration/access/designing-access.md",
+        "7-administration/access/sso.md"
+      ],
+      "permissions": [
+        "org.get",
+        "user.ctrl",
+        "apikey.ctrl",
+        "billing.ctrl",
+        "org.conf.get",
+        "org.conf.set",
+        "audit.get"
+      ],
+      "operations": [
+        "resolve scope",
+        "inspect identity",
+        "manage users and groups",
+        "manage API keys",
+        "inspect billing and quotas",
+        "inspect audit and errors"
+      ]
+    },
+    {
+      "id": "sensors-tasking",
+      "name": "Sensors and endpoint tasking",
+      "description": "Deploy and manage sensors, discover supported endpoint commands, task selected fleets and track asynchronous or partial results.",
+      "keywords": [
+        "sensor",
+        "edr",
+        "endpoint",
+        "task",
+        "fleet",
+        "scale",
+        "offline",
+        "isolate",
+        "isolation",
+        "seal",
+        "tag",
+        "upgrade",
+        "installation",
+        "command",
+        "spotcheck"
+      ],
+      "cli_roots": [
+        "sensor",
+        "task",
+        "tag",
+        "endpoint-policy",
+        "installation-key",
+        "download",
+        "spotcheck",
+        "job"
+      ],
+      "instructions": "capabilities/sensors-tasking/SKILL.md",
+      "references": [
+        "8-reference/endpoint-commands.md",
+        "8-reference/sensor-selector-expressions.md",
+        "2-sensors-deployment/installation-keys.md",
+        "2-sensors-deployment/endpoint-agent/versioning-upgrades.md",
+        "5-integrations/extensions/limacharlie/reliable-tasking.md",
+        "2-sensors-deployment/troubleshooting/non-responding-sensors.md",
+        "2-sensors-deployment/endpoint-agent/chrome/installation.md",
+        "2-sensors-deployment/endpoint-agent/docker/installation.md",
+        "2-sensors-deployment/endpoint-agent/edge/installation.md",
+        "2-sensors-deployment/endpoint-agent/linux/installation.md",
+        "2-sensors-deployment/endpoint-agent/macos/installation.md",
+        "2-sensors-deployment/endpoint-agent/windows/installation.md",
+        "2-sensors-deployment/sensor-tags.md",
+        "2-sensors-deployment/connectivity.md"
+      ],
+      "permissions": [
+        "sensor.list",
+        "sensor.get",
+        "sensor.task",
+        "sensor.tag",
+        "sensor.del",
+        "ikey.list",
+        "ikey.set",
+        "job.get"
+      ],
+      "operations": [
+        "deploy and upgrade",
+        "select and count fleet",
+        "discover supported commands",
+        "request endpoint evidence",
+        "task fleet",
+        "track reliable delivery",
+        "isolate and rejoin"
+      ]
+    },
+    {
+      "id": "adapters-ingestion",
+      "name": "Adapters and ingestion",
+      "description": "Configure cloud or self-hosted adapters, ingestion credentials, schemas, mappings and ingestion health.",
+      "keywords": [
+        "adapter",
+        "ingestion",
+        "ingest",
+        "usp",
+        "webhook",
+        "saas",
+        "logs",
+        "cloud adapter",
+        "self-hosted"
+      ],
+      "cli_roots": [
+        "cloud-adapter",
+        "external-adapter",
+        "usp",
+        "ingestion-key",
+        "download"
+      ],
+      "instructions": "capabilities/adapters-ingestion/SKILL.md",
+      "references": [
+        "2-sensors-deployment/adapters/index.md",
+        "2-sensors-deployment/adapters/as-a-service.md",
+        "2-sensors-deployment/adapters/deployment.md",
+        "2-sensors-deployment/adapters/usage.md",
+        "7-administration/config-hive/cloud-sensors.md",
+        "2-sensors-deployment/adapters/types/1password.md",
+        "2-sensors-deployment/adapters/types/atlassian.md",
+        "2-sensors-deployment/adapters/types/aws-cloudtrail.md",
+        "2-sensors-deployment/adapters/types/aws-guardduty.md",
+        "2-sensors-deployment/adapters/types/azure/key-vault.md",
+        "2-sensors-deployment/adapters/types/azure/kubernetes-service.md",
+        "2-sensors-deployment/adapters/types/azure/monitor.md",
+        "2-sensors-deployment/adapters/types/azure/network-security-group.md",
+        "2-sensors-deployment/adapters/types/azure/sql-audit-logs.md",
+        "2-sensors-deployment/adapters/types/azure-event-hub.md",
+        "2-sensors-deployment/adapters/types/canarytokens.md",
+        "2-sensors-deployment/adapters/types/carbon-black.md",
+        "2-sensors-deployment/adapters/types/cato.md",
+        "2-sensors-deployment/adapters/types/checkpoint-harmony.md",
+        "2-sensors-deployment/adapters/types/crowdstrike.md",
+        "2-sensors-deployment/adapters/types/duo.md",
+        "2-sensors-deployment/adapters/types/evtx.md",
+        "2-sensors-deployment/adapters/types/file.md",
+        "2-sensors-deployment/adapters/types/gmail.md",
+        "2-sensors-deployment/adapters/types/google-cloud-pubsub.md",
+        "2-sensors-deployment/adapters/types/google-cloud-storage.md",
+        "2-sensors-deployment/adapters/types/google-workspace.md",
+        "2-sensors-deployment/adapters/types/hubspot.md",
+        "2-sensors-deployment/adapters/types/iis.md",
+        "2-sensors-deployment/adapters/types/imap.md",
+        "2-sensors-deployment/adapters/types/it-glue.md",
+        "2-sensors-deployment/adapters/types/json.md",
+        "2-sensors-deployment/adapters/types/kubernetes-pods.md",
+        "2-sensors-deployment/adapters/types/mac-unified-logging.md",
+        "2-sensors-deployment/adapters/types/microsoft-365.md",
+        "2-sensors-deployment/adapters/types/microsoft-defender.md",
+        "2-sensors-deployment/adapters/types/microsoft-entra-id.md",
+        "2-sensors-deployment/adapters/types/mimecast.md",
+        "2-sensors-deployment/adapters/types/okta.md",
+        "2-sensors-deployment/adapters/types/pandadoc.md",
+        "2-sensors-deployment/adapters/types/s3.md",
+        "2-sensors-deployment/adapters/types/sentinelone.md",
+        "2-sensors-deployment/adapters/types/servicenow.md",
+        "2-sensors-deployment/adapters/types/slack-audit-logs.md",
+        "2-sensors-deployment/adapters/types/sophos.md",
+        "2-sensors-deployment/adapters/types/sqs.md",
+        "2-sensors-deployment/adapters/types/stdin.md",
+        "2-sensors-deployment/adapters/types/sublime-security.md",
+        "2-sensors-deployment/adapters/types/syslog.md",
+        "2-sensors-deployment/adapters/types/tailscale.md",
+        "2-sensors-deployment/adapters/types/threatlocker.md",
+        "2-sensors-deployment/adapters/types/windows-event-log.md",
+        "2-sensors-deployment/adapters/types/zendesk.md"
+      ],
+      "permissions": [
+        "cloudsensor.get",
+        "cloudsensor.set",
+        "externaladapter.get",
+        "externaladapter.set",
+        "sensor.list"
+      ],
+      "operations": [
+        "discover adapter types",
+        "inspect schema",
+        "configure adapter",
+        "validate configuration",
+        "verify ingestion"
+      ]
+    },
+    {
+      "id": "detection-rules",
+      "name": "Detection and response rules",
+      "description": "Create, edit, validate, test and deploy D&R automation and false-positive rules with the correct event target.",
+      "keywords": [
+        "d&r",
+        "dr",
+        "detection",
+        "automation",
+        "rule",
+        "false positive",
+        "suppression",
+        "replay",
+        "detect",
+        "respond",
+        "schedule"
+      ],
+      "cli_roots": [
+        "dr",
+        "fp",
+        "replay",
+        "ai",
+        "event",
+        "schema",
+        "job"
+      ],
+      "instructions": "capabilities/detection-rules/SKILL.md",
+      "references": [
+        "3-detection-response/index.md",
+        "3-detection-response/alternate-targets.md",
+        "3-detection-response/tutorials/dr-rule-building-guidebook.md",
+        "3-detection-response/unit-tests.md",
+        "8-reference/detection-logic-operators.md",
+        "8-reference/response-actions.md",
+        "3-detection-response/false-positives.md",
+        "8-reference/schedule-events.md"
+      ],
+      "permissions": [
+        "dr.list",
+        "dr.set",
+        "dr.del",
+        "fp.ctrl",
+        "insight.evt.get",
+        "job.get"
+      ],
+      "operations": [
+        "discover",
+        "validate",
+        "test-positive",
+        "test-negative",
+        "preview",
+        "apply",
+        "verify",
+        "replay",
+        "manage-suppressions"
+      ]
+    },
+    {
+      "id": "search-evidence",
+      "name": "Search and telemetry evidence",
+      "description": "Query telemetry and detections, inspect event schemas, run bounded LCQL searches and retrieve IOC evidence.",
+      "keywords": [
+        "search",
+        "lcql",
+        "query",
+        "telemetry",
+        "event",
+        "detection history",
+        "ioc",
+        "stream",
+        "timeline",
+        "retention",
+        "evidence"
+      ],
+      "cli_roots": [
+        "search",
+        "event",
+        "detection",
+        "schema",
+        "ioc",
+        "stream",
+        "arl"
+      ],
+      "instructions": "capabilities/search-evidence/SKILL.md",
+      "references": [
+        "4-data-queries/query-cli.md",
+        "4-data-queries/query-limits-and-performance.md",
+        "4-data-queries/lcql-examples.md",
+        "8-reference/event-schemas.md",
+        "8-reference/authentication-resource-locator.md"
+      ],
+      "permissions": [
+        "insight.evt.get",
+        "insight.det.get",
+        "query.get",
+        "query.set"
+      ],
+      "operations": [
+        "inspect schema",
+        "validate and run query",
+        "paginate results",
+        "save query",
+        "retrieve event ancestry",
+        "search IOC",
+        "bounded streaming"
+      ]
+    },
+    {
+      "id": "outputs",
+      "name": "Outputs and delivery",
+      "description": "Configure event, detection or audit Outputs and verify external delivery and forwarding errors.",
+      "keywords": [
+        "output",
+        "forward",
+        "forwarding",
+        "delivery",
+        "siem",
+        "slack",
+        "s3",
+        "gcs",
+        "syslog",
+        "destination",
+        "webhook"
+      ],
+      "cli_roots": [
+        "output",
+        "org"
+      ],
+      "instructions": "capabilities/outputs/SKILL.md",
+      "references": [
+        "5-integrations/outputs/index.md",
+        "5-integrations/outputs/stream-structures.md",
+        "5-integrations/outputs/testing.md",
+        "5-integrations/outputs/allowlisting.md",
+        "5-integrations/outputs/destinations/amazon-s3.md",
+        "5-integrations/outputs/destinations/apache-kafka.md",
+        "5-integrations/outputs/destinations/azure-event-hub.md",
+        "5-integrations/outputs/destinations/azure-storage-blob.md",
+        "5-integrations/outputs/destinations/bigquery.md",
+        "5-integrations/outputs/destinations/elastic.md",
+        "5-integrations/outputs/destinations/google-cloud-storage.md",
+        "5-integrations/outputs/destinations/google-pubsub.md",
+        "5-integrations/outputs/destinations/humio.md",
+        "5-integrations/outputs/destinations/ms-teams.md",
+        "5-integrations/outputs/destinations/opensearch.md",
+        "5-integrations/outputs/destinations/scp.md",
+        "5-integrations/outputs/destinations/sftp.md",
+        "5-integrations/outputs/destinations/slack.md",
+        "5-integrations/outputs/destinations/smtp.md",
+        "5-integrations/outputs/destinations/splunk.md",
+        "5-integrations/outputs/destinations/syslog.md",
+        "5-integrations/outputs/destinations/telegram.md",
+        "5-integrations/outputs/destinations/tines.md",
+        "5-integrations/outputs/destinations/webhook-bulk.md",
+        "5-integrations/outputs/destinations/webhook.md"
+      ],
+      "permissions": [
+        "output.list",
+        "output.set",
+        "output.del",
+        "audit.get"
+      ],
+      "operations": [
+        "inspect outputs",
+        "configure destination",
+        "select stream and filter",
+        "verify delivery",
+        "diagnose errors"
+      ],
+      "api_prefixes": [
+        "outputs/{oid}"
+      ]
+    },
+    {
+      "id": "extensions",
+      "name": "Extensions and service jobs",
+      "description": "Discover, subscribe, configure and invoke Extensions using their live schemas and monitor asynchronous service jobs.",
+      "keywords": [
+        "extension",
+        "subscribe",
+        "subscription",
+        "integration",
+        "service",
+        "job",
+        "feedback",
+        "action",
+        "schema"
+      ],
+      "cli_roots": [
+        "extension",
+        "job",
+        "feedback"
+      ],
+      "instructions": "capabilities/extensions/SKILL.md",
+      "references": [
+        "5-integrations/extensions/index.md",
+        "5-integrations/extensions/using-extensions.md",
+        "6-developer-guide/extensions/schema-data-types.md",
+        "5-integrations/extensions/limacharlie/feedback.md",
+        "5-integrations/extensions/cloud-cli/1password.md",
+        "5-integrations/extensions/cloud-cli/aws.md",
+        "5-integrations/extensions/cloud-cli/azure.md",
+        "5-integrations/extensions/cloud-cli/digitalocean.md",
+        "5-integrations/extensions/cloud-cli/github.md",
+        "5-integrations/extensions/cloud-cli/google-cloud.md",
+        "5-integrations/extensions/cloud-cli/index.md",
+        "5-integrations/extensions/cloud-cli/microsoft365.md",
+        "5-integrations/extensions/cloud-cli/okta.md",
+        "5-integrations/extensions/cloud-cli/sdm.md",
+        "5-integrations/extensions/cloud-cli/sublime.md",
+        "5-integrations/extensions/cloud-cli/tailscale.md",
+        "5-integrations/extensions/cloud-cli/vultr.md",
+        "5-integrations/extensions/limacharlie/artifact.md",
+        "5-integrations/extensions/limacharlie/binlib.md",
+        "5-integrations/extensions/limacharlie/cases.md",
+        "5-integrations/extensions/limacharlie/dlp.md",
+        "5-integrations/extensions/limacharlie/dumper.md",
+        "5-integrations/extensions/limacharlie/epp.md",
+        "5-integrations/extensions/limacharlie/exfil.md",
+        "5-integrations/extensions/limacharlie/git-sync.md",
+        "5-integrations/extensions/limacharlie/index.md",
+        "5-integrations/extensions/limacharlie/infrastructure.md",
+        "5-integrations/extensions/limacharlie/integrity.md",
+        "5-integrations/extensions/limacharlie/lookup-manager.md",
+        "5-integrations/extensions/limacharlie/payload-manager.md",
+        "5-integrations/extensions/limacharlie/playbook.md",
+        "5-integrations/extensions/limacharlie/reliable-tasking.md",
+        "5-integrations/extensions/limacharlie/sensor-cull.md",
+        "5-integrations/extensions/limacharlie/usage-alerts.md",
+        "5-integrations/extensions/limacharlie/vulnerability-reporting.md",
+        "5-integrations/extensions/limacharlie/yara-manager.md",
+        "5-integrations/extensions/third-party/atomic-red-team.md",
+        "5-integrations/extensions/third-party/cloudflare.md",
+        "5-integrations/extensions/third-party/govee.md",
+        "5-integrations/extensions/third-party/halopsa.md",
+        "5-integrations/extensions/third-party/hayabusa.md",
+        "5-integrations/extensions/third-party/index.md",
+        "5-integrations/extensions/third-party/microsoft-response.md",
+        "5-integrations/extensions/third-party/nims.md",
+        "5-integrations/extensions/third-party/okta.md",
+        "5-integrations/extensions/third-party/otx.md",
+        "5-integrations/extensions/third-party/pagerduty.md",
+        "5-integrations/extensions/third-party/plaso.md",
+        "5-integrations/extensions/third-party/renigma.md",
+        "5-integrations/extensions/third-party/secureannex.md",
+        "5-integrations/extensions/third-party/sentinelone.md",
+        "5-integrations/extensions/third-party/servicenow.md",
+        "5-integrations/extensions/third-party/strelka.md",
+        "5-integrations/extensions/third-party/threatlocker.md",
+        "5-integrations/extensions/third-party/twilio.md",
+        "5-integrations/extensions/third-party/velociraptor.md",
+        "5-integrations/extensions/third-party/yara.md",
+        "5-integrations/extensions/third-party/zeek.md"
+      ],
+      "permissions": [
+        "ext.request",
+        "ext.conf.get",
+        "ext.conf.set",
+        "ext.sub",
+        "job.get"
+      ],
+      "operations": [
+        "discover extensions",
+        "inspect action schema",
+        "subscribe and configure",
+        "invoke action",
+        "track service job",
+        "manage feedback"
+      ]
+    },
+    {
+      "id": "hive-data",
+      "name": "Hive, lookups and secrets",
+      "description": "Manage typed Hive configuration, lookups and secret references while preserving metadata and unrelated records.",
+      "keywords": [
+        "hive",
+        "lookup",
+        "secret",
+        "credential",
+        "configuration",
+        "key-value",
+        "feed",
+        "metadata",
+        "expiry"
+      ],
+      "cli_roots": [
+        "hive",
+        "lookup",
+        "secret"
+      ],
+      "instructions": "capabilities/hive-data/SKILL.md",
+      "references": [
+        "7-administration/config-hive/index.md",
+        "7-administration/config-hive/lookups.md",
+        "7-administration/config-hive/secrets.md",
+        "5-integrations/extensions/limacharlie/lookup-manager.md"
+      ],
+      "permissions": [
+        "lookup.get",
+        "lookup.set",
+        "secret.get.mtd",
+        "secret.set"
+      ],
+      "operations": [
+        "inspect typed record",
+        "merge configuration",
+        "manage lookup",
+        "reference secret",
+        "verify metadata"
+      ]
+    },
+    {
+      "id": "endpoint-services",
+      "name": "Endpoint collection and protection services",
+      "description": "Operate artifacts, log collection, FIM, YARA, payloads, exfiltration prevention and vulnerability reporting.",
+      "keywords": [
+        "artifact",
+        "logging",
+        "log collection",
+        "fim",
+        "integrity",
+        "yara",
+        "payload",
+        "exfil",
+        "vulnerability",
+        "file collection",
+        "scan"
+      ],
+      "cli_roots": [
+        "artifact",
+        "logging",
+        "integrity",
+        "yara",
+        "payload",
+        "exfil",
+        "vulnerability",
+        "job"
+      ],
+      "instructions": "capabilities/endpoint-services/SKILL.md",
+      "references": [
+        "5-integrations/extensions/limacharlie/artifact.md",
+        "2-sensors-deployment/log-collection-guide.md",
+        "5-integrations/extensions/limacharlie/integrity.md",
+        "5-integrations/extensions/limacharlie/yara-manager.md",
+        "2-sensors-deployment/endpoint-agent/payloads.md",
+        "5-integrations/extensions/limacharlie/exfil.md",
+        "5-integrations/extensions/limacharlie/vulnerability-reporting.md"
+      ],
+      "permissions": [
+        "ext.request",
+        "sensor.task",
+        "payload.ctrl",
+        "yara.get",
+        "yara.set",
+        "job.get"
+      ],
+      "operations": [
+        "collect artifact",
+        "configure logs",
+        "configure FIM",
+        "scan YARA",
+        "manage payload",
+        "configure exfil rules",
+        "inspect vulnerabilities"
+      ]
+    },
+    {
+      "id": "cases",
+      "name": "Cases and evidence records",
+      "description": "Manage Case lifecycle, notes, entities, detections, telemetry and artifacts with verified links and scoped bulk updates.",
+      "keywords": [
+        "case",
+        "cases",
+        "incident",
+        "assignee",
+        "note",
+        "entity",
+        "case report",
+        "evidence attachment"
+      ],
+      "cli_roots": [
+        "case"
+      ],
+      "instructions": "capabilities/cases/SKILL.md",
+      "references": [
+        "5-integrations/extensions/limacharlie/cases.md"
+      ],
+      "permissions": [
+        "ext.request"
+      ],
+      "operations": [
+        "inspect case",
+        "update lifecycle",
+        "attach evidence",
+        "manage entities",
+        "merge cases",
+        "report case"
+      ]
+    },
+    {
+      "id": "ai-agents",
+      "name": "AI agents, sessions and organizational procedures",
+      "description": "Configure AI agent definitions and session workspaces, manage SOPs, organization skills, notes and persistent memory.",
+      "keywords": [
+        "ai agent",
+        "ai session",
+        "workspace",
+        "memory",
+        "sop",
+        "skill",
+        "procedure",
+        "org notes",
+        "profile",
+        "autonomous",
+        "grid"
+      ],
+      "cli_roots": [
+        "hive",
+        "ai-skill",
+        "ai-memory",
+        "sop",
+        "note",
+        "ai-cost-model",
+        "ai"
+      ],
+      "instructions": "capabilities/ai-agents/SKILL.md",
+      "references": [
+        "9-ai-sessions/dr-sessions.md",
+        "9-ai-sessions/api-reference.md",
+        "9-ai-sessions/cli.md",
+        "9-ai-sessions/tool-permissions.md",
+        "9-ai-sessions/skills.md",
+        "9-ai-sessions/sops.md",
+        "9-ai-sessions/memory.md",
+        "9-ai-sessions/org-notes.md",
+        "9-ai-sessions/grid.md",
+        "9-ai-sessions/runner-environment.md",
+        "9-ai-sessions/user-sessions.md"
+      ],
+      "permissions": [
+        "ai_agent.get",
+        "ai_agent.set",
+        "sop.get",
+        "sop.set",
+        "org_notes.get",
+        "org_notes.set"
+      ],
+      "operations": [
+        "configure agent",
+        "configure session",
+        "inspect procedure index",
+        "load relevant SOP",
+        "manage organization skill",
+        "manage memory",
+        "verify autonomous trigger"
+      ]
+    },
+    {
+      "id": "cloud-security",
+      "name": "Cloud Security",
+      "description": "Configure cloud posture providers and policies; operate findings, inventory, graph, identity, data security and asset coverage.",
+      "keywords": [
+        "cloud",
+        "cloudsec",
+        "cnapp",
+        "posture",
+        "provider",
+        "inventory",
+        "graph",
+        "ciam",
+        "ciem",
+        "dspm",
+        "caasm",
+        "finding",
+        "attack path",
+        "cloud policy"
+      ],
+      "cli_roots": [
+        "cloudsec",
+        "hive",
+        "extension"
+      ],
+      "instructions": "capabilities/cloud-security/SKILL.md",
+      "references": [
+        "cloud-security/getting-started.md",
+        "cloud-security/configuration.md",
+        "cloud-security/findings.md",
+        "cloud-security/graph.md",
+        "cloud-security/custom-rules.md",
+        "cloud-security/caasm.md",
+        "cloud-security/cli.md",
+        "8-reference/cloud-security-api-iac.md",
+        "cloud-security/provider-setup/anthropic.md",
+        "cloud-security/provider-setup/auth0.md",
+        "cloud-security/provider-setup/aws.md",
+        "cloud-security/provider-setup/azure.md",
+        "cloud-security/provider-setup/cloudflare.md",
+        "cloud-security/provider-setup/entra.md",
+        "cloud-security/provider-setup/gcp.md",
+        "cloud-security/provider-setup/github.md",
+        "cloud-security/provider-setup/google-workspace.md",
+        "cloud-security/provider-setup/index.md",
+        "cloud-security/provider-setup/limacharlie.md",
+        "cloud-security/provider-setup/okta.md",
+        "cloud-security/provider-setup/onepassword.md",
+        "cloud-security/provider-setup/openai.md",
+        "cloud-security/api-reference.md",
+        "cloud-security/automation.md",
+        "cloud-security/code-scanning.md",
+        "cloud-security/compliance.md",
+        "cloud-security/index.md",
+        "cloud-security/mcp.md",
+        "cloud-security/providers.md",
+        "cloud-security/remediation-sla.md"
+      ],
+      "permissions": [
+        "cloudsec.get",
+        "cloudsec.set",
+        "ext.sub"
+      ],
+      "operations": [
+        "configure provider",
+        "verify collection coverage",
+        "triage finding",
+        "inspect inventory and graph",
+        "manage posture policy",
+        "simulate matcher",
+        "inspect asset coverage",
+        "export bounded results"
+      ]
+    },
+    {
+      "id": "code-security",
+      "name": "Code Security",
+      "description": "Configure repository scanning, inspect code findings and SBOMs, ingest scan results, rescan and operate authorized dependency fixes.",
+      "keywords": [
+        "code",
+        "appsec",
+        "repository",
+        "repo",
+        "sca",
+        "sast",
+        "sbom",
+        "sarif",
+        "dependency",
+        "autofix",
+        "code scanning",
+        "secret scanning"
+      ],
+      "cli_roots": [
+        "cloudsec",
+        "hive",
+        "extension"
+      ],
+      "instructions": "capabilities/code-security/SKILL.md",
+      "references": [
+        "cloud-security/code-scanning.md",
+        "cloud-security/provider-setup/github.md",
+        "cloud-security/findings.md",
+        "cloud-security/cli.md"
+      ],
+      "permissions": [
+        "cloudsec.get",
+        "cloudsec.set"
+      ],
+      "operations": [
+        "configure code scanning",
+        "verify repository access",
+        "inspect scan coverage",
+        "inspect code findings",
+        "export SBOM",
+        "ingest report",
+        "rescan repository",
+        "request dependency fix"
+      ]
+    },
+    {
+      "id": "email-security",
+      "name": "Email Security",
+      "description": "Configure mailbox coverage and policies, inspect messages and campaigns, test mail rules and track authorized remediation.",
+      "keywords": [
+        "email",
+        "mail",
+        "mailsec",
+        "mailbox",
+        "phishing",
+        "bec",
+        "quarantine",
+        "message",
+        "campaign",
+        "verdict",
+        "eml",
+        "mail rule"
+      ],
+      "cli_roots": [
+        "mailsec",
+        "hive",
+        "extension"
+      ],
+      "instructions": "capabilities/email-security/SKILL.md",
+      "references": [
+        "email-security/getting-started.md",
+        "email-security/custom-rules.md",
+        "email-security/policy.md",
+        "email-security/messages.md",
+        "email-security/remediation.md",
+        "email-security/campaigns.md",
+        "email-security/user-reports.md",
+        "email-security/troubleshooting.md",
+        "email-security/cli.md",
+        "email-security/ai-triage.md",
+        "email-security/api-reference.md",
+        "email-security/automation.md",
+        "email-security/detections.md",
+        "email-security/index.md",
+        "email-security/ioc-feeds.md",
+        "email-security/pipeline.md",
+        "email-security/provider-setup/google-workspace.md",
+        "email-security/provider-setup/microsoft-365.md",
+        "email-security/providers.md"
+      ],
+      "permissions": [
+        "mailsec.get",
+        "mailsec.set",
+        "mailsec.act",
+        "mailsec.get.eml"
+      ],
+      "operations": [
+        "configure connection",
+        "verify mailbox coverage",
+        "inspect message",
+        "revise verdict",
+        "validate mail rule",
+        "backtest rule",
+        "remediate message or campaign",
+        "track bulk action",
+        "resolve report"
+      ]
+    },
+    {
+      "id": "platform-configuration",
+      "name": "Platform configuration, apps and IaC",
+      "description": "Manage infrastructure-as-code, apps, playbooks and reusable platform configuration with scoped diffs and verified execution.",
+      "keywords": [
+        "iac",
+        "infrastructure",
+        "sync",
+        "config",
+        "app",
+        "playbook",
+        "git-sync",
+        "platform configuration"
+      ],
+      "cli_roots": [
+        "sync",
+        "app",
+        "playbook",
+        "org",
+        "hive",
+        "extension"
+      ],
+      "instructions": "capabilities/platform-configuration/SKILL.md",
+      "references": [
+        "5-integrations/extensions/limacharlie/infrastructure.md",
+        "5-integrations/extensions/limacharlie/git-sync.md",
+        "apps/reference.md",
+        "apps/creating-and-managing-apps.md",
+        "5-integrations/extensions/limacharlie/playbook.md"
+      ],
+      "permissions": [
+        "org.conf.get",
+        "org.conf.set",
+        "app.get",
+        "app.set",
+        "playbook.get",
+        "playbook.set",
+        "ext.request"
+      ],
+      "operations": [
+        "pull configuration",
+        "preview scoped diff",
+        "push configuration",
+        "configure app",
+        "manage playbook",
+        "verify execution"
+      ]
+    }
+  ]
+}
