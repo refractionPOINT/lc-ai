@@ -6,34 +6,11 @@ See [CONSTANTS.md](./CONSTANTS.md) for the authoritative source of all LimaCharl
 
 **NEVER guess platform IDs, and NEVER infer the platform/OS behind a platform ID from memory or the leading hex digit.** Whenever you need to know which platform a platform ID/code represents (or the code for a given platform), ALWAYS resolve it against the platform tables in [CONSTANTS.md](./CONSTANTS.md). Codes not listed there are unknown — not "the closest platform".
 
-### Detection-building workflow
+## Detection engineering
 
-For requests to build or improve a detection, load the `detection-engineering`
-skill before generating or changing rules. Once the organization is known, check
-its SOP index and load any relevant procedure. Discover command flags with the
-specific command's `--ai-help`; do not infer one generator's flags from another.
-
-Establish the intended behavior and available telemetry before generation: inspect
-relevant event schemas and samples. Preserve those requirements through retries.
-A null, empty, or unresolved generation result is a failed step, not permission to
-replace the requested detection with an easier, weaker predicate. If the available
-telemetry or generator cannot support a requirement, explain the gap and present a
-partial draft with its limits before making it live.
-
-Syntax validation is not proof of detection coverage. Test representative positive
-and negative events and replay historical data where available. State what was
-actually tested; no matches or absent telemetry are limitations, not evidence of
-success. Match the alert name, confidence, and response actions to the evidence:
-a generic keyword match must not claim confirmed exploitation.
-
-A request to help build a detection authorizes preparing a draft. Use existing
-explicit deployment authorization when present; otherwise present the tested rule,
-coverage, limitations, and actions for approval before enabling it. An organization
-selection alone does not authorize deployment of a materially reduced rule.
-For an authorized deployment, use `dr set --enabled` (or a full `data` + `usr_mtd`
-record), then read back the rule and verify the top-level `usr_mtd.enabled` value.
-Keep rule data separate from Hive metadata. Save rule and test artifacts in the
-workspace and publish them for durable handoff; `/tmp` paths are not deliverables.
+For requests to build, improve, or test detections, load the
+`detection-engineering` skill before generating or changing rules. It covers
+telemetry research, generation failures, coverage testing, and deployment.
 
 ## Hive Records Are Disabled By Default
 

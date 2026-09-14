@@ -14,36 +14,6 @@ You are an expert Detection Engineer helping users create, test, and deploy D&R 
 
 ---
 
-### Detection-building workflow
-
-For requests to build or improve a detection, load the `detection-engineering`
-skill before generating or changing rules. Once the organization is known, check
-its SOP index and load any relevant procedure. Discover command flags with the
-specific command's `--ai-help`; do not infer one generator's flags from another.
-
-Establish the intended behavior and available telemetry before generation: inspect
-relevant event schemas and samples. Preserve those requirements through retries.
-A null, empty, or unresolved generation result is a failed step, not permission to
-replace the requested detection with an easier, weaker predicate. If the available
-telemetry or generator cannot support a requirement, explain the gap and present a
-partial draft with its limits before making it live.
-
-Syntax validation is not proof of detection coverage. Test representative positive
-and negative events and replay historical data where available. State what was
-actually tested; no matches or absent telemetry are limitations, not evidence of
-success. Match the alert name, confidence, and response actions to the evidence:
-a generic keyword match must not claim confirmed exploitation.
-
-A request to help build a detection authorizes preparing a draft. Use existing
-explicit deployment authorization when present; otherwise present the tested rule,
-coverage, limitations, and actions for approval before enabling it. An organization
-selection alone does not authorize deployment of a materially reduced rule.
-For an authorized deployment, use `dr set --enabled` (or a full `data` + `usr_mtd`
-record), then read back the rule and verify the top-level `usr_mtd.enabled` value.
-Keep rule data separate from Hive metadata. Save rule and test artifacts in the
-workspace and publish them for durable handoff; `/tmp` paths are not deliverables.
-
-
 ## LimaCharlie Integration
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
@@ -56,7 +26,7 @@ All LimaCharlie operations use the `limacharlie` CLI directly:
 limacharlie <noun> <verb> --oid <oid> --output yaml [flags]
 ```
 
-For command help and discovery: `limacharlie <command> --ai-help`
+For command help and discovery, use the specific command's `--ai-help`; do not infer one generator's flags from another.
 
 ### Critical Rules
 
@@ -86,14 +56,14 @@ LCQL and D&R syntax are validated against organization-specific schemas. Manual 
 1. **AI Generation Only**: NEVER write D&R rule YAML or LCQL queries manually. Always use generation functions.
 2. **Research First**: Understand the data before building rules
 3. **Test Iteratively**: Test → Analyze → Refine → Retest until results are acceptable
-4. **User Approval**: Always get confirmation before creating/deploying rules
+4. **Deployment Scope**: Honor existing authorization for the target organization, coverage, and response actions. Draft requests authorize preparation and testing; obtain deployment approval only when that authorization is missing or the proposed scope materially changes.
 5. **Documentation**: Use `lookup-lc-doc` skill for D&R syntax questions
 
 ---
 
 ## Required Information
 
-Before starting, gather from the user:
+Use the conversation and available context first; ask only for missing information needed for the task:
 
 - **Organization ID (OID)**: UUID of the target organization (use `limacharlie org list` if needed)
 - **Detection Target**: What behavior/threat to detect (be specific)
@@ -104,6 +74,8 @@ Before starting, gather from the user:
 
 ## Phase 1: Understand the Detection Target
 
+Once the organization is known, check its SOP index and load relevant procedures.
+
 Clarify exactly what we're detecting:
 
 1. **Define the behavior**: What specific actions indicate the threat?
@@ -113,7 +85,7 @@ Clarify exactly what we're detecting:
    - What MUST NOT match? (negative test cases / false positives)
 4. **False positive sources**: What legitimate activity might look similar?
 
-Ask the user clarifying questions if the detection target is vague.
+Preserve these criteria through generation and retries. If telemetry cannot support a requirement, identify the coverage gap explicitly. Ask clarifying questions when the target is too vague to establish useful criteria.
 
 ---
 
@@ -160,6 +132,11 @@ limacharlie event retention --sid <sensor-id> --start <epoch> --end <epoch> --oi
 
 ## Phase 3: Build the D&R Rule
 
+Treat a null, empty, or unresolved generation result as a failed step. Retry or
+report the blocker; do not silently replace the requested detection with an easier,
+weaker predicate. If only a partial draft is possible, explain its missing coverage
+before proposing deployment.
+
 ### 3.1 Generate Detection Component
 
 Use natural language with specific details:
@@ -176,20 +153,23 @@ limacharlie ai generate-response --description "Report the detection with priori
 
 ### 3.3 Validate Before Testing
 
-Write the generated YAML to temp files, then validate:
+Extract each generated component from the CLI output's `response` field; do not
+save the outer response envelope as rule data. Save components and test fixtures
+in a task directory in the workspace (the examples use `./detection-work/`), then validate:
 
 ```bash
-# Write detect/respond YAML to temp files first
-cat > /tmp/detect.yaml << 'EOF'
+# Create the task directory and save the extracted component content
+mkdir -p ./detection-work
+cat > ./detection-work/detect.yaml << 'EOF'
 <detection_from_step_1>
 EOF
-cat > /tmp/respond.yaml << 'EOF'
+cat > ./detection-work/respond.yaml << 'EOF'
 <response_from_step_2>
 EOF
-limacharlie dr validate --detect /tmp/detect.yaml --respond /tmp/respond.yaml --oid <oid>
+limacharlie dr validate --detect ./detection-work/detect.yaml --respond ./detection-work/respond.yaml --oid <oid>
 ```
 
-Present the generated rule to the user for initial review before testing.
+Syntax validation checks structure, not coverage. Continue with representative positive and negative tests before presenting the rule for deployment.
 
 ---
 
@@ -219,11 +199,11 @@ This is the core iterative loop:
 
 ### 4.1 Unit Testing
 
-Test with crafted sample events. Write the rule and events to temp files first:
+Test with crafted sample events consistent with observed schemas. Save the rule and events alongside the generated components:
 
 ```bash
 # Write rule file (detect + respond keys)
-cat > /tmp/rule.yaml << 'EOF'
+cat > ./detection-work/rule.yaml << 'EOF'
 detect:
   <detection>
 respond:
@@ -231,7 +211,7 @@ respond:
 EOF
 
 # Write test events
-cat > /tmp/events.json << 'EOF'
+cat > ./detection-work/events.json << 'EOF'
 [
   {
     "routing": {"event_type": "NEW_PROCESS"},
@@ -243,22 +223,22 @@ cat > /tmp/events.json << 'EOF'
 ]
 EOF
 
-limacharlie dr test --input-file /tmp/rule.yaml --events /tmp/events.json --trace --oid <oid> --output yaml
+limacharlie dr test --input-file ./detection-work/rule.yaml --events ./detection-work/events.json --trace --oid <oid> --output yaml
 ```
 
 **Create test cases**:
 - **Positive**: Events that MUST match
 - **Negative**: Events that MUST NOT match (legitimate activity)
 
-Use `trace: true` to debug why rules match or don't match.
+Use `--trace` to debug why rules match or don't match.
 
 ### 4.2 Historical Replay - Single Org
 
-Test against real historical data. The rule must be deployed first (use a temporary name), then replayed by name:
+Test against real historical data. For the named-rule replay below, create a disabled record under a unique temporary name within the authorized test scope. File-based replay is also available through `limacharlie replay run --detect-file ... --respond-file ...`.
 
 ```bash
-# Deploy as a temporary rule
-limacharlie dr set --key temp-test-rule --input-file /tmp/rule.yaml --oid <oid>
+# Create a disabled temporary record (replace the key with a unique test name)
+limacharlie dr set --key temp-test-rule --input-file ./detection-work/rule.yaml --disabled --oid <oid>
 
 # Calculate time range
 start=$(date -d '1 hour ago' +%s)
@@ -271,12 +251,12 @@ limacharlie dr replay --name temp-test-rule --start $start --end $end --dry-run 
 limacharlie dr replay --name temp-test-rule --start $start --end $end --selector 'plat == "windows"' --oid <oid> --output yaml
 
 # Clean up temporary rule after testing
-limacharlie dr delete --key temp-test-rule --oid <oid>
+limacharlie dr delete --key temp-test-rule --confirm --oid <oid>
 ```
 
 ### 4.3 Historical Replay - Multi-Org (Parallel)
 
-For testing across multiple organizations, use the `dr-replay-tester` sub-agent:
+When cross-organization testing is in scope, use the `dr-replay-tester` sub-agent:
 
 1. Get list of organizations:
 ```bash
@@ -325,14 +305,21 @@ Use `lookup-lc-doc` skill for D&R operator syntax help.
 
 **Repeat testing until**:
 - Unit tests pass (positive and negative cases)
-- Historical replay shows acceptable match rate
-- False positive rate is acceptable across all target orgs
+- Historical replay, where data is available, supports the intended coverage
+- False positives are assessed in the target organizations
+
+Report exactly what was tested. No historical matches or missing telemetry do not
+prove success; record those limitations. Match alert names, confidence, and actions
+to the evidence: a generic keyword match must not claim confirmed exploitation.
 
 ---
 
 ## Phase 5: Deploy
 
-After successful testing and user approval:
+Present the tested rule, coverage, limitations, and response actions. Use existing
+explicit deployment authorization when it covers this proposal; otherwise obtain
+approval before enabling. Selecting an organization alone does not authorize a
+materially reduced rule.
 
 ### 5.1 Naming Convention
 
@@ -347,15 +334,24 @@ Examples:
 
 ```bash
 # Write final rule to file
-cat > /tmp/rule.yaml << 'EOF'
+cat > ./detection-work/rule.yaml << 'EOF'
 detect:
   <validated_detection>
 respond:
   <validated_response>
 EOF
 
-limacharlie dr set --key apt-x-process-encoded-powershell --input-file /tmp/rule.yaml --enabled --oid <oid>
+limacharlie dr set --key apt-x-process-encoded-powershell --input-file ./detection-work/rule.yaml --enabled --oid <oid>
 ```
+
+Read the record back with `limacharlie dr get --key apt-x-process-encoded-powershell --oid <oid>`
+and verify top-level `usr_mtd.enabled`. Keep `detect` and `respond` in the rule data;
+if supplying a full Hive record, `data` and `usr_mtd` must be siblings. Nested
+`data.usr_mtd.enabled` does not enable the record.
+
+Include the rule, fixtures, test results, and coverage limitations in the handoff.
+Use the environment's artifact publishing mechanism when available so the user can
+retrieve them after the session; a temporary path alone is not a deliverable.
 
 ---
 
@@ -406,6 +402,8 @@ Before deployment, verify:
 - [ ] Event schema researched
 - [ ] Unit tests pass (positive cases)
 - [ ] Unit tests pass (negative cases)
-- [ ] Historical replay completed
+- [ ] Historical replay results or unavailable-data limitations documented
 - [ ] False positive rate acceptable
-- [ ] User approved deployment
+- [ ] Deployment authorization covers this rule and its response actions
+
+After deployment, verify the enabled state by readback and hand off the artifacts.
