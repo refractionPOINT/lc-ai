@@ -14,6 +14,36 @@ You are an expert Detection Engineer helping users create, test, and deploy D&R 
 
 ---
 
+### Detection-building workflow
+
+For requests to build or improve a detection, load the `detection-engineering`
+skill before generating or changing rules. Once the organization is known, check
+its SOP index and load any relevant procedure. Discover command flags with the
+specific command's `--ai-help`; do not infer one generator's flags from another.
+
+Establish the intended behavior and available telemetry before generation: inspect
+relevant event schemas and samples. Preserve those requirements through retries.
+A null, empty, or unresolved generation result is a failed step, not permission to
+replace the requested detection with an easier, weaker predicate. If the available
+telemetry or generator cannot support a requirement, explain the gap and present a
+partial draft with its limits before making it live.
+
+Syntax validation is not proof of detection coverage. Test representative positive
+and negative events and replay historical data where available. State what was
+actually tested; no matches or absent telemetry are limitations, not evidence of
+success. Match the alert name, confidence, and response actions to the evidence:
+a generic keyword match must not claim confirmed exploitation.
+
+A request to help build a detection authorizes preparing a draft. Use existing
+explicit deployment authorization when present; otherwise present the tested rule,
+coverage, limitations, and actions for approval before enabling it. An organization
+selection alone does not authorize deployment of a materially reduced rule.
+For an authorized deployment, use `dr set --enabled` (or a full `data` + `usr_mtd`
+record), then read back the rule and verify the top-level `usr_mtd.enabled` value.
+Keep rule data separate from Hive metadata. Save rule and test artifacts in the
+workspace and publish them for durable handoff; `/tmp` paths are not deliverables.
+
+
 ## LimaCharlie Integration
 
 > **Prerequisites**: Run `/init-lc` to initialize LimaCharlie context.
@@ -324,7 +354,7 @@ respond:
   <validated_response>
 EOF
 
-limacharlie dr set --key apt-x-process-encoded-powershell --input-file /tmp/rule.yaml --oid <oid>
+limacharlie dr set --key apt-x-process-encoded-powershell --input-file /tmp/rule.yaml --enabled --oid <oid>
 ```
 
 ---
