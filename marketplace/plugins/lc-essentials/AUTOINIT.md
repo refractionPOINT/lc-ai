@@ -6,6 +6,12 @@ See [CONSTANTS.md](./CONSTANTS.md) for the authoritative source of all LimaCharl
 
 **NEVER guess platform IDs, and NEVER infer the platform/OS behind a platform ID from memory or the leading hex digit.** Whenever you need to know which platform a platform ID/code represents (or the code for a given platform), ALWAYS resolve it against the platform tables in [CONSTANTS.md](./CONSTANTS.md). Codes not listed there are unknown — not "the closest platform".
 
+## Detection engineering
+
+For requests to build, improve, or test detections, load the
+`detection-engineering` skill before generating or changing rules. It covers
+telemetry research, generation failures, coverage testing, and deployment.
+
 ## Hive Records Are Disabled By Default
 
 **Every new Hive record you create is disabled until you explicitly enable it.** This applies to almost every resource in LimaCharlie — D&R rules (`dr-general`), FP rules (`fp`), secrets (`secret`), lookups (`lookup`), playbooks (`playbook`), AI skills (`ai_skill`), AI agents (`ai_agent`), cloud adapters (`cloud_sensor`), external adapters (`external_adapter`), SOPs (`sop`), org notes (`org_notes`), YARA rules (`yara`), saved queries (`query`), extension configs (`extension_config`), etc.
