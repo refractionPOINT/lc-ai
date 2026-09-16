@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import yaml
@@ -7,6 +8,7 @@ import yaml
 from lc_eval.reporting.compare import compare_pair, compare_results
 from lc_eval.reporting.html import render_html
 from lc_eval.reporting.results import acceptance_summary, build_report, dumps_json
+from lc_eval.controller import Controller
 
 
 def _trial(trial_id, grade="pass", **changes):
@@ -23,11 +25,13 @@ def _trial(trial_id, grade="pass", **changes):
         "docs_digest": "docs",
         "fixture_recipe_digest": "fixture",
         "tools_digest": "tools",
+        "evaluator_digest": "evaluator",
         "permission_profile": "scoped",
         "execution_profile": "controlled-cli-v1",
         "limits": {"seconds": 600},
         "grade": grade,
-        "execution_status": "finished",
+        "execution_status": "completed",
+        "evidence_complete": True,
         "cleanup_status": "clean",
         "usage": {"cost_usd": 1.0, "input_tokens": 10},
     }
@@ -79,8 +83,29 @@ def test_comparison_requires_compatibility_and_both_success_for_efficiency():
     assert incompatible["compatibility"]["compatible"] is False
     assert "mismatched controlled field: docs_digest" in incompatible["compatibility"]["reasons"]
 
+    evaluator_changed = compare_pair(left, _trial("evaluator-changed", evaluator_digest="other"))
+    assert evaluator_changed["compatibility"]["compatible"] is False
+    assert "mismatched controlled field: evaluator" in evaluator_changed["compatibility"]["reasons"]
+    assert evaluator_changed["efficiency"]["cost_usd"]["delta_right_minus_left"] is None
+
     repeat = compare_pair(left, _trial("repeat", repetition=2))
     assert repeat["compatibility"]["compatible"] is True
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"execution_status": "failed"},
+        {"evidence_complete": False},
+        {"cleanup_status": "failed"},
+        {"adapter": "reference"},
+    ],
+)
+def test_pair_efficiency_requires_genuine_complete_clean_success(changes):
+    pair = compare_pair(_trial("left"), _trial("right", **changes))
+    assert pair["paired_success"] is False
+    assert pair["included_in_efficiency"] is False
+    assert pair["efficiency"]["cost_usd"]["delta_right_minus_left"] is None
 
 
 def test_compare_results_includes_all_attempt_spend_and_null_unknown_total():
@@ -132,3 +157,68 @@ def test_calibration_and_fault_drills_do_not_dilute_model_success_rate():
     assert report["summary"]["recorded_trials"] == 3
     assert report["summary"]["success_rate"] == 1
     assert len(report["trials"]) == 3
+
+
+def test_smoke_does_not_turn_missing_scored_ai_evidence_into_failure():
+    result = acceptance_summary([_trial("smoke", scenario_id="harness-smoke")])
+    assert result["criteria"]["scenario_ai_success"]["status"] == "unknown"
+    assert result["criteria"]["harness_matrix_terminal"]["status"] == "unknown"
+    assert result["criteria"]["billing_accounting"]["status"] == "unknown"
+
+
+def test_subscription_accounting_requires_unknown_dollar_cost():
+    subscription = _trial(
+        "subscription",
+        manifest={"billing_mode": "subscription_limits"},
+        usage={"billing_mode": "subscription_limits", "cost_usd": None, "input_tokens": 10},
+    )
+    result = acceptance_summary([subscription])
+    assert result["criteria"]["billing_accounting"]["status"] == "pass"
+
+    false_claim = _trial(
+        "false-claim",
+        manifest={"billing_mode": "subscription_limits"},
+        usage={"billing_mode": "subscription_limits", "cost_usd": 1.25},
+    )
+    result = acceptance_summary([false_claim])
+    assert result["criteria"]["billing_accounting"]["status"] == "fail"
+
+
+def test_hard_usd_accounting_remains_supported_when_cost_is_known():
+    metered = _trial(
+        "metered",
+        manifest={"billing_mode": "hard_usd"},
+        usage={"billing_mode": "hard_usd", "cost_usd": 0.25},
+    )
+    result = acceptance_summary([metered])
+    assert result["criteria"]["billing_accounting"]["status"] == "pass"
+
+
+def test_extra_compatible_aa_pairs_are_retained_without_invalidating_coverage(tmp_path):
+    trials = []
+    for adapter, repetitions in (("claude_code", (1, 2, 2)), ("codex", (1, 2))):
+        for index, repetition in enumerate(repetitions):
+            trial = _trial(
+                f"{adapter}-{repetition}-{index}",
+                adapter=adapter,
+                repetition=repetition,
+            )
+            trial["manifest"] = {"repetition": repetition}
+            trials.append({"result": trial})
+
+    class Journal:
+        def trials(self, campaign=None):
+            return trials
+
+        def resources(self):
+            return []
+
+    controller = Controller.__new__(Controller)
+    controller.journal = Journal()
+    controller.config = SimpleNamespace(run_data_dir=tmp_path)
+    report_dir = controller.report("campaign")
+    report = json.loads((report_dir / "report.json").read_text())
+
+    assert len(report["comparisons"]) == 3
+    assert all(pair["compatibility"]["compatible"] for pair in report["comparisons"])
+    assert report["acceptance"]["criteria"]["paired_aa"]["status"] == "pass"

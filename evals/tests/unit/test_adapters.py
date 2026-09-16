@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import os
 import sys
+import time
 from decimal import Decimal
 
 import pytest
@@ -50,6 +51,10 @@ def test_native_argv_builders_keep_prompt_on_stdin_and_auth_modes_separate() -> 
     assert "--dangerously-bypass-approvals-and-sandbox" in codex
     with pytest.raises(ValueError, match="external isolation"):
         build_codex_argv("codex", model="fixed-codex", externally_isolated=False)
+    with pytest.raises(ValueError, match="not allowed"):
+        build_codex_argv(
+            "codex", model="fixed-codex", config_overrides=('model="different-model"',)
+        )
 
 
 def test_claude_cumulative_result_usage_does_not_double_count(tmp_path) -> None:
@@ -59,6 +64,7 @@ def test_claude_cumulative_result_usage_does_not_double_count(tmp_path) -> None:
             model="m",
             workdir=tmp_path,
             executable="claude",
+            auth_mode="api_key",
         )
     )
     first = {
@@ -85,6 +91,32 @@ def test_claude_cumulative_result_usage_does_not_double_count(tmp_path) -> None:
     adapter.normalize_native_event(duplicate)
     adapter.normalize_native_event(final)
     assert adapter.final_usage() == Usage(10, 6, 3, 2, 12_345, 15)
+
+
+def test_claude_subscription_usage_does_not_claim_dollar_cost(tmp_path) -> None:
+    adapter = ClaudeCodeAdapter(
+        ClaudeCodeConfig(
+            trial_id="t",
+            model="m",
+            workdir=tmp_path,
+            executable="claude",
+            auth_mode="subscription",
+        )
+    )
+    adapter.normalize_native_event(
+        {
+            "type": "result",
+            "result": "done",
+            "usage": {
+                "input_tokens": 10,
+                "output_tokens": 6,
+                "cache_read_input_tokens": 3,
+                "cache_creation_input_tokens": 2,
+            },
+            "total_cost_usd": 0.012345,
+        }
+    )
+    assert adapter.final_usage() == Usage(10, 6, 3, 2, None, 15)
 
 
 def test_missing_usage_remains_unknown(tmp_path) -> None:
@@ -137,6 +169,16 @@ def test_normalize_usage_preserves_unknowns_and_emits_metric_aliases() -> None:
     assert unknown_cache.input_tokens is None
     assert unknown_cache.total_input_tokens == 100
     assert unknown_cache.cache_read_tokens is None
+
+    inconsistent_cache = normalize_usage(
+        input_tokens=10,
+        output_tokens=1,
+        cached_input_tokens=11,
+        cache_write_input_tokens=0,
+        input_tokens_are_total=True,
+    )
+    assert inconsistent_cache.input_tokens is None
+    assert inconsistent_cache.total_input_tokens == 10
 
     claude = normalize_usage(
         input_tokens=6,
@@ -257,6 +299,60 @@ async def test_subprocess_stop_terminates_process_group_and_drains(tmp_path) -> 
     assert result.exit_code != 0
     assert result.stdout == b"started\n"
     assert result.stderr == b"err\n"
+
+
+@pytest.mark.asyncio
+async def test_subprocess_limit_event_stops_without_external_consumer(tmp_path) -> None:
+    script = r'''
+import json, time
+print(json.dumps({"type": "limit_reached"}), flush=True)
+time.sleep(60)
+'''
+    adapter = _PythonAdapter(
+        AdapterConfig(
+            trial_id="t",
+            model="m",
+            workdir=tmp_path,
+            executable=sys.executable,
+            environment=os.environ.copy(),
+            shutdown_grace_seconds=0.2,
+        ),
+        script,
+    )
+    adapter.prepare("task")
+    await adapter.start()
+    result = await asyncio.wait_for(adapter.collect(), 5)
+    assert result.stopped
+    assert result.exit_code != 0
+    assert [event.event_type for event in result.events] == ["limit_reached"]
+
+
+@pytest.mark.asyncio
+async def test_expired_stop_deadline_kills_without_using_timestamp_as_timeout(tmp_path) -> None:
+    script = r'''
+import signal, time
+signal.signal(signal.SIGTERM, signal.SIG_IGN)
+print("ready", flush=True)
+time.sleep(60)
+'''
+    adapter = _PythonAdapter(
+        AdapterConfig(
+            trial_id="t",
+            model="m",
+            workdir=tmp_path,
+            executable=sys.executable,
+            environment=os.environ.copy(),
+            shutdown_grace_seconds=30,
+        ),
+        script,
+    )
+    adapter.prepare("task")
+    await adapter.start()
+    async for event in adapter.events():
+        if event.payload.get("text") == "ready":
+            break
+    await asyncio.wait_for(adapter.stop(time.monotonic() - 1), 2)
+    assert (await adapter.collect()).stopped
 
 
 @pytest.mark.asyncio

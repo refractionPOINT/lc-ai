@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from lc_eval.controller import freeze, prompt_for, scenario
+from lc_eval.controller import freeze, prompt_for, scenario, source_tree_digest
 from lc_eval.fixtures.hive import provision
 from lc_eval.verifiers import verify_hive
 
@@ -27,6 +27,17 @@ def test_prompt_requires_all_variables():
     assert len(digest) == 64
     with pytest.raises(ValueError, match="unresolved"):
         prompt_for(path, {"organization_id": "org"})
+
+
+def test_source_tree_digest_tracks_python_recipe_sources_only(tmp_path):
+    (tmp_path / "nested").mkdir()
+    (tmp_path / "fixture.py").write_text("VERSION = 1\n")
+    (tmp_path / "nested" / "helper.py").write_text("VALUE = 'a'\n")
+    first = source_tree_digest(tmp_path)
+    (tmp_path / "runtime.sqlite").write_bytes(b"ignored")
+    assert source_tree_digest(tmp_path) == first
+    (tmp_path / "nested" / "helper.py").write_text("VALUE = 'b'\n")
+    assert source_tree_digest(tmp_path) != first
 
 
 def test_hive_live_shape_semantics():

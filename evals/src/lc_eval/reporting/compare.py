@@ -37,6 +37,11 @@ COMPATIBILITY_FIELDS: dict[str, tuple[str, ...]] = {
     "model": ("model", "configuration.model", "manifest.model"),
     "effort": ("effort", "configuration.effort", "manifest.effort"),
     "tools": ("tools_digest", "configuration.tools_digest", "manifest.tools_digest"),
+    "evaluator": (
+        "evaluator_digest",
+        "configuration.evaluator_digest",
+        "manifest.evaluator_digest",
+    ),
     "permission_profile": ("permission_profile", "configuration.permission_profile", "manifest.permission_profile"),
     "execution_profile": ("execution_profile", "configuration.execution_profile", "manifest.execution_profile"),
     "limits": ("limits", "configuration.limits", "manifest.limits"),
@@ -76,19 +81,30 @@ def _metric(trial: Mapping[str, Any], name: str) -> float | int | None:
 
 
 def _success(trial: Mapping[str, Any]) -> bool:
-    return trial.get("grade", trial.get("task_grade")) == "pass"
+    harness = trial.get("adapter", trial.get("harness"))
+    return (
+        harness not in {None, "scripted", "reference", "reference_bad", "fault_injection"}
+        and trial.get("invalid") is not True
+        and trial.get("grade", trial.get("task_grade")) == "pass"
+        and trial.get("execution_status", trial.get("status")) == "completed"
+        and trial.get("evidence_complete") is True
+        and trial.get("cleanup_status", trial.get("cleanup_state")) == "clean"
+    )
 
 
 def compare_pair(left: Mapping[str, Any], right: Mapping[str, Any]) -> dict[str, Any]:
     check = compatibility(left, right)
     both_success = _success(left) and _success(right)
+    efficiency_eligible = check["compatible"] and both_success
     efficiency: dict[str, Any] = {}
     for metric in EFFICIENCY_METRICS:
         lhs, rhs = _metric(left, metric), _metric(right, metric)
         efficiency[metric] = {
             "left": lhs,
             "right": rhs,
-            "delta_right_minus_left": rhs - lhs if both_success and lhs is not None and rhs is not None else None,
+            "delta_right_minus_left": (
+                rhs - lhs if efficiency_eligible and lhs is not None and rhs is not None else None
+            ),
         }
     return {
         "left_trial_id": left.get("trial_id"),
@@ -98,7 +114,7 @@ def compare_pair(left: Mapping[str, Any], right: Mapping[str, Any]) -> dict[str,
         "right_success": _success(right),
         "paired_success": both_success,
         "efficiency": efficiency,
-        "included_in_efficiency": check["compatible"] and both_success,
+        "included_in_efficiency": efficiency_eligible,
     }
 
 
@@ -158,5 +174,8 @@ def compare_results(left: Sequence[Mapping[str, Any]], right: Sequence[Mapping[s
             "paired_success": len(successful_pairs), "excluded_from_efficiency": len(pairs) - len(successful_pairs),
         },
         "unpaired": {"left": unpaired_left, "right": unpaired_right},
-        "efficiency_basis": "compatible pairs where both trials passed",
+        "efficiency_basis": (
+            "compatible genuine-harness pairs where both completed with complete evidence, "
+            "passed, and cleaned"
+        ),
     }

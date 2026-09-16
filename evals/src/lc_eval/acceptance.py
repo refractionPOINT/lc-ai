@@ -16,6 +16,17 @@ BAD_ASSERTIONS = {
 }
 
 
+def _complete_reference(trial: dict, adapter: str, grade: str) -> bool:
+    return (
+        trial.get("adapter") == adapter
+        and trial.get("grade") == grade
+        and trial.get("execution_status") == "completed"
+        and trial.get("evidence_complete") is True
+        and trial.get("cleanup_status") == "clean"
+        and trial.get("invalid") is not True
+    )
+
+
 def validate_references(run_root: Path, campaign: str | None = None):
     journal = Journal(run_root)
     try:
@@ -25,20 +36,19 @@ def validate_references(run_root: Path, campaign: str | None = None):
             good = [
                 t
                 for t in trials
-                if t["scenario_id"] == scenario
-                and t["adapter"] == "reference"
-                and t["grade"] == "pass"
-                and t["cleanup_status"] == "clean"
+                if t.get("scenario_id") == scenario
+                and _complete_reference(t, "reference", "pass")
             ]
             bad = [
                 t
                 for t in trials
-                if t["scenario_id"] == scenario
-                and t["adapter"] == "reference_bad"
-                and t["grade"] == "fail"
-                and t["cleanup_status"] == "clean"
+                if t.get("scenario_id") == scenario
+                and _complete_reference(t, "reference_bad", "fail")
                 and any(
-                    a["id"] == BAD_ASSERTIONS[scenario] and a["status"] == "fail" for a in t["assertions"]
+                    isinstance(a, dict)
+                    and a.get("id") == BAD_ASSERTIONS[scenario]
+                    and a.get("status") == "fail"
+                    for a in t.get("assertions", [])
                 )
             ]
             checks.append(
@@ -67,12 +77,26 @@ def validate_references(run_root: Path, campaign: str | None = None):
 def write_acceptance(report_path: Path):
     report = json.loads(report_path.read_text())
     acceptance = report.get("acceptance") or {"status": "unknown", "criteria": {}}
+    campaign = report.get("campaign")
+    billing_mode = campaign.get("billing_mode") if isinstance(campaign, dict) else None
+    if billing_mode is None:
+        criterion = acceptance.get("criteria", {}).get("billing_accounting", {})
+        observed = criterion.get("observed")
+        if isinstance(observed, dict):
+            billing_mode = observed.get("billing_mode")
+    billing = {
+        "subscription_limits": (
+            "Billing: existing subscriptions; reported tokens are usage measurements. "
+            "Dollar cost is unknown."
+        ),
+        "hard_usd": "Billing: metered API usage with reported dollar-cost accounting.",
+    }.get(billing_mode, "Billing: unresolved; see the billing-accounting criterion.")
     lines = [
         "# Initial loop acceptance",
         "",
         f"Status: **{acceptance['status']}**",
         "",
-        "Billing: existing subscriptions; reported tokens are usage measurements. Dollar cost is unknown.",
+        billing,
         "",
         "| Criterion | Status | Observed |",
         "|---|---|---|",

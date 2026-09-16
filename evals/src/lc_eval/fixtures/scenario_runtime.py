@@ -6,6 +6,7 @@ from dataclasses import asdict
 import json
 import secrets
 import time
+import uuid
 
 from ..config import atomic_json
 from .local_cli import ControlError
@@ -17,13 +18,16 @@ from .search_dataset import generate_search_dataset, RegionalSearchClient
 
 def installation_key(cli, oid, trial):
     raw = unwrap(cli.invoke(["installation-key", "create", "--description", "eval-" + trial, "--get"], oid))
-    # The CLI returns both ``key`` (the binary RPCM key for native sensors)
-    # and ``json_key`` (the JSON key accepted by adapters).  Supplying the
-    # binary form to a hosted adapter provisions the record successfully but
-    # leaves it unable to enroll, with "installation key not authorized".
-    value = raw.get("json_key") if isinstance(raw, dict) else None
-    if not value:
-        raise ControlError("installation key response missing adapter json_key")
+    # Hosted USP adapters send this value unchanged as the ``iid`` in their
+    # connection header.  The proxy authorizes that UUID against its org-key
+    # map.  The same CLI response also contains encoded ``key`` and
+    # ``json_key`` sensor installers; neither encoding belongs in the hosted
+    # adapter identity field.
+    value = raw.get("iid") if isinstance(raw, dict) else None
+    try:
+        uuid.UUID(value)
+    except (AttributeError, TypeError, ValueError) as error:
+        raise ControlError("installation key response missing valid adapter iid") from error
     return value
 
 

@@ -102,3 +102,40 @@ def test_webhook_sends_bounded_gzip_batches_with_header_secret() -> None:
         assert json.loads(gzip.decompress(seen[0].content)) == [{"id": 1}, {"id": 2}]
 
     asyncio.run(exercise())
+
+
+def test_webhook_batches_by_exact_bytes_and_paces_across_calls(monkeypatch) -> None:
+    async def exercise() -> None:
+        seen: list[httpx.Request] = []
+        sleeps: list[float] = []
+
+        async def handler(request: httpx.Request) -> httpx.Response:
+            seen.append(request)
+            return httpx.Response(202, request=request)
+
+        async def fake_sleep(delay: float) -> None:
+            sleeps.append(delay)
+
+        monkeypatch.setattr("lc_eval.fixtures.webhook.asyncio.sleep", fake_sleep)
+        fixture = _fixture(FakeCLI())
+        events = [{"id": index, "message": "x" * 48} for index in range(4)]
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            first = await fixture.send_events(
+                events,
+                batch_events=10,
+                max_batch_bytes=80,
+                bytes_per_second=1_000,
+                client=client,
+            )
+            second = await fixture.send_events(
+                [{"id": 5}], bytes_per_second=1_000, client=client
+            )
+
+        assert sum(receipt.event_count for receipt in first) == len(events)
+        assert all(receipt.uncompressed_bytes <= 80 for receipt in first)
+        assert len(first) == len(events)
+        assert second[0].event_count == 1
+        assert len(seen) == len(events) + 1
+        assert sleeps and all(delay > 0 for delay in sleeps)
+
+    asyncio.run(exercise())

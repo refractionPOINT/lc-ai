@@ -1,4 +1,4 @@
-"""Live interruption drill: crash after org creation, then reconcile from the ledger."""
+"""Live interruption drill: crash after runtime creation, then reconcile the ledger."""
 
 from __future__ import annotations
 
@@ -17,12 +17,67 @@ from .fixtures import keys
 from .models import safe_id
 
 EXPECTED_CRASH_EXIT = 86
+REQUIRED_RESOURCE_KINDS = {"org", "api_key", "docker_network", "docker_container"}
+
+
+def _crash_marker(path: Path) -> tuple[dict, dict]:
+    """Validate that the child reached a fully acquired candidate runtime."""
+
+    try:
+        marker = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}, {"valid": False, "reason": "post-start marker is missing or invalid"}
+    resources = marker.get("resources")
+    if not isinstance(resources, list):
+        return marker, {"valid": False, "reason": "post-start marker omitted resources"}
+    valid_resources = [
+        resource
+        for resource in resources
+        if isinstance(resource, dict)
+        and isinstance(resource.get("kind"), str)
+        and isinstance(resource.get("name"), str)
+        and isinstance(resource.get("resource_id"), str)
+        and bool(resource["resource_id"])
+        and resource.get("status") == "active"
+    ]
+    kinds = {resource["kind"] for resource in valid_resources}
+    containers = [
+        resource for resource in valid_resources if resource["kind"] == "docker_container"
+    ]
+    candidate = [resource for resource in containers if resource["name"].endswith("-agent")]
+    worker = [resource for resource in containers if resource["name"].endswith("-worker")]
+    networks = [resource for resource in valid_resources if resource["kind"] == "docker_network"]
+    valid = (
+        len(valid_resources) == len(resources)
+        and REQUIRED_RESOURCE_KINDS <= kinds
+        and len(candidate) == 1
+        and len(worker) == 1
+        and len(containers) >= 4
+        and len(networks) >= 2
+        and isinstance(marker.get("oid"), str)
+        and bool(marker["oid"])
+    )
+    return marker, {
+        "valid": valid,
+        "resource_count": len(resources),
+        "resource_kinds": sorted(kinds),
+        "candidate_container": candidate[0]["name"] if len(candidate) == 1 else None,
+        "worker_container": worker[0]["name"] if len(worker) == 1 else None,
+        "container_count": len(containers),
+        "network_count": len(networks),
+        "reason": None if valid else "marker does not prove a fully acquired candidate runtime",
+    }
 
 
 def _child(config_path: Path, campaign: str, trial_id: str) -> None:
     config = load(config_path)
     controller = Controller(config)
-    selected = config.agents[0]
+    selected = next(
+        (agent for agent in config.agents if agent.adapter in {"claude_code", "codex"}),
+        None,
+    )
+    if selected is None:
+        raise RuntimeError("fault drill requires a supported live harness configuration")
     manifest = {
         "kind": "interruption-recovery-drill",
         "crash_point": "after_candidate_start",
@@ -47,6 +102,7 @@ def _child(config_path: Path, campaign: str, trial_id: str) -> None:
                     "kind": resource["kind"],
                     "name": resource["name"],
                     "resource_id": resource["resource_id"],
+                    "status": resource["status"],
                 }
                 for resource in resources
             ],
@@ -133,8 +189,54 @@ def run_crash_drill(config_path: Path, campaign: str) -> dict:
         cleanup = {"unresolved": controller.journal.resources(trial_id), "errors": []}
         finalization_errors.append({"stage": "reconcile", "error": str(exc)})
     clean = not cleanup["unresolved"] and not cleanup["errors"] and not finalization_errors
-    crashed_at_marker = (root / "crash-created.json").is_file()
-    passed = child_returncode == EXPECTED_CRASH_EXIT and crashed_at_marker and clean
+    _, marker_evidence = _crash_marker(root / "crash-created.json")
+    marker_valid = marker_evidence["valid"]
+    expected_crash = child_returncode == EXPECTED_CRASH_EXIT
+    passed = expected_crash and marker_valid and clean
+    assertions = [
+        {
+            "id": "fault.runtime_started",
+            "status": "pass" if marker_valid else "fail",
+            "required": True,
+            "expected": "journaled active candidate runtime",
+            "observed": marker_evidence,
+            "evidence": ["artifact:crash-created.json"],
+            "explanation": (
+                "The child journaled a fully acquired candidate runtime before interruption."
+                if marker_valid
+                else "The post-start marker does not prove a fully acquired candidate runtime."
+            ),
+        },
+        {
+            "id": "fault.expected_interruption",
+            "status": "pass" if expected_crash else "fail",
+            "required": True,
+            "expected": EXPECTED_CRASH_EXIT,
+            "observed": child_returncode,
+            "evidence": ["process:crash-child"],
+            "explanation": (
+                "The child terminated at the deliberate crash point."
+                if expected_crash
+                else "The child did not terminate at the deliberate crash point."
+            ),
+        },
+        {
+            "id": "fault.exact_cleanup",
+            "status": "pass" if clean else "fail",
+            "required": True,
+            "expected": {"unresolved": 0, "errors": 0},
+            "observed": {
+                "unresolved": len(cleanup["unresolved"]),
+                "errors": len(cleanup["errors"]) + len(finalization_errors),
+            },
+            "evidence": ["journal:resources"],
+            "explanation": (
+                "Reconciliation removed every exact journal-owned resource."
+                if clean
+                else "Reconciliation left resources or cleanup errors."
+            ),
+        },
+    ]
     result = {
         "schema_version": 1,
         "trial_id": trial_id,
@@ -144,17 +246,18 @@ def run_crash_drill(config_path: Path, campaign: str) -> dict:
         "execution_status": "interrupted" if child_returncode == EXPECTED_CRASH_EXIT else "failed",
         "grade": "not-run",
         "cleanup_status": "clean" if clean else "failed",
-        "assertions": [],
+        "assertions": assertions,
         "usage": {},
         "timings": {},
         "manifest": rows[0]["manifest"],
-        "evidence_complete": crashed_at_marker,
+        "evidence_complete": marker_valid,
         "cleanup_errors": [*cleanup["errors"], *finalization_errors],
         "interruption_recovery_passed": passed,
         "child_returncode": child_returncode,
+        "crash_evidence": marker_evidence,
     }
-    if child_error or not crashed_at_marker:
-        result["error"] = child_error or "child did not persist its post-create marker"
+    if child_error or not marker_valid:
+        result["error"] = child_error or marker_evidence["reason"]
     atomic_json(root / "result.json", result)
     controller.journal.finish(trial_id, result)
     try:

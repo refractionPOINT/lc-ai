@@ -125,8 +125,10 @@ def normalize_usage(
         total = input_tokens
         uncached = (
             None
-            if input_tokens is None or cached_input_tokens is None
-            else max(0, input_tokens - cached_input_tokens)
+            if input_tokens is None
+            or cached_input_tokens is None
+            or cached_input_tokens > input_tokens
+            else input_tokens - cached_input_tokens
         )
     else:
         uncached = input_tokens
@@ -210,6 +212,7 @@ class NativeSubprocessAdapter(BaseAdapter):
         self._queue: asyncio.Queue[AdapterEvent | None] = asyncio.Queue()
         self._readers: list[asyncio.Task[None]] = []
         self._completion: asyncio.Task[None] | None = None
+        self._limit_stop_task: asyncio.Task[None] | None = None
         self._done = asyncio.Event()
         self._stopped = False
         self._truncated = False
@@ -258,20 +261,21 @@ class NativeSubprocessAdapter(BaseAdapter):
             stderr=asyncio.subprocess.PIPE,
             start_new_session=True,
         )
-        assert self._process.stdin is not None
-        self._process.stdin.write(self._prepared.prompt.encode("utf-8"))
-        if not self._prepared.prompt.endswith("\n"):
-            self._process.stdin.write(b"\n")
-        await self._process.stdin.drain()
-        self._process.stdin.close()
-        with contextlib.suppress(BrokenPipeError, ConnectionResetError):
-            await self._process.stdin.wait_closed()
         assert self._process.stdout is not None and self._process.stderr is not None
         self._readers = [
             asyncio.create_task(self._read_stream("stdout", self._process.stdout)),
             asyncio.create_task(self._read_stream("stderr", self._process.stderr)),
         ]
         self._completion = asyncio.create_task(self._finish())
+        assert self._process.stdin is not None
+        with contextlib.suppress(BrokenPipeError, ConnectionResetError):
+            self._process.stdin.write(self._prepared.prompt.encode("utf-8"))
+            if not self._prepared.prompt.endswith("\n"):
+                self._process.stdin.write(b"\n")
+            await self._process.stdin.drain()
+        self._process.stdin.close()
+        with contextlib.suppress(BrokenPipeError, ConnectionResetError):
+            await self._process.stdin.wait_closed()
 
     async def _read_stream(self, name: str, stream: asyncio.StreamReader) -> None:
         pending = bytearray()
@@ -313,6 +317,15 @@ class NativeSubprocessAdapter(BaseAdapter):
         self._native_events.append(native)
         for event_type, payload in self.normalize_native_event(parsed):
             self._emit(event_type, payload, stream=stream)
+            if (
+                event_type == "limit_reached"
+                and self._process is not None
+                and self._process.returncode is None
+                and self._limit_stop_task is None
+            ):
+                # Limits are adapter guarantees, rather than advisory events
+                # that depend on an external event consumer reacting in time.
+                self._limit_stop_task = asyncio.create_task(self.stop(time.monotonic()))
 
     def _emit(self, event_type: str, payload: Mapping[str, Any], *, stream: str = "stdout") -> None:
         event = AdapterEvent(
@@ -353,7 +366,7 @@ class NativeSubprocessAdapter(BaseAdapter):
             os.killpg(process.pid, signal.SIGTERM)
         timeout = self.config.shutdown_grace_seconds
         if deadline is not None:
-            timeout = max(0.0, deadline - time.monotonic()) if deadline > time.monotonic() else max(0.0, deadline)
+            timeout = max(0.0, deadline - time.monotonic())
         try:
             await asyncio.wait_for(self._done.wait(), timeout=timeout)
         except TimeoutError:
@@ -365,6 +378,8 @@ class NativeSubprocessAdapter(BaseAdapter):
         if self._process is None or self._prepared is None:
             raise AdapterStateError("adapter has not started")
         await self._done.wait()
+        if self._limit_stop_task is not None and self._limit_stop_task is not asyncio.current_task():
+            await self._limit_stop_task
         assert self._process.returncode is not None
         return CollectedRun(
             argv=self._prepared.argv,

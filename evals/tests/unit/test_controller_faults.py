@@ -1,3 +1,4 @@
+import asyncio
 import json
 import subprocess
 from contextlib import nullcontext
@@ -13,7 +14,7 @@ import lc_eval.execution.parity as parity_module
 from lc_eval.controller import Controller
 from lc_eval.journal import Journal as RealJournal
 from lc_eval.models import AgentConfig
-from lc_eval.adapters import UnsupportedAdapterError
+from lc_eval.adapters import AdapterStateError, UnsupportedAdapterError
 
 
 class FakeJournal:
@@ -98,6 +99,122 @@ async def test_unsupported_adapter_is_rejected_before_trial_or_org_creation(tmp_
     with pytest.raises(UnsupportedAdapterError):
         await value.trial("campaign", "hive-preserve-update", "workspace")
     assert not (tmp_path / "trials").exists()
+
+
+@pytest.mark.asyncio
+async def test_subscription_usage_never_promotes_provider_estimate_to_dollar_cost(
+    tmp_path, monkeypatch
+):
+    class Usage:
+        def as_dict(self):
+            return {"input_tokens": 10, "cost_micro_usd": 125_000}
+
+    collected = SimpleNamespace(
+        usage=Usage(),
+        stdout=b"",
+        stderr=b"",
+        exit_code=0,
+        result_text="done",
+    )
+
+    class Adapter:
+        def __init__(self, config):
+            pass
+
+        def prepare(self, prompt):
+            pass
+
+        async def start(self):
+            pass
+
+        async def events(self):
+            if False:
+                yield None
+
+        async def collect(self):
+            return collected
+
+    monkeypatch.setattr(controller_module, "ClaudeCodeAdapter", Adapter)
+    value = Controller.__new__(Controller)
+    result = {"usage": {}}
+    agent = SimpleNamespace(
+        adapter="claude_code",
+        model="model",
+        max_turns=4,
+        effort="medium",
+        timeout_seconds=30,
+    )
+    env = SimpleNamespace(trial_id="trial", agent="agent", stop_candidate=lambda: None)
+    tmp_path.mkdir(exist_ok=True)
+
+    await value.run_agent(agent, env, "prompt", result, tmp_path)
+
+    assert result["usage"]["input_tokens"] == 10
+    assert result["usage"]["billing_mode"] == "subscription_limits"
+    assert result["usage"]["cost_usd"] is None
+    assert result["usage"]["cost_micro_usd"] is None
+
+
+@pytest.mark.asyncio
+async def test_agent_startup_hang_is_timed_out_and_stops_candidate(tmp_path, monkeypatch):
+    class Adapter:
+        instance = None
+
+        def __init__(self, config):
+            self.stopped = False
+            self.collect_attempted = False
+            Adapter.instance = self
+
+        def prepare(self, prompt):
+            pass
+
+        async def start(self):
+            await asyncio.Event().wait()
+
+        async def stop(self, deadline=None):
+            self.stopped = True
+
+        async def collect(self):
+            self.collect_attempted = True
+            raise AdapterStateError("adapter has not started")
+
+    class Environment:
+        trial_id = "trial"
+        agent = "candidate"
+
+        def __init__(self):
+            self.stopped = False
+
+        def stop_candidate(self):
+            self.stopped = True
+
+    monkeypatch.setattr(controller_module, "ClaudeCodeAdapter", Adapter)
+    value = Controller.__new__(Controller)
+    result = {}
+    agent = SimpleNamespace(
+        adapter="claude_code",
+        model="model",
+        max_turns=4,
+        effort="medium",
+        timeout_seconds=0.01,
+    )
+    env = Environment()
+
+    completion = await asyncio.wait_for(
+        value.run_agent(agent, env, "prompt", result, tmp_path),
+        1,
+    )
+
+    assert completion is None
+    assert env.stopped
+    assert Adapter.instance.stopped
+    assert Adapter.instance.collect_attempted
+    assert result["execution_status"] == "timed_out"
+    assert result["timeout_phase"] == "startup"
+    assert result["agent_exit_code"] is None
+    assert result["usage"]["input_tokens"] is None
+    assert (tmp_path / "agent.stdout").read_bytes() == b""
+    assert (tmp_path / "agent.stderr").read_bytes() == b""
 
 
 @pytest.mark.asyncio

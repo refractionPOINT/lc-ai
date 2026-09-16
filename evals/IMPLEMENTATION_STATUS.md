@@ -6,9 +6,9 @@ Branch: `eval/limacharlie-cli-ai`. Implementation started 2026-09-16.
 |---|---|---|
 | M0 Configuration/package | Implemented | Branch confirmed; Python 3.11.2, Docker 29.7.2 and local CLI authentication verified. |
 | M1 Journal/controller | In progress | SQLite journal, exclusive campaign lock, CLI/controller state machine, exact cleanup reconciliation implemented; crash drill pending. |
-| M2 Isolated CLI execution | In progress | Docker networks/proxies, pinned worker build, bounded CLI broker and credential/path policy implemented; live parity checks pending. |
+| M2 Isolated CLI execution | Implemented | Live direct-versus-broker CLI parity and isolation checks passed in `calibration-b4ba166555`. |
 | M3 Harnesses and budget | Implemented for subscriptions | Both real subscription smoke tests passed after packaging fixes; bounded time/turn/tool execution and token-only accounting. |
-| M4 Live fixtures | Pending | Disposable org lifecycle live probe passed: create, auth, independent read, confirmed deletion; zero remaining resources. |
+| M4 Live fixtures | In progress | Hive fixture works live. Adapter enrollment contract corrected to IID; event uploads now paced at 4 KiB/s for new-org throughput. Export/routing calibration pending. |
 | M5 Scenarios/graders | In progress | Three manifests, public prompts and deterministic Hive/export/routing graders implemented; unit calibration passes. |
 | M6 Reporting | Implemented | JSON/HTML reports, missing-metric handling, compatibility checks and acceptance criteria implemented. |
 | M7 Live proof | Pending | No model trials yet; organization and Hive fixture/key lifecycle probes passed. |
@@ -51,3 +51,11 @@ A later independent owner-inventory audit found four exact journal-owned test or
 - `calibration-b4dfd758dd`: export preparation revealed cloud-adapter `last_error: adapter: lc installation key not authorized`. Accepted webhook HTTP batches alone are not ingestion evidence. The calibration was interrupted for exact cleanup; installation-key setup is being corrected before a fresh trial.
 
 - The hosted-adapter enrollment defect is fixed: `installation-key create --get` returns both `key` (native sensor/RPCM) and `json_key` (adapters); fixtures now require `json_key` and reject a binary-only response. Focused regression tests pass. The interrupted calibration completed cleanup with no pending resources.
+
+- Follow-up calibration `calibration-125938eba4` disproved the first key-format fix: hosted USP adapters still rejected `json_key`. Source trace through `go-uspclient` and `legion_usp_proxy/service/auth.go` establishes that this adapter field is the **installation record UUID (`iid`)**, passed unchanged as the protocol `iid`. CLI help describing `json_key` as suitable for adapters is misleading for this path. The fixture now follows the backend contract; the candidate CLI is unchanged. The failed calibration is retained and cleanup is running.
+
+- `calibration-ceb3c441ef`: UUID-based adapter enrollment succeeded (sensor appeared); ingestion then hit the new organization free-tier ceiling, `over throughput of 10240 bytes/s for free tier`. Fixture uploads are being paced below that ceiling. HTTP acceptance alone remains insufficient; all expected event IDs must be independently searchable before candidate execution. No paid-tier change was made.
+- Adapter and acceptance review: 138 offline tests passed. Subscription reports now suppress both dollar fields; Codex tool limits self-terminate; native configuration cannot override the pinned model; acceptance excludes smoke trials and requires complete reference evidence.
+
+- `calibration-b4ba166555`: all seven live transport/isolation checks passed (version, help, JSON lookup, missing-key exit behavior, API proxy denial, direct egress denial, host Docker socket denial).
+- Fixture sender now caps exact uncompressed batches at 4 KiB and paces 4 KiB/s across consecutive sends. Backend throughput counts decoded USP envelopes, so this leaves headroom below the 10 KiB/s free-tier limit. Routing readiness now retries fresh transient-failure queries with a bounded deadline and preserves infrastructure diagnostics.

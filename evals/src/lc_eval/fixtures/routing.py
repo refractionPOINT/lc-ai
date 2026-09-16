@@ -31,7 +31,7 @@ from ..execution.processes import cleanup as cleanup_process
 from ..execution.processes import process_handle
 from ..journal import Journal
 from .local_cli import ControlError, LocalCLI
-from .search_dataset import RegionalSearchClient
+from .search_dataset import RegionalSearchClient, SearchError
 from .webhook import HostedWebhookFixture, WebhookSpec
 
 
@@ -402,9 +402,12 @@ class RoutingFixture:
         end_time: int,
         deadline: float,
         poll_seconds: float,
-    ) -> set[str]:
+    ) -> tuple[set[str], list[dict[str, Any]]]:
         expected = {event["eval_event_id"] for event in events}
         observed: set[str] = set()
+        valid_searches: set[str] = set()
+        transient_failures: list[dict[str, Any]] = []
+        last_transient: BaseException | None = None
         while time.monotonic() < deadline:
             for event in events:
                 event_id = event["eval_event_id"]
@@ -419,14 +422,48 @@ class RoutingFixture:
                         self.search.execute(query, start_time, end_time),
                         timeout=remaining,
                     )
-                except TimeoutError:
-                    return observed
+                except SearchError as error:
+                    if error.status_code not in {500, 502, 503, 504}:
+                        raise
+                    last_transient = error
+                    transient_failures.append(
+                        {
+                            "attempt": len(transient_failures) + 1,
+                            "event_id": event_id,
+                            "status_code": error.status_code,
+                            "query_id": error.query_id,
+                        }
+                    )
+                    # A failed query ID cannot recover when a fresh-org
+                    # search dataset is still initializing. Move on and issue
+                    # a new search for this probe on the next pass.
+                    continue
+                except TimeoutError as error:
+                    last_transient = error
+                    transient_failures.append(
+                        {
+                            "attempt": len(transient_failures) + 1,
+                            "event_id": event_id,
+                            "status_code": None,
+                            "query_id": None,
+                            "timeout": True,
+                        }
+                    )
+                    break
+                valid_searches.add(event_id)
                 if any(item.get("eval_event_id") == event_id for item in result.events):
                     observed.add(event_id)
             if observed == expected:
                 break
             await asyncio.sleep(min(poll_seconds, max(0, deadline - time.monotonic())))
-        return observed
+        unavailable = expected - valid_searches
+        if unavailable:
+            raise ControlError(
+                "routing ingestion search remained unavailable for "
+                f"{len(unavailable)} of {len(expected)} probes after "
+                f"{len(transient_failures)} transient failures"
+            ) from last_transient
+        return observed, transient_failures
 
     @staticmethod
     def _flatten_receipts(receipts: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -463,7 +500,7 @@ class RoutingFixture:
         observation_start = _utc_now()
         search_start = int(time.time()) - 60
         await self.webhook.send_events(events)
-        ingested = await self._wait_ingested(
+        ingested, search_transient_failures = await self._wait_ingested(
             events,
             start_time=search_start,
             end_time=int(time.time()) + max(60, int(total_timeout_seconds)),
@@ -514,6 +551,7 @@ class RoutingFixture:
             "expected_match_ids": sorted(matching_ids),
             "expected_negative_ids": sorted(negative_ids),
             "observed_ingestion_ids": sorted(ingested),
+            "search_transient_failures": search_transient_failures,
             "receiver_health": {
                 "management_reachable": management_reachable,
                 "receiver_ready": health.get("database") == "ok",

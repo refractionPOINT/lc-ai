@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
@@ -18,7 +19,8 @@ from lc_eval.fixtures.routing import (
     build_routing_rule,
     reference,
 )
-from lc_eval.fixtures.search_dataset import SearchPage, SearchResult
+from lc_eval.fixtures.local_cli import ControlError
+from lc_eval.fixtures.search_dataset import SearchError, SearchPage, SearchResult
 from lc_eval.verifiers.routing import verify_routing
 
 
@@ -128,7 +130,16 @@ def test_verification_uses_fresh_probes_and_positive_control() -> None:
                 sent.extend(events)
 
         class Search:
+            calls = 0
+
             async def execute(self, *_args, **_kwargs):
+                self.calls += 1
+                if self.calls == 1:
+                    raise SearchError(
+                        "dataset initializing",
+                        query_id="stale-query",
+                        status_code=500,
+                    )
                 return SearchResult(
                     query_id="query",
                     events=tuple(sent),
@@ -179,6 +190,14 @@ def test_verification_uses_fresh_probes_and_positive_control() -> None:
         assert len(evidence["expected_match_ids"]) == 1
         assert len(evidence["expected_negative_ids"]) == 3
         assert len(evidence["observed_ingestion_ids"]) == 5
+        assert evidence["search_transient_failures"] == [
+            {
+                "attempt": 1,
+                "event_id": sent[0]["eval_event_id"],
+                "status_code": 500,
+                "query_id": "stale-query",
+            }
+        ]
         assert evidence["receiver_health"] == {
             "management_reachable": True,
             "receiver_ready": True,
@@ -194,5 +213,34 @@ def test_verification_uses_fresh_probes_and_positive_control() -> None:
             item["status"] == "pass"
             for item in verify_routing({}, {}, {}, evidence)
         )
+
+    asyncio.run(exercise())
+
+
+def test_ingestion_search_persistent_transient_is_infrastructure_error() -> None:
+    async def exercise() -> None:
+        class Search:
+            async def execute(self, *_args, **_kwargs):
+                raise SearchError(
+                    "dataset unavailable", query_id="query", status_code=503
+                )
+
+        fixture = RoutingFixture(
+            SimpleNamespace(), SimpleNamespace(), _spec(), search=Search()
+        )
+        events = [{"eval_event_id": "probe"}]
+        try:
+            await fixture._wait_ingested(
+                events,
+                start_time=1,
+                end_time=2,
+                deadline=time.monotonic() + 0.01,
+                poll_seconds=0.001,
+            )
+        except ControlError as error:
+            assert "search remained unavailable" in str(error)
+            assert isinstance(error.__cause__, SearchError)
+        else:
+            raise AssertionError("persistent transient search failure was hidden")
 
     asyncio.run(exercise())

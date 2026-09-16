@@ -9,7 +9,7 @@ from lc_eval.fixtures.local_cli import ControlError
 from lc_eval.fixtures.scenario_runtime import installation_key, reference
 
 
-def test_installation_key_selects_adapter_json_key() -> None:
+def test_installation_key_selects_adapter_iid() -> None:
     class FakeCLI:
         def invoke(self, args, oid):
             assert args == [
@@ -20,22 +20,28 @@ def test_installation_key_selects_adapter_json_key() -> None:
                 "--get",
             ]
             assert oid == "oid"
-            return {"key": "binary-rpcm-key", "json_key": "adapter-json-key"}
+            return {
+                "iid": "00000000-0000-4000-8000-000000000001",
+                "key": "binary-rpcm-key",
+                "json_key": "encoded-json-sensor-key",
+            }
 
-    assert installation_key(FakeCLI(), "oid", "trial") == "adapter-json-key"
+    assert installation_key(FakeCLI(), "oid", "trial") == (
+        "00000000-0000-4000-8000-000000000001"
+    )
 
 
-def test_installation_key_rejects_binary_only_response() -> None:
+def test_installation_key_rejects_encoded_keys_without_iid() -> None:
     class FakeCLI:
         def invoke(self, args, oid):
-            return {"key": "binary-rpcm-key"}
+            return {"key": "binary-rpcm-key", "json_key": "encoded-json-sensor-key"}
 
     try:
         installation_key(FakeCLI(), "oid", "trial")
     except ControlError as error:
-        assert "json_key" in str(error)
+        assert "iid" in str(error)
     else:
-        raise AssertionError("binary installation key was accepted for an adapter")
+        raise AssertionError("encoded sensor key was accepted for an adapter")
 
 
 def test_search_reference_projects_rows_from_raw_result_pages(

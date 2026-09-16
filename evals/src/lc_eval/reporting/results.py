@@ -146,9 +146,11 @@ def acceptance_summary(
     """Evaluate the initial-loop acceptance criteria without hiding missing proof."""
 
     facts = dict(evidence or {})
+    expected_scenario_set = set(expected_scenarios)
     genuine = [
         trial
         for trial in trials
+        if _scenario_id(trial) in expected_scenario_set
         if trial.get("adapter", trial.get("harness"))
         not in {"scripted", "reference", "reference_bad", "fault_injection", None}
         and trial.get("invalid") is not True
@@ -178,6 +180,52 @@ def acceptance_summary(
             cleanup_value = cleanup.get("state")
         if cleanup_value not in {"clean", "cleaned", "complete", "verified"}:
             unresolved.append(trial.get("trial_id"))
+
+    declared_modes = []
+    billing_rows = []
+    for trial in genuine:
+        manifest = trial.get("manifest")
+        usage = trial.get("usage")
+        mode = trial.get("billing_mode")
+        if mode is None and isinstance(usage, Mapping):
+            mode = usage.get("billing_mode")
+        if mode is None and isinstance(manifest, Mapping):
+            mode = manifest.get("billing_mode")
+        if isinstance(mode, str):
+            declared_modes.append(mode)
+        claimed_costs = {}
+        if isinstance(usage, Mapping):
+            for field in ("cost_usd", "cost_micro_usd"):
+                if usage.get(field) is not None:
+                    claimed_costs[field] = usage[field]
+        billing_rows.append((trial.get("trial_id"), mode, claimed_costs))
+    unique_modes = sorted(set(declared_modes))
+    expected_billing_mode = facts.get("billing_mode")
+    if expected_billing_mode is None and len(unique_modes) == 1:
+        expected_billing_mode = unique_modes[0]
+    billing_issues = []
+    for trial_id, mode, claimed_costs in billing_rows:
+        issue = mode != expected_billing_mode or expected_billing_mode not in {
+            "subscription_limits",
+            "hard_usd",
+        }
+        if expected_billing_mode == "subscription_limits" and claimed_costs:
+            issue = True
+        if expected_billing_mode == "hard_usd":
+            valid_costs = [
+                _finite_number(value)
+                for value in claimed_costs.values()
+            ]
+            if not valid_costs or any(value is None or value < 0 for value in valid_costs):
+                issue = True
+        if issue:
+            billing_issues.append(
+                {
+                    "trial_id": trial_id,
+                    "billing_mode": mode,
+                    "claimed_dollar_costs": claimed_costs,
+                }
+            )
     criteria = {
         "reference_validation": _criterion(
             "pass"
@@ -197,6 +245,15 @@ def acceptance_summary(
             scenario_status,
             "Each scenario has at least one genuine AI success.",
             missing_success,
+        ),
+        "billing_accounting": _criterion(
+            "pass" if genuine and not billing_issues else "fail" if billing_issues else "unknown",
+            "Scored trials follow the declared billing mode; subscriptions make no dollar-cost claim.",
+            {
+                "billing_mode": expected_billing_mode,
+                "checked_trials": len(genuine),
+                "issues": billing_issues,
+            },
         ),
         "cleanup": _criterion(
             "pass"

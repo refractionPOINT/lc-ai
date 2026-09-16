@@ -17,6 +17,17 @@ from .base import (
 )
 
 
+_ALLOWED_CONFIG_OVERRIDES = frozenset({"model_reasoning_effort"})
+
+
+def _validate_config_override(value: str) -> None:
+    key, separator, setting = value.partition("=")
+    if not separator or not setting.strip():
+        raise ValueError("Codex config overrides must use key=value syntax")
+    if key.strip() not in _ALLOWED_CONFIG_OVERRIDES:
+        raise ValueError(f"Codex config override is not allowed: {key.strip() or '<empty>'}")
+
+
 def build_codex_argv(
     executable: str,
     *,
@@ -29,6 +40,8 @@ def build_codex_argv(
         raise ValueError("model is required")
     if not externally_isolated:
         raise ValueError("the controlled Codex profile requires external isolation")
+    for override in config_overrides:
+        _validate_config_override(override)
     args = [
         "exec",
         "--json",
@@ -59,6 +72,8 @@ class CodexConfig(AdapterConfig):
             raise ValueError("auth_mode must be 'subscription' or 'api_key'")
         if self.max_tool_calls <= 0:
             raise ValueError("max_tool_calls must be positive")
+        for override in self.config_overrides:
+            _validate_config_override(override)
 
 
 class CodexAdapter(NativeSubprocessAdapter):

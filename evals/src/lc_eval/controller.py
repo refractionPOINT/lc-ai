@@ -24,11 +24,13 @@ from .fixtures import hive, keys
 from .execution.docker import DockerEnvironment
 from .execution.broker import Broker, CONTROLLED_CLI_V1_NOTICE
 from .adapters import (
+    AdapterStateError,
     ClaudeCodeAdapter,
     ClaudeCodeConfig,
     CodexAdapter,
     CodexConfig,
     UnsupportedAdapterError,
+    Usage,
 )
 from .verifiers import verify_hive, verify_export, verify_routing
 from .reporting import build_report, render_html, compare_pair, acceptance_summary
@@ -45,6 +47,17 @@ def scenario(name):
         if file.is_file():
             digest.update(str(file.relative_to(path)).encode() + b"\0" + file.read_bytes())
     return path, spec, digest.hexdigest()
+
+
+def source_tree_digest(path: Path) -> str:
+    """Hash Python source names and contents without including runtime artifacts."""
+
+    digest = hashlib.sha256()
+    for file in sorted(Path(path).rglob("*.py")):
+        if "__pycache__" in file.parts:
+            continue
+        digest.update(str(file.relative_to(path)).encode() + b"\0" + file.read_bytes())
+    return digest.hexdigest()
 
 
 def prompt_for(path, public):
@@ -268,7 +281,7 @@ class Controller:
             "docs_digest": self.config.sources.docs.commit,
             "fixture_recipe_digest": sha256(PROJECT / "src/lc_eval/fixtures/hive.py")
             if name.startswith("hive")
-            else digest,
+            else source_tree_digest(PROJECT / "src/lc_eval/fixtures"),
             "harness": reference_adapter if reference else adapter_name,
             "model": agent.model,
             "effort": agent.effort,
@@ -488,9 +501,12 @@ class Controller:
             )
         )
         adapter.prepare(prompt)
-        await adapter.start()
+        started = False
 
         async def consume():
+            nonlocal started
+            await adapter.start()
+            started = True
             async for event in adapter.events():
                 if event.event_type == "limit_reached":
                     await adapter.stop(time.monotonic() + 10)
@@ -503,22 +519,36 @@ class Controller:
             timed_out = True
             await adapter.stop(time.monotonic() + 10)
             env.stop_candidate()
-            collected = await adapter.collect()
+            try:
+                collected = await asyncio.wait_for(adapter.collect(), 10)
+            except (asyncio.TimeoutError, AdapterStateError):
+                collected = None
         # Private transcript only; never embed it in distributable reports.
-        for filename, raw in [("agent.stdout", collected.stdout), ("agent.stderr", collected.stderr)]:
+        for filename, raw in [
+            ("agent.stdout", collected.stdout if collected is not None else b""),
+            ("agent.stderr", collected.stderr if collected is not None else b""),
+        ]:
             file = root / filename
             file.write_bytes(raw)
             file.chmod(0o600)
+        usage = collected.usage if collected is not None else Usage()
         result["usage"] = {
-            **collected.usage.as_dict(),
+            **usage.as_dict(),
             "cost_usd": None,
+            "cost_micro_usd": None,
             "billing_mode": "subscription_limits",
         }
         result["execution_status"] = (
-            "timed_out" if timed_out else "completed" if collected.exit_code == 0 else "failed"
+            "timed_out"
+            if timed_out
+            else "completed"
+            if collected is not None and collected.exit_code == 0
+            else "failed"
         )
-        result["agent_exit_code"] = collected.exit_code
-        return collected.result_text
+        result["agent_exit_code"] = collected.exit_code if collected is not None else None
+        if timed_out:
+            result["timeout_phase"] = "execution" if started else "startup"
+        return collected.result_text if collected is not None else None
 
     async def reference(self, name, fixture, env, *, bad=False):
         from .execution.docker import run
@@ -565,9 +595,16 @@ class Controller:
                 )
                 if first:
                     pairs.append(compare_pair(first, current))
+        compatible_aa_harnesses = {
+            pair["compatibility"]["fields"]["harness"]["left"]
+            for pair in pairs
+            if pair["compatibility"]["compatible"]
+            and pair["compatibility"]["fields"]["scenario_id"]["left"]
+            == "hive-preserve-update"
+        }
         evidence = {
             "unresolved_resource_count": len(self.journal.resources()),
-            "paired_aa_complete": len(pairs) == 2 and all(p["compatibility"]["compatible"] for p in pairs),
+            "paired_aa_complete": {"claude_code", "codex"} <= compatible_aa_harnesses,
         }
         proof = self.config.run_data_dir / "proof.json"
         if proof.exists():

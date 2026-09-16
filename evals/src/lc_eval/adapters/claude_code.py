@@ -151,7 +151,10 @@ class ClaudeCodeAdapter(NativeSubprocessAdapter):
                         normalized.append(("tool_result", dict(block)))
         elif event_type == "result":
             usage = _usage_dict(event.get("usage"))
-            cost = event.get("total_cost_usd")
+            # Subscription output may include a CLI estimate, but the approved
+            # accounting mode is token-only. Dollar accounting is meaningful
+            # only when this adapter is explicitly using API-key billing.
+            cost = event.get("total_cost_usd") if self.claude_config.auth_mode == "api_key" else None
             cost_micro = None
             if isinstance(cost, (int, float, str)) and not isinstance(cost, bool):
                 try:
