@@ -82,7 +82,8 @@ async def test_parity_uses_direct_fixed_cli_and_candidate_shim_argv(tmp_path, mo
     )
     assert brokered[brokered.index("trial-agent") + 1] == "/usr/local/bin/limacharlie"
     assert any(
-        argv[-4:] == ("--output", "json", "lookup", "list")
+        argv[-4:] == ("lookup", "list", "--output", "json")
         for argv in seen
         if "trial-worker" in argv
     )
+    assert any(argv[-1:] == ("--ai-help",) for argv in seen if "trial-worker" in argv)

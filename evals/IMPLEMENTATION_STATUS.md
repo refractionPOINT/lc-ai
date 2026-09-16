@@ -11,7 +11,7 @@ Branch: `eval/limacharlie-cli-ai`. Implementation started 2026-09-16.
 | M4 Live fixtures | Implemented and verified | All three correct references passed against real LC resources; hosted webhook warmup, paced ingestion, genuine pagination and signed output delivery are verified. |
 | M5 Scenarios/graders | Live calibration complete | All three correct references passed; each incorrect reference failed its intended assertion. `validate-suite --campaign calibration` passed after cleanup. |
 | M6 Reporting | Implemented | JSON/HTML reports, missing-metric handling, compatibility checks and acceptance criteria implemented. |
-| M7 Live proof | Pending | No model trials yet; organization and Hive fixture/key lifecycle probes passed. |
+| M7 Live proof | In progress | References, real harness smokes and crash recovery passed. Two first Hive AI attempts passed but are invalid for scoring because of broker friction; corrected eight-trial campaign follows live parity. |
 
 Receiver, graders/reporting and harness modules are assigned to GPT-5.6 Sol agents. Controller, fixture lifecycle, configuration and integration remain with the primary agent. No unrelated files are included.
 
@@ -79,3 +79,11 @@ A later independent owner-inventory audit found four exact journal-owned test or
 - `calibration-be7ae8e001`: negative routing calibration failed only `routing.negatives_excluded`; ingestion, signed matching delivery, receiver health, full observation window and baseline preservation passed. Cleanup is in progress. All three intended negative failures have now been observed.
 
 - `validate-suite --campaign calibration` returned **reference_validation_passed: true** for all three scenarios after all reference cleanup completed. The eight-trial genuine AI campaign `initial-proof` is now running sequentially from evaluator commit `fa77838`.
+
+### Real-agent transport correction
+
+- `initial-proof-1352f4c9e2` (Claude Code) and `initial-proof-9677f5415d` (Codex) both passed all Hive assertions and cleaned up. Trace review found that the broker rejected native CLI-supported `--ai-help` and global options after subcommands. Those extra errors are evaluator-induced friction.
+- Both results retain their original task grades, tokens, command evidence and cleanup, with `invalid: true` and an explicit classification audit excluding them from scoring/comparison. The campaign stopped before other AI scenarios.
+- The broker is being corrected against the pinned native CLI global-option hoisting contract, and live parity will include these cases. The scored suite will restart as **`initial-proof-v2`**, keeping the earlier attempts visible.
+
+- Broker correction verified: **175 unit tests passed; Ruff clean**. `calibration-4313564b3f` passed all seven CLI parity cases (including root/group/leaf AI help and trailing global output), all three isolation checks, and all five Hive assertions.

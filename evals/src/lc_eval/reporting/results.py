@@ -91,7 +91,13 @@ def command_metrics(path: str | os.PathLike[str], *, max_events: int = 1_000_000
 
 
 def _success(trial: Mapping[str, Any]) -> bool:
-    return trial.get("grade", trial.get("task_grade")) == "pass"
+    return (
+        trial.get("invalid") is not True
+        and trial.get("grade", trial.get("task_grade")) == "pass"
+        and trial.get("execution_status", trial.get("status")) == "completed"
+        and trial.get("evidence_complete") is True
+        and trial.get("cleanup_status", trial.get("cleanup_state")) == "clean"
+    )
 
 
 def _finite_number(value: Any) -> float | int | None:
@@ -156,6 +162,7 @@ def build_report(
         for trial in copied
         if trial.get("adapter") not in {"reference", "reference_bad", "scripted", "fault_injection"}
         and _scenario_id(trial) != "harness-smoke"
+        and trial.get("invalid") is not True
     ]
     successes = sum(_success(trial) for trial in scored)
     by_scenario: dict[str, dict[str, Any]] = {}
@@ -197,6 +204,7 @@ def build_report(
         "summary": {
             "trials": len(scored),
             "recorded_trials": len(copied),
+            "invalid_trials": sum(trial.get("invalid") is True for trial in copied),
             "non_scored_trials": len(copied) - len(scored),
             "successes": successes,
             "success_rate": successes / len(scored) if scored else None,
@@ -248,7 +256,7 @@ def acceptance_summary(
                 _scenario_id(trial) == scenario
                 and trial.get("adapter", trial.get("harness")) == harness
                 and trial.get("execution_status", trial.get("status")) in terminal_values
-                for trial in trials
+                for trial in genuine
             )
             if not found:
                 matrix_missing.append(f"{scenario}:{harness}")

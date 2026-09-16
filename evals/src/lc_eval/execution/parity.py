@@ -14,7 +14,10 @@ from ..config import atomic_json
 _CLI_CASES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("version", ("--version",)),
     ("lookup_help", ("lookup", "--help")),
-    ("lookup_list_json", ("--output", "json", "lookup", "list")),
+    ("root_ai_help", ("--ai-help",)),
+    ("lookup_ai_help", ("lookup", "--ai-help")),
+    ("lookup_list_ai_help", ("lookup", "list", "--ai-help")),
+    ("lookup_list_json_postcommand", ("lookup", "list", "--output", "json")),
     ("lookup_missing", ("lookup", "get", "--key", "lc-eval-intentionally-missing")),
 )
 _PROXY_ENV = ("HTTPS_PROXY", "HTTP_PROXY", "ALL_PROXY", "https_proxy", "http_proxy", "all_proxy")

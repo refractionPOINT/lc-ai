@@ -55,12 +55,77 @@ def test_policy_allows_only_initial_scenario_commands_and_flags() -> None:
 @pytest.mark.parametrize(
     "argv",
     [
+        ["--oid", "trial-oid", "--output", "json", "lookup", "list"],
+        ["lookup", "--oid", "trial-oid", "list", "--output", "json"],
+        ["lookup", "--output=json", "list", "--oid=trial-oid"],
+        ["lookup", "list", "--output=JSON", "--oid", "trial-oid", "--quiet"],
+        ["--filter", "--debug", "lookup", "list"],
+        ["search", "validate", "--query=--debug", "--oid", "trial-oid"],
+    ],
+)
+def test_policy_hoists_safe_globals_from_every_native_position(argv) -> None:
+    validated = CommandPolicy(allowed_oids=("trial-oid",)).validate(argv, "/work")
+    assert validated.argv == tuple(argv)
+
+
+@pytest.mark.parametrize(
+    "argv,command",
+    [
+        (["--ai-help"], ("meta", "help")),
+        (["lookup", "--output=json", "--ai-help"], ("lookup", "help")),
+        (
+            ["lookup", "--oid", "trial-oid", "list", "--output", "yaml", "--ai-help"],
+            ("lookup", "list"),
+        ),
+    ],
+)
+def test_policy_allows_ai_help_at_root_group_and_leaf(argv, command) -> None:
+    validated = CommandPolicy(allowed_oids=("trial-oid",)).validate(argv, "/work")
+    assert validated.argv == tuple(argv)
+    assert validated.command == command
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["--oid", "trial-oid", "lookup", "list", "--oid", "wrong-oid"],
+        ["lookup", "--oid=wrong-oid", "list", "--oid=trial-oid"],
+        ["--output", "json", "lookup", "list", "--output=yamlx"],
+    ],
+)
+def test_policy_validates_every_duplicate_global_value(argv) -> None:
+    with pytest.raises(PolicyError):
+        CommandPolicy(allowed_oids=("trial-oid",)).validate(argv, "/work")
+
+
+def test_policy_retains_original_file_index_with_interleaved_globals() -> None:
+    argv = [
+        "lookup",
+        "--oid",
+        "trial-oid",
+        "set",
+        "--output=json",
+        "--key",
+        "target",
+        "--input-file",
+        "record.yaml",
+    ]
+    validated = CommandPolicy(allowed_oids=("trial-oid",)).validate(argv, "/work")
+    assert validated.argv == tuple(argv)
+    assert validated.file_arguments == ((8, PurePosixPath("/work/record.yaml")),)
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
         ["auth", "get-token"],
         ["api", "--input-file", "/proc/self/environ"],
         ["--debug-curl", "lookup", "list"],
         ["--debug-full", "lookup", "list"],
         ["--profile", "personal", "lookup", "list"],
         ["--env", "production", "lookup", "list"],
+        ["lookup", "--debug-curl", "list"],
+        ["lookup", "list", "--profile=personal"],
         ["lookup", "delete", "--key", "target", "--confirm"],
         ["hive", "get", "--hive-name", "secret", "--key", "credential"],
         ["search", "run", "--checkpoint", "/tmp/worker-file"],

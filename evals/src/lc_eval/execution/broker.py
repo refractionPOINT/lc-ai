@@ -43,6 +43,9 @@ class ValidatedCommand:
 _GLOBAL_VALUE_OPTIONS = frozenset({"--oid", "--output", "--filter", "--fields", "--sort-by"})
 _GLOBAL_FLAG_OPTIONS = frozenset({"--quiet", "-q", "--wide", "-W", "--no-warnings", "--reverse"})
 _GLOBAL_FIXED_VALUES = {"--output": frozenset({"json", "yaml", "toon", "csv", "table", "jsonl"})}
+_UNSAFE_GLOBAL_VALUE_OPTIONS = frozenset({"--profile", "--env"})
+_UNSAFE_GLOBAL_FLAG_OPTIONS = frozenset({"--debug", "--debug-full", "--debug-curl"})
+_HELP_OPTIONS = frozenset({"--help", "-h", "--ai-help"})
 
 CONTROLLED_CLI_V1_NOTICE = """\
 The controlled CLI transport supports only these LimaCharlie operations:
@@ -54,7 +57,9 @@ list/get. Use stdin or an --input-file below /work for command input. The
 transport snapshots input files without following symlinks. Search checkpoint,
 resume, delete, import/export, generic api/auth, debug, credential-profile, and
 environment-selection commands are unavailable. Use shell redirection in the
-candidate container for files such as /work/export.jsonl.
+candidate container for files such as /work/export.jsonl. Safe global options
+may appear anywhere in a command, and --ai-help is available at the root,
+permitted group, and permitted leaf-command levels.
 """
 
 _STAGE_SCRIPT = """\
@@ -170,6 +175,7 @@ _DIAGNOSTIC_OPTIONS = frozenset(
     }
     | set(_GLOBAL_VALUE_OPTIONS)
     | set(_GLOBAL_FLAG_OPTIONS)
+    | set(_HELP_OPTIONS)
     | {option for spec in _COMMANDS.values() for option in spec.value_options | spec.flag_options}
 )
 
@@ -191,91 +197,99 @@ class CommandPolicy:
             raise PolicyError("argv contains an invalid value")
         if not isinstance(cwd, str) or cwd != "/work":
             raise PolicyError("controlled-cli-v1 requires cwd /work")
-        if argv in (["--help"], ["-h"], ["--version"]):
+        remaining = self._partition_global_options(argv)
+        if len(remaining) == 1 and remaining[0][1] in _HELP_OPTIONS | {"--version"}:
             return ValidatedCommand(tuple(argv), (), ("meta", "help"))
-
-        index = 0
-        while index < len(argv) and argv[index].startswith("-"):
-            index = self._consume_global_option(argv, index)
-        if index >= len(argv):
+        if not remaining:
             raise PolicyError("a permitted CLI command is required")
 
-        group = argv[index]
-        index += 1
-        if index < len(argv) and argv[index] in {"--help", "-h"} and index == len(argv) - 1:
+        cursor = 0
+        _, group = remaining[cursor]
+        cursor += 1
+        if cursor == len(remaining) - 1 and remaining[cursor][1] in _HELP_OPTIONS:
             if any(command[0] == group for command in _COMMANDS):
                 return ValidatedCommand(tuple(argv), (), (group, "help"))
-        if index >= len(argv) or argv[index].startswith("-"):
+        if cursor >= len(remaining) or remaining[cursor][1].startswith("-"):
             raise PolicyError("a permitted CLI subcommand is required")
-        subcommand = argv[index]
-        index += 1
+        _, subcommand = remaining[cursor]
+        cursor += 1
         spec = _COMMANDS.get((group, subcommand))
         if spec is None:
             raise PolicyError("command is outside controlled-cli-v1")
 
         file_arguments: list[tuple[int, PurePosixPath]] = []
-        while index < len(argv):
-            if argv[index] in {"--help", "-h"} and index == len(argv) - 1:
-                index += 1
+        while cursor < len(remaining):
+            argument_index, argument = remaining[cursor]
+            if argument in _HELP_OPTIONS and cursor == len(remaining) - 1:
+                cursor += 1
                 continue
-            option, inline_value = _split_option(argv[index])
+            option, inline_value = _split_option(argument)
             if option in spec.flag_options:
                 if inline_value is not None:
                     raise PolicyError(f"flag {option} does not take a value")
-                index += 1
+                cursor += 1
                 continue
             if option not in spec.value_options:
                 raise PolicyError("option is not permitted for this command")
             if inline_value is None:
-                if index + 1 >= len(argv):
+                if cursor + 1 >= len(remaining):
                     raise PolicyError(f"option {option} requires a value")
-                value_index = index + 1
-                value = argv[value_index]
+                value_index, value = remaining[cursor + 1]
                 if value.startswith("--"):
                     raise PolicyError(f"option {option} requires a value")
-                index += 2
+                cursor += 2
             else:
-                value_index = index
+                value_index = argument_index
                 value = inline_value
-                index += 1
+                cursor += 1
             fixed = spec.allowed_values(option)
             if fixed is not None and value not in fixed:
                 raise PolicyError(f"value for {option} is outside controlled-cli-v1")
             if option in spec.path_options:
                 file_arguments.append((value_index, _workspace_path(value)))
 
-        self._validate_global_values(argv)
         return ValidatedCommand(tuple(argv), tuple(file_arguments), (group, subcommand))
 
-    @staticmethod
-    def _consume_global_option(argv: list[str], index: int) -> int:
-        option, inline_value = _split_option(argv[index])
-        if option in _GLOBAL_FLAG_OPTIONS:
-            if inline_value is not None:
-                raise PolicyError(f"flag {option} does not take a value")
-            return index + 1
-        if option not in _GLOBAL_VALUE_OPTIONS:
-            raise PolicyError("global option is not permitted")
-        if inline_value is None:
-            if index + 1 >= len(argv) or argv[index + 1].startswith("--"):
-                raise PolicyError(f"option {option} requires a value")
-            return index + 2
-        return index + 1
-
-    def _validate_global_values(self, argv: list[str]) -> None:
+    def _partition_global_options(self, argv: list[str]) -> list[tuple[int, str]]:
+        """Mirror LazyGroup's global-option hoisting while retaining indexes."""
+        remaining: list[tuple[int, str]] = []
         index = 0
-        while index < len(argv) and argv[index].startswith("-"):
-            option, inline = _split_option(argv[index])
-            if option in _GLOBAL_FLAG_OPTIONS:
+        while index < len(argv):
+            argument = argv[index]
+            if argument == "--":
+                remaining.extend(enumerate(argv[index:], start=index))
+                break
+            if not argument.startswith("-"):
+                remaining.append((index, argument))
                 index += 1
                 continue
-            value = inline if inline is not None else argv[index + 1]
+            option, inline = _split_option(argv[index])
+            if option in _UNSAFE_GLOBAL_FLAG_OPTIONS | _UNSAFE_GLOBAL_VALUE_OPTIONS:
+                raise PolicyError(f"global option {option} is not permitted")
+            if option in _GLOBAL_FLAG_OPTIONS:
+                if inline is not None:
+                    raise PolicyError(f"flag {option} does not take a value")
+                index += 1
+                continue
+            if option not in _GLOBAL_VALUE_OPTIONS:
+                remaining.append((index, argument))
+                index += 1
+                continue
+            if inline is None:
+                if index + 1 >= len(argv):
+                    raise PolicyError(f"option {option} requires a value")
+                value = argv[index + 1]
+                index += 2
+            else:
+                value = inline
+                index += 1
             if option == "--oid" and self.allowed_oids and value not in self.allowed_oids:
                 raise PolicyError("organization ID is not assigned to this trial")
             fixed = _GLOBAL_FIXED_VALUES.get(option)
-            if fixed is not None and value not in fixed:
+            comparable = value.lower() if option == "--output" else value
+            if fixed is not None and comparable not in fixed:
                 raise PolicyError(f"value for {option} is outside controlled-cli-v1")
-            index += 1 if inline is not None else 2
+        return remaining
 
 
 class StreamingRedactor:

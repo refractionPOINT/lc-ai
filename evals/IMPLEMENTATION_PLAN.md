@@ -325,7 +325,7 @@ Gate: synthetic A/A and known differing result fixtures produce correct aggregat
 
 ### M7 — Initial live acceptance campaign
 
-Implementation status: In progress. Real harness smoke, all reference calibration and crash recovery passed. The eight genuine AI trials are running; final acceptance remains pending.
+Implementation status: In progress. Real harness smoke, all reference calibration and crash recovery passed. Two Hive AI runs passed but exposed evaluator transport rejections of native global-option positions and AI help. They are retained as invalid for comparison. After corrected live parity, restart all eight scored trials as `initial-proof-v2`; final acceptance remains pending.
 
 1. Run offline checks, live doctor and reference/bad-reference suites.
 2. Run each scenario once with each selected real harness, in fresh fixtures (six trials total for two harnesses). Alternate harness order to limit systematic timing effects. No hints, manual interventions or task repairs mid-trial.

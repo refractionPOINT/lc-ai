@@ -209,6 +209,44 @@ def test_calibration_and_fault_drills_do_not_dilute_model_success_rate():
     assert len(report["trials"]) == 3
 
 
+def test_invalid_attempt_is_retained_but_excluded_from_scored_summary():
+    report = build_report([_trial("valid"), _trial("invalid", invalid=True)])
+    assert report["summary"]["trials"] == 1
+    assert report["summary"]["recorded_trials"] == 2
+    assert report["summary"]["invalid_trials"] == 1
+    assert report["summary"]["non_scored_trials"] == 1
+    assert report["summary"]["successes"] == 1
+    assert [trial["trial_id"] for trial in report["trials"]] == ["valid", "invalid"]
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"execution_status": "failed"},
+        {"evidence_complete": False},
+        {"cleanup_status": "failed"},
+        {"invalid": True},
+    ],
+)
+def test_report_success_requires_complete_clean_valid_evidence(changes):
+    report = build_report([_trial("attempt", **changes)])
+    assert report["summary"]["successes"] == 0
+
+
+def test_invalid_terminal_attempt_does_not_satisfy_harness_matrix():
+    invalid = _trial(
+        "invalid",
+        invalid=True,
+        adapter="codex",
+        scenario_id="hive-preserve-update",
+        execution_status="completed",
+    )
+    result = acceptance_summary([invalid])
+    assert result["criteria"]["harness_matrix_terminal"]["status"] == "unknown"
+    assert "hive-preserve-update:codex" in result["criteria"]["harness_matrix_terminal"]["observed"]
+    assert result["criteria"]["scenario_ai_success"]["status"] == "unknown"
+
+
 def test_smoke_does_not_turn_missing_scored_ai_evidence_into_failure():
     result = acceptance_summary([_trial("smoke", scenario_id="harness-smoke")])
     assert result["criteria"]["scenario_ai_success"]["status"] == "unknown"
