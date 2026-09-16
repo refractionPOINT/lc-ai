@@ -11,6 +11,7 @@ from lc_eval.fixtures.local_cli import ControlError
 from lc_eval.fixtures.scenario_runtime import (
     _prepare_export_dataset,
     installation_key,
+    provision,
     reference,
     wait_for_webhook_search_ready,
 )
@@ -281,14 +282,23 @@ class _AdaptiveSearch:
 def _small_adaptive_fixture(monkeypatch) -> None:
     monkeypatch.setattr(
         "lc_eval.fixtures.scenario_runtime.generate_search_dataset",
-        lambda trial: generate_search_dataset(
-            trial, matching_count=2, nonmatching_count=1
+        lambda trial, **bounds: generate_search_dataset(
+            trial, matching_count=2, nonmatching_count=1, **bounds
         ),
     )
     monkeypatch.setattr(
         "lc_eval.fixtures.scenario_runtime.DEFAULT_GROWTH_EVENTS", 2
     )
-    monkeypatch.setattr("lc_eval.fixtures.scenario_runtime.MAX_FIXTURE_EVENTS", 7)
+
+
+def _adaptive_config(*, max_events=7, max_fixture_bytes=100_000_000):
+    return SimpleNamespace(
+        limits=SimpleNamespace(
+            verification_seconds=1,
+            max_events=max_events,
+            max_fixture_bytes=max_fixture_bytes,
+        )
+    )
 
 
 def test_adaptive_export_grows_only_after_complete_single_page(tmp_path, monkeypatch) -> None:
@@ -296,7 +306,7 @@ def test_adaptive_export_grows_only_after_complete_single_page(tmp_path, monkeyp
         _small_adaptive_fixture(monkeypatch)
         hook = _AdaptiveHook()
         search = _AdaptiveSearch(hook, paginate_at=5)
-        config = SimpleNamespace(limits=SimpleNamespace(verification_seconds=1))
+        config = _adaptive_config(max_fixture_bytes=123_456)
 
         dataset, ready, _end = await _prepare_export_dataset(
             config,
@@ -318,15 +328,21 @@ def test_adaptive_export_grows_only_after_complete_single_page(tmp_path, monkeyp
         ledger = json.loads((tmp_path / "injected-events.json").read_text())
         assert ledger["events"] == list(dataset.events)
         assert ledger["event_count"] == 5
+        assert ledger["fixture_event_ceiling"] == 7
+        assert ledger["fixture_byte_ceiling"] == 123_456
         progress = json.loads((tmp_path / "injection-progress.json").read_text())
         assert progress["target_events"] == 5
         assert progress["accepted_events"] == 5
+        assert progress["fixture_event_ceiling"] == 7
+        assert progress["fixture_byte_ceiling"] == 123_456
         receipts = json.loads((tmp_path / "injection-receipts.json").read_text())
         assert [row["batch_number"] for row in receipts] == [1, 2]
         assert [row["growth_stage"] for row in receipts] == [1, 2]
         growth = json.loads((tmp_path / "fixture-growth.json").read_text())
         assert growth["state"] == "ready"
         assert growth["final_event_count"] == 5
+        assert growth["fixture_event_ceiling"] == 7
+        assert growth["fixture_byte_ceiling"] == 123_456
         assert [stage["state"] for stage in growth["stages"]] == [
             "complete_single_page",
             "ready",
@@ -342,7 +358,7 @@ def test_adaptive_export_reports_unsupported_at_event_ceiling(
         _small_adaptive_fixture(monkeypatch)
         hook = _AdaptiveHook()
         search = _AdaptiveSearch(hook, paginate_at=None)
-        config = SimpleNamespace(limits=SimpleNamespace(verification_seconds=1))
+        config = _adaptive_config()
 
         with pytest.raises(PaginationFixtureUnsupportedError) as raised:
             await _prepare_export_dataset(
@@ -364,5 +380,114 @@ def test_adaptive_export_reports_unsupported_at_event_ceiling(
             stage["state"] == "complete_single_page"
             for stage in growth["stages"]
         )
+
+    asyncio.run(exercise())
+
+
+def test_adaptive_export_reports_unsupported_when_byte_ceiling_blocks_growth(
+    tmp_path, monkeypatch
+) -> None:
+    async def exercise() -> None:
+        initial = generate_search_dataset(
+            "trial", matching_count=2, nonmatching_count=1
+        )
+        byte_ceiling = initial.total_json_bytes + 1
+
+        def fixed_dataset(trial, **bounds):
+            assert trial == "trial"
+            assert bounds == {"max_events": 7, "max_bytes": byte_ceiling}
+            return initial
+
+        monkeypatch.setattr(
+            "lc_eval.fixtures.scenario_runtime.generate_search_dataset",
+            fixed_dataset,
+        )
+        monkeypatch.setattr(
+            "lc_eval.fixtures.scenario_runtime.DEFAULT_GROWTH_EVENTS", 2
+        )
+        hook = _AdaptiveHook()
+        search = _AdaptiveSearch(hook, paginate_at=None)
+
+        with pytest.raises(PaginationFixtureUnsupportedError) as raised:
+            await _prepare_export_dataset(
+                _adaptive_config(max_fixture_bytes=byte_ceiling),
+                hook,
+                search,
+                "trial",
+                tmp_path,
+                start_time=100,
+            )
+
+        assert raised.value.fixture_event_count == 3
+        assert raised.value.limiting_ceiling == "bytes"
+        assert [len(stage) for stage in hook.sends] == [3]
+        growth = json.loads((tmp_path / "fixture-growth.json").read_text())
+        assert growth["state"] == "unsupported"
+        assert growth["limiting_ceiling"] == "bytes"
+        assert growth["fixture_byte_ceiling"] == byte_ceiling
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize(
+    ("max_events", "max_fixture_bytes", "error"),
+    [
+        (2, 100_000_000, "event counts"),
+        (7, 1, "byte ceiling"),
+    ],
+)
+def test_adaptive_export_rejects_initial_dataset_over_configured_ceiling_before_send(
+    tmp_path,
+    monkeypatch,
+    max_events,
+    max_fixture_bytes,
+    error,
+) -> None:
+    async def exercise() -> None:
+        _small_adaptive_fixture(monkeypatch)
+        hook = _AdaptiveHook()
+        search = _AdaptiveSearch(hook, paginate_at=None)
+
+        with pytest.raises(ValueError, match=error):
+            await _prepare_export_dataset(
+                _adaptive_config(
+                    max_events=max_events,
+                    max_fixture_bytes=max_fixture_bytes,
+                ),
+                hook,
+                search,
+                "trial",
+                tmp_path,
+                start_time=100,
+            )
+
+        assert hook.sends == []
+        assert not (tmp_path / "injected-events.json").exists()
+
+    asyncio.run(exercise())
+
+
+def test_export_provision_checks_initial_ceilings_before_remote_setup(
+    tmp_path, monkeypatch
+) -> None:
+    async def exercise() -> None:
+        _small_adaptive_fixture(monkeypatch)
+
+        class NoRemoteCalls:
+            def __getattr__(self, name):
+                raise AssertionError(f"unexpected remote access through {name}")
+
+        with pytest.raises(ValueError, match="event counts"):
+            await provision(
+                _adaptive_config(max_events=2),
+                NoRemoteCalls(),
+                "oid",
+                "trial",
+                "search-complete-export",
+                1,
+                tmp_path,
+            )
+
+        assert list(tmp_path.iterdir()) == []
 
     asyncio.run(exercise())

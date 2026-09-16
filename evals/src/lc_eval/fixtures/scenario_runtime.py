@@ -16,7 +16,6 @@ from .hive import snapshot
 from .webhook import WebhookSpec, HostedWebhookFixture
 from .search_dataset import (
     DEFAULT_GROWTH_EVENTS,
-    MAX_FIXTURE_EVENTS,
     PaginationFixtureUnsupportedError,
     PaginationNotObservedError,
     RegionalSearchClient,
@@ -170,12 +169,25 @@ async def _prepare_export_dataset(
     root,
     *,
     start_time: int,
+    initial_dataset=None,
 ):
     """Ingest and grow an export fixture until nonempty pagination is proven."""
-    dataset = generate_search_dataset(trial)
+    event_ceiling = config.limits.max_events
+    byte_ceiling = config.limits.max_fixture_bytes
+    dataset = initial_dataset
+    if dataset is None:
+        dataset = generate_search_dataset(
+            trial,
+            max_events=event_ceiling,
+            max_bytes=byte_ceiling,
+        )
+    if len(dataset.events) > event_ceiling:
+        raise ValueError("dataset event counts are outside fixture bounds")
+    if dataset.total_json_bytes > byte_ceiling:
+        raise ValueError("dataset exceeds the fixture byte ceiling")
     targets = adaptive_event_targets(
         len(dataset.events),
-        ceiling=MAX_FIXTURE_EVENTS,
+        ceiling=event_ceiling,
         growth_events=DEFAULT_GROWTH_EVENTS,
     )
     pending_events = dataset.events
@@ -187,7 +199,7 @@ async def _prepare_export_dataset(
 
     for stage_number, target_event_count in enumerate(targets, start=1):
         if len(dataset.events) != target_event_count:
-            dataset, pending_events = grow_search_dataset(dataset, target_event_count)
+            raise AssertionError("adaptive fixture growth did not reach its target")
 
         # The complete expected ledger is durable before any event in this stage
         # can be accepted by the remote hook.
@@ -199,7 +211,8 @@ async def _prepare_export_dataset(
                 "production_count": len(dataset.production),
                 "nonproduction_count": len(dataset.nonproduction),
                 "total_json_bytes": dataset.total_json_bytes,
-                "fixture_event_ceiling": MAX_FIXTURE_EVENTS,
+                "fixture_event_ceiling": event_ceiling,
+                "fixture_byte_ceiling": byte_ceiling,
             },
         )
 
@@ -213,7 +226,8 @@ async def _prepare_export_dataset(
                 {
                     "growth_stage": stage_number,
                     "target_events": len(dataset.events),
-                    "fixture_event_ceiling": MAX_FIXTURE_EVENTS,
+                    "fixture_event_ceiling": event_ceiling,
+                    "fixture_byte_ceiling": byte_ceiling,
                     "accepted_batches": prior_batches + value["accepted_batches"],
                     "accepted_events": prior_events + value["accepted_events"],
                     "uncompressed_bytes": (
@@ -257,7 +271,8 @@ async def _prepare_export_dataset(
                         **value,
                         "growth_stage": stage_number,
                         "target_events": len(dataset.events),
-                        "fixture_event_ceiling": MAX_FIXTURE_EVENTS,
+                        "fixture_event_ceiling": event_ceiling,
+                        "fixture_byte_ceiling": byte_ceiling,
                     },
                 ),
             )
@@ -265,20 +280,59 @@ async def _prepare_export_dataset(
             stage["state"] = "complete_single_page"
             stage["readiness"] = _search_result_summary(error.result)
             growth_stages.append(stage)
-            at_ceiling = len(dataset.events) == MAX_FIXTURE_EVENTS
+            at_event_ceiling = len(dataset.events) == event_ceiling
+            if at_event_ceiling:
+                atomic_json(
+                    root / "fixture-growth.json",
+                    {
+                        "state": "unsupported",
+                        "limiting_ceiling": "events",
+                        "final_event_count": len(dataset.events),
+                        "final_json_bytes": dataset.total_json_bytes,
+                        "fixture_event_ceiling": event_ceiling,
+                        "fixture_byte_ceiling": byte_ceiling,
+                        "stages": growth_stages,
+                    },
+                )
+                raise PaginationFixtureUnsupportedError(
+                    len(dataset.events), error.result, limiting_ceiling="events"
+                ) from error
+
+            next_target = targets[stage_number]
+            try:
+                dataset, pending_events = grow_search_dataset(
+                    dataset,
+                    next_target,
+                    max_events=event_ceiling,
+                    max_bytes=byte_ceiling,
+                )
+            except ValueError as growth_error:
+                atomic_json(
+                    root / "fixture-growth.json",
+                    {
+                        "state": "unsupported",
+                        "limiting_ceiling": "bytes",
+                        "final_event_count": len(dataset.events),
+                        "final_json_bytes": dataset.total_json_bytes,
+                        "fixture_event_ceiling": event_ceiling,
+                        "fixture_byte_ceiling": byte_ceiling,
+                        "stages": growth_stages,
+                    },
+                )
+                raise PaginationFixtureUnsupportedError(
+                    len(dataset.events), error.result, limiting_ceiling="bytes"
+                ) from growth_error
             atomic_json(
                 root / "fixture-growth.json",
                 {
-                    "state": "unsupported" if at_ceiling else "growing",
+                    "state": "growing",
                     "final_event_count": len(dataset.events),
-                    "fixture_event_ceiling": MAX_FIXTURE_EVENTS,
+                    "final_json_bytes": dataset.total_json_bytes,
+                    "fixture_event_ceiling": event_ceiling,
+                    "fixture_byte_ceiling": byte_ceiling,
                     "stages": growth_stages,
                 },
             )
-            if at_ceiling:
-                raise PaginationFixtureUnsupportedError(
-                    len(dataset.events), error.result
-                ) from error
             continue
 
         stage["state"] = "ready"
@@ -289,7 +343,9 @@ async def _prepare_export_dataset(
             {
                 "state": "ready",
                 "final_event_count": len(dataset.events),
-                "fixture_event_ceiling": MAX_FIXTURE_EVENTS,
+                "final_json_bytes": dataset.total_json_bytes,
+                "fixture_event_ceiling": event_ceiling,
+                "fixture_byte_ceiling": byte_ceiling,
                 "stages": growth_stages,
             },
         )
@@ -303,6 +359,11 @@ async def provision(config, cli, oid, trial, name, seed, root):
         from .routing import provision as routing_provision
 
         return await routing_provision(config, cli, oid, trial, seed, root)
+    initial_dataset = generate_search_dataset(
+        trial,
+        max_events=config.limits.max_events,
+        max_bytes=config.limits.max_fixture_bytes,
+    )
     key = installation_key(cli, oid, trial)
     hook = HostedWebhookFixture(
         cli,
@@ -333,6 +394,7 @@ async def provision(config, cli, oid, trial, name, seed, root):
         trial,
         root,
         start_time=start,
+        initial_dataset=initial_dataset,
     )
     expected = {
         event_id: {k: row[k] for k in ("eval_event_id", "environment", "message")}
@@ -352,6 +414,8 @@ async def provision(config, cli, oid, trial, name, seed, root):
             "fixture_event_count": len(dataset.events),
             "production_count": len(dataset.production),
             "nonproduction_count": len(dataset.nonproduction),
+            "fixture_event_ceiling": config.limits.max_events,
+            "fixture_byte_ceiling": config.limits.max_fixture_bytes,
             "paginated": ready.traversed_continuation,
             "transient_failures": list(ready.transient_failures),
         },

@@ -85,6 +85,7 @@ async def test_provision_exception_is_persisted_inconclusive_and_reconciled(tmp_
 
     assert result["grade"] == "inconclusive"
     assert result["agent_attempted"] is False
+    assert result["manifest"]["lc_location"] == "auto"
     assert result["evidence_complete"] is False
     assert result["cleanup_status"] == "clean"
     assert "fixture exploded" in result["error"]

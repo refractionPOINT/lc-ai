@@ -53,12 +53,20 @@ class PaginationNotObservedError(DatasetReadinessError):
 class PaginationFixtureUnsupportedError(DatasetReadinessError):
     """The bounded fixture ceiling was reached without proving pagination."""
 
-    def __init__(self, fixture_event_count: int, result: SearchResult):
+    def __init__(
+        self,
+        fixture_event_count: int,
+        result: SearchResult,
+        *,
+        limiting_ceiling: str = "events",
+    ):
         super().__init__(
-            f"pagination was not observed at the {fixture_event_count}-event fixture ceiling"
+            "pagination was not observed before the configured "
+            f"{limiting_ceiling} ceiling ({fixture_event_count} events searchable)"
         )
         self.fixture_event_count = fixture_event_count
         self.result = result
+        self.limiting_ceiling = limiting_ceiling
 
 
 def _service_root(value: str, *, suffix: str = "/v1") -> str:
@@ -422,9 +430,15 @@ def generate_search_dataset(
     *,
     matching_count: int = DEFAULT_MATCHING_EVENTS,
     nonmatching_count: int = DEFAULT_NONMATCHING_EVENTS,
+    max_events: int = MAX_FIXTURE_EVENTS,
+    max_bytes: int = MAX_FIXTURE_BYTES,
 ) -> SearchDataset:
     total = matching_count + nonmatching_count
-    if matching_count <= 0 or nonmatching_count < 0 or total > MAX_FIXTURE_EVENTS:
+    if not 1 <= max_events <= MAX_FIXTURE_EVENTS:
+        raise ValueError("max_events is outside fixture bounds")
+    if not 1 <= max_bytes <= MAX_FIXTURE_BYTES:
+        raise ValueError("max_bytes is outside fixture bounds")
+    if matching_count <= 0 or nonmatching_count < 0 or total > max_events:
         raise ValueError("dataset event counts are outside fixture bounds")
     if not trial_id or len(trial_id) > 128 or "'" in trial_id:
         raise ValueError("trial_id is invalid for the readiness query")
@@ -448,7 +462,7 @@ def generate_search_dataset(
     import json
 
     total_json_bytes = sum(len(json.dumps(event, separators=(",", ":")).encode("utf-8")) for event in events)
-    if total_json_bytes > MAX_FIXTURE_BYTES:
+    if total_json_bytes > max_bytes:
         raise ValueError("dataset exceeds the fixture byte ceiling")
     return SearchDataset(
         trial_id=trial_id,
@@ -482,10 +496,17 @@ def adaptive_event_targets(
 def grow_search_dataset(
     dataset: SearchDataset,
     target_event_count: int,
+    *,
+    max_events: int = MAX_FIXTURE_EVENTS,
+    max_bytes: int = MAX_FIXTURE_BYTES,
 ) -> tuple[SearchDataset, tuple[dict[str, str], ...]]:
     """Append random production events while preserving the existing exact prefix."""
     current_count = len(dataset.events)
-    if target_event_count <= current_count or target_event_count > MAX_FIXTURE_EVENTS:
+    if not 1 <= max_events <= MAX_FIXTURE_EVENTS:
+        raise ValueError("max_events is outside fixture bounds")
+    if not 1 <= max_bytes <= MAX_FIXTURE_BYTES:
+        raise ValueError("max_bytes is outside fixture bounds")
+    if target_event_count <= current_count or target_event_count > max_events:
         raise ValueError("target event count is outside adaptive fixture bounds")
 
     existing_ids = set(dataset.all_ids)
@@ -517,7 +538,7 @@ def grow_search_dataset(
         for event in added
     )
     total_json_bytes = dataset.total_json_bytes + added_bytes
-    if total_json_bytes > MAX_FIXTURE_BYTES:
+    if total_json_bytes > max_bytes:
         raise ValueError("dataset exceeds the fixture byte ceiling")
     production = dict(dataset.production)
     production.update({event["eval_event_id"]: event for event in added})
