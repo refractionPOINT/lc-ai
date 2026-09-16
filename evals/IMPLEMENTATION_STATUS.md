@@ -67,3 +67,6 @@ A later independent owner-inventory audit found four exact journal-owned test or
 - Efficiency reports now aggregate CLI output bytes, execution seconds, failed commands and rejected requests from broker evidence. Incomplete command evidence yields unknown totals. Current review checkpoint: 150 offline tests passed.
 
 - `fault-05046ba64cc944b3` (**initial-proof campaign**): live interruption recovery passed after acquiring an organization, candidate API key, isolated networks and all runtime containers; recovery removed every owned resource and confirmed sustained organization absence. This is recovery evidence, not an AI trial.
+
+- `calibration-5043d08d42`: routing reference passed all six independent assertions: ingestion, receiver health, full negative window, signed matching delivery, exclusion of negative probes, and preservation of the baseline output. Cleanup is in progress.
+- Current offline checkpoint after warmup, probe retries, command metrics and nonempty-continuation proof: **154 tests passed; Ruff clean**.

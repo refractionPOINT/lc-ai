@@ -301,7 +301,9 @@ class Controller:
             "limits": {
                 **self.config.limits.model_dump(),
                 "timeout_seconds": agent.timeout_seconds,
-                "max_turns": agent.max_turns,
+                "max_turns": agent.max_turns if agent.adapter == "claude_code" else None,
+                "max_tool_calls": 80 if agent.adapter == "codex" else None,
+                "max_cli_invocations": 80,
             },
             "repetition": repetition,
             "billing_mode": "subscription_limits",

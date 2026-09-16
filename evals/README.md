@@ -23,24 +23,23 @@ The initial authorized billing mode is **subscription_limits**: one trial at a t
 ## Run and inspect
 
 ```sh
-# First calibrate the complete execution path with a deterministic reference.
-./evals/.venv/bin/lc-eval run --campaign hive-reference --scenario hive-preserve-update --reference
-
-# A single real-agent trial.
-./evals/.venv/bin/lc-eval run --campaign hive-claude --scenario hive-preserve-update --adapter claude_code
-
-# All eight initial suite trials, sequentially.
-./evals/.venv/bin/lc-eval run --campaign initial-proof
-
-# Calibrate all three scenarios with good and deliberately bad references
-# before claiming acceptance; retain every failed attempt.
+# Calibrate each scenario; bad-reference runs must exit 1 with their named failure.
+./evals/.venv/bin/lc-eval run --campaign calibration --scenario hive-preserve-update --seed 41001 --reference
+./evals/.venv/bin/lc-eval run --campaign calibration --scenario hive-preserve-update --seed 41001 --bad-reference
+./evals/.venv/bin/lc-eval run --campaign calibration --scenario search-complete-export --seed 42001 --reference
+./evals/.venv/bin/lc-eval run --campaign calibration --scenario search-complete-export --seed 42001 --bad-reference
+./evals/.venv/bin/lc-eval run --campaign calibration --scenario webhook-production-routing --seed 43001 --reference
+./evals/.venv/bin/lc-eval run --campaign calibration --scenario webhook-production-routing --seed 43001 --bad-reference
 ./evals/.venv/bin/lc-eval validate-suite --campaign calibration
-./evals/.venv/bin/lc-eval fault-drill --campaign initial-proof
-./evals/.venv/bin/lc-eval acceptance --campaign initial-proof
 
-./evals/.venv/bin/lc-eval status
-./evals/.venv/bin/lc-eval report --campaign initial-proof
+# Real harness smoke, eight scored trials, recovery and final evidence.
+./evals/.venv/bin/lc-eval smoke --campaign harness-smoke
+./evals/.venv/bin/lc-eval run --campaign initial-proof
+./evals/.venv/bin/lc-eval fault-drill --campaign initial-proof
 ./evals/.venv/bin/lc-eval cleanup
+./evals/.venv/bin/lc-eval report --campaign initial-proof
+./evals/.venv/bin/lc-eval acceptance --campaign initial-proof
+./evals/.venv/bin/lc-eval status
 ```
 
 Every trial gets a disposable organization in the configured location (`usa` by default for the initial Search proof). Fresh Insight datasets can take time to initialize; readiness retries fresh bounded queries rather than repeatedly polling a failed query ID. The controller journals creation intent before creating resources, uses a separate scoped CLI worker, freezes artifacts after stopping execution, reads platform state with independent HTTP verification, and attempts cleanup in a `finally` path. `cleanup` reconciles exact owned resources after interruption; never run a broad organization deletion command. An unresolved cleanup stops the campaign.
