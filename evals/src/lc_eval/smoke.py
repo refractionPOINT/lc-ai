@@ -71,7 +71,9 @@ async def smoke(config, campaign):
                     env.socket_dir,
                     root / "commands.jsonl",
                     workspace=env.work,
-                    max_invocations=4,
+                    # Native startup performs root-help/version discovery before
+                    # the candidate's explicit version and leaf-help probes.
+                    max_invocations=8 if agent.adapter == "ai_sessions" else 4,
                     max_seconds=30,
                 )
                 await broker.start()
