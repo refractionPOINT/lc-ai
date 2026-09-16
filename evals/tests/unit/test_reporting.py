@@ -33,6 +33,7 @@ def _trial(trial_id, grade="pass", **changes):
         "execution_status": "completed",
         "evidence_complete": True,
         "cleanup_status": "clean",
+        "agent_attempted": True,
         "usage": {"cost_usd": 1.0, "input_tokens": 10},
     }
     value.update(changes)
@@ -217,6 +218,85 @@ def test_invalid_attempt_is_retained_but_excluded_from_scored_summary():
     assert report["summary"]["non_scored_trials"] == 1
     assert report["summary"]["successes"] == 1
     assert [trial["trial_id"] for trial in report["trials"]] == ["valid", "invalid"]
+
+
+def test_pre_agent_infrastructure_is_retained_but_excluded_from_model_rates():
+    setup_failure = _trial(
+        "setup-failure",
+        agent_attempted=False,
+        execution_status="failed",
+        evidence_complete=False,
+        grade="inconclusive",
+    )
+    report = build_report([_trial("attempted"), setup_failure])
+
+    assert report["summary"]["trials"] == 1
+    assert report["summary"]["recorded_trials"] == 2
+    assert report["summary"]["pre_agent_infrastructure_trials"] == 1
+    assert report["summary"]["non_scored_trials"] == 1
+    assert report["summary"]["success_rate"] == 1
+    assert [trial["trial_id"] for trial in report["trials"]] == [
+        "attempted",
+        "setup-failure",
+    ]
+
+
+@pytest.mark.parametrize(
+    ("changes", "expected"),
+    [
+        ({"agent_exit_code": 7}, "pass"),
+        (
+            {
+                "agent_exit_code": None,
+                "timeout_phase": "execution",
+                "execution_status": "timed_out",
+            },
+            "pass",
+        ),
+        (
+            {
+                "agent_exit_code": None,
+                "timeout_phase": "startup",
+                "execution_status": "timed_out",
+            },
+            "unknown",
+        ),
+        ({"agent_exit_code": 7, "agent_attempted": False}, "unknown"),
+    ],
+)
+def test_terminal_matrix_requires_actual_agent_attempt_legacy_evidence(changes, expected):
+    trial = _trial("legacy", execution_status="failed")
+    trial.pop("agent_attempted")
+    trial.update(changes)
+
+    result = acceptance_summary(
+        [trial],
+        expected_scenarios=("hive-preserve-update",),
+        expected_harnesses=("codex",),
+    )
+
+    assert result["criteria"]["harness_matrix_terminal"]["status"] == expected
+
+
+def test_pre_agent_failure_does_not_satisfy_terminal_matrix():
+    setup_failure = _trial(
+        "setup-failure",
+        agent_attempted=False,
+        execution_status="failed",
+        evidence_complete=False,
+        grade="inconclusive",
+    )
+    result = acceptance_summary(
+        [setup_failure],
+        expected_scenarios=("hive-preserve-update",),
+        expected_harnesses=("codex",),
+    )
+
+    assert result["criteria"]["harness_matrix_terminal"]["status"] == "unknown"
+    assert result["criteria"]["harness_matrix_terminal"]["observed"] == [
+        "hive-preserve-update:codex"
+    ]
+    assert result["criteria"]["scenario_ai_success"]["status"] == "unknown"
 
 
 @pytest.mark.parametrize(

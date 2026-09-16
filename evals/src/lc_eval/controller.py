@@ -321,6 +321,7 @@ class Controller:
             "execution_status": "failed",
             "grade": "inconclusive",
             "cleanup_status": "pending",
+            "agent_attempted": False,
             "assertions": [],
             "usage": {},
             "timings": {},
@@ -479,6 +480,7 @@ class Controller:
         return result
 
     async def run_agent(self, agent, env, prompt, result, root):
+        result.setdefault("agent_attempted", False)
         common = dict(
             trial_id=env.trial_id,
             model=agent.model,
@@ -512,6 +514,7 @@ class Controller:
             nonlocal started
             await adapter.start()
             started = True
+            result["agent_attempted"] = True
             async for event in adapter.events():
                 if event.event_type == "limit_reached":
                     await adapter.stop(time.monotonic() + 10)

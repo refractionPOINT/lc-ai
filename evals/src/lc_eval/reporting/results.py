@@ -100,6 +100,22 @@ def _success(trial: Mapping[str, Any]) -> bool:
     )
 
 
+def _agent_attempted(trial: Mapping[str, Any]) -> bool:
+    """Return true only when evidence shows the real harness started.
+
+    New results carry an explicit marker. Older results are accepted only when
+    they recorded a concrete process exit or timed out after startup completed.
+    """
+
+    explicit = trial.get("agent_attempted")
+    if isinstance(explicit, bool):
+        return explicit
+    exit_code = trial.get("agent_exit_code")
+    if isinstance(exit_code, int) and not isinstance(exit_code, bool):
+        return True
+    return trial.get("timeout_phase") == "execution"
+
+
 def _finite_number(value: Any) -> float | int | None:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
@@ -157,12 +173,17 @@ def build_report(
     """Build a JSON-safe report without filling unknown measurements with zero."""
 
     copied = [dict(trial) for trial in trials]
-    scored = [
+    model_rows = [
         trial
         for trial in copied
         if trial.get("adapter") not in {"reference", "reference_bad", "scripted", "fault_injection"}
         and _scenario_id(trial) != "harness-smoke"
-        and trial.get("invalid") is not True
+    ]
+    scored = [
+        trial
+        for trial in model_rows
+        if trial.get("invalid") is not True
+        and _agent_attempted(trial)
     ]
     successes = sum(_success(trial) for trial in scored)
     by_scenario: dict[str, dict[str, Any]] = {}
@@ -205,6 +226,9 @@ def build_report(
             "trials": len(scored),
             "recorded_trials": len(copied),
             "invalid_trials": sum(trial.get("invalid") is True for trial in copied),
+            "pre_agent_infrastructure_trials": sum(
+                not _agent_attempted(trial) for trial in model_rows
+            ),
             "non_scored_trials": len(copied) - len(scored),
             "successes": successes,
             "success_rate": successes / len(scored) if scored else None,
@@ -243,6 +267,7 @@ def acceptance_summary(
         if trial.get("adapter", trial.get("harness"))
         not in {"scripted", "reference", "reference_bad", "fault_injection", None}
         and trial.get("invalid") is not True
+        and _agent_attempted(trial)
     ]
     successful_scenarios = {_scenario_id(trial) for trial in genuine if _success(trial)}
     missing_success = sorted(set(expected_scenarios) - successful_scenarios)

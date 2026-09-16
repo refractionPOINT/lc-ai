@@ -84,6 +84,7 @@ async def test_provision_exception_is_persisted_inconclusive_and_reconciled(tmp_
     result = await value.trial("campaign", "hive-preserve-update", "codex")
 
     assert result["grade"] == "inconclusive"
+    assert result["agent_attempted"] is False
     assert result["evidence_complete"] is False
     assert result["cleanup_status"] == "clean"
     assert "fixture exploded" in result["error"]
@@ -149,6 +150,7 @@ async def test_subscription_usage_never_promotes_provider_estimate_to_dollar_cos
 
     await value.run_agent(agent, env, "prompt", result, tmp_path)
 
+    assert result["agent_attempted"] is True
     assert result["usage"]["input_tokens"] == 10
     assert result["usage"]["billing_mode"] == "subscription_limits"
     assert result["usage"]["cost_usd"] is None
@@ -212,6 +214,7 @@ async def test_agent_startup_hang_is_timed_out_and_stops_candidate(tmp_path, mon
     assert result["execution_status"] == "timed_out"
     assert result["timeout_phase"] == "startup"
     assert result["agent_exit_code"] is None
+    assert result["agent_attempted"] is False
     assert result["usage"]["input_tokens"] is None
     assert (tmp_path / "agent.stdout").read_bytes() == b""
     assert (tmp_path / "agent.stderr").read_bytes() == b""
