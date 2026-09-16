@@ -50,7 +50,7 @@ The final exact-ownership audit passed across the main journal and four temporar
 
 ## Reproduce and extend
 
-Follow the full configuration, reference, smoke, eight-trial and recovery sequence in [README.md](README.md) or [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md). Exact commands used for the final export retries and acceptance were:
+Follow the full configuration, reference, smoke, eight-trial and recovery sequence in [Running evals](RUNNING.md); the original build recipe is retained in [the historical implementation plan](history/IMPLEMENTATION_PLAN.md). Exact commands used for the final export retries and acceptance were:
 
 ```sh
 ./evals/.venv/bin/lc-eval run --config /home/maxime/.local/share/lc-eval/config-canada.json --campaign initial-proof-v2 --scenario search-complete-export --seed 42001 --adapter codex

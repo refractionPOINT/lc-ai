@@ -1,8 +1,10 @@
+> Historical record of the initial build (2026-09-16). Do not use this as the current implementation checklist. See [running evals](../RUNNING.md) and [adding evals](../ADDING_EVALS.md).
+
 > Implementation update (2026-09-16): the user selected existing Claude Code and Codex subscriptions with time/turn limits. For the initial proof, use `budget_mode: subscription_limits`, one live trial at a time, 600 seconds per harness run, Claude 30 turns, Codex 80 tool calls, and an external 80-command broker limit. Report native token usage and unknown dollar cost. The API-key request-budget gateway described below remains optional and is not an initial acceptance requirement. Track completed work and evidence in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
 
 # Implementation plan
 
-Status: initial implementation and live proof complete, 2026-09-16. All eight genuine Claude Code/Codex trials passed across the three scenarios and both Hive repeats. Reference calibration, live transport parity, crash recovery and final exact-ownership cleanup passed; 193 offline tests and Ruff pass. Read [ACCEPTANCE.md](ACCEPTANCE.md) for results and limitations and [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for the retained investigation history. The broader capability expansion remains in [DESIGN.md](DESIGN.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
+Status: initial implementation and live proof complete, 2026-09-16. All eight genuine Claude Code/Codex trials passed across the three scenarios and both Hive repeats. Reference calibration, live transport parity, crash recovery and final exact-ownership cleanup passed; 193 offline tests and Ruff pass. Read [ACCEPTANCE.md](../ACCEPTANCE.md) for results and limitations and [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for the retained investigation history. The broader capability expansion remains in [DESIGN.md](DESIGN.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## 1. Objective and working rules
 
@@ -314,7 +316,7 @@ Gate: synthetic A/A and known differing result fixtures produce correct aggregat
 
 ### M7 — Initial live acceptance campaign
 
-Implementation status: Complete. `initial-proof-v2` contains eight genuine clean passes and two retained pre-agent infrastructure failures. Both Hive A/A pairs are compatible. USA Hive/routing and Canada export are recorded separately; export readiness grew to 15,140 events for Codex and 20,140 for Claude. Reference validation, live recovery, parity, all five cleanup journals, and the acceptance evaluator passed. See [ACCEPTANCE.md](ACCEPTANCE.md) for exact evidence and reproduction commands.
+Implementation status: Complete. `initial-proof-v2` contains eight genuine clean passes and two retained pre-agent infrastructure failures. Both Hive A/A pairs are compatible. USA Hive/routing and Canada export are recorded separately; export readiness grew to 15,140 events for Codex and 20,140 for Claude. Reference validation, live recovery, parity, all five cleanup journals, and the acceptance evaluator passed. See [ACCEPTANCE.md](../ACCEPTANCE.md) for exact evidence and reproduction commands.
 
 1. Run offline checks, live doctor and reference/bad-reference suites.
 2. Run each scenario once with each selected real harness, in fresh fixtures (six trials total for two harnesses). Alternate harness order to limit systematic timing effects. No hints, manual interventions or task repairs mid-trial.

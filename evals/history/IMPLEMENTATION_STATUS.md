@@ -1,3 +1,5 @@
+> Historical record of the initial build (2026-09-16). Do not use this as the current implementation checklist. See [running evals](../RUNNING.md) and [adding evals](../ADDING_EVALS.md).
+
 # Implementation status
 
 Branch: `eval/limacharlie-cli-ai`. Implementation started 2026-09-16.
@@ -11,7 +13,7 @@ Branch: `eval/limacharlie-cli-ai`. Implementation started 2026-09-16.
 | M4 Live fixtures | Implemented and verified | All three correct references passed against real LC resources; hosted webhook warmup, paced ingestion, genuine pagination and signed output delivery are verified. |
 | M5 Scenarios/graders | Live calibration complete | All three correct references passed; each incorrect reference failed its intended assertion. `validate-suite --campaign calibration` passed after cleanup. |
 | M6 Reporting | Implemented | JSON/HTML reports, missing-metric handling, compatibility checks and acceptance criteria implemented. |
-| M7 Live proof | Complete | Eight genuine passes, both compatible Hive A/A pairs, reference/negative calibration, crash recovery, final cleanup and acceptance passed. See [ACCEPTANCE.md](ACCEPTANCE.md). |
+| M7 Live proof | Complete | Eight genuine passes, both compatible Hive A/A pairs, reference/negative calibration, crash recovery, final cleanup and acceptance passed. See [ACCEPTANCE.md](../ACCEPTANCE.md). |
 
 Receiver, graders/reporting and harness modules are assigned to GPT-5.6 Sol agents. Controller, fixture lifecycle, configuration and integration remain with the primary agent. No unrelated files are included.
 
@@ -107,4 +109,4 @@ A later independent owner-inventory audit found four exact journal-owned test or
 - Campaign result: **8/8 genuine passes**, 10 recorded attempts including two pre-agent infrastructure failures. Two earlier broker-confounded Hive attempts remain invalid in the separate `initial-proof` campaign. Both Hive A/A comparisons are compatible; this is plumbing/calibration evidence, not a statistical performance claim.
 - Final validation: **193 tests passed; Ruff and diff checks clean**. Targeted `--repetition` is implemented for the full documented mixed-region recipe.
 - Final exact-ownership audit passed all five journals: zero pending resources, runtime leftovers or inventory errors. A private audit-checker mismatch for Docker absent-network wording was corrected; its initial failed output is retained.
-- `validate-suite`, `report`, and `acceptance` returned success. [ACCEPTANCE.md](ACCEPTANCE.md) and [sanitized results](results/initial-proof-v2.json) contain outcomes, manifests, accounting and limitations. Subscription usage is token-only; dollar cost remains unknown.
+- `validate-suite`, `report`, and `acceptance` returned success. [ACCEPTANCE.md](../ACCEPTANCE.md) and [sanitized results](../results/initial-proof-v2.json) contain outcomes, manifests, accounting and limitations. Subscription usage is token-only; dollar cost remains unknown.
