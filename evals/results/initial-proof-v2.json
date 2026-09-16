@@ -1,0 +1,1660 @@
+{
+  "campaign": "initial-proof-v2",
+  "date": "2026-09-16",
+  "final_evaluator_commit": "6e1da53",
+  "summary": {
+    "trials": 8,
+    "recorded_trials": 10,
+    "invalid_trials": 0,
+    "pre_agent_infrastructure_trials": 2,
+    "non_scored_trials": 2,
+    "successes": 8,
+    "success_rate": 1.0,
+    "by_scenario": {
+      "hive-preserve-update": {
+        "attempts": 4,
+        "successes": 4,
+        "success_rate": 1.0
+      },
+      "search-complete-export": {
+        "attempts": 2,
+        "successes": 2,
+        "success_rate": 1.0
+      },
+      "webhook-production-routing": {
+        "attempts": 2,
+        "successes": 2,
+        "success_rate": 1.0
+      }
+    },
+    "metrics": {
+      "input_tokens": {
+        "total": 60151,
+        "known_total": 60151,
+        "mean": 7518.875,
+        "known_count": 8,
+        "missing_count": 0
+      },
+      "total_input_tokens": {
+        "total": 1728358,
+        "known_total": 1728358,
+        "mean": 216044.75,
+        "known_count": 8,
+        "missing_count": 0
+      },
+      "output_tokens": {
+        "total": 16032,
+        "known_total": 16032,
+        "mean": 2004.0,
+        "known_count": 8,
+        "missing_count": 0
+      },
+      "cached_input_tokens": {
+        "total": 1609377,
+        "known_total": 1609377,
+        "mean": 201172.125,
+        "known_count": 8,
+        "missing_count": 0
+      },
+      "cache_read_tokens": {
+        "total": 1609377,
+        "known_total": 1609377,
+        "mean": 201172.125,
+        "known_count": 8,
+        "missing_count": 0
+      },
+      "cache_write_tokens": {
+        "total": 58830,
+        "known_total": 58830,
+        "mean": 7353.75,
+        "known_count": 8,
+        "missing_count": 0
+      },
+      "cost_usd": {
+        "total": null,
+        "known_total": null,
+        "mean": null,
+        "known_count": 0,
+        "missing_count": 8
+      },
+      "cost_micro_usd": {
+        "total": null,
+        "known_total": null,
+        "mean": null,
+        "known_count": 0,
+        "missing_count": 8
+      },
+      "cli_invocations": {
+        "total": 87,
+        "known_total": 87,
+        "mean": 10.875,
+        "known_count": 8,
+        "missing_count": 0
+      },
+      "cli_seconds": {
+        "total": 62.19674801873043,
+        "known_total": 62.19674801873043,
+        "mean": 7.774593502341304,
+        "known_count": 8,
+        "missing_count": 0
+      },
+      "cli_failed_commands": {
+        "total": 6,
+        "known_total": 6,
+        "mean": 0.75,
+        "known_count": 8,
+        "missing_count": 0
+      },
+      "rejected_commands": {
+        "total": 3,
+        "known_total": 3,
+        "mean": 0.375,
+        "known_count": 8,
+        "missing_count": 0
+      },
+      "backend_requests": {
+        "total": null,
+        "known_total": null,
+        "mean": null,
+        "known_count": 0,
+        "missing_count": 8
+      },
+      "output_bytes": {
+        "total": null,
+        "known_total": 16734127,
+        "mean": 2390589.5714285714,
+        "known_count": 7,
+        "missing_count": 1
+      },
+      "active_seconds": {
+        "total": 428.44246885646135,
+        "known_total": 428.44246885646135,
+        "mean": 53.55530860705767,
+        "known_count": 8,
+        "missing_count": 0
+      },
+      "waiting_seconds": {
+        "total": null,
+        "known_total": null,
+        "mean": null,
+        "known_count": 0,
+        "missing_count": 8
+      },
+      "verification_seconds": {
+        "total": 487.5179283055477,
+        "known_total": 487.5179283055477,
+        "mean": 60.93974103819346,
+        "known_count": 8,
+        "missing_count": 0
+      }
+    }
+  },
+  "acceptance": {
+    "status": "pass",
+    "criteria": {
+      "reference_validation": {
+        "status": "pass",
+        "observed": true,
+        "explanation": "Good references pass and named bad references fail their intended assertions."
+      },
+      "harness_matrix_terminal": {
+        "status": "pass",
+        "observed": [],
+        "explanation": "Each configured harness has a terminal result for every initial scenario."
+      },
+      "scenario_ai_success": {
+        "status": "pass",
+        "observed": [],
+        "explanation": "Each scenario has at least one genuine AI success."
+      },
+      "billing_accounting": {
+        "status": "pass",
+        "observed": {
+          "billing_mode": "subscription_limits",
+          "checked_trials": 8,
+          "issues": []
+        },
+        "explanation": "Scored trials follow the declared billing mode; subscriptions make no dollar-cost claim."
+      },
+      "cleanup": {
+        "status": "pass",
+        "observed": {
+          "trial_ids": [],
+          "unresolved_resource_count": 0
+        },
+        "explanation": "Every trial has verified cleanup and the resource ledger is empty."
+      },
+      "interruption_recovery": {
+        "status": "pass",
+        "observed": true,
+        "explanation": "The live interruption drill recovered and cleaned its owned resources."
+      },
+      "paired_aa": {
+        "status": "pass",
+        "observed": true,
+        "explanation": "Both required Hive A/A repeats were reported as compatible pairs."
+      }
+    }
+  },
+  "trials": [
+    {
+      "trial_id": "initial-proof-v2-b11473c260",
+      "scenario_id": "hive-preserve-update",
+      "adapter": "claude_code",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "agent_attempted": null,
+      "error": null,
+      "usage": {
+        "input_tokens": 14,
+        "total_input_tokens": 96728,
+        "output_tokens": 1201,
+        "cache_read_tokens": 91530,
+        "cached_input_tokens": 91530,
+        "cache_write_tokens": 5184,
+        "cache_write_input_tokens": 5184,
+        "cost_micro_usd": null,
+        "cost_usd": null,
+        "billing_mode": "subscription_limits",
+        "cli_invocations": 6,
+        "output_bytes": 6922,
+        "cli_seconds": 1.908384800888598,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0
+      },
+      "timings": {
+        "active_seconds": 17.705627047922462,
+        "verification_seconds": 0.5054284650832415,
+        "total_seconds": 105.75197011511773
+      },
+      "manifest": {
+        "scenario_id": "hive-preserve-update",
+        "scenario_revision": 1,
+        "scenario_hash": "b567d8f8f8f1e8086b9ca77aed8cc29699f8a8315236b2876b536d84c6f9b597",
+        "variant_seed": 41001,
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "9ed07a0fdac2b91ffa8216d0de5e3f4eba8bcf4bea605988f2ec6ef2810bb537",
+        "harness": "claude_code",
+        "model": "claude-sonnet-5",
+        "effort": "medium",
+        "tools_digest": "04442b5b48b5bcf8df1c5f88dbf4258e661f7c971d6290b809f93fb5355c8a9b",
+        "evaluator_digest": "7e3f108fcca5ebfc89f32c463ff19ae88824cafebad1abe26514311380ee3f7e",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "permission_profile": [
+          "org.get",
+          "lookup.get",
+          "lookup.get.mtd",
+          "lookup.set",
+          "lookup.set.mtd"
+        ],
+        "execution_profile": "controlled-cli-v1",
+        "limits": {
+          "model_budget_usd": 50.0,
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_orgs": 2,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "lease_seconds": 86400,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": 30,
+          "max_tool_calls": null,
+          "max_cli_invocations": 80
+        },
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "lc_location": "usa"
+      },
+      "original_manifest_file_sha256": "a05c5179465c956854910ecb89055aee61c2b066476f471ec3c46306ca36d862",
+      "assertions": [
+        {
+          "id": "hive.target.data_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.target.user_metadata_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.distractors.unchanged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.record_set.unchanged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.deliverable.identifies_target",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "initial-proof-v2-e88759af32",
+      "scenario_id": "hive-preserve-update",
+      "adapter": "codex",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "agent_attempted": null,
+      "error": null,
+      "usage": {
+        "input_tokens": 8868,
+        "total_input_tokens": 103716,
+        "output_tokens": 796,
+        "cache_read_tokens": 94848,
+        "cached_input_tokens": 94848,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cost_micro_usd": null,
+        "cost_usd": null,
+        "billing_mode": "subscription_limits",
+        "cli_invocations": 10,
+        "output_bytes": 13458,
+        "cli_seconds": 3.145044868811965,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0
+      },
+      "timings": {
+        "active_seconds": 53.534178148023784,
+        "verification_seconds": 0.5411038212478161,
+        "total_seconds": 142.18008949793875
+      },
+      "manifest": {
+        "scenario_id": "hive-preserve-update",
+        "scenario_revision": 1,
+        "scenario_hash": "b567d8f8f8f1e8086b9ca77aed8cc29699f8a8315236b2876b536d84c6f9b597",
+        "variant_seed": 41001,
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "9ed07a0fdac2b91ffa8216d0de5e3f4eba8bcf4bea605988f2ec6ef2810bb537",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "04442b5b48b5bcf8df1c5f88dbf4258e661f7c971d6290b809f93fb5355c8a9b",
+        "evaluator_digest": "7e3f108fcca5ebfc89f32c463ff19ae88824cafebad1abe26514311380ee3f7e",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "permission_profile": [
+          "org.get",
+          "lookup.get",
+          "lookup.get.mtd",
+          "lookup.set",
+          "lookup.set.mtd"
+        ],
+        "execution_profile": "controlled-cli-v1",
+        "limits": {
+          "model_budget_usd": 50.0,
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_orgs": 2,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "lease_seconds": 86400,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "lc_location": "usa"
+      },
+      "original_manifest_file_sha256": "c5f94997158554b8ba33f2a3281f8799f326e55c9c9dff6499799815fa77b04c",
+      "assertions": [
+        {
+          "id": "hive.target.data_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.target.user_metadata_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.distractors.unchanged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.record_set.unchanged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.deliverable.identifies_target",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "initial-proof-v2-ea2df2ef91",
+      "scenario_id": "search-complete-export",
+      "adapter": "codex",
+      "execution_status": "failed",
+      "grade": "inconclusive",
+      "cleanup_status": "clean",
+      "agent_attempted": null,
+      "error": "DatasetReadinessError: all events are searchable but the search did not traverse pagination",
+      "usage": {
+        "output_bytes": null,
+        "cli_seconds": null,
+        "cli_failed_commands": null,
+        "rejected_commands": null
+      },
+      "timings": {
+        "total_seconds": 560.4995843879879
+      },
+      "manifest": {
+        "scenario_id": "search-complete-export",
+        "scenario_revision": 1,
+        "scenario_hash": "554c9af5d76fa06ffc001194e159fda138f0b51a4bd8848ba6ee8b2278c39a06",
+        "variant_seed": 42001,
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "b71d67009c8d5ab2cdea57195604d43a5e40467ab03af291f9c8cad0092c0977",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "04442b5b48b5bcf8df1c5f88dbf4258e661f7c971d6290b809f93fb5355c8a9b",
+        "evaluator_digest": "7e3f108fcca5ebfc89f32c463ff19ae88824cafebad1abe26514311380ee3f7e",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "permission_profile": [
+          "org.get",
+          "sensor.list",
+          "sensor.get",
+          "insight.evt.get"
+        ],
+        "execution_profile": "controlled-cli-v1",
+        "limits": {
+          "model_budget_usd": 50.0,
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_orgs": 2,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "lease_seconds": 86400,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "lc_location": "usa"
+      },
+      "original_manifest_file_sha256": "a754d892e55106910d34d31e6123951e448f79fdb409aa8c9c3ebdf34d4a1d95",
+      "assertions": []
+    },
+    {
+      "trial_id": "initial-proof-v2-3549abcc93",
+      "scenario_id": "search-complete-export",
+      "adapter": "claude_code",
+      "execution_status": "failed",
+      "grade": "inconclusive",
+      "cleanup_status": "clean",
+      "agent_attempted": null,
+      "error": "DatasetReadinessError: all events are searchable but the search did not traverse pagination",
+      "usage": {
+        "output_bytes": null,
+        "cli_seconds": null,
+        "cli_failed_commands": null,
+        "rejected_commands": null
+      },
+      "timings": {
+        "total_seconds": 488.6123733529821
+      },
+      "manifest": {
+        "scenario_id": "search-complete-export",
+        "scenario_revision": 1,
+        "scenario_hash": "554c9af5d76fa06ffc001194e159fda138f0b51a4bd8848ba6ee8b2278c39a06",
+        "variant_seed": 42001,
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "b71d67009c8d5ab2cdea57195604d43a5e40467ab03af291f9c8cad0092c0977",
+        "harness": "claude_code",
+        "model": "claude-sonnet-5",
+        "effort": "medium",
+        "tools_digest": "04442b5b48b5bcf8df1c5f88dbf4258e661f7c971d6290b809f93fb5355c8a9b",
+        "evaluator_digest": "7e3f108fcca5ebfc89f32c463ff19ae88824cafebad1abe26514311380ee3f7e",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "permission_profile": [
+          "org.get",
+          "sensor.list",
+          "sensor.get",
+          "insight.evt.get"
+        ],
+        "execution_profile": "controlled-cli-v1",
+        "limits": {
+          "model_budget_usd": 50.0,
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_orgs": 2,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "lease_seconds": 86400,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": 30,
+          "max_tool_calls": null,
+          "max_cli_invocations": 80
+        },
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "lc_location": "usa"
+      },
+      "original_manifest_file_sha256": "a9b94895096ab9149b1bc588f368a0a497f6d581a4ba48f8ac23cf0da58fc7c7",
+      "assertions": []
+    },
+    {
+      "trial_id": "initial-proof-v2-c52050447d",
+      "scenario_id": "webhook-production-routing",
+      "adapter": "claude_code",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "agent_attempted": null,
+      "error": null,
+      "usage": {
+        "input_tokens": 54,
+        "total_input_tokens": 630328,
+        "output_tokens": 4938,
+        "cache_read_tokens": 609384,
+        "cached_input_tokens": 609384,
+        "cache_write_tokens": 20890,
+        "cache_write_input_tokens": 20890,
+        "cost_micro_usd": null,
+        "cost_usd": null,
+        "billing_mode": "subscription_limits",
+        "cli_invocations": 19,
+        "output_bytes": 58735,
+        "cli_seconds": 6.969602256081998,
+        "cli_failed_commands": 2,
+        "rejected_commands": 1
+      },
+      "timings": {
+        "active_seconds": 74.24420244712383,
+        "verification_seconds": 218.50747154979035,
+        "total_seconds": 422.31424107030034
+      },
+      "manifest": {
+        "scenario_id": "webhook-production-routing",
+        "scenario_revision": 1,
+        "scenario_hash": "ce207d168b5e5af4e2e37eed62c1c897884992b0369733010247b2096aa7d862",
+        "variant_seed": 43001,
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "b71d67009c8d5ab2cdea57195604d43a5e40467ab03af291f9c8cad0092c0977",
+        "harness": "claude_code",
+        "model": "claude-sonnet-5",
+        "effort": "medium",
+        "tools_digest": "04442b5b48b5bcf8df1c5f88dbf4258e661f7c971d6290b809f93fb5355c8a9b",
+        "evaluator_digest": "7e3f108fcca5ebfc89f32c463ff19ae88824cafebad1abe26514311380ee3f7e",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "permission_profile": [
+          "org.get",
+          "sensor.list",
+          "sensor.get",
+          "insight.evt.get",
+          "cloudsensor.get",
+          "cloudsensor.get.mtd",
+          "cloudsensor.set",
+          "cloudsensor.set.mtd",
+          "dr.list",
+          "dr.set",
+          "output.list",
+          "output.set",
+          "ikey.list"
+        ],
+        "execution_profile": "controlled-cli-v1",
+        "limits": {
+          "model_budget_usd": 50.0,
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_orgs": 2,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "lease_seconds": 86400,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": 30,
+          "max_tool_calls": null,
+          "max_cli_invocations": 80
+        },
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "lc_location": "usa"
+      },
+      "original_manifest_file_sha256": "d38b21c4a21c4d1133b621bf8dfdfe835e4db79fec4aa9b13eccbc46515b11cb",
+      "assertions": [
+        {
+          "id": "routing.probes_ingested",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "routing.receiver_health",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "routing.observation_window",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "routing.matching_delivered",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "routing.negatives_excluded",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "routing.baseline_output_unchanged",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "initial-proof-v2-bf63fd326e",
+      "scenario_id": "webhook-production-routing",
+      "adapter": "codex",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "agent_attempted": null,
+      "error": null,
+      "usage": {
+        "input_tokens": 23928,
+        "total_input_tokens": 236536,
+        "output_tokens": 1826,
+        "cache_read_tokens": 212608,
+        "cached_input_tokens": 212608,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cost_micro_usd": null,
+        "cost_usd": null,
+        "billing_mode": "subscription_limits",
+        "cli_invocations": 21,
+        "output_bytes": null,
+        "cli_seconds": 8.529971795156598,
+        "cli_failed_commands": 4,
+        "rejected_commands": 0
+      },
+      "timings": {
+        "active_seconds": 88.28608812205493,
+        "verification_seconds": 263.66908610379323,
+        "total_seconds": 472.71252652071416
+      },
+      "manifest": {
+        "scenario_id": "webhook-production-routing",
+        "scenario_revision": 1,
+        "scenario_hash": "ce207d168b5e5af4e2e37eed62c1c897884992b0369733010247b2096aa7d862",
+        "variant_seed": 43001,
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "b71d67009c8d5ab2cdea57195604d43a5e40467ab03af291f9c8cad0092c0977",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "04442b5b48b5bcf8df1c5f88dbf4258e661f7c971d6290b809f93fb5355c8a9b",
+        "evaluator_digest": "7e3f108fcca5ebfc89f32c463ff19ae88824cafebad1abe26514311380ee3f7e",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "permission_profile": [
+          "org.get",
+          "sensor.list",
+          "sensor.get",
+          "insight.evt.get",
+          "cloudsensor.get",
+          "cloudsensor.get.mtd",
+          "cloudsensor.set",
+          "cloudsensor.set.mtd",
+          "dr.list",
+          "dr.set",
+          "output.list",
+          "output.set",
+          "ikey.list"
+        ],
+        "execution_profile": "controlled-cli-v1",
+        "limits": {
+          "model_budget_usd": 50.0,
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_orgs": 2,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "lease_seconds": 86400,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "lc_location": "usa"
+      },
+      "original_manifest_file_sha256": "640e7f54db86792d4175c057f8591a4e246dc98335f1a06b55b9a47817ff877b",
+      "assertions": [
+        {
+          "id": "routing.probes_ingested",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "routing.receiver_health",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "routing.observation_window",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "routing.matching_delivered",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "routing.negatives_excluded",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "routing.baseline_output_unchanged",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "initial-proof-v2-3814f304d2",
+      "scenario_id": "hive-preserve-update",
+      "adapter": "claude_code",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "agent_attempted": null,
+      "error": null,
+      "usage": {
+        "input_tokens": 18,
+        "total_input_tokens": 123143,
+        "output_tokens": 1487,
+        "cache_read_tokens": 117517,
+        "cached_input_tokens": 117517,
+        "cache_write_tokens": 5608,
+        "cache_write_input_tokens": 5608,
+        "cost_micro_usd": null,
+        "cost_usd": null,
+        "billing_mode": "subscription_limits",
+        "cli_invocations": 10,
+        "output_bytes": 6835,
+        "cli_seconds": 2.5690775234252214,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0
+      },
+      "timings": {
+        "active_seconds": 22.530107866972685,
+        "verification_seconds": 0.5391323836520314,
+        "total_seconds": 106.3623605328612
+      },
+      "manifest": {
+        "scenario_id": "hive-preserve-update",
+        "scenario_revision": 1,
+        "scenario_hash": "b567d8f8f8f1e8086b9ca77aed8cc29699f8a8315236b2876b536d84c6f9b597",
+        "variant_seed": 41001,
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "9ed07a0fdac2b91ffa8216d0de5e3f4eba8bcf4bea605988f2ec6ef2810bb537",
+        "harness": "claude_code",
+        "model": "claude-sonnet-5",
+        "effort": "medium",
+        "tools_digest": "04442b5b48b5bcf8df1c5f88dbf4258e661f7c971d6290b809f93fb5355c8a9b",
+        "evaluator_digest": "7e3f108fcca5ebfc89f32c463ff19ae88824cafebad1abe26514311380ee3f7e",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "permission_profile": [
+          "org.get",
+          "lookup.get",
+          "lookup.get.mtd",
+          "lookup.set",
+          "lookup.set.mtd"
+        ],
+        "execution_profile": "controlled-cli-v1",
+        "limits": {
+          "model_budget_usd": 50.0,
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_orgs": 2,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "lease_seconds": 86400,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": 30,
+          "max_tool_calls": null,
+          "max_cli_invocations": 80
+        },
+        "repetition": 2,
+        "billing_mode": "subscription_limits",
+        "lc_location": "usa"
+      },
+      "original_manifest_file_sha256": "4efc5bf24d26cdeb8bbe3c29fc5f284e490e872583e8d9484d60f639572b9ef0",
+      "assertions": [
+        {
+          "id": "hive.target.data_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.target.user_metadata_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.distractors.unchanged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.record_set.unchanged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.deliverable.identifies_target",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "initial-proof-v2-3a736c38f6",
+      "scenario_id": "hive-preserve-update",
+      "adapter": "codex",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "agent_attempted": null,
+      "error": null,
+      "usage": {
+        "input_tokens": 7439,
+        "total_input_tokens": 83215,
+        "output_tokens": 755,
+        "cache_read_tokens": 75776,
+        "cached_input_tokens": 75776,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cost_micro_usd": null,
+        "cost_usd": null,
+        "billing_mode": "subscription_limits",
+        "cli_invocations": 8,
+        "output_bytes": 9008,
+        "cli_seconds": 2.363841315731406,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0
+      },
+      "timings": {
+        "active_seconds": 36.96947396825999,
+        "verification_seconds": 0.5030172108672559,
+        "total_seconds": 132.16507501900196
+      },
+      "manifest": {
+        "scenario_id": "hive-preserve-update",
+        "scenario_revision": 1,
+        "scenario_hash": "b567d8f8f8f1e8086b9ca77aed8cc29699f8a8315236b2876b536d84c6f9b597",
+        "variant_seed": 41001,
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "9ed07a0fdac2b91ffa8216d0de5e3f4eba8bcf4bea605988f2ec6ef2810bb537",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "04442b5b48b5bcf8df1c5f88dbf4258e661f7c971d6290b809f93fb5355c8a9b",
+        "evaluator_digest": "7e3f108fcca5ebfc89f32c463ff19ae88824cafebad1abe26514311380ee3f7e",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "permission_profile": [
+          "org.get",
+          "lookup.get",
+          "lookup.get.mtd",
+          "lookup.set",
+          "lookup.set.mtd"
+        ],
+        "execution_profile": "controlled-cli-v1",
+        "limits": {
+          "model_budget_usd": 50.0,
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_orgs": 2,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "lease_seconds": 86400,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "repetition": 2,
+        "billing_mode": "subscription_limits",
+        "lc_location": "usa"
+      },
+      "original_manifest_file_sha256": "e2b4a1b9daf630346718d9bf43284e7fde412c5bf0cc79bef455ab0fc0af7bc0",
+      "assertions": [
+        {
+          "id": "hive.target.data_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.target.user_metadata_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.distractors.unchanged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.record_set.unchanged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "hive.deliverable.identifies_target",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "initial-proof-v2-e06caa68d1",
+      "scenario_id": "search-complete-export",
+      "adapter": "codex",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "agent_attempted": true,
+      "error": null,
+      "usage": {
+        "input_tokens": 19802,
+        "total_input_tokens": 185306,
+        "output_tokens": 1175,
+        "cache_read_tokens": 165504,
+        "cached_input_tokens": 165504,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cost_micro_usd": null,
+        "cost_usd": null,
+        "billing_mode": "subscription_limits",
+        "cli_invocations": 6,
+        "output_bytes": 11881874,
+        "cli_seconds": 19.693721373099834,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0
+      },
+      "timings": {
+        "active_seconds": 72.1167464889586,
+        "verification_seconds": 1.7388268653303385,
+        "total_seconds": 1311.0803388101049
+      },
+      "manifest": {
+        "scenario_id": "search-complete-export",
+        "scenario_revision": 1,
+        "scenario_hash": "554c9af5d76fa06ffc001194e159fda138f0b51a4bd8848ba6ee8b2278c39a06",
+        "variant_seed": 42001,
+        "lc_location": "canada",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "b2bab0732588786acd7983423f99a4041577a6871dd10eeaab48a11f83e2f4a8",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "04442b5b48b5bcf8df1c5f88dbf4258e661f7c971d6290b809f93fb5355c8a9b",
+        "evaluator_digest": "14d0778a4b5e87a1ae052ef74ee4f8d69214bd575859effb2a5db4298a32e911",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "permission_profile": [
+          "org.get",
+          "sensor.list",
+          "sensor.get",
+          "insight.evt.get"
+        ],
+        "execution_profile": "controlled-cli-v1",
+        "limits": {
+          "model_budget_usd": 50.0,
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_orgs": 2,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "lease_seconds": 86400,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "repetition": 1,
+        "billing_mode": "subscription_limits"
+      },
+      "original_manifest_file_sha256": "09806e010fedf1d6c303a7a6e694fe0695f32c18caf1b7d3f48956c46659c03c",
+      "assertions": [
+        {
+          "id": "export.safe_file",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "export.valid_bounded_jsonl",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "export.platform_unchanged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "export.membership",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "export.unique_ids",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "export.values",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "export.count",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "initial-proof-v2-66b49892a8",
+      "scenario_id": "search-complete-export",
+      "adapter": "claude_code",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "agent_attempted": true,
+      "error": null,
+      "usage": {
+        "input_tokens": 28,
+        "total_input_tokens": 269386,
+        "output_tokens": 3854,
+        "cache_read_tokens": 242210,
+        "cached_input_tokens": 242210,
+        "cache_write_tokens": 27148,
+        "cache_write_input_tokens": 27148,
+        "cost_micro_usd": null,
+        "cost_usd": null,
+        "billing_mode": "subscription_limits",
+        "cli_invocations": 7,
+        "output_bytes": 4757295,
+        "cli_seconds": 17.01710408553481,
+        "cli_failed_commands": 0,
+        "rejected_commands": 2
+      },
+      "timings": {
+        "active_seconds": 63.05604476714507,
+        "verification_seconds": 1.5138619057834148,
+        "total_seconds": 1634.1873700888827
+      },
+      "manifest": {
+        "scenario_id": "search-complete-export",
+        "scenario_revision": 1,
+        "scenario_hash": "554c9af5d76fa06ffc001194e159fda138f0b51a4bd8848ba6ee8b2278c39a06",
+        "variant_seed": 42001,
+        "lc_location": "canada",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "b2bab0732588786acd7983423f99a4041577a6871dd10eeaab48a11f83e2f4a8",
+        "harness": "claude_code",
+        "model": "claude-sonnet-5",
+        "effort": "medium",
+        "tools_digest": "04442b5b48b5bcf8df1c5f88dbf4258e661f7c971d6290b809f93fb5355c8a9b",
+        "evaluator_digest": "14d0778a4b5e87a1ae052ef74ee4f8d69214bd575859effb2a5db4298a32e911",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "permission_profile": [
+          "org.get",
+          "sensor.list",
+          "sensor.get",
+          "insight.evt.get"
+        ],
+        "execution_profile": "controlled-cli-v1",
+        "limits": {
+          "model_budget_usd": 50.0,
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_orgs": 2,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "lease_seconds": 86400,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": 30,
+          "max_tool_calls": null,
+          "max_cli_invocations": 80
+        },
+        "repetition": 1,
+        "billing_mode": "subscription_limits"
+      },
+      "original_manifest_file_sha256": "675351b63cf235ed3fe1972c5829043fb06debbbaa39a147bdf81c4c7ad51257",
+      "assertions": [
+        {
+          "id": "export.safe_file",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "export.valid_bounded_jsonl",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "export.platform_unchanged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "export.membership",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "export.unique_ids",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "export.values",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "export.count",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "left_trial_id": "initial-proof-v2-b11473c260",
+      "right_trial_id": "initial-proof-v2-3814f304d2",
+      "compatibility": {
+        "compatible": true,
+        "reasons": [],
+        "fields": {
+          "scenario_id": {
+            "left": "hive-preserve-update",
+            "right": "hive-preserve-update"
+          },
+          "scenario_revision": {
+            "left": 1,
+            "right": 1
+          },
+          "scenario_hash": {
+            "left": "b567d8f8f8f1e8086b9ca77aed8cc29699f8a8315236b2876b536d84c6f9b597",
+            "right": "b567d8f8f8f1e8086b9ca77aed8cc29699f8a8315236b2876b536d84c6f9b597"
+          },
+          "variant_seed": {
+            "left": 41001,
+            "right": 41001
+          },
+          "lc_location": {
+            "left": "usa",
+            "right": "usa"
+          },
+          "docs_digest": {
+            "left": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+            "right": "3eeeb95207730af2e93f600ca93cdad82ef47f73"
+          },
+          "fixture_recipe": {
+            "left": "9ed07a0fdac2b91ffa8216d0de5e3f4eba8bcf4bea605988f2ec6ef2810bb537",
+            "right": "9ed07a0fdac2b91ffa8216d0de5e3f4eba8bcf4bea605988f2ec6ef2810bb537"
+          },
+          "harness": {
+            "left": "claude_code",
+            "right": "claude_code"
+          },
+          "model": {
+            "left": "claude-sonnet-5",
+            "right": "claude-sonnet-5"
+          },
+          "effort": {
+            "left": "medium",
+            "right": "medium"
+          },
+          "tools": {
+            "left": "04442b5b48b5bcf8df1c5f88dbf4258e661f7c971d6290b809f93fb5355c8a9b",
+            "right": "04442b5b48b5bcf8df1c5f88dbf4258e661f7c971d6290b809f93fb5355c8a9b"
+          },
+          "evaluator": {
+            "left": "7e3f108fcca5ebfc89f32c463ff19ae88824cafebad1abe26514311380ee3f7e",
+            "right": "7e3f108fcca5ebfc89f32c463ff19ae88824cafebad1abe26514311380ee3f7e"
+          },
+          "permission_profile": {
+            "left": [
+              "org.get",
+              "lookup.get",
+              "lookup.get.mtd",
+              "lookup.set",
+              "lookup.set.mtd"
+            ],
+            "right": [
+              "org.get",
+              "lookup.get",
+              "lookup.get.mtd",
+              "lookup.set",
+              "lookup.set.mtd"
+            ]
+          },
+          "execution_profile": {
+            "left": "controlled-cli-v1",
+            "right": "controlled-cli-v1"
+          },
+          "limits": {
+            "left": {
+              "model_budget_usd": 50.0,
+              "budget_mode": "subscription_limits",
+              "concurrency": 1,
+              "max_orgs": 2,
+              "max_events": 25000,
+              "max_fixture_bytes": 100000000,
+              "max_command_output": 16000000,
+              "max_command_seconds": 300,
+              "lease_seconds": 86400,
+              "verification_seconds": 600,
+              "negative_window_seconds": 180,
+              "timeout_seconds": 600,
+              "max_turns": 30,
+              "max_tool_calls": null,
+              "max_cli_invocations": 80
+            },
+            "right": {
+              "model_budget_usd": 50.0,
+              "budget_mode": "subscription_limits",
+              "concurrency": 1,
+              "max_orgs": 2,
+              "max_events": 25000,
+              "max_fixture_bytes": 100000000,
+              "max_command_output": 16000000,
+              "max_command_seconds": 300,
+              "lease_seconds": 86400,
+              "verification_seconds": 600,
+              "negative_window_seconds": 180,
+              "timeout_seconds": 600,
+              "max_turns": 30,
+              "max_tool_calls": null,
+              "max_cli_invocations": 80
+            }
+          },
+          "repetition": {
+            "left": 1,
+            "right": 2
+          },
+          "cli_digest": {
+            "left": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+            "right": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5"
+          }
+        }
+      },
+      "left_success": true,
+      "right_success": true,
+      "paired_success": true,
+      "efficiency": {
+        "input_tokens": {
+          "left": 14,
+          "right": 18,
+          "delta_right_minus_left": 4
+        },
+        "output_tokens": {
+          "left": 1201,
+          "right": 1487,
+          "delta_right_minus_left": 286
+        },
+        "cost_usd": {
+          "left": null,
+          "right": null,
+          "delta_right_minus_left": null
+        },
+        "cost_micro_usd": {
+          "left": null,
+          "right": null,
+          "delta_right_minus_left": null
+        },
+        "active_seconds": {
+          "left": 17.705627047922462,
+          "right": 22.530107866972685,
+          "delta_right_minus_left": 4.824480819050223
+        },
+        "verification_seconds": {
+          "left": 0.5054284650832415,
+          "right": 0.5391323836520314,
+          "delta_right_minus_left": 0.03370391856878996
+        },
+        "cli_invocations": {
+          "left": 6,
+          "right": 10,
+          "delta_right_minus_left": 4
+        },
+        "cli_seconds": {
+          "left": 1.908384800888598,
+          "right": 2.5690775234252214,
+          "delta_right_minus_left": 0.6606927225366235
+        },
+        "cli_failed_commands": {
+          "left": 0,
+          "right": 0,
+          "delta_right_minus_left": 0
+        },
+        "rejected_commands": {
+          "left": 0,
+          "right": 0,
+          "delta_right_minus_left": 0
+        },
+        "backend_requests": {
+          "left": null,
+          "right": null,
+          "delta_right_minus_left": null
+        },
+        "output_bytes": {
+          "left": 6922,
+          "right": 6835,
+          "delta_right_minus_left": -87
+        }
+      },
+      "included_in_efficiency": true
+    },
+    {
+      "left_trial_id": "initial-proof-v2-e88759af32",
+      "right_trial_id": "initial-proof-v2-3a736c38f6",
+      "compatibility": {
+        "compatible": true,
+        "reasons": [],
+        "fields": {
+          "scenario_id": {
+            "left": "hive-preserve-update",
+            "right": "hive-preserve-update"
+          },
+          "scenario_revision": {
+            "left": 1,
+            "right": 1
+          },
+          "scenario_hash": {
+            "left": "b567d8f8f8f1e8086b9ca77aed8cc29699f8a8315236b2876b536d84c6f9b597",
+            "right": "b567d8f8f8f1e8086b9ca77aed8cc29699f8a8315236b2876b536d84c6f9b597"
+          },
+          "variant_seed": {
+            "left": 41001,
+            "right": 41001
+          },
+          "lc_location": {
+            "left": "usa",
+            "right": "usa"
+          },
+          "docs_digest": {
+            "left": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+            "right": "3eeeb95207730af2e93f600ca93cdad82ef47f73"
+          },
+          "fixture_recipe": {
+            "left": "9ed07a0fdac2b91ffa8216d0de5e3f4eba8bcf4bea605988f2ec6ef2810bb537",
+            "right": "9ed07a0fdac2b91ffa8216d0de5e3f4eba8bcf4bea605988f2ec6ef2810bb537"
+          },
+          "harness": {
+            "left": "codex",
+            "right": "codex"
+          },
+          "model": {
+            "left": "gpt-6-astra",
+            "right": "gpt-6-astra"
+          },
+          "effort": {
+            "left": "medium",
+            "right": "medium"
+          },
+          "tools": {
+            "left": "04442b5b48b5bcf8df1c5f88dbf4258e661f7c971d6290b809f93fb5355c8a9b",
+            "right": "04442b5b48b5bcf8df1c5f88dbf4258e661f7c971d6290b809f93fb5355c8a9b"
+          },
+          "evaluator": {
+            "left": "7e3f108fcca5ebfc89f32c463ff19ae88824cafebad1abe26514311380ee3f7e",
+            "right": "7e3f108fcca5ebfc89f32c463ff19ae88824cafebad1abe26514311380ee3f7e"
+          },
+          "permission_profile": {
+            "left": [
+              "org.get",
+              "lookup.get",
+              "lookup.get.mtd",
+              "lookup.set",
+              "lookup.set.mtd"
+            ],
+            "right": [
+              "org.get",
+              "lookup.get",
+              "lookup.get.mtd",
+              "lookup.set",
+              "lookup.set.mtd"
+            ]
+          },
+          "execution_profile": {
+            "left": "controlled-cli-v1",
+            "right": "controlled-cli-v1"
+          },
+          "limits": {
+            "left": {
+              "model_budget_usd": 50.0,
+              "budget_mode": "subscription_limits",
+              "concurrency": 1,
+              "max_orgs": 2,
+              "max_events": 25000,
+              "max_fixture_bytes": 100000000,
+              "max_command_output": 16000000,
+              "max_command_seconds": 300,
+              "lease_seconds": 86400,
+              "verification_seconds": 600,
+              "negative_window_seconds": 180,
+              "timeout_seconds": 600,
+              "max_turns": null,
+              "max_tool_calls": 80,
+              "max_cli_invocations": 80
+            },
+            "right": {
+              "model_budget_usd": 50.0,
+              "budget_mode": "subscription_limits",
+              "concurrency": 1,
+              "max_orgs": 2,
+              "max_events": 25000,
+              "max_fixture_bytes": 100000000,
+              "max_command_output": 16000000,
+              "max_command_seconds": 300,
+              "lease_seconds": 86400,
+              "verification_seconds": 600,
+              "negative_window_seconds": 180,
+              "timeout_seconds": 600,
+              "max_turns": null,
+              "max_tool_calls": 80,
+              "max_cli_invocations": 80
+            }
+          },
+          "repetition": {
+            "left": 1,
+            "right": 2
+          },
+          "cli_digest": {
+            "left": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+            "right": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5"
+          }
+        }
+      },
+      "left_success": true,
+      "right_success": true,
+      "paired_success": true,
+      "efficiency": {
+        "input_tokens": {
+          "left": 8868,
+          "right": 7439,
+          "delta_right_minus_left": -1429
+        },
+        "output_tokens": {
+          "left": 796,
+          "right": 755,
+          "delta_right_minus_left": -41
+        },
+        "cost_usd": {
+          "left": null,
+          "right": null,
+          "delta_right_minus_left": null
+        },
+        "cost_micro_usd": {
+          "left": null,
+          "right": null,
+          "delta_right_minus_left": null
+        },
+        "active_seconds": {
+          "left": 53.534178148023784,
+          "right": 36.96947396825999,
+          "delta_right_minus_left": -16.564704179763794
+        },
+        "verification_seconds": {
+          "left": 0.5411038212478161,
+          "right": 0.5030172108672559,
+          "delta_right_minus_left": -0.03808661038056016
+        },
+        "cli_invocations": {
+          "left": 10,
+          "right": 8,
+          "delta_right_minus_left": -2
+        },
+        "cli_seconds": {
+          "left": 3.145044868811965,
+          "right": 2.363841315731406,
+          "delta_right_minus_left": -0.7812035530805588
+        },
+        "cli_failed_commands": {
+          "left": 0,
+          "right": 0,
+          "delta_right_minus_left": 0
+        },
+        "rejected_commands": {
+          "left": 0,
+          "right": 0,
+          "delta_right_minus_left": 0
+        },
+        "backend_requests": {
+          "left": null,
+          "right": null,
+          "delta_right_minus_left": null
+        },
+        "output_bytes": {
+          "left": 13458,
+          "right": 9008,
+          "delta_right_minus_left": -4450
+        }
+      },
+      "included_in_efficiency": true
+    }
+  ],
+  "cleanup_audit": {
+    "schema_version": 1,
+    "started_at": "2026-09-16T22:02:57.167611+00:00",
+    "ownership_scope": "recorded ledger resources only; organizations use server-filtered exact names and recorded OIDs",
+    "journal_count_expected": 5,
+    "journals": [
+      {
+        "journal": "main",
+        "resource_counts_by_kind_status": {
+          "api_key:cleaned": 22,
+          "docker_container:cleaned": 100,
+          "docker_network:cleaned": 50,
+          "local_process:cleaned": 4,
+          "org:cleaned": 33
+        },
+        "pending_count": 0,
+        "pending_by_kind": {},
+        "reconcile_error_count": 0,
+        "org_records_exactly_audited": 33,
+        "runtime": {
+          "checked_by_kind": {
+            "docker_container": 100,
+            "docker_network": 50,
+            "local_process": 4
+          },
+          "owned_present_by_kind": {},
+          "inventory_errors_by_kind": {}
+        },
+        "passed": true
+      },
+      {
+        "journal": "probe-1",
+        "resource_counts_by_kind_status": {
+          "org:cleaned": 1
+        },
+        "pending_count": 0,
+        "pending_by_kind": {},
+        "reconcile_error_count": 0,
+        "org_records_exactly_audited": 1,
+        "runtime": {
+          "checked_by_kind": {},
+          "owned_present_by_kind": {},
+          "inventory_errors_by_kind": {}
+        },
+        "passed": true
+      },
+      {
+        "journal": "probe-2",
+        "resource_counts_by_kind_status": {
+          "org:cleaned": 1
+        },
+        "pending_count": 0,
+        "pending_by_kind": {},
+        "reconcile_error_count": 0,
+        "org_records_exactly_audited": 1,
+        "runtime": {
+          "checked_by_kind": {},
+          "owned_present_by_kind": {},
+          "inventory_errors_by_kind": {}
+        },
+        "passed": true
+      },
+      {
+        "journal": "probe-3",
+        "resource_counts_by_kind_status": {
+          "org:cleaned": 1
+        },
+        "pending_count": 0,
+        "pending_by_kind": {},
+        "reconcile_error_count": 0,
+        "org_records_exactly_audited": 1,
+        "runtime": {
+          "checked_by_kind": {},
+          "owned_present_by_kind": {},
+          "inventory_errors_by_kind": {}
+        },
+        "passed": true
+      },
+      {
+        "journal": "probe-4",
+        "resource_counts_by_kind_status": {},
+        "pending_count": 0,
+        "pending_by_kind": {},
+        "reconcile_error_count": 0,
+        "org_records_exactly_audited": 0,
+        "runtime": {
+          "checked_by_kind": {},
+          "owned_present_by_kind": {},
+          "inventory_errors_by_kind": {}
+        },
+        "passed": true
+      }
+    ],
+    "passed": true,
+    "finished_at": "2026-09-16T22:03:25.337459+00:00"
+  },
+  "scope_note": "Three-scenario calibration; no statistical significance or full-platform coverage claim. Subscription dollar cost unknown. Two pre-agent infrastructure failures retained; two earlier invalid broker-confounded attempts are in the separate initial-proof campaign."
+}

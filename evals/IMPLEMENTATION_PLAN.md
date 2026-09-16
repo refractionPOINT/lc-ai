@@ -1,8 +1,8 @@
 > Implementation update (2026-09-16): the user selected existing Claude Code and Codex subscriptions with time/turn limits. For the initial proof, use `budget_mode: subscription_limits`, one live trial at a time, 600 seconds per harness run, Claude 30 turns, Codex 80 tool calls, and an external 80-command broker limit. Report native token usage and unknown dollar cost. The API-key request-budget gateway described below remains optional and is not an initial acceptance requirement. Track completed work and evidence in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
 
-# Implementation plan: prove the LimaCharlie CLI evaluation loop
+# Implementation plan
 
-Status: implementation in progress, 2026-09-16. The controller, isolated execution, both subscription adapters, fixtures, graders, reports and recovery commands are implemented. Offline tests and both real harness smoke tests pass; live scenario calibration and acceptance remain in progress. Read [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for current evidence before resuming. It specifies the work to build and demonstrate the initial complete loop; [DESIGN.md](DESIGN.md) describes the eventual coverage and [ARCHITECTURE.md](ARCHITECTURE.md) explains the boundaries.
+Status: initial implementation and live proof complete, 2026-09-16. All eight genuine Claude Code/Codex trials passed across the three scenarios and both Hive repeats. Reference calibration, live transport parity, crash recovery and final exact-ownership cleanup passed; 193 offline tests and Ruff pass. Read [ACCEPTANCE.md](ACCEPTANCE.md) for results and limitations and [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for the retained investigation history. The broader capability expansion remains in [DESIGN.md](DESIGN.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## 1. Objective and working rules
 
@@ -37,17 +37,17 @@ The user supplied these decisions during planning. They persist for the implemen
 | Model limits | Existing Claude Code and Codex subscriptions, as explicitly selected by the user during implementation. Enforce time/turn/tool limits; report tokens and unknown dollars. One live trial at a time. |
 | Output receiver | Deployment of a small HTTPS receiver is authorized. No specific cloud project was selected. |
 
-Implementation defaults within that scope: use the local CLI's existing authentication/environment, `org create --location usa` (Search requires the supported US region), no org template, unique run-owned names, and explicit `--oid` on subsequent calls. Record the actual assigned region before creating comparison fixtures; use that same supported location for paired trials. Do not redirect tests to an exp environment or an existing org by inference. Do not use `--use` or change the user's default org.
+Implementation defaults within that scope: use the local CLI's existing authentication/environment, no org template, unique run-owned names, and explicit `--oid` on subsequent calls. Pin `lc.location: usa` for Hive/routing trials and `lc.location: canada` for export trials; the latter is the live-proven paginated Search region. The current schema has one location per configuration, so mixed-region acceptance uses scenario-targeted invocations with explicit configuration files. Record the location in every manifest and use the same location for paired trials. Do not redirect tests to an exp environment or an existing org by inference. Do not use `--use` or change the user's default org.
 
 Run the receiver locally and publish only its ingest listener through a temporary Cloudflare Quick Tunnel. This avoids requiring a cloud project or persistent deployment. Install a pinned `cloudflared` binary/image within eval-managed tooling, not as a replacement for user tooling. It was not on PATH during planning. Public URL discovery and readiness are automated. Keep the management listener on a separate local-only port that is never tunneled. This testing use matches the [Cloudflare Quick Tunnel documentation](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/); its lack of an uptime guarantee means a tunnel failure is an infrastructure event. An existing receiver remains an optional configuration path.
 
 Ceilings for the small proof: one active trial, two owned orgs maximum, at most 25,000 generated events per pagination fixture, 100 MB fixture payload per trial, one receiver/tunnel, and a 24-hour resource lease. Track LC usage separately from model cost. Do not provision persistent compute, buy domains, or change billing plans. If the selected account requires additional purchases to enable a mandatory feature, report the specific dependency.
 
-The model auth modes and accessible model IDs are runtime preflight checks, not yet established facts. Prefer existing authorized local harness authentication; isolate only the minimum required auth material or use a local credential-injecting gateway. Do not scan unrelated credential stores, mount whole home directories, print credentials, or assume a subscription auth flow supports the same API transport as a key. If access is missing, request the specific authentication step and continue offline work. The budget enforcement gate in M3 must pass before paid calls.
+The selected model auth mode is the existing local Claude Code and Codex subscriptions. `init-local --subscription` records explicit model IDs and only the narrowly selected `.claude/.credentials.json` or `.codex/auth.json` path; image preparation copies the minimum auth state. Do not scan unrelated credential stores, mount whole home directories, print credentials, or route subscription auth through a guessed API-key transport. `doctor` verifies the configured binaries, models, source pins and auth-file presence before live work.
 
-Allocate the $50 campaign ledger as follows: up to $2 total for the two harness smoke tests, up to $5 for each of six initial scored trials ($30), up to $3 for each of two A/A repeat trials ($6), and the remaining $12 for disclosed diagnostic/retry trials. Unspent allowances can be reassigned within the $50 cap; no task cap overrides the campaign cap. If a configured model's conservative request reservation exceeds its task allowance, reduce the declared context/output limits or adjust allocation before launch, never exceed the campaign limit. This budget may be insufficient for a particular model or failure investigation; partial completion must be reported honestly.
+Subscription execution is bounded by concurrency 1, a 600-second per-agent wall clock that includes startup, Claude's 30-turn native limit, Codex's one-shot `exec` plus 80 completed tool calls, and the broker's 80 CLI invocations. Report native token classes and unknown dollar cost. `model_budget_usd` and the SQLite reservation gateway remain available for a future API-key lane, but the live controller rejects `hard_usd`; they are not acceptance controls for subscription runs.
 
-No further architecture choices require a user answer now. Offline implementation is unblocked. Live preflight must establish actual account permissions, entitlements, model auth, budget enforcement and receiver reachability. Record a precise blocker if one fails; do not call the loop proved without live evidence.
+No further architecture choices require a user answer now. Account lifecycle, model auth, receiver reachability, both harness smokes, cleanup recovery, and live boundary parity have been exercised. M7 passed after genuine export retries and the final acceptance audit; no further user answers are required for the initial loop.
 
 ### Trusted bootstrap CLI and independent verification
 
@@ -55,7 +55,7 @@ Resolve the host `limacharlie` executable once, store its absolute path/version/
 
 Implement `LocalCliProvisioner` for org creation/deletion and privileged setup. Run argv arrays, capture stdout privately, and parse expected JSON with a bounded decoder that tolerates documented surrounding status text. Validate response shape and ownership before recording IDs. Never blindly extract the first UUID from output. For auth-bearing calls, log only command kind/status and sanitized metadata.
 
-Bootstrap sequence: `org create --name <owned-name> --location auto --output json`; resolve the new OID; `auth test --oid <new-oid>` to refresh/test access; create the scoped candidate API key via `api-key create --oid <new-oid> --name <owned-key> --permissions <validated-list> --output json`. Capture the one-time key secret directly into protected worker provisioning. Record its key hash for revocation without exporting the secret.
+Bootstrap sequence: `org create --name <owned-name> --location <config.lc.location> --output json`; resolve the new OID; `auth test --oid <new-oid>` to refresh/test access; create the scoped candidate API key via `api-key create --oid <new-oid> --name <owned-key> --permissions <validated-list> --output json`. Capture the one-time key secret directly into protected worker provisioning. Record its key hash for revocation without exporting the secret.
 
 For independent evaluator reads, obtain a short-lived token through `auth get-token --oid <new-oid> --hours 1 --format json` captured in memory, and initialize the pinned SDK with `Client(oid=<new-oid>, jwt=<token>)`. Refresh through the trusted CLI before expiry or on an authenticated expiry response. The candidate never receives the user's token, config or identity. Setup may use the trusted CLI's generic API command where no dedicated setup command exists; authoritative checks use independent SDK/HTTP requests.
 
@@ -88,7 +88,7 @@ Observed source heads: LC AI `94d5518`, Python CLI `fe67856`, documentation `3ee
 
 Local commands available during planning: Docker server `29.7.2`, Codex `0.154.0`, Claude Code `2.1.272`, and the older host CLI described in section 2. No model authentication or live LC connectivity was exercised. Do not assume the host CLI and the sibling source checkout are the same version.
 
-Verified harness documentation: [Codex non-interactive mode](https://learn.chatgpt.com/docs/non-interactive-mode) documents JSONL execution events and invocation-specific API authentication. [Claude Code programmatic execution](https://code.claude.com/docs/en/headless) documents print mode and streaming results. Recheck the pinned binaries' help when implementing the adapters; store their version/help fingerprints. Current web docs and installed versions may diverge.
+Verified harness documentation: [Codex non-interactive mode](https://learn.chatgpt.com/docs/non-interactive-mode) documents JSONL execution events and invocation-specific API authentication. [Claude Code programmatic execution](https://code.claude.com/docs/en/headless) documents print mode and streaming results. The implemented build records pinned binary versions/hashes and the adapter flags were checked against installed help; current web docs and installed versions may still diverge.
 
 ## 4. Concrete implementation choices
 
@@ -98,7 +98,7 @@ Use Docker for local isolation. The controller runs on the host or in its own en
 
 Do not adopt Harbor in this milestone. The adapters and manifests are sufficient for the first proof; a framework bridge is follow-up work. Do not build a whole-platform emulator or an LLM grader.
 
-Proposed layout:
+Implemented logical layout:
 
 ```text
 evals/
@@ -108,7 +108,6 @@ evals/
   pyproject.toml
   uv.lock
   scripts/bootstrap.sh            # pinned uv bootstrap and locked install
-  config/example.yaml             # non-secret configuration schema example
   catalog/capabilities.yaml
   suites/initial-loop.yaml
   scenarios/<task-id>/
@@ -117,18 +116,14 @@ evals/
     public/                       # task-specific public samples
   src/lc_eval/
     cli.py, models.py, config.py
-    controller.py, journal.py, resources.py
-    fixtures/{organization,local_cli,hive,webhook,search_dataset}.py
+    controller.py, journal.py, acceptance.py, crash_drill.py
+    fixtures/{organization,local_cli,hive,webhook,search_dataset,routing,scenario_runtime}.py
     adapters/{base,scripted,claude_code,codex,workspace}.py
-    execution/{docker,broker,shim,egress,model_gateway,budget}.py
-    evidence/{events,artifacts,redaction}.py
+    execution/{docker,broker,shim,egress,parity,processes,model_gateway,budget}.py
     verifiers/{base,hive,export,routing}.py
     receiver/{app,store,client}.py
     reporting/{results,compare,html}.py
-  references/                     # evaluator-only reference executors
-  docker/                         # Dockerfiles and local topology
-  deploy/                         # local receiver/tunnel lifecycle assets
-  tests/{unit,integration,live}/
+  tests/unit/
 ```
 
 Use a configurable run-data directory outside the git checkout. Store its absolute path in the resolved operator config. Local artifact files default to user-only permissions. Add ignore rules for generated local configs, environments, credentials, databases and run artifacts as defense in depth; never rely on ignores for secrecy.
@@ -140,7 +135,7 @@ Define the following versioned, extra-fields-forbidden records. Treat IDs as opa
 | Record | Required content |
 |---|---|
 | `ScenarioSpec` | schema version, ID/revision, capability tags, prompt/public files, fixture kind/parameters, allowed scope, required adapter capabilities, timeout/convergence/probe budgets, assertion IDs, required deliverable paths. |
-| `RunConfig` | sources and immutable pins, agent configurations, secret references, environment mode/location/OID allowlist, receiver endpoints, resource caps, model pricing/budget semantics, run-data directory. |
+| `RunConfig` | schema version, run-data directory, source/image pins, LC executable/location, receiver configuration, agent model/auth-file references, subscription/resource limits, suite seed and controlled profile. |
 | `TrialManifest` | run/trial IDs, scenario hash/revision, variant seed, attempt, logical-to-real identity map reference, candidate/doc/evaluator digests, actual harness/image/tools/model/effort, observed backend settings, limits. |
 | `ResourceLease` | resource kind/ID, trial owner, create intent ID, creation status, cleanup handle, lease expiry, dependencies, cleanup state; no inline secrets in exported records. |
 | `ExecutionEvent` | version, trial ID, producer, sequence, event ID, wall and monotonic timestamps, event type, source event ID, sanitized payload/artifact references. |
@@ -165,13 +160,13 @@ Implement the strict local path for the three initial tasks. Name the profile `c
 
 - Candidate container: harness, ordinary shell/file tools, read-only docs and a `limacharlie` shim; writable `/work`; no real LC management credential, no evaluator storage, no Docker socket, no host mounts beyond the explicit public workspace.
 - CLI worker: immutable candidate wheel/image, separate credential/config directory and explicit environment; access only to `/work` plus its own runtime. Runs a fixed executable as an argument array, never a shell command assembled from user text.
-- Shim/broker: forward argv, bounded stdin, `/work`-relative cwd, and cancellation; stream stdout/stderr separately and return the actual exit code. Use a per-trial authenticated channel. Worker and candidate see the same `/work` files so YAML input and output redirection behave normally. No arbitrary executable or environment override RPC.
+- Shim/broker: forward argv, bounded stdin, fixed `/work` cwd, and cancellation; stream stdout/stderr separately and return the actual exit code over a per-trial Unix socket mounted only into the candidate. For CLI input files, snapshot regular files below candidate `/work` without following symlinks, stage private worker copies, and rewrite only the corresponding argv value. Shell redirection writes command output in candidate `/work`. No arbitrary executable or environment override RPC.
 - Candidate network: only its model endpoint/proxy and broker; no direct LC API, hooks or receiver access. Worker egress: only required LC services resolved for the authorized org and approved authentication endpoints. Reject arbitrary proxy destinations and resolved private/metadata addresses. Include IPv6, redirects and raw sockets in boundary tests.
 - Fix Python invocation with isolated import behavior and an immutable package environment. Ignore candidate `PYTHONPATH`, `PYTHONSTARTUP`, credential env overrides and user site packages. Do not load executable configuration from `/work`. Treat shared-workspace symlinks and artifact paths as hostile.
 - A worker may read task files, but the broker must not expose worker credential files or arbitrary file-read endpoints. Audit CLI commands that can display credentials or execute external tools; initial scoped keys exclude key/user/org administration and unrelated execution capabilities.
 - Support pipes, JSON/JSONL, YAML input files, relative paths, concurrent command requests, and cancellation. Interactive TTY/auth flows and long-lived interactive streams are declared unsupported in v1 and never selected by initial tasks.
 
-A shim alone is not the enforcement mechanism; the container/network boundary is. Validate that the agent cannot bypass it with Python, curl, an alternate installed SDK, a changed PATH, or an absolute binary path. Keep candidate permission to request generic `limacharlie api` operations within its authorized LC scope; do not confuse that supported CLI escape hatch with a direct API bypass.
+A shim alone is not the enforcement mechanism; the container/network boundary is. Validate that the agent cannot bypass it with Python, curl, an alternate installed SDK, a changed PATH, or an absolute binary path. The initial broker exposes only the scenario command profile documented in its public notice; generic `api`, authentication, debug, credential-profile, environment-selection, destructive, and unsafe file-path surfaces are rejected. Safe global output/OID/filter options and root/group/leaf AI help preserve native placement semantics.
 
 Record broker overhead separately. Compare direct and brokered executions of benign CLI commands for byte/exit-code parity, including file paths and errors. The broker must not repair commands, hide help, change output, or add hints. Do not change the candidate CLI to instrument it. Backend request counts may remain unavailable in v1: report null with provenance rather than equating one CLI invocation to one request.
 
@@ -197,7 +192,7 @@ If this boundary cannot be made compatible on the selected host, stop the strict
 
 **Fixture:** Evaluator provisions and enables a hosted JSON webhook adapter with `mapping.event_type_path: event_type`. Generate 5,003 matching events and 137 nonmatching events initially. Each contains a UUID/random ID generated independently from public samples, `eval_trial_id`, `event_type: LC_EVAL_EXPORT`, `environment` and a distinctive message. Store expected IDs and field values outside the candidate. Ingest in bounded JSON-array batches via the regional hook URL and `lc-secret`.
 
-**Readiness:** Independently query the entire fixture window, prove every unique input event is searchable, check its field values, and prove the matching retrieval traverses at least one nonempty `nextToken` continuation with additional rows. Event count alone is not proof of pagination. If pagination does not occur, grow the fixture deterministically within the configured 25,000-event ceiling and record the final fixture size. If still single-page, mark fixture unsupported; do not claim paginated coverage. If ingestion is retried after an ambiguous response, account for duplicates by unique event ID; grade the explicitly requested one-row-per-ID export.
+**Readiness:** Independently query the entire fixture window, prove every unique input event is searchable, check its field values, and prove the matching retrieval traverses at least one nonempty `nextToken` continuation with additional rows. Event count alone is not proof of pagination. The implemented fixture starts at 5,140 total events and adds 5,000 production events per stage, bounded by configured `limits.max_events` and `limits.max_fixture_bytes` and hard schema ceilings of 25,000 events/100 MB. It journals the expected ledger before each batch and records every growth/readiness stage. If the ceilings still yield one page, mark the fixture unsupported; do not claim paginated coverage. A Canada reference passed after growth to 15,140 events. If ingestion is retried after an ambiguous response, account for duplicates by unique event ID; grade the explicitly requested one-row-per-ID export.
 
 **Reference query shape:** `* | LC_EVAL_EXPORT | event/eval_trial_id == '<trial>' and event/environment == 'production'`, with explicit epoch start/end and stream `event`. Validate through the pinned SDK before publishing the scenario. Use `search run` JSONL and local projection/deduplication as needed. Do not assume CLI `--limit` means event-row count; omit it for the reference. Verify actual JSONL row shape against the selected CLI, then freeze parser fixtures and reference commands.
 
@@ -233,7 +228,7 @@ Implementation status: Implemented: package, locked environment, configuration, 
 
 1. Verify branch/worktree and record source SHAs/digests.
 2. Create package skeleton, lockfile, README and status checklist. Define `lc-eval --help` and a schema-checked example config.
-3. Implement `init --from-local`: generate a non-secret operator configuration using the resolved local LC executable, sibling source revisions, local harness versions, `location: auto`, `receiver.mode: quick_tunnel`, concurrency 1 and the approved $50 budget. Discover model/auth metadata only through supported harness interfaces or narrowly selected configuration fields. Copy no credential values into this file. Freeze model IDs/effort after access is verified; if absent, report the exact missing field. Implement `doctor`: check Python, Docker, run-data path, immutable candidate source/image, harness binaries/flags and required authentication availability without printing values.
+3. Implement `init-local --subscription`: generate a non-secret operator configuration using the resolved local LC executable, sibling source revisions, local harness versions, `location: usa`, `receiver.mode: quick_tunnel`, concurrency 1 and `budget_mode: subscription_limits`. Discover model/auth metadata only through narrowly selected harness configuration fields. Copy no credential values into this file. Freeze model IDs/effort after access is verified; if absent, report the exact missing field. Implement `doctor`/`doctor --offline`: check Docker, source and executable pins, harness binaries/models, and live auth availability without printing values.
 4. Write `preflight.json` with each check, evidence and missing action. Dry preflight never creates resources or calls a model.
 
 Gate: package installs from the lock; config validation rejects unresolved live inputs, incorrect paths and incompatible selected profiles. Offline mode remains usable with no credentials.
@@ -268,25 +263,19 @@ Implementation status: Implemented for the selected subscription mode. Both real
 
 1. Implement Claude Code and Codex adapters around subprocesses inside the candidate container, with fresh configuration/session directories and explicitly permitted file/shell tools.
 2. Launch subprocesses with argv arrays and feed task text via stdin; do not interpolate prompts into shell command strings. Maintain harness-native system instructions, adding only identical task context and documented environment facts.
-3. Claude launch basis: `claude -p --output-format stream-json --verbose --model <configured-model> --max-budget-usd <trial-cap>`. Use the pinned version's supported clean-config options (the inspected binary provides `--bare` for API-key automation) and explicit tool configuration. Capture raw events and final usage/result without double-counting cumulative usage.
+3. Claude subscription launch basis: `claude -p --output-format stream-json --verbose --safe-mode --no-session-persistence --disable-slash-commands --strict-mcp-config --mcp-config '{"mcpServers":{}}' ... --model <configured-model> --max-turns <configured-turns>`. Do not pass `--bare` or a dollar cap for subscription auth. Use explicit tools/permission settings and capture raw events and final usage/result without double-counting cumulative usage.
 4. Codex launch basis: `codex exec --json --ephemeral --ignore-user-config --ignore-rules --skip-git-repo-check --model <configured-model> -`. Use explicitly configured noninteractive permission/sandbox settings compatible with the external container; validate tool access before scoring.
 5. Normalize messages, command/tool events, errors, usage and completion. Keep native traces and mark absent metrics unknown. Read pipes continuously to avoid deadlock and allow final trace drain before forced termination.
 6. Enforce fresh sessions; disable memory, plugin auto-discovery, external MCP and delegated agents for this profile. Do not mount development credentials beyond the selected model auth mechanism.
 7. Implement generic adapter registration and conformance tests. Workspace entry performs capability checks and explains unsupported requirements; do not hard-code the task catalog to local adapters.
 
-Budget enforcement: the inspected Codex exec help does not expose a USD cap. Controller stop based on turn-end usage cannot enforce the approved $50 limit. Implement a local model gateway/budget ledger, or use a demonstrably equivalent existing hard-cap mechanism; do not silently substitute a soft cap.
-
-The gateway is part of the evaluator, not a public deployment. Configure the selected harness's supported provider/base-URL route to it. It forwards the native request/stream without prompt rewriting, injects authorized upstream credentials outside the candidate, and rejects upstream model calls not belonging to an active trial. Confirm API-key versus subscription-auth transport compatibility in preflight; never point subscription credentials at a guessed API endpoint. The [Codex configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) documents provider configuration; record the selected fields in the adapter manifest. For a missing compatible model credential, request that specific auth setup rather than implementing an undocumented auth workaround.
-
-Before forwarding each billable request, atomically reserve its conservative maximum charge against the shared campaign ledger using the pinned model's supported input/output bounds and maximum applicable rates, including cache-write or other billed token classes. Reject unknown models, rates, billable built-in tools and unbounded requests. Use the full model input limit when an exact trusted token bound is unavailable; never estimate a hard ceiling from output characters. Set/validate a supported maximum output-token limit as part of the recorded experimental configuration. Reconcile reservations from trusted upstream usage, keep the full reservation on uncertain/cancelled requests until settled, and reserve anew for every upstream retry. Persist the ledger across controller restarts. Paid smoke calls share the same ledger. Stop new requests when reservations plus settled spend would exceed $50.
-
-This is a small native-protocol forwarding adapter, not a replacement agent loop. Test streaming cancellation, duplicate usage, missing usage, retries and concurrent reservations using a fake upstream before a paid call. If the selected auth mode cannot provide reliable bounded billing, the paid lane stays blocked pending a compatible auth/gateway configuration. Subscription runs must report actual billing separately from estimated model-equivalent cost; unknown billing is not zero.
+The implemented optional API-key lane contains a durable micro-USD reservation ledger and native forwarding gateway tested against fake upstreams. It is not wired into subscription execution and is not required for this acceptance campaign. Subscription reports retain provider token classes, mark dollar cost unknown, and never convert CLI estimates into a billing claim.
 
 Gate: captured representative stream fixtures pass parser tests; a tiny real shell task per selected harness verifies actual launch/auth/stop only after budget authorization. This smoke task is not one of the three scored scenarios.
 
 ### M4 — Live fixture preflight and cleanup
 
-Implementation status: Implemented and live-verified: organization lifecycle, Hive records, hosted webhook enrollment, complete paginated ingestion, signed output delivery and cleanup.
+Implementation status: Implemented and live-verified: organization lifecycle, USA Hive records/routing, hosted webhook enrollment, Canada adaptive paginated ingestion at 15,140 events, signed output delivery and cleanup.
 
 1. Apply the resolved user decisions in section 2; produce `resolved-config.json` with secret references only. Do not re-request org lifecycle or receiver permission.
 2. Implement `LocalCliProvisioner` as specified in section 2. Create and delete orgs using the fixed authenticated local CLI, refresh/test access after creation, wait for org readiness and entitlements, then issue trial-scoped candidate credentials through that CLI. Use private token acquisition for independent evaluator SDK/HTTP reads. Keep user credentials on the host.
@@ -325,7 +314,7 @@ Gate: synthetic A/A and known differing result fixtures produce correct aggregat
 
 ### M7 — Initial live acceptance campaign
 
-Implementation status: In progress. Real harness smoke, reference calibration and crash recovery passed. Corrected live parity passed and `initial-proof-v2` has genuine Hive and routing successes for both harnesses. Both export preparations were inconclusive before agent launch because the backend returned the full fixture in one nonempty page. Preserve those records, require actual agent-start evidence for the matrix, add the bounded growth specified above, and calibrate export in the supported `canada` location before retrying both harnesses. Final acceptance remains pending.
+Implementation status: Complete. `initial-proof-v2` contains eight genuine clean passes and two retained pre-agent infrastructure failures. Both Hive A/A pairs are compatible. USA Hive/routing and Canada export are recorded separately; export readiness grew to 15,140 events for Codex and 20,140 for Claude. Reference validation, live recovery, parity, all five cleanup journals, and the acceptance evaluator passed. See [ACCEPTANCE.md](ACCEPTANCE.md) for exact evidence and reproduction commands.
 
 1. Run offline checks, live doctor and reference/bad-reference suites.
 2. Run each scenario once with each selected real harness, in fresh fixtures (six trials total for two harnesses). Alternate harness order to limit systematic timing effects. No hints, manual interventions or task repairs mid-trial.
@@ -337,53 +326,79 @@ Implementation status: In progress. Real harness smoke, reference calibration an
 
 Gate: the definition of done is satisfied. If genuine AI success, external infrastructure, budget or cleanup remains unresolved, state exactly which criterion is unmet. Do not call the initial loop proved merely because the report generator ran.
 
-## 9. Operator commands the implementation must provide
+## 9. Operator commands
 
-The operator interface was simplified during implementation. These are the current commands; `cleanup` combines exact reconciliation and deletion. Runtime credentials and evidence stay outside the checkout.
+From `lc-ai`, run `bash evals/scripts/bootstrap.sh`, then `evals/.venv/bin/python -m pytest evals/tests/unit` and `evals/.venv/bin/ruff check evals/src evals/tests`. Review the model/source pins generated below before building.
 
-```bash
-cd /home/maxime/goProjects/github.com/refractionPOINT/lc-ai
-git branch --show-current
-git status --short
-bash evals/scripts/bootstrap.sh
-evals/.venv/bin/python -m pytest evals/tests/unit
-evals/.venv/bin/ruff check evals/src evals/tests
+Create two non-secret configuration copies that share one private run directory and differ only in the explicit LC region. The files contain credential **paths**, never credential values. Replace the generic directory below with an absolute private path:
 
-evals/.venv/bin/lc-eval init-local --subscription
-evals/.venv/bin/lc-eval doctor --offline
-evals/.venv/bin/lc-eval build
-evals/.venv/bin/lc-eval doctor
-# Run each scenario with --reference, then --bad-reference, in a calibration campaign.
-# Names: hive-preserve-update, search-complete-export, webhook-production-routing.
-evals/.venv/bin/lc-eval run --campaign calibration --scenario hive-preserve-update --reference
-evals/.venv/bin/lc-eval run --campaign calibration --scenario hive-preserve-update --bad-reference
-# Repeat the two commands for the other two scenarios before validation.
-evals/.venv/bin/lc-eval validate-suite --campaign calibration
-evals/.venv/bin/lc-eval smoke --campaign harness-smoke
-evals/.venv/bin/lc-eval run --campaign initial-proof
-evals/.venv/bin/lc-eval fault-drill --campaign initial-proof
-evals/.venv/bin/lc-eval cleanup
-evals/.venv/bin/lc-eval report --campaign initial-proof
-evals/.venv/bin/lc-eval acceptance --campaign initial-proof
+```sh
+./evals/.venv/bin/lc-eval init-local --subscription --config /absolute/private/lc-eval-base.json
+./evals/.venv/bin/lc-eval doctor --offline --config /absolute/private/lc-eval-base.json
+./evals/.venv/bin/lc-eval build --config /absolute/private/lc-eval-base.json
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+base = Path("/absolute/private/lc-eval-base.json")
+value = json.loads(base.read_text())
+for region in ("usa", "canada"):
+    regional = json.loads(json.dumps(value))
+    regional["lc"]["location"] = region
+    destination = base.with_name(f"lc-eval-{region}.json")
+    destination.write_text(json.dumps(regional, indent=2) + "\n")
+    destination.chmod(0o600)
+PY
+./evals/.venv/bin/lc-eval doctor --config /absolute/private/lc-eval-usa.json
+./evals/.venv/bin/lc-eval doctor --config /absolute/private/lc-eval-canada.json
 ```
 
-`run` without `--scenario` executes the eight trial entries in `suites/initial-loop.yaml`. Bad-reference runs deliberately return a failed grade and a nonzero command exit; inspect the named assertion rather than treating that expected failure as an infrastructure error. Use `--config /absolute/private/config.json` on each command for a different run directory. Do not reinitialize an existing configuration casually: its source and model pins define the experiment.
+```sh
+# Calibrate each scenario; bad-reference runs must exit 1 with their named failure.
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign calibration --scenario hive-preserve-update --seed 41001 --reference
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign calibration --scenario hive-preserve-update --seed 41001 --bad-reference
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-canada.json --campaign calibration --scenario search-complete-export --seed 42001 --reference
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-canada.json --campaign calibration --scenario search-complete-export --seed 42001 --bad-reference
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign calibration --scenario webhook-production-routing --seed 43001 --reference
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign calibration --scenario webhook-production-routing --seed 43001 --bad-reference
+./evals/.venv/bin/lc-eval validate-suite --config /absolute/private/lc-eval-usa.json --campaign calibration
 
-## 10. Configuration fields to finalize
+# Real harness smoke and the complete eight targeted trials.
+./evals/.venv/bin/lc-eval smoke --config /absolute/private/lc-eval-usa.json --campaign harness-smoke
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign initial-proof --scenario hive-preserve-update --adapter claude_code --seed 41001 --repetition 1
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign initial-proof --scenario hive-preserve-update --adapter codex --seed 41001 --repetition 1
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-canada.json --campaign initial-proof --scenario search-complete-export --adapter codex --seed 42001 --repetition 1
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-canada.json --campaign initial-proof --scenario search-complete-export --adapter claude_code --seed 42001 --repetition 1
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign initial-proof --scenario webhook-production-routing --adapter claude_code --seed 43001 --repetition 1
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign initial-proof --scenario webhook-production-routing --adapter codex --seed 43001 --repetition 1
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign initial-proof --scenario hive-preserve-update --adapter claude_code --seed 41001 --repetition 2
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign initial-proof --scenario hive-preserve-update --adapter codex --seed 41001 --repetition 2
 
-Create a commented non-secret YAML example containing these groups:
+./evals/.venv/bin/lc-eval fault-drill --config /absolute/private/lc-eval-usa.json --campaign initial-proof
+./evals/.venv/bin/lc-eval cleanup --config /absolute/private/lc-eval-usa.json
+./evals/.venv/bin/lc-eval report --config /absolute/private/lc-eval-usa.json --campaign initial-proof
+./evals/.venv/bin/lc-eval acceptance --config /absolute/private/lc-eval-usa.json --campaign initial-proof
+./evals/.venv/bin/lc-eval status --config /absolute/private/lc-eval-usa.json
+```
 
-- `schema_version`, `run_data_dir`, `suite`, `seed`, `repetitions`.
-- `sources`: full CLI/docs commits, wheel SHA256, evaluator SDK pin, source dirty policy, candidate/worker images by digest.
-- `lc`: `auth_mode: local_cli`, absolute bootstrap executable/digest, inherited environment selector, `location: auto` initially, `fresh_org`, org/resource ceilings, readiness/deletion timeouts. Dynamically minted secrets stay outside the exported config.
-- `receiver`: mode `quick_tunnel` by default or `existing`, tunnel binary/image pin, ingest/private management ports, generated public URL, management credential reference, retention/cleanup settings.
-- `agents`: adapter, binary/image version, model ID, effort, auth reference/mode, permission/tool profile, price-table reference, token/time/spend limits and hard/soft budget semantics.
-- `execution`: `controlled-cli-v1`, egress configuration, `/work` size cap, max command duration/output, shutdown grace and broker limits.
-- `limits`: approved campaign model budget, infrastructure allowance, concurrency, max fixture events/bytes, verification and lease bounds.
+The targeted `--repetition` option defaults to 1, accepts integers of at least 1 only with `--scenario`, and leaves suite-defined repetitions unchanged.
 
-Model IDs and prices are explicit operator inputs resolved against actual accessible models before launch. Do not choose an unverified “latest” alias or invent a price. Record cache accounting, actual versus estimated cost and gaps. The campaign reserves resources/budget before starting a trial and stops scheduling new ones when funds or quotas are insufficient.
+Regional configurations must share a private run directory and immutable source/model pins. Do not reinitialize them casually. Bad-reference runs intentionally return exit 1; inspect their named assertions before continuing. `run` without `--scenario` executes the eight YAML suite entries at one configured location.
 
-Suggested starting timing defaults for calibration: 600 seconds agent execution per focused task, 900 for routing, 600 fixture readiness, 600 verification, 360 org deletion, 15 seconds process shutdown grace. They are limits to validate and version, not claims about actual service latency. Platform settling does not secretly extend agent execution time.
+## 10. Current configuration schema
+
+`RunConfig` is schema version 1, rejects extra fields, and contains:
+
+- Top level: `schema_version`, absolute `run_data_dir`, `sources`, `lc`, `receiver`, `agents`, `limits`, `suite`, `seed`, and `profile` (`controlled-cli-v1`).
+- `sources`: `cli` and `docs` source pins (`path`, full `commit`, `dirty`), candidate/worker image names and IDs, wheel SHA256, and source-archive SHA256.
+- `lc`: absolute trusted executable, executable SHA256/version, literal `location`, optional inherited environment name, readiness seconds, and deletion seconds. Dynamically minted org/key material stays outside the exported config.
+- `receiver`: `quick_tunnel` or `existing`, optional public/management URLs, management-token environment reference, and optional cloudflared path/SHA256.
+- `agents`: adapter, executable/version, explicit model and effort, auth mode plus API-key environment or subscription auth-file reference, timeout seconds, and Claude max turns. Workspace/scripted remain schema values but are not live scored harnesses.
+- `limits`: optional model-budget value/mode, fixed concurrency 1, maximum orgs/events/fixture bytes, CLI command duration/output, lease, verification, and negative-observation windows.
+
+`init-local --subscription` emits JSON using this schema. There is no separate `execution` group, repetition field, price table, or inline secret. Model IDs are explicit inputs resolved against accessible subscriptions. The live controller accepts `subscription_limits`; dollar cost remains unknown while token classes retain their native provenance.
+
+Current defaults are 600 seconds for every agent execution (including startup), 600 seconds for org/search readiness, 600 seconds for verification, 360 seconds for org deletion, and 300 seconds per brokered CLI command. Scenario YAML records task intent budgets, but controller enforcement comes from the resolved `agents` and `limits` configuration. Platform settling does not extend agent execution time.
 
 ## 11. Required tests and evidence checklist
 

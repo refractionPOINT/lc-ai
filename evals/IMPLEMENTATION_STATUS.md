@@ -6,12 +6,12 @@ Branch: `eval/limacharlie-cli-ai`. Implementation started 2026-09-16.
 |---|---|---|
 | M0 Configuration/package | Implemented | Branch confirmed; Python 3.11.2, Docker 29.7.2 and local CLI authentication verified. |
 | M1 Journal/controller | Implemented | Live crash drill `fault-05046ba64cc944b3` proved acquisition, abrupt interruption, journal recovery and sustained clean deletion. |
-| M2 Isolated CLI execution | Implemented | Live direct-versus-broker CLI parity and isolation checks passed in `calibration-b4ba166555`. |
+| M2 Isolated CLI execution | Implemented | Expanded live parity (seven CLI cases) and three isolation checks passed in `calibration-4313564b3f`. |
 | M3 Harnesses and budget | Implemented for subscriptions | Both real subscription smoke tests passed after packaging fixes; bounded time/turn/tool execution and token-only accounting. |
 | M4 Live fixtures | Implemented and verified | All three correct references passed against real LC resources; hosted webhook warmup, paced ingestion, genuine pagination and signed output delivery are verified. |
 | M5 Scenarios/graders | Live calibration complete | All three correct references passed; each incorrect reference failed its intended assertion. `validate-suite --campaign calibration` passed after cleanup. |
 | M6 Reporting | Implemented | JSON/HTML reports, missing-metric handling, compatibility checks and acceptance criteria implemented. |
-| M7 Live proof | In progress | References, real harness smokes and crash recovery passed. Two first Hive AI attempts passed but are invalid for scoring because of broker friction; corrected eight-trial campaign follows live parity. |
+| M7 Live proof | Complete | Eight genuine passes, both compatible Hive A/A pairs, reference/negative calibration, crash recovery, final cleanup and acceptance passed. See [ACCEPTANCE.md](ACCEPTANCE.md). |
 
 Receiver, graders/reporting and harness modules are assigned to GPT-5.6 Sol agents. Controller, fixture lifecycle, configuration and integration remain with the primary agent. No unrelated files are included.
 
@@ -27,7 +27,7 @@ Receiver, graders/reporting and harness modules are assigned to GPT-5.6 Sol agen
 - `hive-probe-1789582514`: two real lookup records seeded with metadata, restricted candidate key created and revoked, org deleted; ledger empty.
 - Initial Docker build exposed an invalid image-ID `FROM`; fixed to the pulled immutable repository digest. Native Volta Codex executable resolution is covered separately from its launcher.
 
-These are infrastructure checks, not completed model-trial acceptance. The whole-loop proof is still in progress.
+The entries below are chronological investigation history. Final acceptance is complete; later entries supersede earlier in-progress statements without removing failed-attempt evidence.
 
 - `calibration-6dbc7b7414`: first complete live Hive reference **passed**, including independent semantic grading and verified cleanup.
 - Earlier `hive-reference-a3b7439936` exposed Docker file-staging failure; corrected staging now uses a fixed trusted worker writer with exclusive/no-follow file creation. The failed attempt was retained and cleaned.
@@ -93,3 +93,18 @@ A later independent owner-inventory audit found four exact journal-owned test or
 - Export setup attempts `initial-proof-v2-ea2df2ef91` (Codex) and `initial-proof-v2-3549abcc93` (Claude) were infrastructure-inconclusive before agent launch: all 5,140 events were independently searchable, but the backend returned only one nonempty page. Both cleaned up without model usage. Backend pagination operates on storage batches; fixed event count alone does not guarantee continuation. Fixture reliability and pre-agent reporting classification are under investigation; no export success is claimed.
 
 - Both genuine routing trials passed all six assertions: `initial-proof-v2-c52050447d` (Claude) and `initial-proof-v2-bf63fd326e` (Codex). Signed matching delivery, full negative observation, excluded probes, ingestion and baseline preservation all passed. Claude cleanup is complete; Codex cleanup and Hive A/A repeats are in progress.
+
+- Frozen `initial-proof-v2` campaign completed: six genuine task passes (four Hive including both repeats, two routing), two export pre-agent infrastructure failures, all cleaned. Updated reporting excludes pre-agent failures from model rates and coverage; both Hive A/A pairs are compatible.
+- `039427e`: adaptive export growth now implements the planned bounded schedule (5,140 → 10,140 → 15,140 → 20,140 → 25,000), respects configured event/byte ceilings, and records actual nonempty continuation or unsupported status. New manifests include LC location; legacy comparisons use only persisted organization evidence. **191 tests passed; Ruff clean**. Canada reference `calibration-c81636c596` is in progress; its first two complete datasets were single-page, and growth is continuing without agent token usage.
+
+- `calibration-c81636c596` passed all seven export assertions and verified cleanup in **Canada**. Bounded growth proved full searchable membership at each stage; 5,140 and 10,140 were single-page, while 15,140 events produced nonempty continuation. The trusted transported CLI exported exactly 15,003 production rows. Reference validation passed again, and real Codex/Claude export retries are now queued under `initial-proof-v2`, using private `config-canada.json` and evaluator `039427e`.
+
+- Genuine Codex export `initial-proof-v2-e06caa68d1` passed all seven assertions in Canada after adaptive readiness proved 15,140 searchable events and nonempty continuation. The exported artifact contains exactly 15,003 unique production rows with correct values and no platform mutations. Cleanup is in progress; Claude export remains queued. Every initial scenario now has a genuine AI success, but full harness coverage and final cleanup/acceptance remain pending.
+
+## Final acceptance — complete
+
+- `initial-proof-v2-66b49892a8` (Claude export) passed all seven assertions after readiness grew to 20,140 searchable events and proved nonempty continuation; exported exactly 20,003 production rows. Both export retry cleanups completed.
+- Campaign result: **8/8 genuine passes**, 10 recorded attempts including two pre-agent infrastructure failures. Two earlier broker-confounded Hive attempts remain invalid in the separate `initial-proof` campaign. Both Hive A/A comparisons are compatible; this is plumbing/calibration evidence, not a statistical performance claim.
+- Final validation: **193 tests passed; Ruff and diff checks clean**. Targeted `--repetition` is implemented for the full documented mixed-region recipe.
+- Final exact-ownership audit passed all five journals: zero pending resources, runtime leftovers or inventory errors. A private audit-checker mismatch for Docker absent-network wording was corrected; its initial failed output is retained.
+- `validate-suite`, `report`, and `acceptance` returned success. [ACCEPTANCE.md](ACCEPTANCE.md) and [sanitized results](results/initial-proof-v2.json) contain outcomes, manifests, accounting and limitations. Subscription usage is token-only; dollar cost remains unknown.
