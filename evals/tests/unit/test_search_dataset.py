@@ -88,6 +88,19 @@ def test_regional_search_polls_and_follows_inner_continuation() -> None:
     asyncio.run(exercise())
 
 
+def test_empty_continuation_page_is_not_pagination_proof() -> None:
+    result = SearchResult(
+        query_id="query",
+        events=({"eval_event_id": "one"},),
+        pages=(
+            SearchPage(1, None, "continuation", 1, 1, 1),
+            SearchPage(2, "continuation", None, 1, 0, 0),
+        ),
+    )
+
+    assert result.traversed_continuation is False
+
+
 def test_regional_search_retries_transient_poll_500(monkeypatch) -> None:
     async def exercise() -> None:
         class TransientCLI(FakeSearchCLI):

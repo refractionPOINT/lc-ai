@@ -122,7 +122,11 @@ class SearchResult:
 
     @property
     def traversed_continuation(self) -> bool:
-        return len(self.pages) > 1 and any(page.next_token for page in self.pages[:-1])
+        return (
+            len(self.pages) > 1
+            and any(page.next_token for page in self.pages[:-1])
+            and any(page.event_rows > 0 for page in self.pages[1:])
+        )
 
 
 class RegionalSearchClient:

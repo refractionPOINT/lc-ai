@@ -33,7 +33,7 @@ from .adapters import (
     Usage,
 )
 from .verifiers import verify_hive, verify_export, verify_routing
-from .reporting import build_report, render_html, compare_pair, acceptance_summary
+from .reporting import build_report, render_html, compare_pair, acceptance_summary, command_metrics
 
 
 def scenario(name):
@@ -381,6 +381,7 @@ class Controller:
             self.journal.transition(trial_id, "stopping")
             env.stop_candidate()
             await broker.close()
+            result["usage"].update(command_metrics(root / "commands.jsonl"))
             broker = None
             frozen = freeze(env.work, root / "frozen.json", completion, self.config.limits.max_fixture_bytes)
             self.journal.transition(trial_id, "settling")
@@ -415,10 +416,12 @@ class Controller:
                 except Exception as exc:
                     cleanup_error("stop_candidate", exc)
             if broker:
+                result.setdefault("usage", {}).setdefault("cli_invocations", broker.count)
                 try:
                     await broker.close()
                 except Exception as exc:
                     cleanup_error("close_broker", exc)
+            result.setdefault("usage", {}).update(command_metrics(root / "commands.jsonl"))
             if fixture and fixture.get("_runtime"):
                 try:
                     await fixture["_runtime"].stop()

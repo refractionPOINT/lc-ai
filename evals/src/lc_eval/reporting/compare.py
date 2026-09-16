@@ -8,7 +8,8 @@ from typing import Any
 
 EFFICIENCY_METRICS = (
     "input_tokens", "output_tokens", "cost_usd", "cost_micro_usd", "active_seconds",
-    "verification_seconds", "cli_invocations", "backend_requests", "output_bytes",
+    "verification_seconds", "cli_invocations", "cli_seconds", "cli_failed_commands",
+    "rejected_commands", "backend_requests", "output_bytes",
 )
 
 

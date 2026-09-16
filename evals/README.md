@@ -32,6 +32,12 @@ The initial authorized billing mode is **subscription_limits**: one trial at a t
 # All eight initial suite trials, sequentially.
 ./evals/.venv/bin/lc-eval run --campaign initial-proof
 
+# Calibrate all three scenarios with good and deliberately bad references
+# before claiming acceptance; retain every failed attempt.
+./evals/.venv/bin/lc-eval validate-suite --campaign calibration
+./evals/.venv/bin/lc-eval fault-drill --campaign initial-proof
+./evals/.venv/bin/lc-eval acceptance --campaign initial-proof
+
 ./evals/.venv/bin/lc-eval status
 ./evals/.venv/bin/lc-eval report --campaign initial-proof
 ./evals/.venv/bin/lc-eval cleanup

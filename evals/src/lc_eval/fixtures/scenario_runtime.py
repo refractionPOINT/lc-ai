@@ -7,13 +7,14 @@ import json
 import secrets
 import time
 import uuid
+from typing import Any, Callable
 
 from ..config import atomic_json
 from .local_cli import ControlError
 from .organization import unwrap
 from .hive import snapshot
 from .webhook import WebhookSpec, HostedWebhookFixture
-from .search_dataset import generate_search_dataset, RegionalSearchClient
+from .search_dataset import generate_search_dataset, RegionalSearchClient, SearchError
 
 
 def installation_key(cli, oid, trial):
@@ -29,6 +30,116 @@ def installation_key(cli, oid, trial):
     except (AttributeError, TypeError, ValueError) as error:
         raise ControlError("installation key response missing valid adapter iid") from error
     return value
+
+
+async def wait_for_webhook_search_ready(
+    hook: HostedWebhookFixture,
+    search: RegionalSearchClient,
+    trial: str,
+    *,
+    start_time: int,
+    timeout_seconds: float,
+    retry_interval_seconds: float = 3.0,
+    observer: Callable[[dict[str, Any]], None] | None = None,
+) -> dict[str, Any]:
+    """Require a hosted webhook probe to become independently searchable."""
+    if timeout_seconds <= 0 or retry_interval_seconds < 0:
+        raise ValueError("webhook readiness timing bounds are invalid")
+    if not trial or "'" in trial:
+        raise ValueError("trial is invalid for the readiness query")
+
+    loop = asyncio.get_running_loop()
+    started = loop.time()
+    deadline = started + timeout_seconds
+    sent_ids: set[str] = set()
+    attempts: list[dict[str, Any]] = []
+    query = f"* | LC_EVAL_READY | event/eval_trial_id == '{trial}'"
+
+    def snapshot(state: str, ready_probe_id: str | None = None) -> dict[str, Any]:
+        return {
+            "state": state,
+            "attempt_count": len(attempts),
+            "elapsed_seconds": max(0.0, loop.time() - started),
+            "ready_probe_id": ready_probe_id,
+            "attempts": list(attempts),
+        }
+
+    while loop.time() < deadline:
+        probe_id = str(uuid.uuid4())
+        attempt: dict[str, Any] = {
+            "attempt": len(attempts) + 1,
+            "probe_id": probe_id,
+            "hook_accepted": False,
+        }
+        try:
+            receipts = await hook.send_events(
+                [
+                    {
+                        "event_type": "LC_EVAL_READY",
+                        "eval_trial_id": trial,
+                        "eval_event_id": probe_id,
+                    }
+                ]
+            )
+        except ControlError as error:
+            attempt["hook_error"] = type(error).__name__
+        else:
+            attempt["hook_accepted"] = True
+            attempt["hook_statuses"] = [receipt.status_code for receipt in receipts]
+            sent_ids.add(probe_id)
+
+            remaining = deadline - loop.time()
+            if remaining > 0:
+                try:
+                    result = await asyncio.wait_for(
+                        search.execute(
+                            query,
+                            start_time,
+                            int(time.time()) + 60,
+                            stream="event",
+                        ),
+                        timeout=remaining,
+                    )
+                except SearchError as error:
+                    if error.status_code not in {500, 502, 503, 504}:
+                        raise
+                    attempt["search_status_code"] = error.status_code
+                    attempt["search_query_id"] = error.query_id
+                    attempt["search_transient"] = True
+                except TimeoutError:
+                    attempt["search_timeout"] = True
+                else:
+                    observed = {
+                        event.get("eval_event_id")
+                        for event in result.events
+                        if isinstance(event.get("eval_event_id"), str)
+                    }
+                    attempt["search_query_id"] = result.query_id
+                    attempt["search_event_count"] = len(result.events)
+                    attempt["search_pages"] = len(result.pages)
+                    ready_ids = sent_ids & observed
+                    if ready_ids:
+                        ready_probe_id = sorted(ready_ids)[0]
+                        attempt["ready_probe_id"] = ready_probe_id
+                        attempts.append(attempt)
+                        value = snapshot("ready", ready_probe_id)
+                        if observer is not None:
+                            observer(value)
+                        return value
+
+        attempts.append(attempt)
+        if observer is not None:
+            observer(snapshot("waiting"))
+        remaining = deadline - loop.time()
+        if remaining > 0:
+            await asyncio.sleep(min(retry_interval_seconds, remaining))
+
+    value = snapshot("timeout")
+    if observer is not None:
+        observer(value)
+    raise ControlError(
+        "hosted webhook did not produce a searchable readiness probe before deadline"
+    )
 
 
 async def provision(config, cli, oid, trial, name, seed, root):
@@ -50,16 +161,19 @@ async def provision(config, cli, oid, trial, name, seed, root):
         {"events": dataset.events, "total_json_bytes": dataset.total_json_bytes},
     )
     start = int(time.time()) - 120
-    deadline = time.monotonic() + config.limits.verification_seconds
-    while True:
-        try:
-            # Initial readiness event; it does not belong to the scored dataset.
-            await hook.send_events([{"event_type": "LC_EVAL_READY", "eval_trial_id": trial}])
-            break
-        except ControlError:
-            if time.monotonic() >= deadline:
-                raise
-            await asyncio.sleep(3)
+    warmup_search = RegionalSearchClient(
+        cli,
+        oid,
+        timeout_seconds=min(60, config.limits.verification_seconds),
+    )
+    warmup = await wait_for_webhook_search_ready(
+        hook,
+        warmup_search,
+        trial,
+        start_time=start,
+        timeout_seconds=config.limits.verification_seconds,
+        observer=lambda value: atomic_json(root / "webhook-warmup.json", value),
+    )
     receipts = await hook.send_events(dataset.events)
     atomic_json(root / "injection-receipts.json", [asdict(receipt) for receipt in receipts])
     end = int(time.time()) + 60
@@ -88,6 +202,11 @@ async def provision(config, cli, oid, trial, name, seed, root):
             "event_count": len(ready.events),
             "paginated": ready.traversed_continuation,
             "transient_failures": list(ready.transient_failures),
+        },
+        "webhook_warmup": {
+            "attempt_count": warmup["attempt_count"],
+            "elapsed_seconds": warmup["elapsed_seconds"],
+            "ready": warmup["state"] == "ready",
         },
         "public": {"organization_id": oid, "window_start": start, "window_end": end, "trial_selector": trial},
         "_hook": hook,

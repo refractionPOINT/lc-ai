@@ -7,7 +7,7 @@ import yaml
 
 from lc_eval.reporting.compare import compare_pair, compare_results
 from lc_eval.reporting.html import render_html
-from lc_eval.reporting.results import acceptance_summary, build_report, dumps_json
+from lc_eval.reporting.results import acceptance_summary, build_report, command_metrics, dumps_json
 from lc_eval.controller import Controller
 
 
@@ -66,6 +66,56 @@ def test_json_and_aggregates_keep_missing_usage_null():
     assert cost["known_total"] == 1.0
     assert cost["missing_count"] == 1
     assert json.loads(dumps_json(report))["summary"]["metrics"]["cost_usd"]["total"] is None
+
+
+def test_command_metrics_aggregate_metadata_without_raw_output(tmp_path):
+    path = tmp_path / "commands.jsonl"
+    events = [
+        {"type": "command_request", "id": "one"},
+        {"type": "stdout", "id": "one", "text": "private raw output"},
+        {"type": "command_end", "id": "one", "code": 0, "bytes": 5, "seconds": 0.25},
+        {"type": "command_rejected", "argv_sha256": "digest"},
+        {"type": "command_request", "id": "two"},
+        {"type": "command_end", "id": "two", "code": 2, "bytes": 7, "seconds": 0.75},
+    ]
+    path.write_text("".join(json.dumps(event) + "\n" for event in events))
+    metrics = command_metrics(path)
+    assert metrics == {
+        "output_bytes": 12,
+        "cli_seconds": 1.0,
+        "cli_failed_commands": 1,
+        "rejected_commands": 1,
+    }
+    assert "private raw output" not in json.dumps(metrics)
+
+
+def test_command_metrics_preserve_unknown_for_missing_end_or_bytes(tmp_path):
+    missing_end = tmp_path / "missing-end.jsonl"
+    missing_end.write_text(json.dumps({"type": "command_request", "id": "one"}) + "\n")
+    result = command_metrics(missing_end)
+    assert result["output_bytes"] is None
+    assert result["cli_seconds"] is None
+    assert result["cli_failed_commands"] is None
+    assert result["rejected_commands"] == 0
+
+    missing_bytes = tmp_path / "missing-bytes.jsonl"
+    missing_bytes.write_text(
+        json.dumps({"type": "command_request", "id": "one"})
+        + "\n"
+        + json.dumps({"type": "command_end", "id": "one", "code": 125, "seconds": 0.5})
+        + "\n"
+    )
+    result = command_metrics(missing_bytes)
+    assert result["output_bytes"] is None
+    assert result["cli_seconds"] == 0.5
+    assert result["cli_failed_commands"] == 1
+
+
+def test_command_metrics_are_unknown_when_evidence_is_missing_or_malformed(tmp_path):
+    assert all(value is None for value in command_metrics(tmp_path / "absent").values())
+    malformed = tmp_path / "malformed.jsonl"
+    malformed.write_text("not-json\n")
+    assert all(value is None for value in command_metrics(malformed).values())
 
 
 def test_comparison_requires_compatibility_and_both_success_for_efficiency():

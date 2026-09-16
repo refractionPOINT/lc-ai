@@ -250,3 +250,60 @@ def test_ingestion_search_persistent_transient_is_infrastructure_error() -> None
             raise AssertionError("persistent transient search failure was hidden")
 
     asyncio.run(exercise())
+
+
+def test_ingestion_search_resends_same_missing_probe_ids() -> None:
+    async def exercise() -> None:
+        visible: list[dict[str, str]] = []
+
+        class Webhook:
+            calls: list[list[dict[str, str]]] = []
+
+            async def send_events(self, events):
+                batch = [dict(event) for event in events]
+                self.calls.append(batch)
+                # The first HTTP-accepted batch is lost while the adapter is
+                # enrolling. A later delivery reaches search.
+                if len(self.calls) > 1:
+                    visible.extend(batch)
+
+        class Search:
+            calls = 0
+
+            async def execute(self, *_args, **_kwargs):
+                self.calls += 1
+                return SearchResult(
+                    query_id=f"query-{self.calls}",
+                    events=tuple(visible),
+                    pages=(SearchPage(1, None, None, 1, 1, len(visible)),),
+                )
+
+        fixture = RoutingFixture(
+            SimpleNamespace(), SimpleNamespace(), _spec(), search=Search()
+        )
+        webhook = Webhook()
+        fixture.webhook = webhook
+        events = [
+            {"eval_event_id": "probe-a"},
+            {"eval_event_id": "probe-b"},
+        ]
+        await webhook.send_events(events)
+        observed, failures, delivery = await fixture._wait_ingested(
+            events,
+            start_time=1,
+            end_time=2,
+            deadline=time.monotonic() + 1,
+            poll_seconds=0.001,
+        )
+
+        assert observed == {"probe-a", "probe-b"}
+        assert failures == []
+        assert delivery["attempts_by_probe"] == {"probe-a": 2, "probe-b": 2}
+        assert delivery["retry_count"] == 2
+        assert delivery["retry_failures"] == []
+        assert [[item["eval_event_id"] for item in batch] for batch in webhook.calls] == [
+            ["probe-a", "probe-b"],
+            ["probe-a", "probe-b"],
+        ]
+
+    asyncio.run(exercise())

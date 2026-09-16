@@ -402,11 +402,14 @@ class RoutingFixture:
         end_time: int,
         deadline: float,
         poll_seconds: float,
-    ) -> tuple[set[str], list[dict[str, Any]]]:
+    ) -> tuple[set[str], list[dict[str, Any]], dict[str, Any]]:
         expected = {event["eval_event_id"] for event in events}
+        events_by_id = {event["eval_event_id"]: event for event in events}
         observed: set[str] = set()
         valid_searches: set[str] = set()
         transient_failures: list[dict[str, Any]] = []
+        delivery_attempts = {event_id: 1 for event_id in expected}
+        delivery_failures: list[dict[str, Any]] = []
         last_transient: BaseException | None = None
         while time.monotonic() < deadline:
             for event in events:
@@ -455,6 +458,22 @@ class RoutingFixture:
                     observed.add(event_id)
             if observed == expected:
                 break
+            retry_ids = sorted((expected - observed) & valid_searches)
+            if retry_ids:
+                for event_id in retry_ids:
+                    delivery_attempts[event_id] += 1
+                try:
+                    await self.webhook.send_events(
+                        [events_by_id[event_id] for event_id in retry_ids]
+                    )
+                except (ControlError, httpx.HTTPError) as error:
+                    delivery_failures.append(
+                        {
+                            "attempt": len(delivery_failures) + 1,
+                            "event_ids": retry_ids,
+                            "error_type": type(error).__name__,
+                        }
+                    )
             await asyncio.sleep(min(poll_seconds, max(0, deadline - time.monotonic())))
         unavailable = expected - valid_searches
         if unavailable:
@@ -463,7 +482,15 @@ class RoutingFixture:
                 f"{len(unavailable)} of {len(expected)} probes after "
                 f"{len(transient_failures)} transient failures"
             ) from last_transient
-        return observed, transient_failures
+        return (
+            observed,
+            transient_failures,
+            {
+                "attempts_by_probe": delivery_attempts,
+                "retry_count": sum(delivery_attempts.values()) - len(expected),
+                "retry_failures": delivery_failures,
+            },
+        )
 
     @staticmethod
     def _flatten_receipts(receipts: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -500,7 +527,7 @@ class RoutingFixture:
         observation_start = _utc_now()
         search_start = int(time.time()) - 60
         await self.webhook.send_events(events)
-        ingested, search_transient_failures = await self._wait_ingested(
+        ingested, search_transient_failures, probe_delivery = await self._wait_ingested(
             events,
             start_time=search_start,
             end_time=int(time.time()) + max(60, int(total_timeout_seconds)),
@@ -552,6 +579,7 @@ class RoutingFixture:
             "expected_negative_ids": sorted(negative_ids),
             "observed_ingestion_ids": sorted(ingested),
             "search_transient_failures": search_transient_failures,
+            "probe_delivery": probe_delivery,
             "receiver_health": {
                 "management_reachable": management_reachable,
                 "receiver_ready": health.get("database") == "ok",

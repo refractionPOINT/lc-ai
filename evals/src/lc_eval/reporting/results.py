@@ -12,6 +12,84 @@ from pathlib import Path
 from typing import Any
 
 
+COMMAND_METRIC_NAMES = (
+    "output_bytes",
+    "cli_seconds",
+    "cli_failed_commands",
+    "rejected_commands",
+)
+
+
+def command_metrics(path: str | os.PathLike[str], *, max_events: int = 1_000_000) -> dict[str, Any]:
+    """Aggregate numeric broker evidence without copying command text into reports."""
+
+    unknown = {name: None for name in COMMAND_METRIC_NAMES}
+    source = Path(path)
+    if max_events <= 0 or not source.is_file():
+        return unknown
+    requests: set[str] = set()
+    ends: dict[str, Mapping[str, Any]] = {}
+    observed_command_ids: set[str] = set()
+    rejected = 0
+    try:
+        with source.open(encoding="utf-8") as stream:
+            for number, line in enumerate(stream, 1):
+                if number > max_events:
+                    return unknown
+                event = json.loads(line)
+                if not isinstance(event, Mapping):
+                    return unknown
+                kind = event.get("type")
+                if kind == "command_rejected":
+                    rejected += 1
+                elif kind == "command_request":
+                    command_id = event.get("id")
+                    if not isinstance(command_id, str) or not command_id or command_id in requests:
+                        return unknown
+                    requests.add(command_id)
+                elif kind == "command_end":
+                    command_id = event.get("id")
+                    if not isinstance(command_id, str) or not command_id or command_id in ends:
+                        return unknown
+                    ends[command_id] = event
+                    observed_command_ids.add(command_id)
+                elif kind in {"command_start", "stdout", "stderr"}:
+                    command_id = event.get("id")
+                    if not isinstance(command_id, str) or not command_id:
+                        return unknown
+                    observed_command_ids.add(command_id)
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return unknown
+
+    complete = requests == set(ends) and observed_command_ids <= requests
+    end_events = [ends[command_id] for command_id in sorted(requests)] if complete else []
+    byte_values = [event.get("bytes") for event in end_events]
+    second_values = [event.get("seconds") for event in end_events]
+    code_values = [event.get("code") for event in end_events]
+    bytes_known = complete and all(
+        isinstance(value, int) and not isinstance(value, bool) and value >= 0
+        for value in byte_values
+    )
+    seconds_known = complete and all(
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(float(value))
+        and value >= 0
+        for value in second_values
+    )
+    codes_known = complete and all(
+        isinstance(value, int) and not isinstance(value, bool) for value in code_values
+    )
+    return {
+        "output_bytes": sum(byte_values) if bytes_known else None,
+        "cli_seconds": sum(second_values) if seconds_known else None,
+        "cli_failed_commands": (
+            sum(code != 0 for code in code_values) if codes_known else None
+        ),
+        "rejected_commands": rejected,
+    }
+
+
 def _success(trial: Mapping[str, Any]) -> bool:
     return trial.get("grade", trial.get("task_grade")) == "pass"
 
@@ -103,6 +181,9 @@ def build_report(
             "cost_usd",
             "cost_micro_usd",
             "cli_invocations",
+            "cli_seconds",
+            "cli_failed_commands",
+            "rejected_commands",
             "backend_requests",
             "output_bytes",
             "active_seconds",

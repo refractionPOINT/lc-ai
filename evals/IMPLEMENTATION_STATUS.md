@@ -5,7 +5,7 @@ Branch: `eval/limacharlie-cli-ai`. Implementation started 2026-09-16.
 | Milestone | Status | Evidence / remaining work |
 |---|---|---|
 | M0 Configuration/package | Implemented | Branch confirmed; Python 3.11.2, Docker 29.7.2 and local CLI authentication verified. |
-| M1 Journal/controller | In progress | SQLite journal, exclusive campaign lock, CLI/controller state machine, exact cleanup reconciliation implemented; crash drill pending. |
+| M1 Journal/controller | Implemented | Live crash drill `fault-05046ba64cc944b3` proved acquisition, abrupt interruption, journal recovery and sustained clean deletion. |
 | M2 Isolated CLI execution | Implemented | Live direct-versus-broker CLI parity and isolation checks passed in `calibration-b4ba166555`. |
 | M3 Harnesses and budget | Implemented for subscriptions | Both real subscription smoke tests passed after packaging fixes; bounded time/turn/tool execution and token-only accounting. |
 | M4 Live fixtures | In progress | Hive fixture works live. Adapter enrollment contract corrected to IID; event uploads now paced at 4 KiB/s for new-org throughput. Export/routing calibration pending. |
@@ -59,3 +59,11 @@ A later independent owner-inventory audit found four exact journal-owned test or
 
 - `calibration-b4ba166555`: all seven live transport/isolation checks passed (version, help, JSON lookup, missing-key exit behavior, API proxy denial, direct egress denial, host Docker socket denial).
 - Fixture sender now caps exact uncompressed batches at 4 KiB and paces 4 KiB/s across consecutive sends. Backend throughput counts decoded USP envelopes, so this leaves headroom below the 10 KiB/s free-tier limit. Routing readiness now retries fresh transient-failure queries with a bounded deadline and preserves infrastructure diagnostics.
+
+- Hive calibration complete: `calibration-b4ba166555` passed, `calibration-8a4c4fe68a` failed the intended no-op assertion, both with completed execution and sustained clean deletion.
+- `calibration-7c7091eba2`: paced injection avoided throughput errors and independently retrieved 4,836 events over continuation pages. The missing IDs were exactly injection positions 0–303, proving initial HTTP acceptance preceded sensor enrollment. The run was interrupted for cleanup; setup now needs a search-confirmed warmup probe before bulk data injection. The live Search limits endpoint reports 300 results per page (actual pages may include backend batches larger than that).
+
+- Search-confirmed hosted-webhook warmup is implemented before bulk export injection. Routing verification now re-sends only missing original probe IDs during its bounded convergence window, retaining at-least-once delivery semantics; negative observation starts only after searchable ingestion and both positive delivery controls.
+- Efficiency reports now aggregate CLI output bytes, execution seconds, failed commands and rejected requests from broker evidence. Incomplete command evidence yields unknown totals. Current review checkpoint: 150 offline tests passed.
+
+- `fault-05046ba64cc944b3` (**initial-proof campaign**): live interruption recovery passed after acquiring an organization, candidate API key, isolated networks and all runtime containers; recovery removed every owned resource and confirmed sustained organization absence. This is recovery evidence, not an AI trial.

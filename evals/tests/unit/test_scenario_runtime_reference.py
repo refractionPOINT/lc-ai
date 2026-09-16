@@ -6,7 +6,12 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from lc_eval.fixtures.local_cli import ControlError
-from lc_eval.fixtures.scenario_runtime import installation_key, reference
+from lc_eval.fixtures.scenario_runtime import (
+    installation_key,
+    reference,
+    wait_for_webhook_search_ready,
+)
+from lc_eval.fixtures.search_dataset import SearchPage, SearchResult
 
 
 def test_installation_key_selects_adapter_iid() -> None:
@@ -42,6 +47,94 @@ def test_installation_key_rejects_encoded_keys_without_iid() -> None:
         assert "iid" in str(error)
     else:
         raise AssertionError("encoded sensor key was accepted for an adapter")
+
+
+def test_webhook_warmup_waits_until_accepted_probe_is_searchable(
+    monkeypatch,
+) -> None:
+    async def exercise() -> None:
+        sent: list[dict] = []
+        observed_states: list[dict] = []
+
+        class Hook:
+            async def send_events(self, events):
+                sent.extend(events)
+                return [SimpleNamespace(status_code=202)]
+
+        class Search:
+            calls = 0
+
+            async def execute(self, query, start, end, *, stream):
+                self.calls += 1
+                assert query == "* | LC_EVAL_READY | event/eval_trial_id == 'trial'"
+                assert (start, stream) == (100, "event")
+                events = () if self.calls == 1 else (sent[0],)
+                return SearchResult(
+                    query_id=f"query-{self.calls}",
+                    events=events,
+                    pages=(SearchPage(1, None, None, 1, 1, len(events)),),
+                )
+
+        async def no_sleep(_delay):
+            return None
+
+        monkeypatch.setattr(
+            "lc_eval.fixtures.scenario_runtime.asyncio.sleep", no_sleep
+        )
+        search = Search()
+        result = await wait_for_webhook_search_ready(
+            Hook(),
+            search,
+            "trial",
+            start_time=100,
+            timeout_seconds=1,
+            observer=observed_states.append,
+        )
+
+        assert len(sent) == 2
+        assert search.calls == 2
+        assert result["state"] == "ready"
+        assert result["attempt_count"] == 2
+        assert result["ready_probe_id"] == sent[0]["eval_event_id"]
+        assert [value["state"] for value in observed_states] == ["waiting", "ready"]
+
+    asyncio.run(exercise())
+
+
+def test_webhook_warmup_times_out_when_accepted_probes_stay_missing() -> None:
+    async def exercise() -> None:
+        observed_states: list[dict] = []
+
+        class Hook:
+            async def send_events(self, events):
+                return [SimpleNamespace(status_code=202)]
+
+        class Search:
+            async def execute(self, *_args, **_kwargs):
+                await asyncio.sleep(0.02)
+                return SearchResult(query_id="late", events=(), pages=())
+
+        try:
+            await wait_for_webhook_search_ready(
+                Hook(),
+                Search(),
+                "trial",
+                start_time=100,
+                timeout_seconds=0.005,
+                retry_interval_seconds=0,
+                observer=observed_states.append,
+            )
+        except ControlError as error:
+            assert "searchable readiness probe" in str(error)
+        else:
+            raise AssertionError("unsearchable webhook was treated as ready")
+
+        assert observed_states[-1]["state"] == "timeout"
+        assert observed_states[-1]["attempt_count"] == 1
+        assert observed_states[-1]["attempts"][0]["hook_accepted"] is True
+        assert observed_states[-1]["attempts"][0]["search_timeout"] is True
+
+    asyncio.run(exercise())
 
 
 def test_search_reference_projects_rows_from_raw_result_pages(

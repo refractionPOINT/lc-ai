@@ -284,10 +284,23 @@ async def test_verifier_fault_after_execution_stays_inconclusive_and_cleans(tmp_
         count = 1
 
         def __init__(self, *args, **kwargs):
-            pass
+            self.evidence = args[2]
 
         async def start(self):
-            pass
+            self.evidence.write_text(
+                json.dumps({"type": "command_request", "id": "one"})
+                + "\n"
+                + json.dumps(
+                    {
+                        "type": "command_end",
+                        "id": "one",
+                        "code": 0,
+                        "bytes": 9,
+                        "seconds": 0.125,
+                    }
+                )
+                + "\n"
+            )
 
         async def close(self):
             pass
@@ -312,6 +325,10 @@ async def test_verifier_fault_after_execution_stays_inconclusive_and_cleans(tmp_
     assert result["evidence_complete"] is False
     assert result["cleanup_status"] == "clean"
     assert "snapshot failed" in result["error"]
+    assert result["usage"]["output_bytes"] == 9
+    assert result["usage"]["cli_seconds"] == 0.125
+    assert result["usage"]["cli_failed_commands"] == 0
+    assert result["usage"]["rejected_commands"] == 0
 
 
 @pytest.mark.asyncio
