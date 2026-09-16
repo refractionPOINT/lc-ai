@@ -385,6 +385,108 @@ def test_run_command_exit_codes_reflect_trial_outcome(monkeypatch, result, expec
     assert invocation.exit_code == expected, invocation.output
 
 
+def _record_successful_cli_trials(monkeypatch):
+    calls = []
+
+    class Journal:
+        def exclusive(self):
+            return nullcontext()
+
+        def resources(self):
+            return []
+
+    class FakeController:
+        journal = Journal()
+
+        def __init__(self, config):
+            pass
+
+        async def trial(self, *args, **kwargs):
+            calls.append(args)
+            return {
+                "trial_id": "trial",
+                "execution_status": "completed",
+                "grade": "pass",
+                "cleanup_status": "clean",
+                "error": None,
+            }
+
+        def report(self, campaign):
+            return Path("/tmp/report")
+
+    monkeypatch.setattr(cli_module, "load", lambda path: object())
+    monkeypatch.setattr(cli_module, "Controller", FakeController)
+    return calls
+
+
+def test_scenario_run_dispatches_explicit_and_default_repetition(monkeypatch):
+    calls = _record_successful_cli_trials(monkeypatch)
+    runner = CliRunner()
+    explicit = runner.invoke(
+        cli_module.main,
+        [
+            "run",
+            "--campaign",
+            "campaign",
+            "--scenario",
+            "hive-preserve-update",
+            "--repetition",
+            "2",
+        ],
+    )
+    default = runner.invoke(
+        cli_module.main,
+        ["run", "--campaign", "campaign", "--scenario", "hive-preserve-update"],
+    )
+    invalid = runner.invoke(
+        cli_module.main,
+        [
+            "run",
+            "--campaign",
+            "campaign",
+            "--scenario",
+            "hive-preserve-update",
+            "--repetition",
+            "0",
+        ],
+    )
+
+    assert explicit.exit_code == 0, explicit.output
+    assert default.exit_code == 0, default.output
+    assert invalid.exit_code == 2
+    assert [call[4] for call in calls] == [2, 1]
+
+
+def test_suite_run_preserves_yaml_repetition_and_rejects_explicit_override(monkeypatch):
+    calls = _record_successful_cli_trials(monkeypatch)
+    monkeypatch.setattr(
+        cli_module.yaml,
+        "safe_load",
+        lambda value: {
+            "trials": [
+                {
+                    "scenario": "hive-preserve-update",
+                    "adapter": "codex",
+                    "seed": 41001,
+                    "repetition": 2,
+                }
+            ]
+        },
+    )
+    runner = CliRunner()
+    suite = runner.invoke(cli_module.main, ["run", "--campaign", "campaign"])
+    rejected = runner.invoke(
+        cli_module.main,
+        ["run", "--campaign", "campaign", "--repetition", "2"],
+    )
+
+    assert suite.exit_code == 0, suite.output
+    assert calls[0][4] == 2
+    assert rejected.exit_code == 2
+    assert "--repetition requires --scenario" in rejected.output
+    assert len(calls) == 1
+
+
 def test_reconcile_does_not_delete_unknown_network_with_foreign_label(tmp_path, monkeypatch):
     resource = {
         "intent": "intent",

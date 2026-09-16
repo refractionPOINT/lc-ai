@@ -58,9 +58,12 @@ def build(config):
 )
 @click.option("--adapter", type=click.Choice(["claude_code", "codex"]), default="claude_code")
 @click.option("--seed", type=int, default=42)
+@click.option("--repetition", type=click.IntRange(min=1), default=None)
 @click.option("--reference", is_flag=True)
 @click.option("--bad-reference", is_flag=True, help="Run the named negative-calibration reference.")
-def run(config, campaign, scenario, adapter, seed, reference, bad_reference):
+def run(config, campaign, scenario, adapter, seed, repetition, reference, bad_reference):
+    if scenario is None and repetition is not None:
+        raise click.UsageError("--repetition requires --scenario")
     reference = reference or bad_reference
     exit_code = 0
     controller = Controller(load(config))
@@ -69,7 +72,14 @@ def run(config, campaign, scenario, adapter, seed, reference, bad_reference):
             click.echo("Unresolved resources exist; run cleanup first.", err=True)
             raise click.exceptions.Exit(4)
         specs = (
-            [{"scenario": scenario, "adapter": adapter, "seed": seed}]
+            [
+                {
+                    "scenario": scenario,
+                    "adapter": adapter,
+                    "seed": seed,
+                    "repetition": repetition or 1,
+                }
+            ]
             if scenario
             else yaml.safe_load((PROJECT / "suites/initial-loop.yaml").read_text())["trials"]
         )
