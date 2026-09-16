@@ -6,7 +6,7 @@ import asyncio
 import gzip
 import json
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import quote
 
 import httpx
@@ -185,6 +185,7 @@ class HostedWebhookFixture:
         gzip_payload: bool = False,
         timeout_seconds: float = 30.0,
         client: httpx.AsyncClient | None = None,
+        observer: Callable[[dict[str, int]], None] | None = None,
     ) -> list[BatchReceipt]:
         if not 1 <= batch_events <= 10_000:
             raise ValueError("batch_events must be between 1 and 10000")
@@ -195,6 +196,7 @@ class HostedWebhookFixture:
         http = client or httpx.AsyncClient(timeout=timeout_seconds)
         receipts: list[BatchReceipt] = []
         total_bytes = 0
+        total_events = 0
         try:
             async with self._send_lock:
                 for raw, event_count in self._batches(
@@ -237,6 +239,16 @@ class HostedWebhookFixture:
                             status_code=response.status_code,
                         )
                     )
+                    total_events += event_count
+                    if observer is not None:
+                        observer(
+                            {
+                                "target_events": len(events),
+                                "accepted_batches": len(receipts),
+                                "accepted_events": total_events,
+                                "uncompressed_bytes": total_bytes,
+                            }
+                        )
         finally:
             if own_client:
                 await http.aclose()

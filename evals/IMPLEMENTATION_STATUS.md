@@ -8,7 +8,7 @@ Branch: `eval/limacharlie-cli-ai`. Implementation started 2026-09-16.
 | M1 Journal/controller | Implemented | Live crash drill `fault-05046ba64cc944b3` proved acquisition, abrupt interruption, journal recovery and sustained clean deletion. |
 | M2 Isolated CLI execution | Implemented | Live direct-versus-broker CLI parity and isolation checks passed in `calibration-b4ba166555`. |
 | M3 Harnesses and budget | Implemented for subscriptions | Both real subscription smoke tests passed after packaging fixes; bounded time/turn/tool execution and token-only accounting. |
-| M4 Live fixtures | In progress | Hive fixture works live. Adapter enrollment contract corrected to IID; event uploads now paced at 4 KiB/s for new-org throughput. Export/routing calibration pending. |
+| M4 Live fixtures | Implemented and verified | All three correct references passed against real LC resources; hosted webhook warmup, paced ingestion, genuine pagination and signed output delivery are verified. |
 | M5 Scenarios/graders | In progress | Three manifests, public prompts and deterministic Hive/export/routing graders implemented; unit calibration passes. |
 | M6 Reporting | Implemented | JSON/HTML reports, missing-metric handling, compatibility checks and acceptance criteria implemented. |
 | M7 Live proof | Pending | No model trials yet; organization and Hive fixture/key lifecycle probes passed. |
@@ -70,3 +70,6 @@ A later independent owner-inventory audit found four exact journal-owned test or
 
 - `calibration-5043d08d42`: routing reference passed all six independent assertions: ingestion, receiver health, full negative window, signed matching delivery, exclusion of negative probes, and preservation of the baseline output. Cleanup is in progress.
 - Current offline checkpoint after warmup, probe retries, command metrics and nonempty-continuation proof: **154 tests passed; Ruff clean**.
+
+- `calibration-238879db8a`: **export reference passed all seven assertions**. Search-confirmed warmup took 97 seconds; all 5,140 fixture events were observed, with page rows `[4560, 580, 0]`, proving a nonempty continuation. The transported candidate CLI exported exactly 5,003 production events with exact values, unique IDs and no platform mutations.
+- `calibration-5043d08d42` routing cleanup completed cleanly. All three correct scenario references have now passed; remaining negative references and genuine AI trials are pending.

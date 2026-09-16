@@ -92,7 +92,7 @@ Verified harness documentation: [Codex non-interactive mode](https://learn.chatg
 
 ## 4. Concrete implementation choices
 
-Use Python 3.11+ and a standalone installable project in `evals/pyproject.toml`, with console entry point `lc-eval`. Use a `src/lc_eval` package, Click for the command surface, Pydantic v2 for strict typed manifests, PyYAML safe loading for scenario/config files, HTTPX for evaluator HTTP and receiver management, aiohttp for the small receiver/broker/gateway HTTP servers, pytest for tests, and Ruff for linting. Use uv with `evals/uv.lock` and a pinned bootstrap script; install via `uv sync --locked --extra test --project evals`. Use stdlib SQLite for the durable journal and JSONL/files for artifacts. Keep the independently pinned LC SDK in the evaluator environment and candidate wheel in a separate image.
+Use Python 3.11+ and a standalone installable project in `evals/pyproject.toml`, with console entry point `lc-eval`. Use a `src/lc_eval` package, Click for the command surface, Pydantic v2 for strict typed manifests, PyYAML safe loading for scenario/config files, HTTPX for evaluator HTTP and receiver management, aiohttp for the small receiver/broker/gateway HTTP servers, pytest for tests, and Ruff for linting. Use uv with `evals/uv.lock` and a pinned bootstrap script; install via `uv sync --locked --extra test --project evals`. Use stdlib SQLite for the durable journal and JSONL/files for artifacts. Use independent authenticated HTTP for evaluator verification and keep the candidate wheel in its separate worker image. The controller does not import the candidate SDK.
 
 Use Docker for local isolation. The controller runs on the host or in its own environment; it owns Docker and never exposes its socket to the candidate. First implementation uses one host, one campaign at a time and trial concurrency 1. Use an advisory process lock as well as the journal to prevent two controllers acquiring the same environment.
 
@@ -229,6 +229,8 @@ No cybersecurity classification or live customer data is required for any scenar
 
 ### M0 — Repository setup and resolved configuration
 
+Implementation status: Implemented: package, locked environment, configuration, source/image pins and doctor checks.
+
 1. Verify branch/worktree and record source SHAs/digests.
 2. Create package skeleton, lockfile, README and status checklist. Define `lc-eval --help` and a schema-checked example config.
 3. Implement `init --from-local`: generate a non-secret operator configuration using the resolved local LC executable, sibling source revisions, local harness versions, `location: auto`, `receiver.mode: quick_tunnel`, concurrency 1 and the approved $50 budget. Discover model/auth metadata only through supported harness interfaces or narrowly selected configuration fields. Copy no credential values into this file. Freeze model IDs/effort after access is verified; if absent, report the exact missing field. Implement `doctor`: check Python, Docker, run-data path, immutable candidate source/image, harness binaries/flags and required authentication availability without printing values.
@@ -237,6 +239,8 @@ No cybersecurity classification or live customer data is required for any scenar
 Gate: package installs from the lock; config validation rejects unresolved live inputs, incorrect paths and incompatible selected profiles. Offline mode remains usable with no credentials.
 
 ### M1 — Journal, lifecycle and scripted runner
+
+Implementation status: Implemented and live-verified: exact resource ownership, finalization, reconciliation, sustained deletion and abrupt-interruption recovery.
 
 1. Implement models and SQLite tables for campaigns, trials, transitions, create intents and leases. Persist create intent before remote creation and resource ID immediately afterwards.
 2. Use unique trial-owned names plus exact ledger IDs to recover ambiguous create outcomes. On a timeout, reconcile by the known owner/name before retrying; never blindly create a duplicate.
@@ -248,6 +252,8 @@ Gate: tests inject failures at every state transition, terminate during provisio
 
 ### M2 — Candidate isolation and CLI broker
 
+Implementation status: Implemented and live-verified: direct-versus-broker parity and candidate isolation checks passed.
+
 1. Build pinned worker and candidate images; generate allowlisted public workspaces from scenario packages.
 2. Implement broker/shim, cancellation, separate stdout/stderr, size limits, and persisted CLI events.
 3. Implement network separation and provider egress configuration; prove no route to evaluator stores, receiver management or direct LC services from the candidate.
@@ -257,6 +263,8 @@ Gate: tests inject failures at every state transition, terminate during provisio
 Gate: boundary tests pass and actual CLI image digest is recorded. No uninstrumented CLI route exists in the controlled profile. v1 limitations appear in adapter capability output.
 
 ### M3 — Real harness adapters
+
+Implementation status: Implemented for the selected subscription mode. Both real harness smoke tests passed; API-key budget transport remains optional.
 
 1. Implement Claude Code and Codex adapters around subprocesses inside the candidate container, with fresh configuration/session directories and explicitly permitted file/shell tools.
 2. Launch subprocesses with argv arrays and feed task text via stdin; do not interpolate prompts into shell command strings. Maintain harness-native system instructions, adding only identical task context and documented environment facts.
@@ -278,6 +286,8 @@ Gate: captured representative stream fixtures pass parser tests; a tiny real she
 
 ### M4 — Live fixture preflight and cleanup
 
+Implementation status: Implemented and live-verified: organization lifecycle, Hive records, hosted webhook enrollment, complete paginated ingestion, signed output delivery and cleanup.
+
 1. Apply the resolved user decisions in section 2; produce `resolved-config.json` with secret references only. Do not re-request org lifecycle or receiver permission.
 2. Implement `LocalCliProvisioner` as specified in section 2. Create and delete orgs using the fixed authenticated local CLI, refresh/test access after creation, wait for org readiness and entitlements, then issue trial-scoped candidate credentials through that CLI. Use private token acquisition for independent evaluator SDK/HTTP reads. Keep user credentials on the host.
 3. Validate permissions with real reads plus reversible writes in the disposable environment. For the initial scenarios, start from org/sensor discovery, lookup permissions, `cloudsensor.*`, installation-key permissions, `dr.list/set` and output permissions as needed; resolve search permissions from the current endpoints. Freeze the minimal proven list in fixture metadata. Do not give candidates org deletion, API-key administration or unrelated tenant access.
@@ -291,6 +301,8 @@ Gate: a provision → small input/output probe → cleanup cycle succeeds, and r
 
 ### M5 — Scenarios, references and independent graders
 
+Implementation status: Implemented. All three correct references passed; Hive negative calibration passed. Export and routing negative calibrations are running.
+
 1. Implement the three packages in section 7 and add them to `initial-loop.yaml`.
 2. Build fixture factories, expected-state builders, reference runners and deterministic verifiers. Reference runners use the same CLI broker as real agents; privileged preparation stays in the fixture layer.
 3. Prove reference success on each real fixture, then execute deliberately bad references against separate fixtures. Require named failed assertions, not merely a nonzero process status.
@@ -301,6 +313,8 @@ Gate: all good references pass and every bad reference fails for the intended re
 
 ### M6 — Reporting and comparison
 
+Implementation status: Implemented: deterministic assertions, private evidence, JSON/HTML reports, token and CLI metrics, compatibility checks and acceptance gates.
+
 1. Produce JSON plus a static HTML report linking each assertion to evidence. Escape all agent-controlled HTML and text; never render command output as executable markup.
 2. Report full success, stage assertions, task grade, cleanup, CLI invocation count, output bytes, errors, active/wait/verification time, tokens/cost and metric provenance.
 3. Compare compatible configurations by scenario/seed/repetition; normalize logical fixture IDs across tenants. Reject comparisons with mismatched scenario revision, docs, fixture recipe or uncontrolled CLI/model settings unless explicitly presented as a different experiment.
@@ -310,6 +324,8 @@ Gate: all good references pass and every bad reference fails for the intended re
 Gate: synthetic A/A and known differing result fixtures produce correct aggregates, missing usage stays null, dangerous HTML is escaped, and incompatible comparisons are rejected with a reason.
 
 ### M7 — Initial live acceptance campaign
+
+Implementation status: In progress. Real harness smoke and crash recovery passed; eight genuine AI trials and final acceptance are pending.
 
 1. Run offline checks, live doctor and reference/bad-reference suites.
 2. Run each scenario once with each selected real harness, in fresh fixtures (six trials total for two harnesses). Alternate harness order to limit systematic timing effects. No hints, manual interventions or task repairs mid-trial.

@@ -174,7 +174,10 @@ async def provision(config, cli, oid, trial, name, seed, root):
         timeout_seconds=config.limits.verification_seconds,
         observer=lambda value: atomic_json(root / "webhook-warmup.json", value),
     )
-    receipts = await hook.send_events(dataset.events)
+    receipts = await hook.send_events(
+        dataset.events,
+        observer=lambda value: atomic_json(root / "injection-progress.json", value),
+    )
     atomic_json(root / "injection-receipts.json", [asdict(receipt) for receipt in receipts])
     end = int(time.time()) + 60
     search = RegionalSearchClient(cli, oid, timeout_seconds=config.limits.verification_seconds)
