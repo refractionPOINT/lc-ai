@@ -14,7 +14,17 @@ from .local_cli import ControlError
 from .organization import unwrap
 from .hive import snapshot
 from .webhook import WebhookSpec, HostedWebhookFixture
-from .search_dataset import generate_search_dataset, RegionalSearchClient, SearchError
+from .search_dataset import (
+    DEFAULT_GROWTH_EVENTS,
+    MAX_FIXTURE_EVENTS,
+    PaginationFixtureUnsupportedError,
+    PaginationNotObservedError,
+    RegionalSearchClient,
+    SearchError,
+    adaptive_event_targets,
+    generate_search_dataset,
+    grow_search_dataset,
+)
 
 
 def installation_key(cli, oid, trial):
@@ -142,6 +152,152 @@ async def wait_for_webhook_search_ready(
     )
 
 
+def _search_result_summary(result) -> dict[str, Any]:
+    return {
+        "query_id": result.query_id,
+        "pages": [asdict(page) for page in result.pages],
+        "event_count": len(result.events),
+        "paginated": result.traversed_continuation,
+        "transient_failures": list(result.transient_failures),
+    }
+
+
+async def _prepare_export_dataset(
+    config,
+    hook: HostedWebhookFixture,
+    search: RegionalSearchClient,
+    trial: str,
+    root,
+    *,
+    start_time: int,
+):
+    """Ingest and grow an export fixture until nonempty pagination is proven."""
+    dataset = generate_search_dataset(trial)
+    targets = adaptive_event_targets(
+        len(dataset.events),
+        ceiling=MAX_FIXTURE_EVENTS,
+        growth_events=DEFAULT_GROWTH_EVENTS,
+    )
+    pending_events = dataset.events
+    receipt_rows: list[dict[str, Any]] = []
+    growth_stages: list[dict[str, Any]] = []
+    accepted_events = 0
+    accepted_batches = 0
+    accepted_bytes = 0
+
+    for stage_number, target_event_count in enumerate(targets, start=1):
+        if len(dataset.events) != target_event_count:
+            dataset, pending_events = grow_search_dataset(dataset, target_event_count)
+
+        # The complete expected ledger is durable before any event in this stage
+        # can be accepted by the remote hook.
+        atomic_json(
+            root / "injected-events.json",
+            {
+                "events": dataset.events,
+                "event_count": len(dataset.events),
+                "production_count": len(dataset.production),
+                "nonproduction_count": len(dataset.nonproduction),
+                "total_json_bytes": dataset.total_json_bytes,
+                "fixture_event_ceiling": MAX_FIXTURE_EVENTS,
+            },
+        )
+
+        prior_events = accepted_events
+        prior_batches = accepted_batches
+        prior_bytes = accepted_bytes
+
+        def observe_injection(value: dict[str, Any]) -> None:
+            atomic_json(
+                root / "injection-progress.json",
+                {
+                    "growth_stage": stage_number,
+                    "target_events": len(dataset.events),
+                    "fixture_event_ceiling": MAX_FIXTURE_EVENTS,
+                    "accepted_batches": prior_batches + value["accepted_batches"],
+                    "accepted_events": prior_events + value["accepted_events"],
+                    "uncompressed_bytes": (
+                        prior_bytes + value["uncompressed_bytes"]
+                    ),
+                },
+            )
+
+        stage_receipts = await hook.send_events(
+            pending_events,
+            observer=observe_injection,
+        )
+        for receipt in stage_receipts:
+            row = asdict(receipt)
+            row["growth_stage"] = stage_number
+            row["stage_batch_number"] = row["batch_number"]
+            row["batch_number"] = len(receipt_rows) + 1
+            receipt_rows.append(row)
+            accepted_events += receipt.event_count
+            accepted_batches += 1
+            accepted_bytes += receipt.uncompressed_bytes
+        atomic_json(root / "injection-receipts.json", receipt_rows)
+
+        stage: dict[str, Any] = {
+            "growth_stage": stage_number,
+            "target_events": len(dataset.events),
+            "injected_events": len(pending_events),
+            "production_count": len(dataset.production),
+            "nonproduction_count": len(dataset.nonproduction),
+        }
+        end_time = int(time.time()) + 60
+        try:
+            ready = await dataset.wait_until_ready(
+                search,
+                start_time=start_time,
+                end_time=end_time,
+                timeout_seconds=config.limits.verification_seconds,
+                observer=lambda value: atomic_json(
+                    root / "readiness.json",
+                    {
+                        **value,
+                        "growth_stage": stage_number,
+                        "target_events": len(dataset.events),
+                        "fixture_event_ceiling": MAX_FIXTURE_EVENTS,
+                    },
+                ),
+            )
+        except PaginationNotObservedError as error:
+            stage["state"] = "complete_single_page"
+            stage["readiness"] = _search_result_summary(error.result)
+            growth_stages.append(stage)
+            at_ceiling = len(dataset.events) == MAX_FIXTURE_EVENTS
+            atomic_json(
+                root / "fixture-growth.json",
+                {
+                    "state": "unsupported" if at_ceiling else "growing",
+                    "final_event_count": len(dataset.events),
+                    "fixture_event_ceiling": MAX_FIXTURE_EVENTS,
+                    "stages": growth_stages,
+                },
+            )
+            if at_ceiling:
+                raise PaginationFixtureUnsupportedError(
+                    len(dataset.events), error.result
+                ) from error
+            continue
+
+        stage["state"] = "ready"
+        stage["readiness"] = _search_result_summary(ready)
+        growth_stages.append(stage)
+        atomic_json(
+            root / "fixture-growth.json",
+            {
+                "state": "ready",
+                "final_event_count": len(dataset.events),
+                "fixture_event_ceiling": MAX_FIXTURE_EVENTS,
+                "stages": growth_stages,
+            },
+        )
+        return dataset, ready, end_time
+
+    raise AssertionError("adaptive export target schedule did not reach a terminal state")
+
+
 async def provision(config, cli, oid, trial, name, seed, root):
     if name == "webhook-production-routing":
         from .routing import provision as routing_provision
@@ -155,11 +311,6 @@ async def provision(config, cli, oid, trial, name, seed, root):
         ),
     )
     await hook.provision()
-    dataset = generate_search_dataset(trial)
-    atomic_json(
-        root / "injected-events.json",
-        {"events": dataset.events, "total_json_bytes": dataset.total_json_bytes},
-    )
     start = int(time.time()) - 120
     warmup_search = RegionalSearchClient(
         cli,
@@ -174,19 +325,14 @@ async def provision(config, cli, oid, trial, name, seed, root):
         timeout_seconds=config.limits.verification_seconds,
         observer=lambda value: atomic_json(root / "webhook-warmup.json", value),
     )
-    receipts = await hook.send_events(
-        dataset.events,
-        observer=lambda value: atomic_json(root / "injection-progress.json", value),
-    )
-    atomic_json(root / "injection-receipts.json", [asdict(receipt) for receipt in receipts])
-    end = int(time.time()) + 60
     search = RegionalSearchClient(cli, oid, timeout_seconds=config.limits.verification_seconds)
-    ready = await dataset.wait_until_ready(
+    dataset, ready, end = await _prepare_export_dataset(
+        config,
+        hook,
         search,
+        trial,
+        root,
         start_time=start,
-        end_time=end,
-        timeout_seconds=config.limits.verification_seconds,
-        observer=lambda value: atomic_json(root / "readiness.json", value),
     )
     expected = {
         event_id: {k: row[k] for k in ("eval_event_id", "environment", "message")}
@@ -203,6 +349,9 @@ async def provision(config, cli, oid, trial, name, seed, root):
         "search_readiness": {
             "pages": [asdict(p) for p in ready.pages],
             "event_count": len(ready.events),
+            "fixture_event_count": len(dataset.events),
+            "production_count": len(dataset.production),
+            "nonproduction_count": len(dataset.nonproduction),
             "paginated": ready.traversed_continuation,
             "transient_failures": list(ready.transient_failures),
         },

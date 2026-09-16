@@ -17,6 +17,7 @@ from .local_cli import ControlError, LocalCLI
 
 DEFAULT_MATCHING_EVENTS = 5_003
 DEFAULT_NONMATCHING_EVENTS = 137
+DEFAULT_GROWTH_EVENTS = 5_000
 MAX_FIXTURE_EVENTS = 25_000
 MAX_FIXTURE_BYTES = 100 * 1024 * 1024
 EVENT_TYPE = "LC_EVAL_EXPORT"
@@ -37,6 +38,27 @@ class SearchError(RuntimeError):
 
 class DatasetReadinessError(RuntimeError):
     pass
+
+
+class PaginationNotObservedError(DatasetReadinessError):
+    """The complete, exact dataset was returned without a nonempty continuation."""
+
+    def __init__(self, result: SearchResult):
+        super().__init__(
+            "all events are searchable but the search did not traverse pagination"
+        )
+        self.result = result
+
+
+class PaginationFixtureUnsupportedError(DatasetReadinessError):
+    """The bounded fixture ceiling was reached without proving pagination."""
+
+    def __init__(self, fixture_event_count: int, result: SearchResult):
+        super().__init__(
+            f"pagination was not observed at the {fixture_event_count}-event fixture ceiling"
+        )
+        self.fixture_event_count = fixture_event_count
+        self.result = result
 
 
 def _service_root(value: str, *, suffix: str = "/v1") -> str:
@@ -385,8 +407,8 @@ class SearchDataset:
                         if actual.get(field) != expected[field]:
                             raise DatasetReadinessError(f"search event {event_id} has an unexpected {field}")
                 if require_pagination and not result.traversed_continuation:
-                    raise DatasetReadinessError(
-                        "all events are searchable but the search did not traverse pagination"
+                    raise PaginationNotObservedError(
+                        replace(result, transient_failures=tuple(transient_failures))
                     )
                 return replace(result, transient_failures=tuple(transient_failures))
             remaining = deadline - asyncio.get_running_loop().time()
@@ -435,3 +457,75 @@ def generate_search_dataset(
         nonproduction={event["eval_event_id"]: event for event in negative_events},
         total_json_bytes=total_json_bytes,
     )
+
+
+def adaptive_event_targets(
+    initial_event_count: int,
+    *,
+    ceiling: int = MAX_FIXTURE_EVENTS,
+    growth_events: int = DEFAULT_GROWTH_EVENTS,
+) -> tuple[int, ...]:
+    """Return deterministic cumulative sizes, including the initial size and ceiling."""
+    if (
+        initial_event_count <= 0
+        or ceiling < initial_event_count
+        or ceiling > MAX_FIXTURE_EVENTS
+        or growth_events <= 0
+    ):
+        raise ValueError("adaptive fixture bounds are invalid")
+    targets = [initial_event_count]
+    while targets[-1] < ceiling:
+        targets.append(min(ceiling, targets[-1] + growth_events))
+    return tuple(targets)
+
+
+def grow_search_dataset(
+    dataset: SearchDataset,
+    target_event_count: int,
+) -> tuple[SearchDataset, tuple[dict[str, str], ...]]:
+    """Append random production events while preserving the existing exact prefix."""
+    current_count = len(dataset.events)
+    if target_event_count <= current_count or target_event_count > MAX_FIXTURE_EVENTS:
+        raise ValueError("target event count is outside adaptive fixture bounds")
+
+    existing_ids = set(dataset.all_ids)
+    added: list[dict[str, str]] = []
+    next_ordinal = len(dataset.production)
+    while len(added) < target_event_count - current_count:
+        event_id = str(uuid.uuid4())
+        if event_id in existing_ids:
+            continue
+        existing_ids.add(event_id)
+        ordinal = next_ordinal + len(added)
+        added.append(
+            {
+                "eval_event_id": event_id,
+                "eval_trial_id": dataset.trial_id,
+                "event_type": EVENT_TYPE,
+                "environment": "production",
+                "message": (
+                    f"lc-eval-production-{ordinal}-{secrets.token_hex(8)}"
+                ),
+            }
+        )
+    random.SystemRandom().shuffle(added)
+
+    import json
+
+    added_bytes = sum(
+        len(json.dumps(event, separators=(",", ":")).encode("utf-8"))
+        for event in added
+    )
+    total_json_bytes = dataset.total_json_bytes + added_bytes
+    if total_json_bytes > MAX_FIXTURE_BYTES:
+        raise ValueError("dataset exceeds the fixture byte ceiling")
+    production = dict(dataset.production)
+    production.update({event["eval_event_id"]: event for event in added})
+    grown = SearchDataset(
+        trial_id=dataset.trial_id,
+        events=(*dataset.events, *added),
+        production=production,
+        nonproduction=dict(dataset.nonproduction),
+        total_json_bytes=total_json_bytes,
+    )
+    return grown, tuple(added)

@@ -5,13 +5,22 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from lc_eval.fixtures.local_cli import ControlError
 from lc_eval.fixtures.scenario_runtime import (
+    _prepare_export_dataset,
     installation_key,
     reference,
     wait_for_webhook_search_ready,
 )
-from lc_eval.fixtures.search_dataset import SearchPage, SearchResult
+from lc_eval.fixtures.search_dataset import (
+    PaginationFixtureUnsupportedError,
+    SearchPage,
+    SearchResult,
+    generate_search_dataset,
+)
+from lc_eval.fixtures.webhook import BatchReceipt
 
 
 def test_installation_key_selects_adapter_iid() -> None:
@@ -213,5 +222,147 @@ def test_search_reference_projects_rows_from_raw_result_pages(
 
         await reference("search-complete-export", fixture, env, bad=True)
         assert len((tmp_path / "export.jsonl").read_text().splitlines()) == 1
+
+    asyncio.run(exercise())
+
+
+class _AdaptiveHook:
+    def __init__(self) -> None:
+        self.accepted: list[dict] = []
+        self.sends: list[tuple[dict, ...]] = []
+
+    async def send_events(self, events, *, observer):
+        stage = tuple(events)
+        self.sends.append(stage)
+        self.accepted.extend(stage)
+        uncompressed_bytes = sum(len(json.dumps(event)) for event in stage)
+        observer(
+            {
+                "target_events": len(stage),
+                "accepted_batches": 1,
+                "accepted_events": len(stage),
+                "uncompressed_bytes": uncompressed_bytes,
+            }
+        )
+        return [
+            BatchReceipt(
+                batch_number=1,
+                event_count=len(stage),
+                uncompressed_bytes=uncompressed_bytes,
+                transmitted_bytes=uncompressed_bytes,
+                compressed=False,
+                status_code=202,
+            )
+        ]
+
+
+class _AdaptiveSearch:
+    def __init__(self, hook: _AdaptiveHook, paginate_at: int | None) -> None:
+        self.hook = hook
+        self.paginate_at = paginate_at
+        self.calls = 0
+
+    async def execute(self, *_args, **_kwargs):
+        self.calls += 1
+        events = tuple(self.hook.accepted)
+        if self.paginate_at is not None and len(events) >= self.paginate_at:
+            split = len(events) - 1
+            pages = (
+                SearchPage(1, None, "next", 1, 1, split),
+                SearchPage(2, "next", None, 1, 1, 1),
+            )
+        else:
+            pages = (SearchPage(1, None, None, 1, 1, len(events)),)
+        return SearchResult(
+            query_id=f"query-{self.calls}", events=events, pages=pages
+        )
+
+
+def _small_adaptive_fixture(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "lc_eval.fixtures.scenario_runtime.generate_search_dataset",
+        lambda trial: generate_search_dataset(
+            trial, matching_count=2, nonmatching_count=1
+        ),
+    )
+    monkeypatch.setattr(
+        "lc_eval.fixtures.scenario_runtime.DEFAULT_GROWTH_EVENTS", 2
+    )
+    monkeypatch.setattr("lc_eval.fixtures.scenario_runtime.MAX_FIXTURE_EVENTS", 7)
+
+
+def test_adaptive_export_grows_only_after_complete_single_page(tmp_path, monkeypatch) -> None:
+    async def exercise() -> None:
+        _small_adaptive_fixture(monkeypatch)
+        hook = _AdaptiveHook()
+        search = _AdaptiveSearch(hook, paginate_at=5)
+        config = SimpleNamespace(limits=SimpleNamespace(verification_seconds=1))
+
+        dataset, ready, _end = await _prepare_export_dataset(
+            config,
+            hook,
+            search,
+            "trial",
+            tmp_path,
+            start_time=100,
+        )
+
+        assert [len(stage) for stage in hook.sends] == [3, 2]
+        assert hook.sends[0] == dataset.events[:3]
+        assert hook.sends[1] == dataset.events[3:]
+        assert len(dataset.events) == 5
+        assert len(dataset.production) == 4
+        assert len(dataset.nonproduction) == 1
+        assert ready.traversed_continuation
+
+        ledger = json.loads((tmp_path / "injected-events.json").read_text())
+        assert ledger["events"] == list(dataset.events)
+        assert ledger["event_count"] == 5
+        progress = json.loads((tmp_path / "injection-progress.json").read_text())
+        assert progress["target_events"] == 5
+        assert progress["accepted_events"] == 5
+        receipts = json.loads((tmp_path / "injection-receipts.json").read_text())
+        assert [row["batch_number"] for row in receipts] == [1, 2]
+        assert [row["growth_stage"] for row in receipts] == [1, 2]
+        growth = json.loads((tmp_path / "fixture-growth.json").read_text())
+        assert growth["state"] == "ready"
+        assert growth["final_event_count"] == 5
+        assert [stage["state"] for stage in growth["stages"]] == [
+            "complete_single_page",
+            "ready",
+        ]
+
+    asyncio.run(exercise())
+
+
+def test_adaptive_export_reports_unsupported_at_event_ceiling(
+    tmp_path, monkeypatch
+) -> None:
+    async def exercise() -> None:
+        _small_adaptive_fixture(monkeypatch)
+        hook = _AdaptiveHook()
+        search = _AdaptiveSearch(hook, paginate_at=None)
+        config = SimpleNamespace(limits=SimpleNamespace(verification_seconds=1))
+
+        with pytest.raises(PaginationFixtureUnsupportedError) as raised:
+            await _prepare_export_dataset(
+                config,
+                hook,
+                search,
+                "trial",
+                tmp_path,
+                start_time=100,
+            )
+
+        assert raised.value.fixture_event_count == 7
+        assert [len(stage) for stage in hook.sends] == [3, 2, 2]
+        growth = json.loads((tmp_path / "fixture-growth.json").read_text())
+        assert growth["state"] == "unsupported"
+        assert growth["final_event_count"] == 7
+        assert len(growth["stages"]) == 3
+        assert all(
+            stage["state"] == "complete_single_page"
+            for stage in growth["stages"]
+        )
 
     asyncio.run(exercise())

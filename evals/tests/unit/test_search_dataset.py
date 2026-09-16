@@ -1,14 +1,20 @@
 from __future__ import annotations
 
 import asyncio
+import json
+
+import pytest
 
 from lc_eval.fixtures.search_dataset import (
     EVENT_TYPE,
+    PaginationNotObservedError,
     RegionalSearchClient,
     SearchPage,
     SearchError,
     SearchResult,
+    adaptive_event_targets,
     generate_search_dataset,
+    grow_search_dataset,
     normalize_event_row,
 )
 from lc_eval.fixtures.local_cli import ControlError
@@ -229,3 +235,56 @@ def test_dataset_readiness_starts_fresh_query_after_transient_poll_failure() -> 
         )
 
     asyncio.run(exercise())
+
+
+def test_complete_single_page_readiness_has_distinct_growth_signal() -> None:
+    async def exercise() -> None:
+        dataset = generate_search_dataset(
+            "single-page", matching_count=2, nonmatching_count=1
+        )
+
+        class Search:
+            async def execute(self, *_args, **_kwargs):
+                return SearchResult(
+                    query_id="single-page-query",
+                    events=dataset.events,
+                    pages=(SearchPage(1, None, None, 1, 1, len(dataset.events)),),
+                )
+
+        with pytest.raises(PaginationNotObservedError) as raised:
+            await dataset.wait_until_ready(
+                Search(), start_time=1, end_time=2, timeout_seconds=1
+            )
+        assert raised.value.result.query_id == "single-page-query"
+        assert raised.value.result.traversed_continuation is False
+
+    asyncio.run(exercise())
+
+
+def test_dataset_growth_preserves_exact_prefix_and_uses_bounded_targets() -> None:
+    dataset = generate_search_dataset(
+        "growth", matching_count=2, nonmatching_count=1
+    )
+    original_rows = {
+        event_id: dict(event)
+        for event_id, event in (*dataset.production.items(), *dataset.nonproduction.items())
+    }
+
+    grown, added = grow_search_dataset(dataset, 7)
+
+    assert adaptive_event_targets(3, ceiling=12, growth_events=4) == (3, 7, 11, 12)
+    assert len(dataset.events) == 3
+    assert len(grown.events) == 7
+    assert grown.events[:3] == dataset.events
+    assert grown.events[3:] == added
+    assert len(added) == 4
+    assert len(grown.production) == 6
+    assert grown.nonproduction == dataset.nonproduction
+    assert all(event["environment"] == "production" for event in added)
+    for event_id, expected in original_rows.items():
+        actual = grown.production.get(event_id, grown.nonproduction.get(event_id))
+        assert actual == expected
+    assert grown.total_json_bytes == sum(
+        len(json.dumps(event, separators=(",", ":")).encode("utf-8"))
+        for event in grown.events
+    )
