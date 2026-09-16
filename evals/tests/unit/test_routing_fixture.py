@@ -131,9 +131,11 @@ def test_verification_uses_fresh_probes_and_positive_control() -> None:
 
         class Search:
             calls = 0
+            queries: list[str] = []
 
-            async def execute(self, *_args, **_kwargs):
+            async def execute(self, query, *_args, **_kwargs):
                 self.calls += 1
+                self.queries.append(query)
                 if self.calls == 1:
                     raise SearchError(
                         "dataset initializing",
@@ -166,9 +168,8 @@ def test_verification_uses_fresh_probes_and_positive_control() -> None:
             async def health(self):
                 return {"status": "ok", "database": "ok"}
 
-        fixture = RoutingFixture(
-            SimpleNamespace(), Management(), _spec(), search=Search()
-        )
+        search = Search()
+        fixture = RoutingFixture(SimpleNamespace(), Management(), _spec(), search=search)
         fixture.webhook = Webhook()
 
         async def read_outputs():
@@ -198,6 +199,11 @@ def test_verification_uses_fresh_probes_and_positive_control() -> None:
                 "query_id": "stale-query",
             }
         ]
+        assert search.queries
+        assert all(
+            query.startswith("* | * | event/eval_event_id == '")
+            for query in search.queries
+        )
         assert evidence["receiver_health"] == {
             "management_reachable": True,
             "receiver_ready": True,

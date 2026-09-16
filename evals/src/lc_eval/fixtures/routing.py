@@ -413,7 +413,7 @@ class RoutingFixture:
                 event_id = event["eval_event_id"]
                 if event_id in observed:
                     continue
-                query = f"* | event/eval_event_id == '{event_id}'"
+                query = f"* | * | event/eval_event_id == '{event_id}'"
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     return observed
