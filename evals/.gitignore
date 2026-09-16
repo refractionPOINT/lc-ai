@@ -1,0 +1,12 @@
+.venv/
+.tools/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+*.local.yaml
+*.sqlite*
+runs/
+credentials/

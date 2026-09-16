@@ -1,0 +1,36 @@
+schema_version: 1
+id: search-complete-export
+revision: 1
+capability_tags:
+  - data-retrieval
+  - search
+  - pagination
+  - artifact-export
+prompt: prompt.md
+public_files:
+  - public/event-schema.json
+fixture:
+  kind: webhook_search_dataset
+  parameters:
+    initial_matching_events: 5003
+    initial_nonmatching_events: 137
+    max_events: 25000
+    event_type: LC_EVAL_EXPORT
+allowed_scope:
+  resource_kinds: [search]
+  mutation: none
+required_adapter_capabilities: [shell, files, controlled_cli]
+budgets:
+  timeout_seconds: 600
+  convergence_seconds: 600
+  probe_seconds: 120
+assertions:
+  - export.safe_file
+  - export.valid_bounded_jsonl
+  - export.platform_unchanged
+  - export.membership
+  - export.values
+  - export.unique_ids
+  - export.count
+required_deliverable_paths:
+  - /work/export.jsonl

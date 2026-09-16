@@ -1,6 +1,8 @@
+> Implementation update (2026-09-16): the user selected existing Claude Code and Codex subscriptions with time/turn limits. For the initial proof, use `budget_mode: subscription_limits`, one live trial at a time, 600 seconds per harness run, Claude 30 turns, Codex 80 tool calls, and an external 80-command broker limit. Report native token usage and unknown dollar cost. The API-key request-budget gateway described below remains optional and is not an initial acceptance requirement. Track completed work and evidence in [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md).
+
 # Implementation plan: prove the LimaCharlie CLI evaluation loop
 
-Status: implementation handoff, 2026-09-16. No eval implementation or live trial has been performed. Read this document first when resuming. It specifies the work to build and demonstrate the initial complete loop; [DESIGN.md](DESIGN.md) describes the eventual coverage and [ARCHITECTURE.md](ARCHITECTURE.md) explains the boundaries.
+Status: implementation in progress, 2026-09-16. The controller, isolated execution, both subscription adapters, fixtures, graders, reports and recovery commands are implemented. Offline tests and both real harness smoke tests pass; live scenario calibration and acceptance remain in progress. Read [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for current evidence before resuming. It specifies the work to build and demonstrate the initial complete loop; [DESIGN.md](DESIGN.md) describes the eventual coverage and [ARCHITECTURE.md](ARCHITECTURE.md) explains the boundaries.
 
 ## 1. Objective and working rules
 
@@ -32,10 +34,10 @@ The user supplied these decisions during planning. They persist for the implemen
 |---|---|
 | LC access | Use the local `limacharlie` executable, assumed authenticated, to create a new test organization and set it up as needed. Delete the test organization when the eval is done. |
 | Harnesses | Local Claude Code and local Codex. Workspace follows the initial proof. |
-| Model spend | $50 total across the initial campaign, including model smoke tests and retries; one live trial at a time. |
+| Model limits | Existing Claude Code and Codex subscriptions, as explicitly selected by the user during implementation. Enforce time/turn/tool limits; report tokens and unknown dollars. One live trial at a time. |
 | Output receiver | Deployment of a small HTTPS receiver is authorized. No specific cloud project was selected. |
 
-Implementation defaults within that scope: use the local CLI's existing authentication/environment, `org create --location auto`, no org template, unique run-owned names, and explicit `--oid` on subsequent calls. Record the actual assigned region before creating comparison fixtures; use that same supported location for paired trials. Do not redirect tests to an exp environment or an existing org by inference. Do not use `--use` or change the user's default org.
+Implementation defaults within that scope: use the local CLI's existing authentication/environment, `org create --location usa` (Search requires the supported US region), no org template, unique run-owned names, and explicit `--oid` on subsequent calls. Record the actual assigned region before creating comparison fixtures; use that same supported location for paired trials. Do not redirect tests to an exp environment or an existing org by inference. Do not use `--use` or change the user's default org.
 
 Run the receiver locally and publish only its ingest listener through a temporary Cloudflare Quick Tunnel. This avoids requiring a cloud project or persistent deployment. Install a pinned `cloudflared` binary/image within eval-managed tooling, not as a replacement for user tooling. It was not on PATH during planning. Public URL discovery and readiness are automated. Keep the management listener on a separate local-only port that is never tunneled. This testing use matches the [Cloudflare Quick Tunnel documentation](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/do-more-with-tunnels/trycloudflare/); its lack of an uptime guarantee means a tunnel failure is an infrastructure event. An existing receiver remains an optional configuration path.
 
@@ -321,7 +323,7 @@ Gate: the definition of done is satisfied. If genuine AI success, external infra
 
 ## 9. Operator commands the implementation must provide
 
-The commands below specify the intended interface. They do not exist yet. Implement and exercise them in this order; include final copy-paste installation commands using the chosen lockfile in README.
+The operator interface was simplified during implementation. These are the current commands; `cleanup` combines exact reconciliation and deletion. Runtime credentials and evidence stay outside the checkout.
 
 ```bash
 cd /home/maxime/goProjects/github.com/refractionPOINT/lc-ai
@@ -331,26 +333,25 @@ bash evals/scripts/bootstrap.sh
 evals/.venv/bin/python -m pytest evals/tests/unit
 evals/.venv/bin/ruff check evals/src evals/tests
 
-evals/.venv/bin/lc-eval init --from-local --config /absolute/private/eval.yaml --run-data /absolute/private/eval-runs --model-budget-usd 50
-evals/.venv/bin/lc-eval doctor --config /absolute/private/eval.yaml --offline
-evals/.venv/bin/lc-eval build --config /absolute/private/eval.yaml
-evals/.venv/bin/python -m pytest evals/tests/integration
-evals/.venv/bin/lc-eval doctor --config /absolute/private/eval.yaml --live
-evals/.venv/bin/lc-eval fixtures probe --config /absolute/private/eval.yaml
-evals/.venv/bin/lc-eval validate-suite --suite initial-loop --config /absolute/private/eval.yaml --live
-evals/.venv/bin/lc-eval smoke --config /absolute/private/eval.yaml --campaign initial-proof
-evals/.venv/bin/lc-eval run --suite initial-loop --config /absolute/private/eval.yaml --campaign initial-proof
-evals/.venv/bin/lc-eval fault-drill --config /absolute/private/eval.yaml --campaign initial-proof
-evals/.venv/bin/lc-eval reconcile --config /absolute/private/eval.yaml --campaign initial-proof
-evals/.venv/bin/lc-eval report --config /absolute/private/eval.yaml --campaign initial-proof
-evals/.venv/bin/lc-eval acceptance --config /absolute/private/eval.yaml --campaign initial-proof
+evals/.venv/bin/lc-eval init-local --subscription
+evals/.venv/bin/lc-eval doctor --offline
+evals/.venv/bin/lc-eval build
+evals/.venv/bin/lc-eval doctor
+# Run each scenario with --reference, then --bad-reference, in a calibration campaign.
+# Names: hive-preserve-update, search-complete-export, webhook-production-routing.
+evals/.venv/bin/lc-eval run --campaign calibration --scenario hive-preserve-update --reference
+evals/.venv/bin/lc-eval run --campaign calibration --scenario hive-preserve-update --bad-reference
+# Repeat the two commands for the other two scenarios before validation.
+evals/.venv/bin/lc-eval validate-suite --campaign calibration
+evals/.venv/bin/lc-eval smoke --campaign harness-smoke
+evals/.venv/bin/lc-eval run --campaign initial-proof
+evals/.venv/bin/lc-eval fault-drill --campaign initial-proof
+evals/.venv/bin/lc-eval cleanup
+evals/.venv/bin/lc-eval report --campaign initial-proof
+evals/.venv/bin/lc-eval acceptance --campaign initial-proof
 ```
 
-`doctor --live` uses read-only checks; provisioning occurs in fixture/run operations. `build` creates local images only. Fixture lifecycle automatically starts/stops the local receiver and temporary HTTPS tunnel; no manual cloud deployment step is needed. `validate-suite --live` runs references and bad references, not LLMs. `smoke` exercises model launch, a harmless local shell action and termination for both harnesses. `run` executes the configured campaign matrix including the two A/A repeats. `reconcile` operates only on the exact ledger-owned resources, never all orgs matching a broad prefix. `fault-drill` explains and targets only its own child controller and resources. All live model smoke tests must name the same budget ledger as `initial-proof`; do not accidentally give doctor, smoke and run separate $50 allowances.
-
-Repeat campaign names must not overwrite records or resume agent state. Require an explicit new attempt/campaign ID or return the existing manifest/result. Trial timeouts and failures still produce reports. Cleanup failure exits nonzero and reports remaining IDs.
-
-`bootstrap.sh` installs a pinned uv tool in eval-managed storage and runs `uv sync --locked --extra test --project evals`, without editing the user's tool installations. Use it for CI/live acceptance. Replace `/absolute/private/...` with explicit local paths when generating the resolved runbook; do not leave template placeholders in the final acceptance command transcript.
+`run` without `--scenario` executes the eight trial entries in `suites/initial-loop.yaml`. Bad-reference runs deliberately return a failed grade and a nonzero command exit; inspect the named assertion rather than treating that expected failure as an infrastructure error. Use `--config /absolute/private/config.json` on each command for a different run directory. Do not reinitialize an existing configuration casually: its source and model pins define the experiment.
 
 ## 10. Configuration fields to finalize
 

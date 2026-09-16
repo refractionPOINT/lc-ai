@@ -1,0 +1,59 @@
+schema_version: 1
+revision: 1
+families:
+  - id: identity-tenant-lifecycle
+    cli_surfaces: [org, auth, api-key]
+    coverage: planned
+    scenarios: []
+  - id: administration-fleet-operations
+    cli_surfaces: [user, group, api-key, org, usage, audit]
+    coverage: planned
+    scenarios: []
+  - id: endpoint-onboarding-management
+    cli_surfaces: [installation-key, sensor, task]
+    coverage: planned
+    scenarios: []
+  - id: ingestion
+    cli_surfaces: [cloud-adapter, installation-key]
+    coverage: initial
+    scenarios: [webhook-production-routing]
+  - id: outputs-integrations
+    cli_surfaces: [output, extension]
+    coverage: initial
+    scenarios: [webhook-production-routing]
+  - id: dr-automation
+    cli_surfaces: [dr]
+    coverage: initial
+    scenarios: [webhook-production-routing]
+  - id: data-retrieval
+    cli_surfaces: [search]
+    coverage: initial
+    scenarios: [search-complete-export]
+  - id: configuration-iac
+    cli_surfaces: [hive, config]
+    coverage: initial
+    scenarios: [hive-preserve-update]
+  - id: endpoint-supporting-services
+    cli_surfaces: [artifact, payload, yara, integrity, logging, exfil]
+    coverage: planned
+    scenarios: []
+  - id: cloud-security
+    cli_surfaces: [cloudsec, caasm]
+    coverage: planned
+    scenarios: []
+  - id: vulnerability-management
+    cli_surfaces: [vulnerability]
+    coverage: planned
+    scenarios: []
+  - id: email-security
+    cli_surfaces: [email]
+    coverage: planned
+    scenarios: []
+  - id: cases-operational-records
+    cli_surfaces: [case]
+    coverage: planned
+    scenarios: []
+  - id: ai-services-apps
+    cli_surfaces: [ai, app]
+    coverage: planned
+    scenarios: []

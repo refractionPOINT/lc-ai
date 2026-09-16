@@ -1,0 +1,2 @@
+{"event_type":"LC_EVAL_ROUTE","eval_trial_id":"example-only","eval_event_id":"sample-production","environment":"production","message":"documented shape only"}
+{"event_type":"LC_EVAL_ROUTE","eval_trial_id":"example-only","eval_event_id":"sample-staging","environment":"staging","message":"documented negative shape"}

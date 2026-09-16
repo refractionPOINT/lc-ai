@@ -1,0 +1,7 @@
+{
+  "event_type": "string; this task uses LC_EVAL_EXPORT",
+  "eval_trial_id": "string; use the selector in the prompt",
+  "eval_event_id": "string; unique source identity",
+  "environment": "string; production or a distractor value",
+  "message": "string"
+}
