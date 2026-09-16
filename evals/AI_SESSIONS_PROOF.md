@@ -2,6 +2,8 @@
 
 The local `ai_sessions` harness completed the full run–grade–cleanup loop for all three existing scenarios. **Two tasks passed; complete search export failed.** The failure is retained as a scored agent attempt, not relabeled as infrastructure or rerun until successful.
 
+A later [failure investigation](AI_SESSIONS_EXPORT_DIAGNOSIS.md) traced the export result to a blocked generation workflow, an incorrect research-subagent summary, and unsuccessful query recovery. It also found a delegation-policy discrepancy and a normalized tool-result telemetry gap; the original task grade remains unchanged.
+
 Implementation: `941fa4d`. Machine-readable evidence: [sanitized results](results/ai-sessions-proof.json). Run commands: [Running evals](RUNNING.md#run-through-the-ai-sessions-runner).
 
 ## Results

@@ -60,6 +60,14 @@ environment-selection commands are unavailable. Use shell redirection in the
 candidate container for files such as /work/export.jsonl. Safe global options
 may appear anywhere in a command, and --ai-help is available at the root,
 permitted group, and permitted leaf-command levels.
+
+Authentication and organization scoping are already supplied by this transport;
+skip production auth/whoami preflights. ai generate-query is unavailable. This
+profile permits manual LCQL construction even when production skills prescribe
+generation. For search syntax and examples, open `search run --ai-help` and
+`search validate --ai-help`; group help is only an index. Modern CLI pipelines
+retain sensor-selector and event-type positions; --start/--end replace only the
+raw time prefix. Recheck leaf help after parser errors before retrying.
 """
 
 _STAGE_SCRIPT = """\

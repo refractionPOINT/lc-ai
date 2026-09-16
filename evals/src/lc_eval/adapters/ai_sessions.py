@@ -48,6 +48,10 @@ class AISessionsAdapter(NativeSubprocessAdapter):
         ))
 
     def normalize_native_event(self, event: Mapping[str, Any]):
+        context = {key: event[key] for key in ("parent_tool_use_id", "subagent_type") if key in event}
+        return [(kind, {**payload, **context}) for kind, payload in self._normalize(event)]
+
+    def _normalize(self, event: Mapping[str, Any]):
         kind = event.get("type")
         payload = event.get("payload")
         payload = payload if isinstance(payload, dict) else {}
@@ -74,9 +78,14 @@ class AISessionsAdapter(NativeSubprocessAdapter):
             return [("tool_call", payload)]
         if kind == "tool_result":
             return [("tool_result", payload)]
+        if kind == "user":
+            return [("tool_result", block) for block in payload.get("content", [])
+                    if isinstance(block, dict) and block.get("type") == "tool_result"]
         if kind == "usage_delta":
             # Retain raw observations without adding deltas to a cumulative final result.
             return [("usage", {"usage": payload, "semantics": "native_delta_unaggregated"})]
+        if kind == "system":
+            return [("native", {"type": kind, **payload})]
         return [("native", {"type": kind})]
 
     def final_usage(self):

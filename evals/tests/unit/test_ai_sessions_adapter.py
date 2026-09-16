@@ -99,7 +99,7 @@ def test_child_result_does_not_finalize_or_replace_usage(tmp_path) -> None:
             },
         }
     )
-    assert child == [("native", {"type": "result"})]
+    assert child == [("native", {"type": "result", "parent_tool_use_id": "parent-1", "subagent_type": "Task"})]
     assert harness.final_usage() == Usage()
 
     harness.normalize_native_event(
@@ -139,3 +139,17 @@ def test_native_messages_and_duplicate_tool_events_are_normalized(tmp_path) -> N
         ("tool_call", tool)
     ]
     assert harness.normalize_native_event({"type": "tool_use", "payload": tool}) == []
+
+
+def test_native_nested_results_preserve_content_errors_and_parent(tmp_path):
+    harness = adapter(tmp_path)
+    block = {"type": "tool_result", "tool_use_id": "read-1",
+             "content": [{"type": "text", "text": "permission denied"}], "is_error": True}
+    event = {"type": "user", "parent_tool_use_id": "agent-1", "subagent_type": "Explore",
+             "payload": {"content": [block, {"type": "text", "text": "ignored"}]}}
+    assert harness.normalize_native_event(event) == [
+        ("tool_result", {**block, "parent_tool_use_id": "agent-1", "subagent_type": "Explore"})]
+    tool = {"id": "read-1", "name": "Read", "input": {"file_path": "/work/example"}}
+    assert harness.normalize_native_event({"type": "tool_use", "parent_tool_use_id": "agent-1",
+                                           "payload": tool}) == [
+        ("tool_call", {**tool, "parent_tool_use_id": "agent-1"})]

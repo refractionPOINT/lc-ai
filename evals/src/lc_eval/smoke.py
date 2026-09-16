@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import json
 import time
 import uuid
 
@@ -10,6 +11,25 @@ from .config import atomic_json
 from .controller import Controller
 from .execution.broker import Broker, CONTROLLED_CLI_V1_NOTICE
 from .execution.docker import DockerEnvironment
+from .execution.workspace_runner import DENIED_TOOLS
+
+
+def native_policy_checks(root):
+    events = [json.loads(line) for line in (root / "agent.stdout").read_text().splitlines()]
+    inventories = [event["payload"]["data"]["tools"] for event in events
+                   if event.get("type") == "system"
+                   and event.get("payload", {}).get("subtype") == "eval_tool_inventory"]
+    calls = [event.get("payload", {}).get("name") for event in events if event.get("type") == "tool_use"]
+    help_file = root / "work" / "search-help.txt"
+    return {
+        "sdk_tool_inventory_observed": bool(inventories),
+        "delegation_and_scheduling_absent": bool(inventories) and all(
+            not set(tools).intersection(DENIED_TOOLS) for tools in inventories),
+        "no_forbidden_tool_calls": not set(calls).intersection(DENIED_TOOLS),
+        "no_child_events": not any(event.get("parent_tool_use_id") for event in events),
+        "leaf_help_has_pipeline_example": help_file.is_file()
+        and "* | NEW_PROCESS |" in help_file.read_text(),
+    }
 
 
 async def smoke(config, campaign):
@@ -58,10 +78,17 @@ async def smoke(config, campaign):
                 controller.journal.transition(trial_id, "ready")
                 controller.journal.transition(trial_id, "running")
                 start = time.monotonic()
+                native_probe = (
+                    " Also save `limacharlie search run --ai-help` output to /work/search-help.txt. "
+                    "If an Agent or Task delegation tool is available, use it to read that help; "
+                    "otherwise read it directly."
+                    if agent.adapter == "ai_sessions" else ""
+                )
                 await controller.run_agent(
                     agent,
                     env,
                     "Write exactly lc-eval-smoke-ok to /work/smoke.txt, then run limacharlie --version. Report completion. Do not read authentication files.\n"
+                    + native_probe + "\n"
                     + CONTROLLED_CLI_V1_NOTICE,
                     result,
                     root,
@@ -80,6 +107,10 @@ async def smoke(config, campaign):
                     and broker.count >= 1
                     else "fail"
                 )
+                if agent.adapter == "ai_sessions":
+                    result["policy_checks"] = native_policy_checks(root)
+                    if not all(result["policy_checks"].values()):
+                        result["grade"] = "fail"
             except Exception as exc:
                 result["error"] = f"{type(exc).__name__}: {exc}"
             finally:

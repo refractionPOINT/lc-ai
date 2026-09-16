@@ -16,6 +16,7 @@ from pathlib import Path
 
 from ..config import PROJECT, atomic_json, sha256
 from .docker import _build_key, build_image, extract_archive, image_id, run
+from .workspace_policy import apply_policy_overlay
 
 SDK_PINS = {
     "claude-agent-sdk": "0.1.63",
@@ -154,6 +155,7 @@ def build_workspace_image(config, source_path: Path, source_commit: str, lc_ai_c
     contexts = {name: root / name.replace("_", "-") for name in archives}
     for name, archive in archives.items():
         _extract(archive, contexts[name])
+    policy_overlay = apply_policy_overlay(contexts["ai_sessions"] / "scripts/bridge/claude_native.py")
     binary = root / "session-runner"
     binary_digest = _runner_binary(contexts["ai_sessions"], binary, source_commit)
 
@@ -170,11 +172,12 @@ def build_workspace_image(config, source_path: Path, source_commit: str, lc_ai_c
     if image_id(base_tag) != base:
         raise RuntimeError("runner base image tag does not match pinned image id")
     dockerfile.write_text(_dockerfile(base_tag, include_launcher))
-    tag = f"lc-eval-workspace:{source_commit[:12]}-{lc_ai_commit[:12]}"
     key_parts = [base, source_commit, lc_ai_commit, docs_commit, binary_digest, *digests.values(), dockerfile.read_text()]
+    key_parts.extend(policy_overlay.values())
     if include_launcher:
         key_parts.append(sha256(root / "workspace_runner.py"))
     build_key = _build_key(*key_parts)
+    tag = f"lc-eval-workspace:{source_commit[:12]}-{lc_ai_commit[:12]}-{build_key[:12]}"
     build_image(dockerfile, tag, root, build_key)
     if image_id(base_tag) != base:
         raise RuntimeError("runner base image tag changed during build")
@@ -192,6 +195,7 @@ def build_workspace_image(config, source_path: Path, source_commit: str, lc_ai_c
         "sdk_pins": dict(SDK_PINS),
         "go_binary_sha256": binary_digest,
         "build_key": build_key,
+        "policy_overlay": policy_overlay,
     }
     atomic_json(root / "manifest.json", result)
     return result

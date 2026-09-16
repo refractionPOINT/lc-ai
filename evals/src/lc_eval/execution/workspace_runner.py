@@ -27,7 +27,22 @@ PLUGINS = [
     "lc-compliance",
 ]
 ALLOWED_TOOLS = ["Bash", "Read", "Write", "Edit", "Glob", "Grep", "Skill"]
-DENIED_TOOLS = ["Task", "CronCreate", "CronDelete", "CronList"]
+DENIED_TOOLS = ["Agent", "Task", "CronCreate", "CronDelete", "CronList"]
+PROFILE_INSTRUCTIONS = """\
+This session uses the controlled-cli-v1 evaluation profile. These profile-specific
+instructions override conflicting production plugin workflows. LimaCharlie
+authentication and organization scoping are already provided by the transport;
+skip auth/whoami permission preflights. The ai generate-query command is not
+available. For this profile, construct LCQL manually using the installed CLI's
+leaf help: start with `limacharlie search run --ai-help` and consult
+`limacharlie search validate --ai-help` for validation. The search group help is
+only an index. Modern CLI queries retain the sensor-selector and event-type
+pipeline positions; --start/--end replace only the raw time prefix. Older
+interactive query examples are not modern CLI command examples. On validation
+errors, recheck the documented grammar before changing quoting or operators.
+Use the public task's restricted command list. Work directly with the available
+tools; Agent/Task delegation and scheduled background work are disabled.
+"""
 
 
 class ProtocolError(RuntimeError):
@@ -107,6 +122,7 @@ class LocalControlPlane:
                 "permission_mode": "acceptEdits",
                 "allowed_tools": ALLOWED_TOOLS,
                 "denied_tools": DENIED_TOOLS,
+                "system_prompt_suffix": PROFILE_INSTRUCTIONS,
                 "max_turns": self.max_turns,
                 "initial_prompt": self.prompt,
                 "model": self.model,
