@@ -32,6 +32,7 @@ COMPATIBILITY_FIELDS: dict[str, tuple[str, ...]] = {
     "scenario_revision": ("scenario_revision", "scenario.revision", "manifest.scenario_revision"),
     "scenario_hash": ("scenario_hash", "manifest.scenario_hash"),
     "variant_seed": ("variant_seed", "seed", "manifest.variant_seed"),
+    "lc_location": ("lc_location", "configuration.lc_location", "manifest.lc_location"),
     "docs_digest": ("docs_digest", "configuration.docs_digest", "manifest.docs_digest"),
     "fixture_recipe": ("fixture_recipe_digest", "fixture.recipe_digest", "manifest.fixture_recipe_digest"),
     "harness": ("adapter", "harness", "configuration.harness", "manifest.harness"),

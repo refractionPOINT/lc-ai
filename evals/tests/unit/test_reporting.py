@@ -8,7 +8,7 @@ import yaml
 from lc_eval.reporting.compare import compare_pair, compare_results
 from lc_eval.reporting.html import render_html
 from lc_eval.reporting.results import acceptance_summary, build_report, command_metrics, dumps_json
-from lc_eval.controller import Controller
+from lc_eval.controller import Controller, _report_trial
 
 
 def _trial(trial_id, grade="pass", **changes):
@@ -18,6 +18,7 @@ def _trial(trial_id, grade="pass", **changes):
         "scenario_revision": 1,
         "scenario_hash": "scenario-digest",
         "variant_seed": 7,
+        "lc_location": "usa",
         "repetition": 1,
         "adapter": "codex",
         "model": "fixed-model",
@@ -138,6 +139,20 @@ def test_comparison_requires_compatibility_and_both_success_for_efficiency():
     assert evaluator_changed["compatibility"]["compatible"] is False
     assert "mismatched controlled field: evaluator" in evaluator_changed["compatibility"]["reasons"]
     assert evaluator_changed["efficiency"]["cost_usd"]["delta_right_minus_left"] is None
+
+    other_location = compare_pair(left, _trial("canada", lc_location="canada"))
+    assert other_location["compatibility"]["compatible"] is False
+    assert "mismatched controlled field: lc_location" in other_location["compatibility"][
+        "reasons"
+    ]
+
+    missing_location = _trial("missing-location")
+    missing_location.pop("lc_location")
+    location_missing = compare_pair(left, missing_location)
+    assert location_missing["compatibility"]["compatible"] is False
+    assert "missing controlled field: lc_location" in location_missing["compatibility"][
+        "reasons"
+    ]
 
     repeat = compare_pair(left, _trial("repeat", repetition=2))
     assert repeat["compatibility"]["compatible"] is True
@@ -372,13 +387,13 @@ def test_extra_compatible_aa_pairs_are_retained_without_invalidating_coverage(tm
                 repetition=repetition,
             )
             trial["manifest"] = {"repetition": repetition}
-            trials.append({"result": trial})
+            trials.append({"id": trial["trial_id"], "result": trial})
 
     class Journal:
         def trials(self, campaign=None):
             return trials
 
-        def resources(self):
+        def resources(self, pending=True):
             return []
 
     controller = Controller.__new__(Controller)
@@ -390,3 +405,65 @@ def test_extra_compatible_aa_pairs_are_retained_without_invalidating_coverage(tm
     assert len(report["comparisons"]) == 3
     assert all(pair["compatibility"]["compatible"] for pair in report["comparisons"])
     assert report["acceptance"]["criteria"]["paired_aa"]["status"] == "pass"
+
+
+def test_report_enriches_legacy_locations_from_recorded_trial_evidence(tmp_path):
+    rows = []
+    resources = []
+    for repetition in (1, 2):
+        trial_id = f"legacy-{repetition}"
+        trial = _trial(trial_id, repetition=repetition)
+        trial.pop("lc_location")
+        trial["manifest"] = {"repetition": repetition}
+        rows.append({"id": trial_id, "result": trial})
+        resources.append(
+            {
+                "trial": trial_id,
+                "kind": "org",
+                "handle": {"location": "usa"},
+            }
+        )
+        root = tmp_path / "trials" / trial_id
+        root.mkdir(parents=True)
+        (root / "org.json").write_text(json.dumps({"location": "usa"}))
+
+    class Journal:
+        def trials(self, campaign=None):
+            return rows
+
+        def resources(self, pending=True):
+            return [] if pending else resources
+
+    controller = Controller.__new__(Controller)
+    controller.journal = Journal()
+    controller.config = SimpleNamespace(run_data_dir=tmp_path)
+    report_dir = controller.report("campaign")
+    report = json.loads((report_dir / "report.json").read_text())
+
+    assert [trial["manifest"]["lc_location"] for trial in report["trials"]] == [
+        "usa",
+        "usa",
+    ]
+    assert report["comparisons"][0]["compatibility"]["compatible"] is True
+    assert report["comparisons"][0]["compatibility"]["fields"]["lc_location"] == {
+        "left": "usa",
+        "right": "usa",
+    }
+
+
+def test_report_location_enrichment_fails_closed_on_recorded_conflict(tmp_path):
+    trial_id = "conflicting-location"
+    root = tmp_path / "trials" / trial_id
+    root.mkdir(parents=True)
+    (root / "org.json").write_text(json.dumps({"location": "canada"}))
+    trial = _trial(trial_id)
+    trial.pop("lc_location")
+    trial["manifest"] = {"lc_location": "usa"}
+
+    enriched = _report_trial(
+        {"id": trial_id, "result": trial},
+        [{"trial": trial_id, "kind": "org", "handle": {"location": "usa"}}],
+        tmp_path,
+    )
+
+    assert "lc_location" not in enriched["manifest"]

@@ -97,6 +97,44 @@ def freeze(work: Path, path: Path, completion: str | None, max_bytes: int):
     return result
 
 
+def _report_trial(row, org_resources, run_root: Path):
+    """Copy a result and add only a consistently recorded LC location."""
+
+    result = dict(row["result"])
+    manifest = dict(result.get("manifest") or {})
+    locations = []
+
+    for value in (result.pop("lc_location", None), manifest.get("lc_location")):
+        if isinstance(value, str) and value:
+            locations.append(value)
+
+    org_path = run_root / "trials" / row["id"] / "org.json"
+    try:
+        recorded_org = json.loads(org_path.read_text())
+    except (OSError, json.JSONDecodeError):
+        recorded_org = None
+    if isinstance(recorded_org, dict):
+        value = recorded_org.get("location")
+        if isinstance(value, str) and value:
+            locations.append(value)
+
+    for resource in org_resources:
+        if resource.get("trial") != row["id"] or resource.get("kind") != "org":
+            continue
+        handle = resource.get("handle")
+        value = handle.get("location") if isinstance(handle, dict) else None
+        if isinstance(value, str) and value:
+            locations.append(value)
+
+    unique = set(locations)
+    if len(unique) == 1:
+        manifest["lc_location"] = unique.pop()
+    else:
+        manifest.pop("lc_location", None)
+    result["manifest"] = manifest
+    return result
+
+
 class Controller:
     def __init__(self, config):
         self.config = config
@@ -278,6 +316,7 @@ class Controller:
             "scenario_revision": spec["revision"],
             "scenario_hash": digest,
             "variant_seed": seed,
+            "lc_location": self.config.lc.location,
             "docs_digest": self.config.sources.docs.commit,
             "fixture_recipe_digest": sha256(PROJECT / "src/lc_eval/fixtures/hive.py")
             if name.startswith("hive")
@@ -587,7 +626,12 @@ class Controller:
         return await reference(name, fixture, env, bad=bad)
 
     def report(self, campaign):
-        trials = [r["result"] for r in self.journal.trials(campaign) if r["result"]]
+        rows = [row for row in self.journal.trials(campaign) if row["result"]]
+        org_resources = self.journal.resources(pending=False)
+        trials = [
+            _report_trial(row, org_resources, self.config.run_data_dir)
+            for row in rows
+        ]
         pairs = []
         for current in trials:
             if current["manifest"].get("repetition") == 2:
