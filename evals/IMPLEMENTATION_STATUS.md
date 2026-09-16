@@ -9,7 +9,7 @@ Branch: `eval/limacharlie-cli-ai`. Implementation started 2026-09-16.
 | M2 Isolated CLI execution | Implemented | Live direct-versus-broker CLI parity and isolation checks passed in `calibration-b4ba166555`. |
 | M3 Harnesses and budget | Implemented for subscriptions | Both real subscription smoke tests passed after packaging fixes; bounded time/turn/tool execution and token-only accounting. |
 | M4 Live fixtures | Implemented and verified | All three correct references passed against real LC resources; hosted webhook warmup, paced ingestion, genuine pagination and signed output delivery are verified. |
-| M5 Scenarios/graders | In progress | Three manifests, public prompts and deterministic Hive/export/routing graders implemented; unit calibration passes. |
+| M5 Scenarios/graders | Live calibration complete | All three correct references passed; each incorrect reference failed its intended assertion. `validate-suite --campaign calibration` passed after cleanup. |
 | M6 Reporting | Implemented | JSON/HTML reports, missing-metric handling, compatibility checks and acceptance criteria implemented. |
 | M7 Live proof | Pending | No model trials yet; organization and Hive fixture/key lifecycle probes passed. |
 
@@ -73,3 +73,9 @@ A later independent owner-inventory audit found four exact journal-owned test or
 
 - `calibration-238879db8a`: **export reference passed all seven assertions**. Search-confirmed warmup took 97 seconds; all 5,140 fixture events were observed, with page rows `[4560, 580, 0]`, proving a nonempty continuation. The transported candidate CLI exported exactly 5,003 production events with exact values, unique IDs and no platform mutations.
 - `calibration-5043d08d42` routing cleanup completed cleanly. All three correct scenario references have now passed; remaining negative references and genuine AI trials are pending.
+
+- `calibration-b357bb665e`: negative export calibration correctly failed `export.membership` and `export.count` after readiness proved all 5,140 events and nonempty continuation. File safety, valid JSONL, values of retained rows and platform preservation still passed, isolating the intended completeness failure. Cleanup is in progress.
+
+- `calibration-be7ae8e001`: negative routing calibration failed only `routing.negatives_excluded`; ingestion, signed matching delivery, receiver health, full observation window and baseline preservation passed. Cleanup is in progress. All three intended negative failures have now been observed.
+
+- `validate-suite --campaign calibration` returned **reference_validation_passed: true** for all three scenarios after all reference cleanup completed. The eight-trial genuine AI campaign `initial-proof` is now running sequentially from evaluator commit `fa77838`.

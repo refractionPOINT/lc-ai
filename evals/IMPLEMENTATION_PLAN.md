@@ -301,7 +301,7 @@ Gate: a provision → small input/output probe → cleanup cycle succeeds, and r
 
 ### M5 — Scenarios, references and independent graders
 
-Implementation status: Implemented. All three correct references passed; Hive negative calibration passed. Export and routing negative calibrations are running.
+Implementation status: Implemented and live-calibrated. All three correct references passed, and all three incorrect references failed their intended assertions. `validate-suite --campaign calibration` passed after clean deletion.
 
 1. Implement the three packages in section 7 and add them to `initial-loop.yaml`.
 2. Build fixture factories, expected-state builders, reference runners and deterministic verifiers. Reference runners use the same CLI broker as real agents; privileged preparation stays in the fixture layer.
@@ -325,7 +325,7 @@ Gate: synthetic A/A and known differing result fixtures produce correct aggregat
 
 ### M7 — Initial live acceptance campaign
 
-Implementation status: In progress. Real harness smoke and crash recovery passed; eight genuine AI trials and final acceptance are pending.
+Implementation status: In progress. Real harness smoke, all reference calibration and crash recovery passed. The eight genuine AI trials are running; final acceptance remains pending.
 
 1. Run offline checks, live doctor and reference/bad-reference suites.
 2. Run each scenario once with each selected real harness, in fresh fixtures (six trials total for two harnesses). Alternate harness order to limit systematic timing effects. No hints, manual interventions or task repairs mid-trial.
