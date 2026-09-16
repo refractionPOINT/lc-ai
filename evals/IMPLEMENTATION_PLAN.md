@@ -325,7 +325,7 @@ Gate: synthetic A/A and known differing result fixtures produce correct aggregat
 
 ### M7 — Initial live acceptance campaign
 
-Implementation status: In progress. Real harness smoke, all reference calibration and crash recovery passed. Two Hive AI runs passed but exposed evaluator transport rejections of native global-option positions and AI help. They are retained as invalid for comparison. After corrected live parity, restart all eight scored trials as `initial-proof-v2`; final acceptance remains pending.
+Implementation status: In progress. Real harness smoke, reference calibration and crash recovery passed. Corrected live parity passed and `initial-proof-v2` has genuine Hive and routing successes for both harnesses. Both export preparations were inconclusive before agent launch because the backend returned the full fixture in one nonempty page. Preserve those records, require actual agent-start evidence for the matrix, add the bounded growth specified above, and calibrate export in the supported `canada` location before retrying both harnesses. Final acceptance remains pending.
 
 1. Run offline checks, live doctor and reference/bad-reference suites.
 2. Run each scenario once with each selected real harness, in fresh fixtures (six trials total for two harnesses). Alternate harness order to limit systematic timing effects. No hints, manual interventions or task repairs mid-trial.

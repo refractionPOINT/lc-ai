@@ -87,3 +87,9 @@ A later independent owner-inventory audit found four exact journal-owned test or
 - The broker is being corrected against the pinned native CLI global-option hoisting contract, and live parity will include these cases. The scored suite will restart as **`initial-proof-v2`**, keeping the earlier attempts visible.
 
 - Broker correction verified: **175 unit tests passed; Ruff clean**. `calibration-4313564b3f` passed all seven CLI parity cases (including root/group/leaf AI help and trailing global output), all three isolation checks, and all five Hive assertions.
+
+- Expanded parity reference `calibration-4313564b3f` completed with verified clean deletion; reference validation passed again. Scored campaign **`initial-proof-v2`** runs from evaluator commit `d2bbb5a`. First Hive trials `initial-proof-v2-b11473c260` (Claude) and `initial-proof-v2-e88759af32` (Codex) passed all assertions and cleaned up. Export and routing trials, Hive repeats, and final acceptance remain in progress.
+
+- Export setup attempts `initial-proof-v2-ea2df2ef91` (Codex) and `initial-proof-v2-3549abcc93` (Claude) were infrastructure-inconclusive before agent launch: all 5,140 events were independently searchable, but the backend returned only one nonempty page. Both cleaned up without model usage. Backend pagination operates on storage batches; fixed event count alone does not guarantee continuation. Fixture reliability and pre-agent reporting classification are under investigation; no export success is claimed.
+
+- Both genuine routing trials passed all six assertions: `initial-proof-v2-c52050447d` (Claude) and `initial-proof-v2-bf63fd326e` (Codex). Signed matching delivery, full negative observation, excluded probes, ingestion and baseline preservation all passed. Claude cleanup is complete; Codex cleanup and Hive A/A repeats are in progress.
