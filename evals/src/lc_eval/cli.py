@@ -7,7 +7,7 @@ from pathlib import Path
 import click
 import yaml
 
-from .config import PROJECT, load, save, init_local, doctor
+from .config import PROJECT, load, save, init_local, doctor, source_pin
 from .controller import Controller
 from .execution.docker import build_images
 from .acceptance import validate_references, write_acceptance
@@ -49,6 +49,31 @@ def build(config):
     save(config, cfg)
 
 
+@main.command("build-ai-sessions")
+@click.option("--config", type=click.Path(path_type=Path), default=DEFAULT_CONFIG)
+@click.option("--source", type=click.Path(path_type=Path, exists=True), default=PROJECT.parent.parent / "ai-sessions")
+def build_ai_sessions(config, source):
+    """Pin and build the native runner; add a subscription agent from Claude's profile."""
+    from .execution.workspace_build import build_workspace_image
+    from .models import AISessionsImage
+    cfg = load(config)
+    claude = next((a for a in cfg.agents if a.adapter == "claude_code"), None)
+    existing = next((a for a in cfg.agents if a.adapter == "ai_sessions"), None)
+    template = existing or claude
+    if not template or template.auth_mode != "subscription" or not template.auth_file:
+        raise click.ClickException("configure a Claude subscription profile before building ai_sessions")
+    pin, catalog = source_pin(source), source_pin(PROJECT.parent)
+    built = build_workspace_image(cfg, pin.path, pin.commit, catalog.commit)
+    cfg.ai_sessions = AISessionsImage(source=pin, lc_ai=catalog, image=built["image_tag"],
+                                     image_id=built["image_id"], build_manifest=built)
+    import sys
+    agent = template.model_copy(update={"adapter": "ai_sessions", "executable": Path(sys.executable),
+                                      "version": "session-runner@" + pin.commit})
+    cfg.agents = [a for a in cfg.agents if a.adapter != "ai_sessions"] + [agent]
+    save(config, cfg)
+    click.echo(json.dumps(built, indent=2))
+
+
 @main.command("run")
 @click.option("--config", type=click.Path(path_type=Path), default=DEFAULT_CONFIG)
 @click.option("--campaign", required=True)
@@ -56,7 +81,7 @@ def build(config):
     "--scenario",
     type=click.Choice(["hive-preserve-update", "search-complete-export", "webhook-production-routing"]),
 )
-@click.option("--adapter", type=click.Choice(["claude_code", "codex"]), default="claude_code")
+@click.option("--adapter", type=click.Choice(["claude_code", "codex", "ai_sessions"]), default="claude_code")
 @click.option("--seed", type=int, default=42)
 @click.option("--repetition", type=click.IntRange(min=1), default=None)
 @click.option("--reference", is_flag=True)
@@ -64,6 +89,8 @@ def build(config):
 def run(config, campaign, scenario, adapter, seed, repetition, reference, bad_reference):
     if scenario is None and repetition is not None:
         raise click.UsageError("--repetition requires --scenario")
+    if scenario is None and adapter == "ai_sessions":
+        raise click.UsageError("ai_sessions currently requires --scenario; the default suite specifies Claude Code and Codex")
     reference = reference or bad_reference
     exit_code = 0
     controller = Controller(load(config))
@@ -120,10 +147,16 @@ def run(config, campaign, scenario, adapter, seed, repetition, reference, bad_re
 @main.command("smoke")
 @click.option("--config", type=click.Path(path_type=Path), default=DEFAULT_CONFIG)
 @click.option("--campaign", default="harness-smoke")
-def smoke_command(config, campaign):
+@click.option("--adapter", type=click.Choice(["claude_code", "codex", "ai_sessions"]))
+def smoke_command(config, campaign, adapter):
     from .smoke import smoke
 
-    results = asyncio.run(smoke(load(config), campaign))
+    cfg = load(config)
+    if adapter:
+        cfg.agents = [a for a in cfg.agents if a.adapter == adapter]
+        if not cfg.agents:
+            raise click.ClickException("requested adapter is not configured")
+    results = asyncio.run(smoke(cfg, campaign))
     for result in results:
         click.echo(json.dumps({k: result.get(k) for k in ("adapter", "execution_status", "grade", "error")}))
     if any(result.get("grade") != "pass" for result in results):

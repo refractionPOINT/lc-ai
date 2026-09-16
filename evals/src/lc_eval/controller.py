@@ -25,6 +25,8 @@ from .execution.docker import DockerEnvironment
 from .execution.broker import Broker, CONTROLLED_CLI_V1_NOTICE
 from .adapters import (
     AdapterStateError,
+    AISessionsAdapter,
+    AISessionsConfig,
     ClaudeCodeAdapter,
     ClaudeCodeConfig,
     CodexAdapter,
@@ -298,7 +300,7 @@ class Controller:
         reference=False,
         bad_reference=False,
     ):
-        if adapter_name not in {"claude_code", "codex"}:
+        if adapter_name not in {"claude_code", "codex", "ai_sessions"}:
             raise UnsupportedAdapterError(
                 f"adapter {adapter_name!r} is unsupported by the live controlled CLI profile"
             )
@@ -310,6 +312,9 @@ class Controller:
             raise ValueError(
                 "live controller currently supports explicitly selected subscription_limits only"
             )
+        if adapter_name == "ai_sessions" and not self.config.ai_sessions:
+            raise ValueError("build and pin the ai-sessions runner image first")
+        runner_identity = self.config.ai_sessions.model_dump(mode="json") if adapter_name == "ai_sessions" else None
         trial_id = safe_id(campaign + "-" + uuid.uuid4().hex[:10])
         manifest = {
             "scenario_id": name,
@@ -323,12 +328,14 @@ class Controller:
             else source_tree_digest(PROJECT / "src/lc_eval/fixtures"),
             "harness": reference_adapter if reference else adapter_name,
             "model": agent.model,
-            "effort": agent.effort,
+            "effort": "native_default" if adapter_name == "ai_sessions" else agent.effort,
+            "ai_sessions": runner_identity,
             "tools_digest": hashlib.sha256(
                 (
                     self.config.sources.candidate_image_id
                     + sha256(PROJECT / "src/lc_eval/execution/broker.py")
                     + sha256(PROJECT / "src/lc_eval/execution/shim.py")
+                    + (json.dumps(runner_identity, sort_keys=True) if runner_identity else "")
                 ).encode()
             ).hexdigest(),
             "evaluator_digest": hashlib.sha256(
@@ -340,7 +347,7 @@ class Controller:
             "limits": {
                 **self.config.limits.model_dump(),
                 "timeout_seconds": agent.timeout_seconds,
-                "max_turns": agent.max_turns if agent.adapter == "claude_code" else None,
+                "max_turns": agent.max_turns if agent.adapter in {"claude_code", "ai_sessions"} else None,
                 "max_tool_calls": 80 if agent.adapter == "codex" else None,
                 "max_cli_invocations": 80,
             },
@@ -524,28 +531,23 @@ class Controller:
             trial_id=env.trial_id,
             model=agent.model,
             workdir=Path("/"),
-            executable=agent.adapter == "codex" and "codex" or "claude",
+            executable="python" if agent.adapter == "ai_sessions" else ("codex" if agent.adapter == "codex" else "claude"),
             command_prefix=("docker", "exec", "-i", "--workdir", "/work", env.agent),
             environment={
                 k: v for k, v in os.environ.items() if k in ("PATH", "DOCKER_HOST", "XDG_RUNTIME_DIR")
             },
         )
-        adapter = (
-            ClaudeCodeAdapter(
-                ClaudeCodeConfig(
-                    **common, auth_mode="subscription", max_turns=agent.max_turns, effort=agent.effort
-                )
-            )
-            if agent.adapter == "claude_code"
-            else CodexAdapter(
-                CodexConfig(
-                    **common,
-                    auth_mode="subscription",
-                    max_tool_calls=80,
-                    config_overrides=(f'model_reasoning_effort="{agent.effort}"',),
-                )
-            )
-        )
+        if agent.adapter == "ai_sessions":
+            adapter = AISessionsAdapter(AISessionsConfig(**common, max_turns=agent.max_turns, timeout_seconds=agent.timeout_seconds))
+        elif agent.adapter == "claude_code":
+            adapter = ClaudeCodeAdapter(ClaudeCodeConfig(
+                **common, auth_mode="subscription", max_turns=agent.max_turns, effort=agent.effort))
+        elif agent.adapter == "codex":
+            adapter = CodexAdapter(CodexConfig(
+                **common, auth_mode="subscription", max_tool_calls=80,
+                config_overrides=(f'model_reasoning_effort="{agent.effort}"',)))
+        else:
+            raise UnsupportedAdapterError(f"unsupported live adapter {agent.adapter}")
         adapter.prepare(prompt)
         started = False
 

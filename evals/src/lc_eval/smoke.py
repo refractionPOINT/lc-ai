@@ -34,7 +34,13 @@ async def smoke(config, campaign):
                 "grade": "inconclusive",
                 "cleanup_status": "pending",
                 "usage": {},
-                "manifest": {"kind": "harness-smoke"},
+                "manifest": {
+                    "kind": "harness-smoke", "harness": agent.adapter,
+                    "model": agent.model, "harness_version": agent.version,
+                    "timeout_seconds": agent.timeout_seconds, "max_turns": agent.max_turns,
+                    "ai_sessions": config.ai_sessions.model_dump(mode="json")
+                    if agent.adapter == "ai_sessions" and config.ai_sessions else None,
+                },
                 "timings": {},
             }
             try:

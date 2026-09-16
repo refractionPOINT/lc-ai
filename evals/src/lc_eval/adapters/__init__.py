@@ -17,12 +17,14 @@ from .claude_code import ClaudeCodeAdapter, ClaudeCodeConfig, build_claude_code_
 from .codex import CodexAdapter, CodexConfig, build_codex_argv
 from .scripted import ScriptedAdapter, ScriptedStep
 from .workspace import WorkspaceAdapter
+from .ai_sessions import AISessionsAdapter, AISessionsConfig
 
 ADAPTERS: dict[str, type[BaseAdapter]] = {
     "claude-code": ClaudeCodeAdapter,
     "codex": CodexAdapter,
     "scripted": ScriptedAdapter,
     "workspace": WorkspaceAdapter,
+    "ai_sessions": AISessionsAdapter,
 }
 
 
@@ -35,6 +37,8 @@ def adapter_class(name: str) -> type[BaseAdapter]:
 
 __all__ = [
     "ADAPTERS",
+    "AISessionsAdapter",
+    "AISessionsConfig",
     "AdapterCapabilities",
     "AdapterConfig",
     "AdapterError",

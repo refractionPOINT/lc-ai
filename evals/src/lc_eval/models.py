@@ -56,7 +56,7 @@ class ReceiverConfig(StrictModel):
 
 
 class AgentConfig(StrictModel):
-    adapter: Literal["claude_code", "codex", "scripted", "workspace"]
+    adapter: Literal["claude_code", "codex", "scripted", "workspace", "ai_sessions"]
     executable: Path | None = None
     version: str = ""
     model: str | None = None
@@ -89,6 +89,14 @@ class Limits(StrictModel):
         return value
 
 
+class AISessionsImage(StrictModel):
+    source: SourcePin
+    lc_ai: SourcePin
+    image: str
+    image_id: str
+    build_manifest: dict[str, Any] = Field(default_factory=dict)
+
+
 class RunConfig(StrictModel):
     schema_version: Literal[1] = 1
     run_data_dir: Path
@@ -96,6 +104,7 @@ class RunConfig(StrictModel):
     lc: LCConfig
     receiver: ReceiverConfig = Field(default_factory=ReceiverConfig)
     agents: list[AgentConfig]
+    ai_sessions: AISessionsImage | None = None
     limits: Limits = Field(default_factory=Limits)
     suite: str = "initial-loop"
     seed: int = 42

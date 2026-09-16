@@ -247,6 +247,21 @@ class DockerEnvironment:
                                 (cfg.sources.candidate_image, cfg.sources.candidate_image_id)):
             if not expected or image_id(image) != expected:
                 raise RuntimeError("build and pin images before running")
+        candidate_image = cfg.sources.candidate_image_id
+        if selected_agent.adapter == "ai_sessions":
+            if not cfg.ai_sessions or image_id(cfg.ai_sessions.image) != cfg.ai_sessions.image_id:
+                raise RuntimeError("build and pin the ai_sessions image before running")
+            if cfg.ai_sessions.build_manifest.get("base_image_id") != cfg.sources.candidate_image_id:
+                raise RuntimeError("base candidate image changed; rebuild ai_sessions")
+            if selected_agent.auth_mode != "subscription" or not selected_agent.auth_file:
+                raise ValueError("ai_sessions requires a Claude subscription credential file")
+            candidate_image = cfg.ai_sessions.image_id
+            self.work.chmod(0o770)
+            for name in ("lc-ai", "documentation"):
+                destination = self.work / name
+                if destination.exists() or destination.is_symlink():
+                    raise RuntimeError(f"fresh runner workspace already contains {name}")
+                destination.symlink_to(f"/opt/lc-eval/{name}", target_is_directory=True)
         a_net, w_net = self.prefix+"-an", self.prefix+"-wn"
         for net in (a_net, w_net):
             self.owned(
@@ -290,11 +305,11 @@ class DockerEnvironment:
         if selected_agent.auth_file:
             auth_name = "auth.json" if selected_agent.adapter == "codex" else ".credentials.json"
             shutil.copyfile(selected_agent.auth_file, selected_auth/auth_name)
-            os.chmod(selected_auth/auth_name, 0o600)
+            os.chmod(selected_auth/auth_name, 0o640 if selected_agent.adapter == "ai_sessions" else 0o600)
         # Minimal onboarding state, without user preferences, plugins, or the other harness's credentials.
-        if selected_agent.adapter == "claude_code":
+        if selected_agent.adapter in {"claude_code", "ai_sessions"}:
             (selected_auth/".claude.json").write_text(json.dumps({"hasCompletedOnboarding": True}))
-            os.chmod(selected_auth/".claude.json", 0o600)
+            os.chmod(selected_auth/".claude.json", 0o640 if selected_agent.adapter == "ai_sessions" else 0o600)
         docs = self.root/"docs"
         docs.mkdir(exist_ok=True)
         archive = subprocess.run(["git", "-C", str(cfg.sources.docs.path), "archive", cfg.sources.docs.commit,
@@ -306,7 +321,12 @@ class DockerEnvironment:
             "-e", "HOME=/auth",
             "-e", "HTTPS_PROXY=http://proxy:8080", "-e", "HTTP_PROXY=http://proxy:8080",
         ]
-        auth_mounts = ["--tmpfs", "/auth:rw,nosuid,nodev,size=64m,uid=1000,gid=1000,mode=0700"]
+        # The production wrapper's RLIMIT_NPROC is per real UID, including host
+        # processes. A distinct runner UID avoids charging the user's host threads.
+        candidate_uid = 10001 if selected_agent.adapter == "ai_sessions" else 1000
+        candidate_common = list(common)
+        candidate_common[candidate_common.index("--user") + 1] = f"{candidate_uid}:1000"
+        auth_mounts = ["--tmpfs", f"/auth:rw,nosuid,nodev,size=64m,uid={candidate_uid},gid=1000,mode=0700"]
         auth_initializers = []
         if selected_agent.auth_file:
             auth_name = "auth.json" if selected_agent.adapter == "codex" else ".credentials.json"
@@ -317,7 +337,7 @@ class DockerEnvironment:
             auth_initializers.append(f"cp /run/lc-eval-credential /auth/{auth_name}")
         if selected_agent.adapter == "codex":
             selected_env += ["-e", "CODEX_HOME=/auth"]
-        elif selected_agent.adapter == "claude_code":
+        elif selected_agent.adapter in {"claude_code", "ai_sessions"}:
             selected_env += ["-e", "CLAUDE_CONFIG_DIR=/auth"]
             auth_mounts += [
                 "--mount",
@@ -332,13 +352,13 @@ class DockerEnvironment:
         initialize_auth = "; ".join(["umask 077", *auth_initializers, "exec sleep infinity"])
         self.owned("docker_container", self.agent, lambda: run([
             "docker", "run", "-d", "--name", self.agent, "--label", "lc-eval.trial="+self.trial_id,
-            "--network", a_net, *common,
+            "--network", a_net, *candidate_common,
             "--mount", f"type=bind,src={self.socket_dir},dst=/run/lc-eval,readonly",
             "--mount", f"type=bind,src={docs},dst=/docs,readonly",
             *auth_mounts,
             *selected_env,
             "-e", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1", "-e", "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
-            cfg.sources.candidate_image_id, "sh", "-c", initialize_auth]))
+            candidate_image, "sh", "-c", initialize_auth]))
 
     def stop_candidate(self):
         for name in (self.agent, self.worker):

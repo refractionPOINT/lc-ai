@@ -127,6 +127,20 @@ def doctor(config: RunConfig, live: bool = False) -> dict:
                 raise ValueError("model authentication mode unresolved")
             return {"version": agent.version, "model": agent.model, "auth_mode": agent.auth_mode}
         add("agent_"+agent.adapter, verify)
+    if any(a.adapter == "ai_sessions" for a in config.agents):
+        def verify_runner():
+            from .execution.docker import image_id
+            if not config.ai_sessions:
+                raise ValueError("build-ai-sessions must pin the native runner image first")
+            if image_id(config.ai_sessions.image) != config.ai_sessions.image_id:
+                raise ValueError("ai_sessions image tag no longer matches its configured digest")
+            if config.ai_sessions.build_manifest.get("base_image_id") != config.sources.candidate_image_id:
+                raise ValueError("base candidate image changed; rebuild ai_sessions deliberately")
+            for agent in config.agents:
+                if agent.adapter == "ai_sessions" and agent.auth_mode != "subscription":
+                    raise ValueError("ai_sessions currently requires Claude subscription authentication")
+            return {"image_id": config.ai_sessions.image_id, "source": config.ai_sessions.source.commit}
+        add("ai_sessions_image", verify_runner)
     if live:
         add("lc_auth", lambda: bool(capture([str(config.lc.executable), "auth", "test"])))
         if config.limits.budget_mode == "hard_usd":
