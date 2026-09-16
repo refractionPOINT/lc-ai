@@ -38,9 +38,32 @@ Requirements: Python 3.11+, Docker, an authenticated `limacharlie` executable, a
 
 Configuration defaults to `~/.local/share/lc-eval/config.json`. Review its source commits, model selections, timeout/turn limits, and authentication **paths**. Runtime data, copied credentials, raw transcripts, and receipts are private and stay outside the checkout. Source artifacts are built from the recorded commits; Docker image digests and native harness binary hashes are recorded.
 
-The configuration is schema version 1 and rejects unknown fields. Its top-level fields are `run_data_dir`, `sources`, `lc`, `receiver`, `agents`, `limits`, `suite`, `seed`, and `profile`. `lc.location` is a literal organization-creation location for every trial selected by one command. `agents` pins the adapter, executable/version, model, effort, auth mode/file, 600-second execution timeout, and Claude turn limit. `limits` contains the single-trial concurrency, organization/event/byte ceilings, CLI command bounds, verification windows, lease duration, and billing mode. `init-local --subscription` writes JSON, which is also valid YAML; edit only non-secret values and paths.
+The configuration is schema version 1 and rejects unknown fields. Its top-level fields are `run_data_dir`, `sources`, `lc`, `receiver`, `agents`, optional `ai_sessions` image/source identity, `limits`, `suite`, `seed`, and `profile`. `lc.location` is a literal organization-creation location for every trial selected by one command. `agents` pins the adapter, executable/version, model, effort, auth mode/file, 600-second execution timeout, and Claude turn limit. `limits` contains the single-trial concurrency, organization/event/byte ceilings, CLI command bounds, verification windows, lease duration, and billing mode. `init-local --subscription` writes JSON, which is also valid YAML; edit only non-secret values and paths.
 
 The initial authorized billing mode is **subscription_limits**: one trial at a time, 600 seconds per agent including harness startup, Claude 30 turns, a single Codex `exec` turn bounded to 80 completed tool calls, and 80 CLI invocations. Token counts come from native harness streams; uncached, cached, cache-write, total input, and output counts remain distinct when the provider reports them. Dollar cost is unknown. The optional request-budget gateway is separate and is not wired into the subscription controller.
+
+## Run through the AI Sessions runner
+
+The `ai_sessions` adapter exercises the native Go AI Sessions session runner and its packaged Python SDK bridge locally. Build its pinned image after the normal candidate image; building the Go binary also requires the Go toolchain declared by the pinned `ai-sessions/go.mod`. The default sibling checkout is `../ai-sessions`; pass `--source` when it is elsewhere:
+
+```sh
+./evals/.venv/bin/lc-eval build-ai-sessions --config /absolute/private/lc-eval-usa.json --source ../ai-sessions
+./evals/.venv/bin/lc-eval smoke --config /absolute/private/lc-eval-usa.json --campaign ai-sessions-smoke --adapter ai_sessions
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign ai-sessions-check --scenario hive-preserve-update --adapter ai_sessions --seed 41001
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign ai-sessions-check --scenario webhook-production-routing --adapter ai_sessions --seed 43001
+# Use the Canada configuration for the existing export fixture, with the same source/model pins.
+./evals/.venv/bin/lc-eval build-ai-sessions --config /absolute/private/lc-eval-canada.json --source ../ai-sessions
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-canada.json --campaign ai-sessions-check --scenario search-complete-export --adapter ai_sessions --seed 42001
+./evals/.venv/bin/lc-eval report --config /absolute/private/lc-eval-usa.json --campaign ai-sessions-check
+```
+
+`build-ai-sessions` archives the recorded commits rather than the sibling working trees. It derives a reduced eval image from the pinned candidate image and adds the real Go coordinator, SDK bridge, runtime plugins, selected public `lc-ai` catalogues, and documentation. It intentionally omits the production runner image's unrelated cloud and analysis tools. The resulting image, source commits, archive hashes, SDK versions, and Go binary hash are saved in the configuration and private build manifest.
+
+The command initially clones the Claude subscription profile into an `ai_sessions` agent entry, including its model, credential-file path, timeout, and turn ceiling. Later builds preserve that entry’s settings. AI Sessions uses the provider's native effort behavior, recorded as `native_default`; it does not apply the Claude Code adapter's effort setting. Usage comes from native runner events. Cache totals may remain unknown when the bridge does not report them, and subscription runs do not claim dollar billing.
+
+Use an explicit `--scenario` for `ai_sessions`; the default suite still declares the original Claude Code/Codex matrix. The report’s initial-loop acceptance section continues to check that original milestone, not this separate harness proof.
+
+This local adapter tests runner and bridge behavior inside the eval isolation boundary. It does not emulate or validate the hosted AI Sessions workspace service. The original CLI scenarios, brokered `limacharlie` transport, independent graders, and cleanup rules are unchanged. Live validation exercised the smoke and all three scenarios: Hive and routing passed; export hit the native SDK turn limit without producing its file. All resources were cleaned. See the [AI Sessions proof](AI_SESSIONS_PROOF.md) for results and retained failures.
 
 ## Calibrate and run a complete campaign
 
