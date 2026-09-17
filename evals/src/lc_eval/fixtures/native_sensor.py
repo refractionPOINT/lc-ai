@@ -29,6 +29,11 @@ STATUS_PATH = "enrollment-status.json"
 OBSERVATION_PATH = "/work/process-observation.json"
 MAX_ENROLLMENT_BYTES = 16 * 1024
 MAX_DIAGNOSTIC_BYTES = 64 * 1024
+DEFAULT_SYSTEM_KEY_DESCRIPTIONS = frozenset({
+    "ext ext-feedback webhook adapter",
+    "reliable tasking webhook",
+    "ext ext-yara webhook adapter",
+})
 SENSOR_DOCKERFILE = """FROM {base_image}\nCOPY native-sensor.bin /opt/lc-native-sensor\nRUN chmod 755 /opt/lc-native-sensor\n"""
 
 
@@ -49,6 +54,41 @@ COMMANDS = {
 def _ikeys(cli, oid):
     value = cli.invoke(["installation-key", "list"], oid)
     return value if isinstance(value, (dict, list)) else {}
+
+
+def _default_system_keys_ready(value: Any) -> bool:
+    if not isinstance(value, Mapping):
+        return False
+    by_description = {}
+    for record in value.values():
+        if not isinstance(record, Mapping) or not isinstance(record.get("desc"), str):
+            continue
+        by_description[record["desc"]] = record
+    for description in DEFAULT_SYSTEM_KEY_DESCRIPTIONS:
+        record = by_description.get(description)
+        if not isinstance(record, Mapping):
+            return False
+        tags = record.get("tags")
+        if not isinstance(tags, list) or "lc:system" not in tags or not any(
+            isinstance(tag, str) and tag.startswith("ext:") for tag in tags
+        ):
+            return False
+    return True
+
+
+async def _wait_for_default_system_keys(config, cli, oid) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Wait for authoritative default-extension key inventory before baseline."""
+    deadline = time.monotonic() + config.lc.readiness_seconds
+    attempts = 0
+    last: Any = None
+    while time.monotonic() < deadline:
+        attempts += 1
+        last = _ikeys(cli, oid)
+        if _default_system_keys_ready(last):
+            return last, {"state": "ready", "attempts": attempts,
+                          "required_descriptions": sorted(DEFAULT_SYSTEM_KEY_DESCRIPTIONS)}
+        await asyncio.sleep(min(2, max(0, deadline - time.monotonic())))
+    raise RuntimeError("default extension installation keys did not reach authoritative readiness")
 
 
 def _sensors(cli, oid, *, online=False):
@@ -403,7 +443,7 @@ async def provision(config, cli, journal, trial_id, oid, seed, root):
     description = "lc-eval-native-" + suffix
     required_tag = "lc-eval:" + suffix
     distractor = unwrap(cli.invoke(["installation-key", "create", "--description", "lc-eval-distractor-" + suffix, "--get"], oid))
-    baseline_keys = _ikeys(cli, oid)
+    baseline_keys, key_readiness = await _wait_for_default_system_keys(config, cli, oid)
     baseline_sensors = _sensors(cli, oid)
     contract = {
         "schema_version": 1,
@@ -421,6 +461,7 @@ async def provision(config, cli, journal, trial_id, oid, seed, root):
     runtime.start()
     return {
         "baseline_keys": baseline_keys, "baseline_sensors": baseline_sensors,
+        "key_readiness": key_readiness,
         "_distractor_key": distractor, "marker": marker, "required_tag": required_tag,
         "installation_key_description": description,
         "provenance": {"sensor_binary_sha256": runtime.binary_sha256,

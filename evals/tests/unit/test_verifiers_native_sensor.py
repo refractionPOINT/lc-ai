@@ -86,3 +86,19 @@ def test_native_sensor_does_not_assume_missing_sensor_sid_matches_requested_sid(
     facts["sensor"] = {"alive": "2026-09-17 02:52:36", "version": "lc_sensor_5.3.9"}
     status = {item["id"]: item["status"] for item in verify_native_sensor({}, facts, _frozen(facts["trusted_task_result"]), {})}
     assert status["native_sensor.registered"] == "fail"
+
+
+def test_native_sensor_rejects_arbitrary_extra_installation_key():
+    facts = _facts()
+    facts["keys_after"]["unrequested"] = {"desc": "unrelated-extra"}
+    result = {item["id"]: item for item in verify_native_sensor({}, facts, _frozen(facts["trusted_task_result"]), {})}
+    assert result["native_sensor.keys.preserved"]["status"] == "fail"
+    assert result["native_sensor.keys.preserved"]["observed"]["extra_key_ids"] == ["unrequested"]
+
+
+def test_native_sensor_allows_exact_reuse_without_adding_key():
+    facts = _facts()
+    facts["baseline_keys"]["existing"] = {"desc": facts["installation_key_description"]}
+    facts["keys_after"] = {key: dict(value) for key, value in facts["baseline_keys"].items()}
+    status = {item["id"]: item["status"] for item in verify_native_sensor({}, facts, _frozen(facts["trusted_task_result"]), {})}
+    assert status["native_sensor.keys.preserved"] == "pass"

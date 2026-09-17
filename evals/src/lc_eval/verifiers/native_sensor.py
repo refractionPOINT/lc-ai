@@ -141,9 +141,17 @@ def verify_native_sensor(manifest, fixture_handle, frozen_artifacts, evidence):
     description = facts.get("installation_key_description")
     matching_keys = [] if after_records is None else [iid for iid, record in after_records.items() if record.get("desc") == description]
     baseline_exact = before_records is not None and after_records is not None and all(after_records.get(iid) == record for iid, record in before_records.items())
-    keys_preserved = baseline_exact and len(matching_keys) == 1
+    expected_key_ids = None
+    extra_key_ids: list[str] = []
+    missing_key_ids: list[str] = []
+    if before_records is not None and after_records is not None and len(matching_keys) == 1:
+        expected_key_ids = set(before_records) | {matching_keys[0]}
+        extra_key_ids = sorted(set(after_records) - expected_key_ids)
+        missing_key_ids = sorted(expected_key_ids - set(after_records))
+    exact_membership = expected_key_ids is not None and not extra_key_ids and not missing_key_ids
+    keys_preserved = baseline_exact and exact_membership
     keys_status = "unknown" if before_records is None or after_records is None else "pass" if keys_preserved else "fail"
-    out.append(assertion("native_sensor.keys.preserved", keys_status, expected={"baseline_unchanged": True, "requested_description_exact_count": 1}, observed={"baseline_unchanged": baseline_exact, "requested_description_exact_ids": matching_keys}, evidence=["evidence:installation-keys"], explanation="Every baseline key record is exact and one requested deployment key exists." if keys_preserved else "Installation-key preservation or exact requested membership is not proven."))
+    out.append(assertion("native_sensor.keys.preserved", keys_status, expected={"baseline_unchanged": True, "requested_description_exact_count": 1, "additional_keys": "only requested key unless reused"}, observed={"baseline_unchanged": baseline_exact, "requested_description_exact_ids": matching_keys, "extra_key_ids": extra_key_ids, "missing_key_ids": missing_key_ids}, evidence=["evidence:installation-keys"], explanation="Every baseline key is exact and the key set adds only the requested deployment key, unless it was reused." if keys_preserved else "Installation-key preservation or exact requested membership is not proven."))
     before_ids, after_ids = _ids(facts.get("baseline_sensors")), _ids(facts.get("sensors_after"))
     distractors = before_ids <= after_ids if facts.get("sensors_after") is not None else False
     out.append(assertion("native_sensor.distractors.preserved", "pass" if distractors else "unknown" if facts.get("sensors_after") is None else "fail", expected=sorted(before_ids), observed=sorted(after_ids), evidence=["evidence:sensor-list"], explanation="All pre-existing sensor identities remain present." if distractors else "Pre-existing sensor preservation is not proven."))
