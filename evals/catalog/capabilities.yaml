@@ -3,15 +3,15 @@ revision: 1
 families:
   - id: identity-tenant-lifecycle
     cli_surfaces: [org, auth, api-key]
-    coverage: implemented-calibration-pending
+    coverage: calibrated
     scenarios: [access-key-rotation]
   - id: administration-fleet-operations
     cli_surfaces: [user, group, api-key, org, usage, audit]
-    coverage: implemented-calibration-pending
+    coverage: calibrated
     scenarios: [access-key-rotation]
   - id: endpoint-onboarding-management
     cli_surfaces: [installation-key, sensor, task]
-    coverage: implemented-calibration-pending
+    coverage: calibrated
     scenarios: [native-sensor-onboarding]
   - id: ingestion
     cli_surfaces: [cloud-adapter, installation-key]
@@ -39,7 +39,7 @@ families:
     scenarios: []
   - id: cloud-security
     cli_surfaces: [cloudsec, caasm]
-    coverage: implemented-calibration-pending
+    coverage: calibrated
     scenarios: [cloudsec-findings-triage]
   - id: vulnerability-management
     cli_surfaces: [vulnerability]
@@ -51,7 +51,7 @@ families:
     scenarios: []
   - id: cases-operational-records
     cli_surfaces: [case]
-    coverage: implemented-calibration-pending
+    coverage: calibrated
     scenarios: [case-maintain-records]
   - id: ai-services-apps
     cli_surfaces: [ai, app]

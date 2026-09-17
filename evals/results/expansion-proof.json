@@ -1,0 +1,1686 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-16",
+  "campaign": "expansion-proof",
+  "implementation_checkpoints": [
+    "23dbdaa",
+    "e65672c",
+    "90d820f",
+    "053c1b5",
+    "bcebd5a",
+    "9423bc1",
+    "801c87a",
+    "2b8eb89"
+  ],
+  "scope": "Initial single-trial bare versus pinned-skills comparisons; not estimated success probabilities.",
+  "pins": {
+    "execution_profile": "controlled-cli-v1",
+    "lc_ai_commit": "8ab473d023dc6a07dc285149d14cef8e36519a58",
+    "documentation_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+    "cli_commit": "fe67856c4cdd1265b0b90a452247b1fb395f7d08",
+    "candidate_image_id": "sha256:f860e0c1fdba6ae68d6fc07a810127040e34ff76906f67e5caed606d4e4448d3",
+    "worker_image_id": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+    "ai_sessions_commit": "bbe82892282e3989005e70ca9c4415f77866c563",
+    "ai_sessions_image_id": "sha256:feca83783942b6f2e87205e2e127aafb6c37efbe60e161f626c3e96d647d3052",
+    "ai_sessions_binary_sha256": "96608f655fe5c3f1e8cc23b6eb24a3b863e4b86d307172fafbaaeb5bbc0b97a9",
+    "source_skill_corpus_sha256": "eb6c65a0b00dc3683338342b9f569a205cb0f5e034bcf466c60fe2334c67b768",
+    "standalone_transformed_corpus_sha256": "660cc1ebb1fe040630e9add66fc9414d35b23e99fbed45b1b1874cba68058587",
+    "standalone_support_sha256": "44acd527064b01a5e6f2cb3b8089efc4ea5e9af3f38b049c5af5b5fcc44043ff",
+    "skill_count": 43
+  },
+  "harnesses": {
+    "claude_code": {
+      "version": "2.1.273 (Claude Code)",
+      "model": "claude-sonnet-5",
+      "effort": "medium",
+      "auth_mode": "subscription"
+    },
+    "codex": {
+      "version": "codex-cli 0.154.0",
+      "model": "gpt-6-astra",
+      "effort": "medium",
+      "auth_mode": "subscription"
+    },
+    "ai_sessions": {
+      "version": "session-runner@bbe82892282e3989005e70ca9c4415f77866c563",
+      "model": "claude-sonnet-5",
+      "effort": "native_default",
+      "auth_mode": "subscription",
+      "delivery": "ai_sessions_plugin_autoinit"
+    }
+  },
+  "trials": [
+    {
+      "trial_id": "expansion-proof-2c3ce40cab",
+      "scenario_id": "config-reconcile-preserve",
+      "adapter": "codex",
+      "seed": 51002,
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "evidence_complete": true,
+      "agent_attempted": true,
+      "manifest": {
+        "scenario_revision": 1,
+        "scenario_hash": "360b4e91cf560d171e1cbc4ab4a1bf7d17e61967d404473e66f85bfc982152c8",
+        "variant_seed": 51002,
+        "lc_location": "usa",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "6752dcf2d4b12c96a831a7a39592c71604bebce2b05bf83d2ea96e2aacb158c8",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "b0555045193fc9223682e5a72b1be186af0e0d474bf73b784f299ed95e3b5491",
+        "evaluator_digest": "d1f2c790384fd309cca61335b613df4f17628ef386e34dbde94355670255e85d",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "execution_profile": "controlled-cli-v1",
+        "context_mode": "bare",
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "limits": {
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "context": {
+          "mode": "bare",
+          "delivery": "isolated_empty_user_context",
+          "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+          "provider_builtin_skills": "possible",
+          "lc_ai": null
+        },
+        "fixture_provenance": {}
+      },
+      "usage": {
+        "input_tokens": 8156,
+        "total_input_tokens": 68572,
+        "output_tokens": 899,
+        "cache_read_tokens": 60416,
+        "cached_input_tokens": 60416,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cli_invocations": 9,
+        "output_bytes": 11495,
+        "cli_seconds": 3.489610232412815,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0,
+        "billing_mode": "subscription_limits",
+        "cost_usd": null
+      },
+      "timings": {
+        "active_seconds": 41.043389204889536,
+        "verification_seconds": 0.9614127073436975,
+        "total_seconds": 132.23895379388705
+      },
+      "assertions": [
+        {
+          "id": "config.desired_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.unrelated_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.record_sets_exact",
+          "status": "pass",
+          "required": true
+        }
+      ],
+      "skill_use_observation": {
+        "observed_names": [],
+        "transcript_available": true,
+        "exhaustive": false,
+        "meaning": "Observed native skill/read requests or successful Codex skill-file reads; not a measure of internal influence."
+      },
+      "cleanup_error_count": 0
+    },
+    {
+      "trial_id": "expansion-proof-fb33c0285b",
+      "scenario_id": "config-reconcile-preserve",
+      "adapter": "codex",
+      "seed": 51002,
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "evidence_complete": true,
+      "agent_attempted": true,
+      "manifest": {
+        "scenario_revision": 1,
+        "scenario_hash": "360b4e91cf560d171e1cbc4ab4a1bf7d17e61967d404473e66f85bfc982152c8",
+        "variant_seed": 51002,
+        "lc_location": "usa",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "6752dcf2d4b12c96a831a7a39592c71604bebce2b05bf83d2ea96e2aacb158c8",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "b0555045193fc9223682e5a72b1be186af0e0d474bf73b784f299ed95e3b5491",
+        "evaluator_digest": "af4ebdeedc4ca3787c41d958809f0db77ec35677138c5d97a9787a9d9fe26f94",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "execution_profile": "controlled-cli-v1",
+        "context_mode": "lc_ai",
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "limits": {
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "context": {
+          "mode": "lc_ai",
+          "delivery": "native_user_skills",
+          "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+          "provider_builtin_skills": "possible",
+          "lc_ai": {
+            "source_commit": "8ab473d023dc6a07dc285149d14cef8e36519a58",
+            "source_archive_sha256": "4c1f4d0e601ebb660b688b9726271edde833ccc96930fffabe10190edff93ce2",
+            "source_skill_corpus_sha256": "eb6c65a0b00dc3683338342b9f569a205cb0f5e034bcf466c60fe2334c67b768",
+            "corpus_sha256": "660cc1ebb1fe040630e9add66fc9414d35b23e99fbed45b1b1874cba68058587",
+            "support_sha256": "44acd527064b01a5e6f2cb3b8089efc4ea5e9af3f38b049c5af5b5fcc44043ff",
+            "skill_count": 43
+          }
+        },
+        "fixture_provenance": {}
+      },
+      "usage": {
+        "input_tokens": 18259,
+        "total_input_tokens": 155091,
+        "output_tokens": 1058,
+        "cache_read_tokens": 136832,
+        "cached_input_tokens": 136832,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cli_invocations": 14,
+        "output_bytes": 15432,
+        "cli_seconds": 7.041681269183755,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0,
+        "billing_mode": "subscription_limits",
+        "cost_usd": null
+      },
+      "timings": {
+        "active_seconds": 52.48727632407099,
+        "verification_seconds": 0.9593050670810044,
+        "total_seconds": 139.68495876388624
+      },
+      "assertions": [
+        {
+          "id": "config.desired_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.unrelated_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.record_sets_exact",
+          "status": "pass",
+          "required": true
+        }
+      ],
+      "skill_use_observation": {
+        "observed_names": [
+          "lc-fundamentals--platform-config"
+        ],
+        "transcript_available": true,
+        "exhaustive": false,
+        "meaning": "Observed native skill/read requests or successful Codex skill-file reads; not a measure of internal influence."
+      },
+      "cleanup_error_count": 0
+    },
+    {
+      "trial_id": "expansion-proof-8a74157276",
+      "scenario_id": "case-maintain-records",
+      "adapter": "codex",
+      "seed": 51002,
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "evidence_complete": true,
+      "agent_attempted": true,
+      "manifest": {
+        "scenario_revision": 1,
+        "scenario_hash": "8e14533bff922dcade6051513b080a209eefe1862d878281dab6c9bf973d909d",
+        "variant_seed": 51002,
+        "lc_location": "usa",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "332322da7ee5007755df476cc81b03a326f9003b22127bd4e4e431cd234403e3",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "b0555045193fc9223682e5a72b1be186af0e0d474bf73b784f299ed95e3b5491",
+        "evaluator_digest": "d45dae8758cbf5270e34acc086d10a8191d5432ab1a7bb26e3f8d2649759b466",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "execution_profile": "controlled-cli-v1",
+        "context_mode": "bare",
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "limits": {
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "context": {
+          "mode": "bare",
+          "delivery": "isolated_empty_user_context",
+          "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+          "provider_builtin_skills": "possible",
+          "lc_ai": null
+        },
+        "fixture_provenance": {}
+      },
+      "usage": {
+        "input_tokens": 19100,
+        "total_input_tokens": 118684,
+        "output_tokens": 698,
+        "cache_read_tokens": 99584,
+        "cached_input_tokens": 99584,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cli_invocations": 18,
+        "output_bytes": 23065,
+        "cli_seconds": 7.772645750083029,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0,
+        "billing_mode": "subscription_limits",
+        "cost_usd": null
+      },
+      "timings": {
+        "active_seconds": 39.73163176467642,
+        "verification_seconds": 7.550097466912121,
+        "total_seconds": 469.4696897272952
+      },
+      "assertions": [
+        {
+          "id": "cases.target.unique",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.fields_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.detection_once",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.entity_once",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.note_once",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.preexisting_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.distractor.unchanged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.deliverable.identifies_target",
+          "status": "pass",
+          "required": true
+        }
+      ],
+      "skill_use_observation": {
+        "observed_names": [],
+        "transcript_available": true,
+        "exhaustive": false,
+        "meaning": "Observed native skill/read requests or successful Codex skill-file reads; not a measure of internal influence."
+      },
+      "cleanup_error_count": 0
+    },
+    {
+      "trial_id": "expansion-proof-99607897d6",
+      "scenario_id": "case-maintain-records",
+      "adapter": "codex",
+      "seed": 51002,
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "evidence_complete": true,
+      "agent_attempted": true,
+      "manifest": {
+        "scenario_revision": 1,
+        "scenario_hash": "8e14533bff922dcade6051513b080a209eefe1862d878281dab6c9bf973d909d",
+        "variant_seed": 51002,
+        "lc_location": "usa",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "332322da7ee5007755df476cc81b03a326f9003b22127bd4e4e431cd234403e3",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "b0555045193fc9223682e5a72b1be186af0e0d474bf73b784f299ed95e3b5491",
+        "evaluator_digest": "d45dae8758cbf5270e34acc086d10a8191d5432ab1a7bb26e3f8d2649759b466",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "execution_profile": "controlled-cli-v1",
+        "context_mode": "lc_ai",
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "limits": {
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "context": {
+          "mode": "lc_ai",
+          "delivery": "native_user_skills",
+          "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+          "provider_builtin_skills": "possible",
+          "lc_ai": {
+            "source_commit": "8ab473d023dc6a07dc285149d14cef8e36519a58",
+            "source_archive_sha256": "4c1f4d0e601ebb660b688b9726271edde833ccc96930fffabe10190edff93ce2",
+            "source_skill_corpus_sha256": "eb6c65a0b00dc3683338342b9f569a205cb0f5e034bcf466c60fe2334c67b768",
+            "corpus_sha256": "660cc1ebb1fe040630e9add66fc9414d35b23e99fbed45b1b1874cba68058587",
+            "support_sha256": "44acd527064b01a5e6f2cb3b8089efc4ea5e9af3f38b049c5af5b5fcc44043ff",
+            "skill_count": 43
+          }
+        },
+        "fixture_provenance": {}
+      },
+      "usage": {
+        "input_tokens": 22618,
+        "total_input_tokens": 184282,
+        "output_tokens": 748,
+        "cache_read_tokens": 161664,
+        "cached_input_tokens": 161664,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cli_invocations": 20,
+        "output_bytes": 29847,
+        "cli_seconds": 10.44688725611195,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0,
+        "billing_mode": "subscription_limits",
+        "cost_usd": null
+      },
+      "timings": {
+        "active_seconds": 48.1898060310632,
+        "verification_seconds": 8.048641635105014,
+        "total_seconds": 477.5219208258204
+      },
+      "assertions": [
+        {
+          "id": "cases.target.unique",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.fields_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.detection_once",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.entity_once",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.note_once",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.preexisting_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.distractor.unchanged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.deliverable.identifies_target",
+          "status": "pass",
+          "required": true
+        }
+      ],
+      "skill_use_observation": {
+        "observed_names": [
+          "lc-fundamentals--cases"
+        ],
+        "transcript_available": true,
+        "exhaustive": false,
+        "meaning": "Observed native skill/read requests or successful Codex skill-file reads; not a measure of internal influence."
+      },
+      "cleanup_error_count": 0
+    },
+    {
+      "trial_id": "expansion-proof-58db7985e1",
+      "scenario_id": "cloudsec-findings-triage",
+      "adapter": "codex",
+      "seed": 51002,
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "evidence_complete": true,
+      "agent_attempted": true,
+      "manifest": {
+        "scenario_revision": 1,
+        "scenario_hash": "c4935c52f0f87c46271c20efabe698e3394633dcf8692243a7b94b71aef215ab",
+        "variant_seed": 51002,
+        "lc_location": "usa",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "332322da7ee5007755df476cc81b03a326f9003b22127bd4e4e431cd234403e3",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "b0555045193fc9223682e5a72b1be186af0e0d474bf73b784f299ed95e3b5491",
+        "evaluator_digest": "d45dae8758cbf5270e34acc086d10a8191d5432ab1a7bb26e3f8d2649759b466",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "execution_profile": "controlled-cli-v1",
+        "context_mode": "bare",
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "limits": {
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "context": {
+          "mode": "bare",
+          "delivery": "isolated_empty_user_context",
+          "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+          "provider_builtin_skills": "possible",
+          "lc_ai": null
+        },
+        "fixture_provenance": {}
+      },
+      "usage": {
+        "input_tokens": 9641,
+        "total_input_tokens": 87209,
+        "output_tokens": 721,
+        "cache_read_tokens": 77568,
+        "cached_input_tokens": 77568,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cli_invocations": 14,
+        "output_bytes": 16251,
+        "cli_seconds": 5.237775739748031,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0,
+        "billing_mode": "subscription_limits",
+        "cost_usd": null
+      },
+      "timings": {
+        "active_seconds": 39.0732797649689,
+        "verification_seconds": 2.254739746917039,
+        "total_seconds": 147.13460689177737
+      },
+      "assertions": [
+        {
+          "id": "cloudsec.export.safe_file",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.export.valid_csv",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.export.membership",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.export.values",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.targets.owner",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.targets.status",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.targets.resolution",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.nontargets.preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.policy.preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.readiness",
+          "status": "pass",
+          "required": true
+        }
+      ],
+      "skill_use_observation": {
+        "observed_names": [],
+        "transcript_available": true,
+        "exhaustive": false,
+        "meaning": "Observed native skill/read requests or successful Codex skill-file reads; not a measure of internal influence."
+      },
+      "cleanup_error_count": 0
+    },
+    {
+      "trial_id": "expansion-proof-a490da6f9c",
+      "scenario_id": "cloudsec-findings-triage",
+      "adapter": "codex",
+      "seed": 51002,
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "evidence_complete": true,
+      "agent_attempted": true,
+      "manifest": {
+        "scenario_revision": 1,
+        "scenario_hash": "c4935c52f0f87c46271c20efabe698e3394633dcf8692243a7b94b71aef215ab",
+        "variant_seed": 51002,
+        "lc_location": "usa",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "332322da7ee5007755df476cc81b03a326f9003b22127bd4e4e431cd234403e3",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "b0555045193fc9223682e5a72b1be186af0e0d474bf73b784f299ed95e3b5491",
+        "evaluator_digest": "d45dae8758cbf5270e34acc086d10a8191d5432ab1a7bb26e3f8d2649759b466",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "execution_profile": "controlled-cli-v1",
+        "context_mode": "lc_ai",
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "limits": {
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "context": {
+          "mode": "lc_ai",
+          "delivery": "native_user_skills",
+          "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+          "provider_builtin_skills": "possible",
+          "lc_ai": {
+            "source_commit": "8ab473d023dc6a07dc285149d14cef8e36519a58",
+            "source_archive_sha256": "4c1f4d0e601ebb660b688b9726271edde833ccc96930fffabe10190edff93ce2",
+            "source_skill_corpus_sha256": "eb6c65a0b00dc3683338342b9f569a205cb0f5e034bcf466c60fe2334c67b768",
+            "corpus_sha256": "660cc1ebb1fe040630e9add66fc9414d35b23e99fbed45b1b1874cba68058587",
+            "support_sha256": "44acd527064b01a5e6f2cb3b8089efc4ea5e9af3f38b049c5af5b5fcc44043ff",
+            "skill_count": 43
+          }
+        },
+        "fixture_provenance": {}
+      },
+      "usage": {
+        "input_tokens": 20406,
+        "total_input_tokens": 132534,
+        "output_tokens": 943,
+        "cache_read_tokens": 112128,
+        "cached_input_tokens": 112128,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cli_invocations": 15,
+        "output_bytes": 21511,
+        "cli_seconds": 5.346719774417579,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0,
+        "billing_mode": "subscription_limits",
+        "cost_usd": null
+      },
+      "timings": {
+        "active_seconds": 50.91612178925425,
+        "verification_seconds": 2.3787258928641677,
+        "total_seconds": 160.99751635314897
+      },
+      "assertions": [
+        {
+          "id": "cloudsec.export.safe_file",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.export.valid_csv",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.export.membership",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.export.values",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.targets.owner",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.targets.status",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.targets.resolution",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.nontargets.preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.policy.preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.readiness",
+          "status": "pass",
+          "required": true
+        }
+      ],
+      "skill_use_observation": {
+        "observed_names": [
+          "lc-fundamentals--cloud-security"
+        ],
+        "transcript_available": true,
+        "exhaustive": false,
+        "meaning": "Observed native skill/read requests or successful Codex skill-file reads; not a measure of internal influence."
+      },
+      "cleanup_error_count": 0
+    },
+    {
+      "trial_id": "expansion-proof-2ae777361d",
+      "scenario_id": "access-key-rotation",
+      "adapter": "codex",
+      "seed": 51002,
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "evidence_complete": true,
+      "agent_attempted": true,
+      "manifest": {
+        "scenario_revision": 1,
+        "scenario_hash": "e9eb8584349b62fb71c0f268ffdbefdab45546c696bf5fdfb9e85ac36f029cd4",
+        "variant_seed": 51002,
+        "lc_location": "usa",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "332322da7ee5007755df476cc81b03a326f9003b22127bd4e4e431cd234403e3",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "b0555045193fc9223682e5a72b1be186af0e0d474bf73b784f299ed95e3b5491",
+        "evaluator_digest": "d45dae8758cbf5270e34acc086d10a8191d5432ab1a7bb26e3f8d2649759b466",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "execution_profile": "controlled-cli-v1",
+        "context_mode": "bare",
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "limits": {
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "context": {
+          "mode": "bare",
+          "delivery": "isolated_empty_user_context",
+          "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+          "provider_builtin_skills": "possible",
+          "lc_ai": null
+        },
+        "fixture_provenance": {}
+      },
+      "usage": {
+        "input_tokens": 18644,
+        "total_input_tokens": 206164,
+        "output_tokens": 1497,
+        "cache_read_tokens": 187520,
+        "cached_input_tokens": 187520,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cli_invocations": 10,
+        "output_bytes": 23426,
+        "cli_seconds": 2.6208537751808763,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0,
+        "billing_mode": "subscription_limits",
+        "cost_usd": null
+      },
+      "timings": {
+        "active_seconds": 77.97534116310999,
+        "verification_seconds": 3.069345514755696,
+        "total_seconds": 207.34702547779307
+      },
+      "assertions": [
+        {
+          "id": "access.permissions_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.secret_matches_key",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.scope_enforced",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.old_revoked",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.unrelated_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.final_response_secret_safe",
+          "status": "pass",
+          "required": true
+        }
+      ],
+      "skill_use_observation": {
+        "observed_names": [],
+        "transcript_available": true,
+        "exhaustive": false,
+        "meaning": "Observed native skill/read requests or successful Codex skill-file reads; not a measure of internal influence."
+      },
+      "cleanup_error_count": 0
+    },
+    {
+      "trial_id": "expansion-proof-c7d42d9d5f",
+      "scenario_id": "access-key-rotation",
+      "adapter": "codex",
+      "seed": 51002,
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "evidence_complete": true,
+      "agent_attempted": true,
+      "manifest": {
+        "scenario_revision": 1,
+        "scenario_hash": "e9eb8584349b62fb71c0f268ffdbefdab45546c696bf5fdfb9e85ac36f029cd4",
+        "variant_seed": 51002,
+        "lc_location": "usa",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "332322da7ee5007755df476cc81b03a326f9003b22127bd4e4e431cd234403e3",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "b0555045193fc9223682e5a72b1be186af0e0d474bf73b784f299ed95e3b5491",
+        "evaluator_digest": "d45dae8758cbf5270e34acc086d10a8191d5432ab1a7bb26e3f8d2649759b466",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "execution_profile": "controlled-cli-v1",
+        "context_mode": "lc_ai",
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "limits": {
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "context": {
+          "mode": "lc_ai",
+          "delivery": "native_user_skills",
+          "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+          "provider_builtin_skills": "possible",
+          "lc_ai": {
+            "source_commit": "8ab473d023dc6a07dc285149d14cef8e36519a58",
+            "source_archive_sha256": "4c1f4d0e601ebb660b688b9726271edde833ccc96930fffabe10190edff93ce2",
+            "source_skill_corpus_sha256": "eb6c65a0b00dc3683338342b9f569a205cb0f5e034bcf466c60fe2334c67b768",
+            "corpus_sha256": "660cc1ebb1fe040630e9add66fc9414d35b23e99fbed45b1b1874cba68058587",
+            "support_sha256": "44acd527064b01a5e6f2cb3b8089efc4ea5e9af3f38b049c5af5b5fcc44043ff",
+            "skill_count": 43
+          }
+        },
+        "fixture_provenance": {}
+      },
+      "usage": {
+        "input_tokens": 18995,
+        "total_input_tokens": 258739,
+        "output_tokens": 1622,
+        "cache_read_tokens": 239744,
+        "cached_input_tokens": 239744,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cli_invocations": 10,
+        "output_bytes": 17326,
+        "cli_seconds": 2.9812813964672387,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0,
+        "billing_mode": "subscription_limits",
+        "cost_usd": null
+      },
+      "timings": {
+        "active_seconds": 73.08516278630123,
+        "verification_seconds": 3.028715644031763,
+        "total_seconds": 198.270082578063
+      },
+      "assertions": [
+        {
+          "id": "access.permissions_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.secret_matches_key",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.scope_enforced",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.old_revoked",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.unrelated_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.final_response_secret_safe",
+          "status": "pass",
+          "required": true
+        }
+      ],
+      "skill_use_observation": {
+        "observed_names": [
+          "lc-fundamentals--platform-config"
+        ],
+        "transcript_available": true,
+        "exhaustive": false,
+        "meaning": "Observed native skill/read requests or successful Codex skill-file reads; not a measure of internal influence."
+      },
+      "cleanup_error_count": 0
+    },
+    {
+      "trial_id": "expansion-proof-01684abaf4",
+      "scenario_id": "native-sensor-onboarding",
+      "adapter": "codex",
+      "seed": 51002,
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "evidence_complete": true,
+      "agent_attempted": true,
+      "manifest": {
+        "scenario_revision": 1,
+        "scenario_hash": "a5ad10d87a5f7e7f5e05a522413a1f3988087d0705b4d03aa9f3aef3af9f8d87",
+        "variant_seed": 51002,
+        "lc_location": "usa",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "332322da7ee5007755df476cc81b03a326f9003b22127bd4e4e431cd234403e3",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "b0555045193fc9223682e5a72b1be186af0e0d474bf73b784f299ed95e3b5491",
+        "evaluator_digest": "d45dae8758cbf5270e34acc086d10a8191d5432ab1a7bb26e3f8d2649759b466",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "execution_profile": "controlled-cli-v1",
+        "context_mode": "bare",
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "limits": {
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "context": {
+          "mode": "bare",
+          "delivery": "isolated_empty_user_context",
+          "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+          "provider_builtin_skills": "possible",
+          "lc_ai": null
+        },
+        "fixture_provenance": {
+          "sensor_binary_sha256": "d45099ee72844df88b9a9bef3330a4ee525a162675cab39f1ab62a9a407826f2",
+          "derived_image_id": "sha256:9474a740aae808e4c541c2dfe17284c83afc55b351d76604a2ecc1e4d5e167ee",
+          "derived_image_build_key": "53358bae1164e48554dfa709a823230bb6720a71f5d092a54d0c265652f3dbdb",
+          "base_worker_image_id": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5"
+        }
+      },
+      "usage": {
+        "input_tokens": 29806,
+        "total_input_tokens": 407022,
+        "output_tokens": 2102,
+        "cache_read_tokens": 377216,
+        "cached_input_tokens": 377216,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cli_invocations": 17,
+        "output_bytes": 18308,
+        "cli_seconds": 59.1509260982275,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0,
+        "billing_mode": "subscription_limits",
+        "cost_usd": null
+      },
+      "timings": {
+        "active_seconds": 152.6412976528518,
+        "verification_seconds": 53.53756025619805,
+        "total_seconds": 303.7965575712733
+      },
+      "assertions": [
+        {
+          "id": "native_sensor.enrollment.request",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.deployment.safe",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.registered",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.tagged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.task.real_response",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.task.marker_observed",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.keys.preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.distractors.preserved",
+          "status": "pass",
+          "required": true
+        }
+      ],
+      "skill_use_observation": {
+        "observed_names": [],
+        "transcript_available": true,
+        "exhaustive": false,
+        "meaning": "Observed native skill/read requests or successful Codex skill-file reads; not a measure of internal influence."
+      },
+      "cleanup_error_count": 0
+    },
+    {
+      "trial_id": "expansion-proof-56195a2d1e",
+      "scenario_id": "native-sensor-onboarding",
+      "adapter": "codex",
+      "seed": 51002,
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "evidence_complete": true,
+      "agent_attempted": true,
+      "manifest": {
+        "scenario_revision": 1,
+        "scenario_hash": "a5ad10d87a5f7e7f5e05a522413a1f3988087d0705b4d03aa9f3aef3af9f8d87",
+        "variant_seed": 51002,
+        "lc_location": "usa",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "332322da7ee5007755df476cc81b03a326f9003b22127bd4e4e431cd234403e3",
+        "harness": "codex",
+        "model": "gpt-6-astra",
+        "effort": "medium",
+        "tools_digest": "b0555045193fc9223682e5a72b1be186af0e0d474bf73b784f299ed95e3b5491",
+        "evaluator_digest": "d45dae8758cbf5270e34acc086d10a8191d5432ab1a7bb26e3f8d2649759b466",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "execution_profile": "controlled-cli-v1",
+        "context_mode": "lc_ai",
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "limits": {
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": null,
+          "max_tool_calls": 80,
+          "max_cli_invocations": 80
+        },
+        "context": {
+          "mode": "lc_ai",
+          "delivery": "native_user_skills",
+          "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+          "provider_builtin_skills": "possible",
+          "lc_ai": {
+            "source_commit": "8ab473d023dc6a07dc285149d14cef8e36519a58",
+            "source_archive_sha256": "4c1f4d0e601ebb660b688b9726271edde833ccc96930fffabe10190edff93ce2",
+            "source_skill_corpus_sha256": "eb6c65a0b00dc3683338342b9f569a205cb0f5e034bcf466c60fe2334c67b768",
+            "corpus_sha256": "660cc1ebb1fe040630e9add66fc9414d35b23e99fbed45b1b1874cba68058587",
+            "support_sha256": "44acd527064b01a5e6f2cb3b8089efc4ea5e9af3f38b049c5af5b5fcc44043ff",
+            "skill_count": 43
+          }
+        },
+        "fixture_provenance": {
+          "sensor_binary_sha256": "d45099ee72844df88b9a9bef3330a4ee525a162675cab39f1ab62a9a407826f2",
+          "derived_image_id": "sha256:9474a740aae808e4c541c2dfe17284c83afc55b351d76604a2ecc1e4d5e167ee",
+          "derived_image_build_key": "53358bae1164e48554dfa709a823230bb6720a71f5d092a54d0c265652f3dbdb",
+          "base_worker_image_id": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5"
+        }
+      },
+      "usage": {
+        "input_tokens": 25945,
+        "total_input_tokens": 582873,
+        "output_tokens": 2090,
+        "cache_read_tokens": 556928,
+        "cached_input_tokens": 556928,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cli_invocations": 14,
+        "output_bytes": 17665,
+        "cli_seconds": 58.495890737045556,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0,
+        "billing_mode": "subscription_limits",
+        "cost_usd": null
+      },
+      "timings": {
+        "active_seconds": 138.43986487109214,
+        "verification_seconds": 53.67452040920034,
+        "total_seconds": 292.5041256728582
+      },
+      "assertions": [
+        {
+          "id": "native_sensor.enrollment.request",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.deployment.safe",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.registered",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.tagged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.task.real_response",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.task.marker_observed",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.keys.preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.distractors.preserved",
+          "status": "pass",
+          "required": true
+        }
+      ],
+      "skill_use_observation": {
+        "observed_names": [
+          "lc-fundamentals--sensor-tasking",
+          "lc-fundamentals--sensors"
+        ],
+        "transcript_available": true,
+        "exhaustive": false,
+        "meaning": "Observed native skill/read requests or successful Codex skill-file reads; not a measure of internal influence."
+      },
+      "cleanup_error_count": 0
+    },
+    {
+      "trial_id": "expansion-proof-6d44579570",
+      "scenario_id": "config-reconcile-preserve",
+      "adapter": "claude_code",
+      "seed": 51002,
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "evidence_complete": true,
+      "agent_attempted": true,
+      "manifest": {
+        "scenario_revision": 1,
+        "scenario_hash": "360b4e91cf560d171e1cbc4ab4a1bf7d17e61967d404473e66f85bfc982152c8",
+        "variant_seed": 51002,
+        "lc_location": "usa",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "332322da7ee5007755df476cc81b03a326f9003b22127bd4e4e431cd234403e3",
+        "harness": "claude_code",
+        "model": "claude-sonnet-5",
+        "effort": "medium",
+        "tools_digest": "b0555045193fc9223682e5a72b1be186af0e0d474bf73b784f299ed95e3b5491",
+        "evaluator_digest": "d45dae8758cbf5270e34acc086d10a8191d5432ab1a7bb26e3f8d2649759b466",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "execution_profile": "controlled-cli-v1",
+        "context_mode": "bare",
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "limits": {
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": 30,
+          "max_tool_calls": null,
+          "max_cli_invocations": 80
+        },
+        "context": {
+          "mode": "bare",
+          "delivery": "isolated_empty_user_context",
+          "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+          "provider_builtin_skills": "possible",
+          "lc_ai": null
+        },
+        "fixture_provenance": {}
+      },
+      "usage": {
+        "input_tokens": 20,
+        "total_input_tokens": 165761,
+        "output_tokens": 2205,
+        "cache_read_tokens": 146566,
+        "cached_input_tokens": 146566,
+        "cache_write_tokens": 19175,
+        "cache_write_input_tokens": 19175,
+        "cli_invocations": 14,
+        "output_bytes": 12395,
+        "cli_seconds": 3.338530527893454,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0,
+        "billing_mode": "subscription_limits",
+        "cost_usd": null
+      },
+      "timings": {
+        "active_seconds": 27.85894652409479,
+        "verification_seconds": 0.8355916771106422,
+        "total_seconds": 113.27697437210009
+      },
+      "assertions": [
+        {
+          "id": "config.desired_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.unrelated_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.record_sets_exact",
+          "status": "pass",
+          "required": true
+        }
+      ],
+      "skill_use_observation": {
+        "observed_names": [],
+        "transcript_available": true,
+        "exhaustive": false,
+        "meaning": "Observed native skill/read requests or successful Codex skill-file reads; not a measure of internal influence."
+      },
+      "cleanup_error_count": 0
+    },
+    {
+      "trial_id": "expansion-proof-958231dd53",
+      "scenario_id": "config-reconcile-preserve",
+      "adapter": "claude_code",
+      "seed": 51002,
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "evidence_complete": true,
+      "agent_attempted": true,
+      "manifest": {
+        "scenario_revision": 1,
+        "scenario_hash": "360b4e91cf560d171e1cbc4ab4a1bf7d17e61967d404473e66f85bfc982152c8",
+        "variant_seed": 51002,
+        "lc_location": "usa",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "332322da7ee5007755df476cc81b03a326f9003b22127bd4e4e431cd234403e3",
+        "harness": "claude_code",
+        "model": "claude-sonnet-5",
+        "effort": "medium",
+        "tools_digest": "b0555045193fc9223682e5a72b1be186af0e0d474bf73b784f299ed95e3b5491",
+        "evaluator_digest": "d45dae8758cbf5270e34acc086d10a8191d5432ab1a7bb26e3f8d2649759b466",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "execution_profile": "controlled-cli-v1",
+        "context_mode": "lc_ai",
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "limits": {
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": 30,
+          "max_tool_calls": null,
+          "max_cli_invocations": 80
+        },
+        "context": {
+          "mode": "lc_ai",
+          "delivery": "native_user_skills",
+          "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+          "provider_builtin_skills": "possible",
+          "lc_ai": {
+            "source_commit": "8ab473d023dc6a07dc285149d14cef8e36519a58",
+            "source_archive_sha256": "4c1f4d0e601ebb660b688b9726271edde833ccc96930fffabe10190edff93ce2",
+            "source_skill_corpus_sha256": "eb6c65a0b00dc3683338342b9f569a205cb0f5e034bcf466c60fe2334c67b768",
+            "corpus_sha256": "660cc1ebb1fe040630e9add66fc9414d35b23e99fbed45b1b1874cba68058587",
+            "support_sha256": "44acd527064b01a5e6f2cb3b8089efc4ea5e9af3f38b049c5af5b5fcc44043ff",
+            "skill_count": 43
+          }
+        },
+        "fixture_provenance": {}
+      },
+      "usage": {
+        "input_tokens": 34,
+        "total_input_tokens": 442269,
+        "output_tokens": 2839,
+        "cache_read_tokens": 413156,
+        "cached_input_tokens": 413156,
+        "cache_write_tokens": 29079,
+        "cache_write_input_tokens": 29079,
+        "cli_invocations": 11,
+        "output_bytes": 8251,
+        "cli_seconds": 3.0882939188741148,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0,
+        "billing_mode": "subscription_limits",
+        "cost_usd": null
+      },
+      "timings": {
+        "active_seconds": 202.9749707551673,
+        "verification_seconds": 0.8197567858733237,
+        "total_seconds": 287.75892592500895
+      },
+      "assertions": [
+        {
+          "id": "config.desired_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.unrelated_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.record_sets_exact",
+          "status": "pass",
+          "required": true
+        }
+      ],
+      "skill_use_observation": {
+        "observed_names": [],
+        "transcript_available": true,
+        "exhaustive": false,
+        "meaning": "Observed native skill/read requests or successful Codex skill-file reads; not a measure of internal influence."
+      },
+      "cleanup_error_count": 0
+    },
+    {
+      "trial_id": "expansion-proof-4a616d0edd",
+      "scenario_id": "config-reconcile-preserve",
+      "adapter": "ai_sessions",
+      "seed": 51002,
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "evidence_complete": true,
+      "agent_attempted": true,
+      "manifest": {
+        "scenario_revision": 1,
+        "scenario_hash": "360b4e91cf560d171e1cbc4ab4a1bf7d17e61967d404473e66f85bfc982152c8",
+        "variant_seed": 51002,
+        "lc_location": "usa",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "332322da7ee5007755df476cc81b03a326f9003b22127bd4e4e431cd234403e3",
+        "harness": "ai_sessions",
+        "model": "claude-sonnet-5",
+        "effort": "native_default",
+        "tools_digest": "c079baa214fc38f536f5a9e5822e1e28c56ecef069eaae04668037064ab56cbb",
+        "evaluator_digest": "d45dae8758cbf5270e34acc086d10a8191d5432ab1a7bb26e3f8d2649759b466",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "execution_profile": "controlled-cli-v1",
+        "context_mode": "bare",
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "limits": {
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": 30,
+          "max_tool_calls": null,
+          "max_cli_invocations": 80
+        },
+        "context": {
+          "mode": "bare",
+          "delivery": "isolated_empty_user_context",
+          "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+          "provider_builtin_skills": "possible",
+          "lc_ai": null
+        },
+        "fixture_provenance": {}
+      },
+      "usage": {
+        "input_tokens": 17,
+        "total_input_tokens": null,
+        "output_tokens": 1871,
+        "cache_read_tokens": null,
+        "cached_input_tokens": null,
+        "cache_write_tokens": null,
+        "cache_write_input_tokens": null,
+        "cli_invocations": 9,
+        "output_bytes": 22708,
+        "cli_seconds": 2.6241244161501527,
+        "cli_failed_commands": 0,
+        "rejected_commands": 1,
+        "billing_mode": "subscription_limits",
+        "cost_usd": null
+      },
+      "timings": {
+        "active_seconds": 36.36615793313831,
+        "verification_seconds": 0.8268231060355902,
+        "total_seconds": 120.3287452366203
+      },
+      "assertions": [
+        {
+          "id": "config.desired_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.unrelated_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.record_sets_exact",
+          "status": "pass",
+          "required": true
+        }
+      ],
+      "skill_use_observation": {
+        "observed_names": [],
+        "transcript_available": true,
+        "exhaustive": false,
+        "meaning": "Observed native skill/read requests or successful Codex skill-file reads; not a measure of internal influence."
+      },
+      "cleanup_error_count": 0
+    },
+    {
+      "trial_id": "expansion-proof-3cb2441882",
+      "scenario_id": "config-reconcile-preserve",
+      "adapter": "ai_sessions",
+      "seed": 51002,
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "evidence_complete": true,
+      "agent_attempted": true,
+      "manifest": {
+        "scenario_revision": 1,
+        "scenario_hash": "360b4e91cf560d171e1cbc4ab4a1bf7d17e61967d404473e66f85bfc982152c8",
+        "variant_seed": 51002,
+        "lc_location": "usa",
+        "docs_digest": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "fixture_recipe_digest": "332322da7ee5007755df476cc81b03a326f9003b22127bd4e4e431cd234403e3",
+        "harness": "ai_sessions",
+        "model": "claude-sonnet-5",
+        "effort": "native_default",
+        "tools_digest": "c079baa214fc38f536f5a9e5822e1e28c56ecef069eaae04668037064ab56cbb",
+        "evaluator_digest": "d45dae8758cbf5270e34acc086d10a8191d5432ab1a7bb26e3f8d2649759b466",
+        "cli_digest": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+        "execution_profile": "controlled-cli-v1",
+        "context_mode": "lc_ai",
+        "repetition": 1,
+        "billing_mode": "subscription_limits",
+        "limits": {
+          "budget_mode": "subscription_limits",
+          "concurrency": 1,
+          "max_events": 25000,
+          "max_fixture_bytes": 100000000,
+          "max_command_output": 16000000,
+          "max_command_seconds": 300,
+          "verification_seconds": 600,
+          "negative_window_seconds": 180,
+          "timeout_seconds": 600,
+          "max_turns": 30,
+          "max_tool_calls": null,
+          "max_cli_invocations": 80
+        },
+        "context": {
+          "mode": "lc_ai",
+          "delivery": "ai_sessions_plugin_autoinit",
+          "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+          "provider_builtin_skills": "possible",
+          "lc_ai": {
+            "source_commit": "8ab473d023dc6a07dc285149d14cef8e36519a58",
+            "source_archive_sha256": "4c1f4d0e601ebb660b688b9726271edde833ccc96930fffabe10190edff93ce2",
+            "source_skill_corpus_sha256": "eb6c65a0b00dc3683338342b9f569a205cb0f5e034bcf466c60fe2334c67b768",
+            "corpus_sha256": null,
+            "support_sha256": null,
+            "skill_count": 43
+          }
+        },
+        "fixture_provenance": {}
+      },
+      "usage": {
+        "input_tokens": 13,
+        "total_input_tokens": null,
+        "output_tokens": 1384,
+        "cache_read_tokens": null,
+        "cached_input_tokens": null,
+        "cache_write_tokens": null,
+        "cache_write_input_tokens": null,
+        "cli_invocations": 8,
+        "output_bytes": 13357,
+        "cli_seconds": 2.402842274401337,
+        "cli_failed_commands": 0,
+        "rejected_commands": 0,
+        "billing_mode": "subscription_limits",
+        "cost_usd": null
+      },
+      "timings": {
+        "active_seconds": 30.131021243985742,
+        "verification_seconds": 0.8533580568619072,
+        "total_seconds": 117.55846996372566
+      },
+      "assertions": [
+        {
+          "id": "config.desired_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.unrelated_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.record_sets_exact",
+          "status": "pass",
+          "required": true
+        }
+      ],
+      "skill_use_observation": {
+        "observed_names": [],
+        "transcript_available": true,
+        "exhaustive": false,
+        "meaning": "Observed native skill/read requests or successful Codex skill-file reads; not a measure of internal influence."
+      },
+      "cleanup_error_count": 0
+    }
+  ],
+  "superseded_harness_trials": [
+    {
+      "trial_id": "expansion-proof-b8dd0ba4b1",
+      "reason": "Cases fixture did not wait for fresh-tenant list visibility; replaced after subscribed-tenant cache readiness and native discovery calibration.",
+      "included_in_task_scores": false,
+      "replacement_trial_id": "expansion-proof-8a74157276"
+    }
+  ],
+  "cleanup_audit": {
+    "remaining_resources": 0,
+    "errors": [],
+    "scope": "All journaled owned organizations checked against exact owner inventory; no pending trial resources."
+  },
+  "offline_validation": {
+    "tests_passed": 335,
+    "ruff": "pass",
+    "git_diff_check": "pass"
+  }
+}

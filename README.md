@@ -8,7 +8,7 @@ This repository contains AI integrations for LimaCharlie, including Claude Code 
 
 ## AI CLI eval results
 
-We publish live evaluations of how AI harnesses operate the LimaCharlie CLI, including successful runs, failures, configuration changes and untested coverage. The published baseline covers lookup updates, complete search exports and production webhook routing using Claude Code, Codex and the local AI Sessions runner. The evaluator also includes expansion scenarios and explicit bare versus pinned LC-skills profiles; the results page distinguishes verified coverage from work awaiting calibration.
+We publish live evaluations of how AI harnesses operate the LimaCharlie CLI, including successful runs, failures, configuration changes and untested coverage. The published baseline covers lookup updates, complete search exports and production webhook routing using Claude Code, Codex and the local AI Sessions runner. Five additional evals cover configuration reconciliation, Cases, Cloud Security findings, key rotation and native endpoint onboarding. Explicit bare versus pinned LC-skills profiles separate personal-context isolation from skills-assisted operation; the results page shows calibrated workflows, observed task outcomes and untested combinations.
 
 **[View the results matrix, measurements and evidence →](evals/README.md)**
 

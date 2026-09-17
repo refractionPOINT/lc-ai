@@ -14,6 +14,8 @@ Each candidate starts with a fresh `/auth` home, a fresh `/work` directory, pinn
 
 Bare retains CLI help and the same pinned public documentation. It is not a claim that a provider has no system prompt or built-in skills. Provider built-ins remain provider-controlled and are disclosed in context identity. Historical results are not retroactively relabeled as a matched bare/skills experiment.
 
+Claude Code's bare profile uses `--safe-mode` and `--disable-slash-commands` and excludes the `Skill` tool. Its `lc_ai` profile enables native skill loading and the `Skill` tool, while retaining the fresh home, empty MCP configuration and explicit tool allowlist. Thus this comparison includes enabling the native skill system; it is not a claim that the LC corpus is the only possible prompt/tool difference. Codex retains the same launch flags in both modes. AI Sessions explicitly toggles native plugin loading and initialization.
+
 ## Corpus and delivery
 
 The LC corpus comes from a full Git commit pin under `context.lc_ai`, never the operator's installed plugin directories or uncommitted working tree. The initial expansion pin contains 43 skills across `lc-essentials`, `lc-advanced-skills`, `lc-fundamentals` and `lc-compliance`.

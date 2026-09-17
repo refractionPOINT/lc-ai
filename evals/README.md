@@ -2,9 +2,59 @@
 
 How effectively can an AI agent operate LimaCharlie through its CLI? These evals give agents concrete platform tasks and independently verify the results in disposable, live organizations. The task supplies the security criteria; the eval measures platform operation, not cybersecurity judgment.
 
-**Results as of September 16, 2026.** Three scenarios have live evidence. Claude Code and Codex passed the initial eight-trial campaign. The local AI Sessions runner has a verified pass for each scenario, with export verified after the harness/profile fixes. This is early coverage, not an all-platform certification or a model leaderboard.
+**Results as of September 16, 2026.** Eight scenarios have live evidence. The original three cover lookup preservation, complete search export and webhook routing. Five additions cover configuration reconciliation, Cases, Cloud Security, key rotation and native endpoint onboarding, with explicit bare/skills profiles. This is early coverage, not an all-platform certification or a model leaderboard.
 
-## Results at a glance
+## Explicit context profiles
+
+New runs select `--context bare` or `--context lc_ai`. Both retain the same pinned CLI and documentation. Bare excludes personal local settings, skills and history and carries no LC corpus; `lc_ai` loads 43 skills from a pinned repository archive. Provider builtin context remains possible. AI Sessions uses native plugins; standalone harnesses use native user-skill directories. [Isolation audit](CONTEXT_PROFILES.md) and [runtime proof](CONTEXT_PROOF.md).
+
+| Context check | Claude Code | Codex | AI Sessions |
+|---|:---:|:---:|:---:|
+| Bare: LC corpus absent | Pass | Pass | Pass |
+| Pinned LC corpus usable | Pass | Pass | Pass |
+
+These six probes validate context handling, not LimaCharlie task performance. Historical results below retain their original profiles and are not relabeled as bare-versus-skills comparisons.
+
+## Expansion results — explicit contexts
+
+Counts are **passed / scored trials shown**. A dash means untested. The initial matrix uses seed 51002 and one live trial at a time. These observations establish an operational loop, not success probabilities or a demonstrated benefit from skills.
+
+| Eval | Claude bare | Claude + skills | Codex bare | Codex + skills | AI Sessions bare | AI Sessions + skills |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| [Configuration reconciliation](scenarios/config-reconcile-preserve/prompt.md) | ✅ 1/1 | ✅ 1/1 | ✅ 1/1 | ✅ 1/1 | ✅ 1/1 | ✅ 1/1 |
+| [Cases maintenance](scenarios/case-maintain-records/prompt.md) | — | — | ✅ 1/1 | ✅ 1/1 | — | — |
+| [Cloud Security findings](scenarios/cloudsec-findings-triage/prompt.md) | — | — | ✅ 1/1 | ✅ 1/1 | — | — |
+| [Scoped key rotation](scenarios/access-key-rotation/prompt.md) | — | — | ✅ 1/1 | ✅ 1/1 | — | — |
+| [Native endpoint onboarding](scenarios/native-sensor-onboarding/prompt.md) | — | — | ✅ 1/1 | ✅ 1/1 | — | — |
+
+All five scenarios have positive-reference and deliberately bad-reference calibration, separate from these AI scores. Cases uses an existing-case variant; native creation remains blocked by the pinned CLI/backend encoding mismatch. Acceptance-reason persistence and previously issued JWT revocation are outside the Cloud Security and key-rotation claims, respectively. [Scope and calibration](EXPANSION_PROOF.md).
+
+One earlier Cases trial was superseded after fixing fresh-tenant listing readiness. Its empty case list was a fixture fault, and it is excluded from this matrix. Corrected reference discovery and the replacement run are recorded in the evidence. Genuine task failures are retained.
+
+### Expansion measurements
+
+| Harness | Context | Eval | Grade | Agent seconds | CLI calls | Failed calls | LC skill requests |
+|---|---|---|:---:|---:|---:|---:|---:|
+| Codex | bare | Configuration reconciliation | Pass | 41.0 | 9 | 0 | 0 |
+| Codex | lc_ai | Configuration reconciliation | Pass | 52.5 | 14 | 0 | 1 |
+| Codex | bare | Cases maintenance | Pass | 39.7 | 18 | 0 | 0 |
+| Codex | lc_ai | Cases maintenance | Pass | 48.2 | 20 | 0 | 1 |
+| Codex | bare | Cloud Security findings | Pass | 39.1 | 14 | 0 | 0 |
+| Codex | lc_ai | Cloud Security findings | Pass | 50.9 | 15 | 0 | 1 |
+| Codex | bare | Scoped key rotation | Pass | 78.0 | 10 | 0 | 0 |
+| Codex | lc_ai | Scoped key rotation | Pass | 73.1 | 10 | 0 | 1 |
+| Codex | bare | Native endpoint onboarding | Pass | 152.6 | 17 | 0 | 0 |
+| Codex | lc_ai | Native endpoint onboarding | Pass | 138.4 | 14 | 0 | 2 |
+| Claude Code | bare | Configuration reconciliation | Pass | 27.9 | 14 | 0 | 0 |
+| Claude Code | lc_ai | Configuration reconciliation | Pass | 203.0 | 11 | 0 | 0 |
+| AI Sessions | bare | Configuration reconciliation | Pass | 36.4 | 9 | 0 | 0 |
+| AI Sessions | lc_ai | Configuration reconciliation | Pass | 30.1 | 8 | 0 | 0 |
+
+The last column counts distinct LC skills observed in native skill/read requests or successful Codex skill-file reads. Zero does not prove the absence of influence from startup context. Exact names are retained in JSON. Agent time includes harness startup and excludes provisioning, verification and teardown. Source/configuration hashes and native token classes are retained in the [sanitized scored records](results/expansion-proof.json). The first Codex reconciliation pair was collected during final grading work on other scenarios; its broad evaluator digests differ even though the reconciliation grader was unchanged. Treat its timing comparison as exploratory. Later comparisons retain the frozen evaluator identity.
+
+[Live reference records](results/expansion-calibration.json) · [Offline regrade of saved evidence](results/expansion-calibration-regrade.json) · [Context probes](results/expansion-context-probes.json)
+
+## Original three-scenario results
 
 The matrix shows the latest verified evidence for each harness/eval combination. Superseded runs affected by resolved harness bugs are omitted. Counts are **passed / verification trials shown**, not lifetime success rates.
 
@@ -77,7 +127,7 @@ Public records expose outcomes, metrics, configuration fingerprints, failures an
 
 ## Coverage still to build
 
-There are no published live scenario results yet for native endpoint onboarding, Cloud Security findings, broader integrations and outputs, or the rest of the platform. Creating and deleting organizations is exercised by the trusted fixture controller; it is not yet an agent-scored provisioning task. The full production command surface and other model/provider combinations are also untested here. Track expansion in the [coverage plan](DESIGN.md) and [capability catalog](catalog/capabilities.yaml).
+Broader integrations and outputs, vulnerability and email workflows, other endpoint platforms, and much of the platform remain untested. The expansion matrix explicitly marks harness/context combinations that have not been run. Creating and deleting organizations is exercised by the trusted fixture controller; it is not yet an agent-scored provisioning task. The full production command surface and other model/provider combinations are also untested here. Track expansion in the [coverage plan](DESIGN.md) and [capability catalog](catalog/capabilities.yaml).
 
 ## Run, extend and update
 
@@ -85,6 +135,14 @@ There are no published live scenario results yet for native endpoint onboarding,
 |---|---|
 | Set up, run an eval, inspect reports or recover cleanup | [Running evals](RUNNING.md) |
 | Add a scenario, fixture, verifier or harness | [Adding evals](ADDING_EVALS.md) |
+| Audit bare/skills isolation and native discovery | [Context profiles](CONTEXT_PROFILES.md) |
+| Audit bare/skills isolation and native discovery | [Context profiles](CONTEXT_PROFILES.md) |
+| Audit bare/skills isolation and native discovery | [Context profiles](CONTEXT_PROFILES.md) |
+| Audit bare/skills isolation and native discovery | [Context profiles](CONTEXT_PROFILES.md) |
+| Audit bare/skills isolation and native discovery | [Context profiles](CONTEXT_PROFILES.md) |
+| Audit bare/skills isolation and native discovery | [Context profiles](CONTEXT_PROFILES.md) |
+| Audit bare/skills isolation and native discovery | [Context profiles](CONTEXT_PROFILES.md) |
+| Audit bare/skills isolation and native discovery | [Context profiles](CONTEXT_PROFILES.md) |
 | Understand the lifecycle and trust boundaries | [Architecture](ARCHITECTURE.md) |
 | Investigate CLI issues found during evaluation | [CLI findings](CLI_FINDINGS.md) |
 | Read the original implementation history | [Build history](history/README.md) |

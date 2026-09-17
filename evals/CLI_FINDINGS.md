@@ -30,7 +30,7 @@ compatibility blocker; no performance conclusion should be drawn from it.
 
 ## Cases list visibility after subscription
 
-Backend source: `ext-cases` commit
+Inspected backend source: `ext-cases` commit
 `a52d8a70ef615f0c4a20d517e235889713e3c6e9`.
 
 The Cases list route first intersects requested organization IDs with

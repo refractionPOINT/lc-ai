@@ -1,0 +1,436 @@
+{
+  "kind": "offline_regrade_of_unchanged_live_evidence",
+  "evaluator_digest": "d45dae8758cbf5270e34acc086d10a8191d5432ab1a7bb26e3f8d2649759b466",
+  "trials": [
+    {
+      "trial_id": "expansion-calibration-5dc40b475d",
+      "scenario_id": "config-reconcile-preserve",
+      "original_grade": "pass",
+      "regraded_grade": "pass",
+      "assertions": [
+        {
+          "id": "config.desired_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.unrelated_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.record_sets_exact",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "expansion-calibration-62c163614d",
+      "scenario_id": "config-reconcile-preserve",
+      "original_grade": "fail",
+      "regraded_grade": "fail",
+      "assertions": [
+        {
+          "id": "config.desired_exact",
+          "status": "fail",
+          "required": true
+        },
+        {
+          "id": "config.unrelated_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "config.record_sets_exact",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "expansion-calibration-a196a10588",
+      "scenario_id": "access-key-rotation",
+      "original_grade": "pass",
+      "regraded_grade": "pass",
+      "assertions": [
+        {
+          "id": "access.permissions_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.secret_matches_key",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.scope_enforced",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.old_revoked",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.unrelated_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.final_response_secret_safe",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "expansion-calibration-f184464d9b",
+      "scenario_id": "access-key-rotation",
+      "original_grade": "fail",
+      "regraded_grade": "fail",
+      "assertions": [
+        {
+          "id": "access.permissions_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.secret_matches_key",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.scope_enforced",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.old_revoked",
+          "status": "fail",
+          "required": true
+        },
+        {
+          "id": "access.unrelated_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "access.final_response_secret_safe",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "expansion-calibration-3121b6d62b",
+      "scenario_id": "cloudsec-findings-triage",
+      "original_grade": "pass",
+      "regraded_grade": "pass",
+      "assertions": [
+        {
+          "id": "cloudsec.export.safe_file",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.export.valid_csv",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.export.membership",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.export.values",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.targets.owner",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.targets.status",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.targets.resolution",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.nontargets.preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.policy.preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.readiness",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "expansion-calibration-c67eda6908",
+      "scenario_id": "cloudsec-findings-triage",
+      "original_grade": "fail",
+      "regraded_grade": "fail",
+      "assertions": [
+        {
+          "id": "cloudsec.export.safe_file",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.export.valid_csv",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.export.membership",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.export.values",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.targets.owner",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.targets.status",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.targets.resolution",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.nontargets.preserved",
+          "status": "fail",
+          "required": true
+        },
+        {
+          "id": "cloudsec.policy.preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cloudsec.readiness",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "expansion-calibration-final-76029c0333",
+      "scenario_id": "case-maintain-records",
+      "original_grade": "pass",
+      "regraded_grade": "pass",
+      "assertions": [
+        {
+          "id": "cases.target.unique",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.fields_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.detection_once",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.entity_once",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.note_once",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.preexisting_preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.distractor.unchanged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.deliverable.identifies_target",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "expansion-calibration-final-5de1bc3f05",
+      "scenario_id": "case-maintain-records",
+      "original_grade": "fail",
+      "regraded_grade": "fail",
+      "assertions": [
+        {
+          "id": "cases.target.unique",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.fields_exact",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.detection_once",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.entity_once",
+          "status": "fail",
+          "required": true
+        },
+        {
+          "id": "cases.target.note_once",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.target.preexisting_preserved",
+          "status": "fail",
+          "required": true
+        },
+        {
+          "id": "cases.distractor.unchanged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "cases.deliverable.identifies_target",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "expansion-calibration-final-3403a50f4f",
+      "scenario_id": "native-sensor-onboarding",
+      "original_grade": "pass",
+      "regraded_grade": "pass",
+      "assertions": [
+        {
+          "id": "native_sensor.enrollment.request",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.deployment.safe",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.registered",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.tagged",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.task.real_response",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.task.marker_observed",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.keys.preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.distractors.preserved",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    },
+    {
+      "trial_id": "expansion-calibration-final-4606a97892",
+      "scenario_id": "native-sensor-onboarding",
+      "original_grade": "fail",
+      "regraded_grade": "fail",
+      "assertions": [
+        {
+          "id": "native_sensor.enrollment.request",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.deployment.safe",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.registered",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.tagged",
+          "status": "fail",
+          "required": true
+        },
+        {
+          "id": "native_sensor.task.real_response",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.task.marker_observed",
+          "status": "fail",
+          "required": true
+        },
+        {
+          "id": "native_sensor.keys.preserved",
+          "status": "pass",
+          "required": true
+        },
+        {
+          "id": "native_sensor.distractors.preserved",
+          "status": "pass",
+          "required": true
+        }
+      ]
+    }
+  ]
+}
