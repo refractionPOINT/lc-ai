@@ -1,3 +1,4 @@
+import asyncio
 from pathlib import Path
 from types import SimpleNamespace
 import json
@@ -153,3 +154,64 @@ def test_case_list_reads_actual_cases_projection_without_search():
 
     assert cases._list_cases(CLI(), "oid") == [
         {"case_number": 1, "detection_cats": ["category"]}]
+
+
+def test_cases_permissions_include_metadata_access_required_by_case_service():
+    assert set(cases.PERMISSIONS) == {
+        "org.get", "investigation.get", "investigation.get.mtd",
+        "investigation.set", "investigation.set.mtd", "ext.request",
+    }
+
+
+def test_case_reference_discovers_detection_through_native_cli(monkeypatch):
+    calls = []
+
+    def fake_run(argv, *, timeout):
+        calls.append(argv)
+        command = argv[6:]
+        if command == ["case", "list", "--limit", "200"]:
+            return json.dumps({"cases": [{"case_number": 8}, {"case_number": 7}],
+                               "next_page_token": ""})
+        if command == ["case", "detection", "list", "--case", "8"]:
+            return json.dumps({"detections": [{"detect_id": "other"}]})
+        if command == ["case", "detection", "list", "--case", "7"]:
+            return json.dumps({"detections": [{"detect_id": "target"}]})
+        return "{}"
+
+    monkeypatch.setattr("lc_eval.execution.docker.run", fake_run)
+    fixture = {
+        "target_case_number": 7,
+        "public": {
+            "detection_id": "target", "target_status": "in_progress",
+            "target_severity": "high", "entity_type": "domain",
+            "entity_value": "target.example", "entity_note": "note",
+            "entity_verdict": "suspicious", "note_type": "analysis",
+            "note_content": "content",
+        },
+    }
+    completion = asyncio.run(cases.reference(
+        fixture, SimpleNamespace(agent="candidate-container")))
+
+    native = [argv[6:] for argv in calls]
+    assert native[:3] == [
+        ["case", "list", "--limit", "200"],
+        ["case", "detection", "list", "--case", "8"],
+        ["case", "detection", "list", "--case", "7"],
+    ]
+    assert ["case", "update", "--case-number", "7", "--status", "in_progress",
+            "--severity", "high"] in native
+    assert "case 7" in completion
+
+
+def test_case_reference_does_not_fall_back_to_trusted_number(monkeypatch):
+    monkeypatch.setattr(
+        "lc_eval.execution.docker.run",
+        lambda _argv, *, timeout: json.dumps({"cases": [], "next_page_token": ""}),
+    )
+    fixture = {"target_case_number": 7, "public": {"detection_id": "target"}}
+    try:
+        asyncio.run(cases.reference(fixture, SimpleNamespace(agent="candidate-container")))
+    except ControlError as error:
+        assert "exactly one case" in str(error)
+    else:
+        raise AssertionError("reference bypassed native discovery with trusted case number")

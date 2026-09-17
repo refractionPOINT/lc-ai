@@ -18,7 +18,14 @@ from .local_cli import ControlError, decode_json
 SCENARIO = "case-maintain-records"
 EXTENSION = "ext-cases"
 VARIANTS = ("clean", "partial", "distractor")
-PERMISSIONS = ["org.get", "investigation.get", "investigation.set", "ext.request"]
+PERMISSIONS = [
+    "org.get",
+    "investigation.get",
+    "investigation.get.mtd",
+    "investigation.set",
+    "investigation.set.mtd",
+    "ext.request",
+]
 COMMANDS = {
     ("case", "create"): CommandSpec(
         value_options=frozenset({"--detection", "--severity", "--summary"}),
@@ -299,17 +306,43 @@ async def reference(fixture: Mapping[str, Any], env: Any, bad: bool = False) -> 
         )
         return decode_json(raw)
 
-    number = fixture.get("target_case_number")
-    if number is None:
-        created = await command([
-            "case", "create", "--detection", public["detection_json"],
-            "--severity", "low", "--summary", public["case_summary"],
-        ])
-        if isinstance(created, Mapping) and isinstance(created.get("data"), Mapping):
-            created = created["data"]
-        number = created.get("case_number") if isinstance(created, Mapping) else None
-    if not isinstance(number, int):
-        raise ControlError("reference could not resolve the target case")
+    matching_numbers: list[int] = []
+    cursor: str | None = None
+    for _ in range(20):
+        args = ["case", "list", "--limit", "200"]
+        if cursor:
+            args += ["--cursor", cursor]
+        listed = await command(args)
+        if isinstance(listed, Mapping) and isinstance(listed.get("data"), Mapping):
+            listed = listed["data"]
+        rows = listed.get("cases") if isinstance(listed, Mapping) else None
+        if not isinstance(rows, list):
+            raise ControlError("reference case list returned an invalid collection")
+        for row in rows:
+            number = row.get("case_number") if isinstance(row, Mapping) else None
+            if not isinstance(number, int):
+                continue
+            linked = await command(["case", "detection", "list", "--case", str(number)])
+            if isinstance(linked, Mapping) and isinstance(linked.get("data"), Mapping):
+                linked = linked["data"]
+            detections = linked.get("detections") if isinstance(linked, Mapping) else None
+            if not isinstance(detections, list):
+                raise ControlError("reference detection list returned an invalid collection")
+            if any(isinstance(item, Mapping) and item.get("detect_id") == public["detection_id"]
+                   for item in detections):
+                matching_numbers.append(number)
+        cursor = listed.get("next_page_token") if isinstance(listed, Mapping) else None
+        if not isinstance(cursor, str) or not cursor:
+            break
+    else:
+        raise ControlError("reference case discovery exceeded the pagination bound")
+
+    if len(matching_numbers) != 1:
+        raise ControlError("reference did not discover exactly one case for the supplied detection")
+    number = matching_numbers[0]
+    expected_number = fixture.get("target_case_number")
+    if isinstance(expected_number, int) and number != expected_number:
+        raise ControlError("reference discovery did not match the trusted seeded case")
     await command(["case", "update", "--case-number", str(number), "--status", public["target_status"],
                    "--severity", public["target_severity"]])
     if not bad:
