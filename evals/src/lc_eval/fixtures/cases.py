@@ -21,9 +21,7 @@ VARIANTS = ("clean", "partial", "distractor")
 PERMISSIONS = [
     "org.get",
     "investigation.get",
-    "investigation.get.mtd",
     "investigation.set",
-    "investigation.set.mtd",
     "ext.request",
 ]
 COMMANDS = {
@@ -57,6 +55,13 @@ and case entity list/add. Find a reusable case through case list and confirm its
 linked detection with case detection list before mutating it. Organization scope
 and authentication are already supplied.
 """
+
+# ext-cases caches its subscribed-tenant inventory for five minutes. Tenant
+# creation does not invalidate that cache, so every service instance must be
+# allowed to age out a pre-subscription snapshot before list visibility proves
+# candidate readiness.
+SUBSCRIBED_CACHE_TTL_SECONDS = 300.0
+SUBSCRIBED_CACHE_MARGIN_SECONDS = 15.0
 
 
 class CaseCreateUnsupportedError(RuntimeError):
@@ -161,6 +166,45 @@ def _list_cases(cli: Any, oid: str, search: str | None = None) -> list[dict[str,
     raise ControlError("case listing exceeded the fixture pagination bound")
 
 
+def _wait_list_ready(
+    cli: Any,
+    oid: str,
+    expected: Mapping[int, str],
+    tenant_ready_at: float,
+    timeout_seconds: float,
+    retry_seconds: float = 5.0,
+) -> None:
+    """Prove all seeded cases are listable after every stale tenant cache expires."""
+    deadline = tenant_ready_at + timeout_seconds
+    safe_after = tenant_ready_at + SUBSCRIBED_CACHE_TTL_SECONDS + SUBSCRIBED_CACHE_MARGIN_SECONDS
+    last_detail = "not observed"
+    while time.monotonic() < deadline:
+        try:
+            rows = _list_cases(cli, oid)
+            listed = {
+                row.get("case_number") for row in rows
+                if isinstance(row.get("case_number"), int)
+            }
+            missing = set(expected) - listed
+            wrong = []
+            if not missing:
+                for number, detect_id in expected.items():
+                    detections = _component(cli, oid, number, "detections")
+                    if sum(row.get("detect_id") == detect_id for row in detections) != 1:
+                        wrong.append(number)
+            last_detail = f"missing={sorted(missing)}, wrong_detections={sorted(wrong)}"
+            if not missing and not wrong and time.monotonic() >= safe_after:
+                return
+        except ControlError as error:
+            if error.status_code not in {404, 429, 500, 502, 503, 504}:
+                raise
+            last_detail = str(error)
+        remaining = deadline - time.monotonic()
+        if remaining > 0:
+            time.sleep(min(retry_seconds, remaining))
+    raise ControlError(f"seeded cases did not become safely list-visible: {last_detail}")
+
+
 def _notes(snapshot: Mapping[str, Any]) -> list[dict[str, Any]]:
     events = snapshot.get("events", [])
     return [dict(event) for event in events if isinstance(event, Mapping) and event.get("event_type") == "case_note_added"]
@@ -177,6 +221,7 @@ def provision(config: Any, cli: Any, journal: Any, trial_id: str, oid: str, seed
         )
     cli.invoke(["extension", "subscribe", "--name", EXTENSION], oid)
     _wait_ready(cli, oid, min(180, config.limits.verification_seconds))
+    tenant_ready_at = time.monotonic()
     suffix = hashlib.sha256(f"{trial_id}:{seed}".encode()).hexdigest()[:12]
     detection = {
         "detect_id": str(uuid.uuid5(uuid.NAMESPACE_URL, f"lc-eval:{trial_id}:{seed}:detection")),
@@ -216,6 +261,7 @@ def provision(config: Any, cli: Any, journal: Any, trial_id: str, oid: str, seed
         })
 
     distractor_numbers = []
+    expected_detections = {target_number: detection["detect_id"]}
     distractor_count = 3 if variant == "distractor" else 1
     for index in range(distractor_count):
         distractor_detection = {
@@ -230,9 +276,14 @@ def provision(config: Any, cli: Any, journal: Any, trial_id: str, oid: str, seed
             cli, oid, distractor_detection, f"Unrelated evaluation case {suffix}-{index}", "medium"
         )
         distractor_numbers.append(distractor_number)
+        expected_detections[distractor_number] = distractor_detection["detect_id"]
         _api(cli, oid, "POST", f"cases/{distractor_number}/notes", body={
             "content": f"Unrelated note {index}; preserve exactly.", "note_type": "general", "is_public": False,
         })
+    _wait_list_ready(
+        cli, oid, expected_detections, tenant_ready_at,
+        max(float(config.lc.readiness_seconds), 360.0),
+    )
     baseline_target = snapshot_case(cli, oid, target_number) if target_number is not None else None
     baseline_distractors = {
         str(number): snapshot_case(cli, oid, number) for number in distractor_numbers

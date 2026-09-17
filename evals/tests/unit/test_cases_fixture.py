@@ -34,11 +34,15 @@ def test_case_fixture_seed_variants_are_distinct(monkeypatch, tmp_path: Path):
     monkeypatch.setattr(cases, "_create", create)
     monkeypatch.setattr(cases, "_api", api)
     monkeypatch.setattr(cases, "_wait_ready", lambda *_args: {})
+    monkeypatch.setattr(cases, "_wait_list_ready", lambda *_args: None)
     monkeypatch.setattr(cases, "snapshot_case", lambda _cli, _oid, number: {
         "case": {"case_number": number}, "events": [], "detections": [], "entities": []})
 
     cli = _CLI()
-    config = SimpleNamespace(limits=SimpleNamespace(verification_seconds=30))
+    config = SimpleNamespace(
+        limits=SimpleNamespace(verification_seconds=30),
+        lc=SimpleNamespace(readiness_seconds=600),
+    )
     partial = cases.provision(config, cli, None, "trial", "oid", 1, tmp_path)
     distractor = cases.provision(config, cli, None, "trial", "oid", 2, tmp_path)
 
@@ -156,11 +160,42 @@ def test_case_list_reads_actual_cases_projection_without_search():
         {"case_number": 1, "detection_cats": ["category"]}]
 
 
-def test_cases_permissions_include_metadata_access_required_by_case_service():
+def test_cases_permissions_are_the_exact_backend_route_requirements():
     assert set(cases.PERMISSIONS) == {
-        "org.get", "investigation.get", "investigation.get.mtd",
-        "investigation.set", "investigation.set.mtd", "ext.request",
+        "org.get", "investigation.get", "investigation.set", "ext.request",
     }
+
+
+def test_case_list_readiness_waits_out_subscription_cache_and_proves_detections(monkeypatch):
+    clock = [100.0]
+    monkeypatch.setattr(cases.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(cases.time, "sleep", lambda seconds: clock.__setitem__(0, clock[0] + seconds))
+    monkeypatch.setattr(cases, "_list_cases", lambda *_args: [
+        {"case_number": 1}, {"case_number": 2}])
+    monkeypatch.setattr(cases, "_component", lambda _cli, _oid, number, _name: [
+        {"detect_id": "target" if number == 1 else "distractor"}])
+
+    cases._wait_list_ready(
+        object(), "oid", {1: "target", 2: "distractor"},
+        tenant_ready_at=100.0, timeout_seconds=360.0, retry_seconds=5.0,
+    )
+    assert clock[0] >= 100.0 + cases.SUBSCRIBED_CACHE_TTL_SECONDS + cases.SUBSCRIBED_CACHE_MARGIN_SECONDS
+
+
+def test_case_list_readiness_rejects_missing_seeded_case(monkeypatch):
+    clock = [0.0]
+    monkeypatch.setattr(cases.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(cases.time, "sleep", lambda seconds: clock.__setitem__(0, clock[0] + seconds))
+    monkeypatch.setattr(cases, "_list_cases", lambda *_args: [{"case_number": 1}])
+    try:
+        cases._wait_list_ready(
+            object(), "oid", {1: "target", 2: "distractor"},
+            tenant_ready_at=0.0, timeout_seconds=320.0, retry_seconds=20.0,
+        )
+    except ControlError as error:
+        assert "missing=[2]" in str(error)
+    else:
+        raise AssertionError("readiness accepted an incomplete list index")
 
 
 def test_case_reference_discovers_detection_through_native_cli(monkeypatch):

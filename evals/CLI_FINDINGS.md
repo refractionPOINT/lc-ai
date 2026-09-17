@@ -27,3 +27,25 @@ Partial and distractor variants seed the target case before execution and are
 supported. The clean variant is declared unsupported until the pinned native
 `case create` path can encode the deployed schema. This is a functional
 compatibility blocker; no performance conclusion should be drawn from it.
+
+## Cases list visibility after subscription
+
+Backend source: `ext-cases` commit
+`a52d8a70ef615f0c4a20d517e235889713e3c6e9`.
+
+The Cases list route first intersects requested organization IDs with
+`Store.ListSubscribedOIDs`. That store method caches the complete subscribed
+tenant inventory for five minutes (`subscribedCacheTTL`). `CreateTenant` writes
+the new tenant but does not invalidate this cache, while `DeleteTenant` does.
+Consequently, a service instance holding a pre-subscription snapshot can return
+HTTP 200 with an empty `cases` list for a newly subscribed organization even
+though numbered case reads already work.
+
+This was observed in evaluator calibration: independently seeded numbered case
+reads succeeded, while repeated unfiltered native `case list` calls returned an
+empty valid response. It is a backend list-readiness condition, not evidence of
+model failure or CLI response parsing failure. The fixture now waits through
+the five-minute cache TTL plus a margin, then positively proves that every
+seeded case and expected detection is reachable through the list path before
+candidate execution. The native reference also performs the same case-list and
+detection-link discovery candidates must use.
