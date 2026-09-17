@@ -2,7 +2,7 @@
 
 How effectively can an AI agent operate LimaCharlie through its CLI? These evals give agents concrete platform tasks and independently verify the results in disposable, live organizations. The task supplies the security criteria; the eval measures platform operation, not cybersecurity judgment.
 
-**Campaign: `unified-2026-09-17` — 45/48 completed normally and passed.** Eight evals, three harnesses, two explicit context profiles, one fresh trial per cell. Every result below belongs to this campaign; earlier experiments are preserved in [history](history/RESULTS_2026-09-16.md). One trial per cell is an operational snapshot, not an estimated success rate or a model leaderboard.
+**Campaign: `unified-2026-09-17` — 45/48 completed normally and passed.** Eight evals, three harnesses, two explicit context profiles, one fresh trial per cell. Every result below belongs to this campaign. One trial per cell is an operational snapshot, not an estimated success rate or a model leaderboard.
 
 ## Results
 
@@ -132,6 +132,5 @@ Positive and deliberately bad reference trials are separate infrastructure check
 | Audit context isolation | [Context profiles](CONTEXT_PROFILES.md) |
 | Understand trust boundaries | [Architecture](ARCHITECTURE.md) |
 | Investigate CLI issues | [CLI findings](CLI_FINDINGS.md) |
-| Inspect earlier results | [September 16 snapshot](history/RESULTS_2026-09-16.md) |
 
 Coverage is still limited: broader integrations and outputs, vulnerability and email workflows, other endpoint platforms and much of LimaCharlie remain untested. See the [capability catalog](catalog/capabilities.yaml). This README is a dated evidence snapshot, not an automatically refreshed CI badge.

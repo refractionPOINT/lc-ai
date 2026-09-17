@@ -8,7 +8,7 @@ This repository contains AI integrations for LimaCharlie, including Claude Code 
 
 ## AI CLI eval results
 
-We publish live evaluations of how AI harnesses operate the LimaCharlie CLI. The results page presents one campaign across eight evals, Claude Code, Codex and the local AI Sessions runner, with separate bare and pinned LC-skills profiles. It includes per-trial measurements, verification scope, source pins and sanitized evidence. Earlier experiments remain available in the history.
+We publish live evaluations of how AI harnesses operate the LimaCharlie CLI. The results page presents one campaign across eight evals, Claude Code, Codex and the local AI Sessions runner, with separate bare and pinned LC-skills profiles. It includes per-trial measurements, verification scope, source pins and sanitized evidence.
 
 **[View the results matrix, measurements and evidence →](evals/README.md)**
 

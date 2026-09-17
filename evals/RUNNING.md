@@ -8,19 +8,24 @@ For an already configured installation, choose a new campaign name and the confi
 
 ```sh
 ./evals/.venv/bin/lc-eval doctor --config /absolute/private/lc-eval-usa.json
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign hive-check-001 --scenario hive-preserve-update --adapter codex --seed 41001
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign hive-check-001 --scenario hive-preserve-update --adapter codex --context bare --seed 41001
 ./evals/.venv/bin/lc-eval report --config /absolute/private/lc-eval-usa.json --campaign hive-check-001
 ```
 
-Replace `codex` with `claude_code` for Claude Code. `report` writes private JSON and HTML paths; it does not start a model. Reusing a campaign name appends trials rather than resuming or replacing an old trial.
+Replace `codex` with `claude_code` or `ai_sessions` for the other harnesses, and use `--context lc_ai` for pinned LC skills. `report` writes private JSON and HTML paths; it does not start a model. Reusing a campaign name appends trials rather than resuming or replacing an old trial.
 
 | Scenario | Calibrated location | What it checks |
 |---|---|---|
 | `hive-preserve-update` | `usa` | Update the intended data while preserving metadata and unrelated records. |
 | `search-complete-export` | `canada` | Export the exact matching dataset, including real continuation pages. |
 | `webhook-production-routing` | `usa` | Configure ingestion and automation with real signed output delivery and negative probes. |
+| `config-reconcile-preserve` | `usa` | Reconcile lookup and D&R configuration while preserving unrelated records. |
+| `case-maintain-records` | `usa` | Discover and maintain an existing case and preserve surrounding records. |
+| `cloudsec-findings-triage` | `usa` | Apply supplied finding owners and dispositions. |
+| `access-key-rotation` | `usa` | Replace a scoped key and verify fresh authentication with the old key is denied. |
+| `native-sensor-onboarding` | `usa` | Enroll and configure a real sensor in an evaluator-owned container. |
 
-These are the locations exercised by the initial proof, not guarantees about other regions. Export preparation can take 20–30 minutes or longer as the fixture grows and indexing converges. Preparation and verification are separate from the 600-second agent execution allowance.
+These are the locations exercised by the current campaign, not guarantees about other regions. Export preparation can take 20–30 minutes or longer as the fixture grows and indexing converges. Preparation and verification are separate from the 600-second agent execution allowance.
 
 A single-scenario campaign is useful on its own. `acceptance` checks the initial three-scenario/two-harness milestone, so it will not pass for an intentionally partial campaign.
 
@@ -40,7 +45,7 @@ Configuration defaults to `~/.local/share/lc-eval/config.json`. Review its sourc
 
 The configuration is schema version 1 and rejects unknown fields. Its top-level fields are `run_data_dir`, `sources`, `lc`, `receiver`, `agents`, optional `context` skill-source pin and `ai_sessions` image/source identity, `limits`, `suite`, `seed`, and `profile`. `lc.location` is a literal organization-creation location for every trial selected by one command. `agents` pins the adapter, executable/version, model, effort, auth mode/file, 600-second execution timeout, and Claude turn limit. `limits` contains the single-trial concurrency, organization/event/byte ceilings, CLI command bounds, verification windows, lease duration, and billing mode. `init-local --subscription` writes JSON, which is also valid YAML; edit only non-secret values and paths.
 
-The initial authorized billing mode is **subscription_limits**: one trial at a time, 600 seconds per agent including harness startup, Claude 30 turns, a single Codex `exec` turn bounded to 80 completed tool calls, and 80 CLI invocations. Token counts come from native harness streams; uncached, cached, cache-write, total input, and output counts remain distinct when the provider reports them. Dollar cost is unknown. The optional request-budget gateway is separate and is not wired into the subscription controller.
+The campaign billing mode is **subscription_limits**: one trial at a time, 600 seconds per agent including harness startup, Claude 30 turns, a single Codex `exec` turn bounded to 80 completed tool calls, and 80 CLI invocations. Token counts come from native harness streams; uncached, cached, cache-write, total input, and output counts remain distinct when the provider reports them. Dollar cost is unknown. The optional request-budget gateway is separate and is not wired into the subscription controller.
 
 ## Run through the AI Sessions runner
 
@@ -65,13 +70,13 @@ The reduced image applies an eval-only overlay to the archived native bridge. It
 
 The command initially clones the Claude subscription profile into an `ai_sessions` agent entry, including its model, credential-file path, timeout, and turn ceiling. Later builds preserve that entry’s settings. AI Sessions uses the provider's native effort behavior, recorded as `native_default`; it does not apply the Claude Code adapter's effort setting. Usage comes from native runner events. Cache totals may remain unknown when the bridge does not report them, and subscription runs do not claim dollar billing.
 
-Use an explicit `--scenario` for `ai_sessions`; the default suite still declares the original Claude Code/Codex matrix. The report’s initial-loop acceptance section continues to check that original milestone, not this separate harness proof.
+Use an explicit `--scenario` for `ai_sessions`; the default suite still declares the original Claude Code/Codex matrix. The report’s `initial-loop` acceptance section checks only its fixed three-scenario/two-harness matrix, not the full eight-eval campaign.
 
-This local adapter tests runner and bridge behavior inside the eval isolation boundary. It does not emulate or validate the hosted AI Sessions workspace service. The original CLI scenarios, brokered `limacharlie` transport, independent graders, and cleanup rules are unchanged. The original live proof exercised all three scenarios: Hive and routing passed; export hit the SDK turn limit. A fresh export trial passed after the restricted instructions, native tool policy and reporting fixes described above. Both experiments cleaned all resources. See the [original proof](AI_SESSIONS_PROOF.md) and [export retest](AI_SESSIONS_EXPORT_RETEST.md); these are separate experiments, not a new three-scenario campaign.
+This local adapter tests runner and bridge behavior inside the eval isolation boundary. It does not emulate or validate the hosted AI Sessions workspace service. The brokered `limacharlie` transport, independent graders and cleanup rules apply to all harnesses. See the [current results](README.md) for all eight scenarios in both context profiles.
 
 ## Calibrate and run a complete campaign
 
-Create two non-secret configuration copies that share one private run directory and differ only in the explicit LC region. The files contain credential **paths**, never credential values. Replace the generic directory below with an absolute private path:
+Create two non-secret configuration copies that share one private run directory. Export uses Canada and a 64 MB command-output cap; the other scenarios use USA and 16 MB. Pin `context.lc_ai` and build the AI Sessions image as described above before copying the configuration. The files contain credential **paths**, never credential values. Replace the generic directory below with an absolute private path:
 
 ```sh
 ./evals/.venv/bin/lc-eval init-local --subscription --config /absolute/private/lc-eval-base.json
@@ -86,6 +91,7 @@ value = json.loads(base.read_text())
 for region in ("usa", "canada"):
     regional = json.loads(json.dumps(value))
     regional["lc"]["location"] = region
+    regional["limits"]["max_command_output"] = 64_000_000 if region == "canada" else 16_000_000
     destination = base.with_name(f"lc-eval-{region}.json")
     destination.write_text(json.dumps(regional, indent=2) + "\n")
     destination.chmod(0o600)
@@ -94,45 +100,31 @@ PY
 ./evals/.venv/bin/lc-eval doctor --config /absolute/private/lc-eval-canada.json
 ```
 
+Run all six context probes and the scenario-specific positive/negative references before the scored trials. Follow the [full matrix](#reproduce-the-unified-eight-eval-matrix) for seeds and the eight scenarios × three harnesses × two contexts. For example:
+
 ```sh
-# Calibrate each scenario; bad-reference runs must exit 1 with their named failure.
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign calibration --scenario hive-preserve-update --seed 41001 --reference
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign calibration --scenario hive-preserve-update --seed 41001 --bad-reference
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-canada.json --campaign calibration --scenario search-complete-export --seed 42001 --reference
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-canada.json --campaign calibration --scenario search-complete-export --seed 42001 --bad-reference
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign calibration --scenario webhook-production-routing --seed 43001 --reference
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign calibration --scenario webhook-production-routing --seed 43001 --bad-reference
-./evals/.venv/bin/lc-eval validate-suite --config /absolute/private/lc-eval-usa.json --campaign calibration
-
-# Real harness smoke and the complete eight targeted trials.
-./evals/.venv/bin/lc-eval smoke --config /absolute/private/lc-eval-usa.json --campaign harness-smoke
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign initial-proof --scenario hive-preserve-update --adapter claude_code --seed 41001 --repetition 1
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign initial-proof --scenario hive-preserve-update --adapter codex --seed 41001 --repetition 1
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-canada.json --campaign initial-proof --scenario search-complete-export --adapter codex --seed 42001 --repetition 1
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-canada.json --campaign initial-proof --scenario search-complete-export --adapter claude_code --seed 42001 --repetition 1
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign initial-proof --scenario webhook-production-routing --adapter claude_code --seed 43001 --repetition 1
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign initial-proof --scenario webhook-production-routing --adapter codex --seed 43001 --repetition 1
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign initial-proof --scenario hive-preserve-update --adapter claude_code --seed 41001 --repetition 2
-./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign initial-proof --scenario hive-preserve-update --adapter codex --seed 41001 --repetition 2
-
-./evals/.venv/bin/lc-eval fault-drill --config /absolute/private/lc-eval-usa.json --campaign initial-proof
+./evals/.venv/bin/lc-eval context-probe --config /absolute/private/lc-eval-usa.json --campaign context-check --adapter codex --context bare
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign calibration --scenario hive-preserve-update --seed 41001 --context bare --reference
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign calibration --scenario hive-preserve-update --seed 41001 --context bare --bad-reference
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign evaluation-001 --scenario hive-preserve-update --adapter codex --context bare --seed 41001
 ./evals/.venv/bin/lc-eval cleanup --config /absolute/private/lc-eval-usa.json
-./evals/.venv/bin/lc-eval report --config /absolute/private/lc-eval-usa.json --campaign initial-proof
-./evals/.venv/bin/lc-eval acceptance --config /absolute/private/lc-eval-usa.json --campaign initial-proof
+./evals/.venv/bin/lc-eval report --config /absolute/private/lc-eval-usa.json --campaign evaluation-001
 ./evals/.venv/bin/lc-eval status --config /absolute/private/lc-eval-usa.json
 ```
 
+The bad reference must exit 1 and fail its intended task assertions. Inspect execution and cleanup separately before continuing.
+
 The targeted `--repetition` option defaults to 1, accepts integers of at least 1 only with `--scenario`, and leaves suite-defined repetitions unchanged.
 
-Every trial gets a disposable organization in the configured location. The calibrated region pins are `usa` for Hive and routing and `canada` for export. Because `lc.location` is configuration-wide, use USA- and Canada-pinned configuration files for scenario-targeted live runs; `run` without `--scenario` executes all eight suite entries at one configured location and is not the mixed-region M7 retry command.
+Every trial gets a disposable organization in the configured location. The calibrated region pins are `canada` for export and `usa` for the other seven scenarios. Because `lc.location` is configuration-wide, use USA- and Canada-pinned configuration files for scenario-targeted live runs; `run` without `--scenario` executes all eight suite entries at one configured location and does not reproduce the current matrix.
 
-Export starts with 5,003 matching and 137 nonmatching events, then adds 5,000 production events per stage until search returns a nonempty continuation or a configured ceiling is reached. The hard schema ceilings are 25,000 events and 100 MB; lower `limits.max_events` and `limits.max_fixture_bytes` values are honored and each growth stage is recorded. Live Canada trials proved pagination at 15,140 events for the reference and Codex, and 20,140 for Claude. The initial proof passed; see the dated [acceptance record](ACCEPTANCE.md). Live export preparation can take 20–30 minutes under the free-tier ingestion ceiling; the 600-second agent timer begins after preparation.
+Export starts with 5,003 matching and 137 nonmatching events, then adds 5,000 production events per stage until search returns a nonempty continuation or a configured ceiling is reached. The hard schema ceilings are 25,000 events and 100 MB; lower `limits.max_events` and `limits.max_fixture_bytes` values are honored and each growth stage is recorded. The current campaign proved pagination with fixtures of 5,140–15,140 events; see the [campaign evidence](UNIFIED_PROOF.md#export-readiness). Live export preparation can take 20–30 minutes under the free-tier ingestion ceiling; the 600-second agent timer begins after preparation.
 
 Fresh Insight datasets can take time to initialize; readiness retries fresh bounded queries rather than repeatedly polling a failed query ID. The controller journals creation intent before creating resources, uses a separate scoped CLI worker, freezes artifacts after stopping execution, reads platform state with independent HTTP verification, and attempts cleanup in a `finally` path. `cleanup` reconciles exact owned resources after interruption; never run a broad organization deletion command. An unresolved cleanup stops the campaign.
 
 The candidate container receives the public task and documentation. Its `limacharlie` executable is a transport to the pinned real CLI in a separate worker. The worker has the trial key; the agent has no LimaCharlie credentials. Agent and worker networks have separate restricted HTTPS proxies. Harness subscription material is isolated from the user's original files. The controller, graders, private fixtures, journal, and receiver administration stay outside both containers.
 
-JSON and HTML reports are written under the private run directory. A failed task is distinct from an incomplete observation or cleanup failure. Missing usage stays unknown. A/A comparisons require compatible manifests and measure efficiency only for paired successes. Three scenarios prove the machinery; the capability catalog records the broader platform scope and future expansion.
+JSON and HTML reports are written under the private run directory. A failed task is distinct from an incomplete observation or cleanup failure. Missing usage stays unknown. A/A comparisons require compatible manifests and measure efficiency only for paired successes. The results README records the eight calibrated workflows; the capability catalog tracks broader platform coverage.
 
 
 ## Inspect failures and recover
@@ -154,7 +146,7 @@ After interruption, use the same private configuration/run directory:
 ```sh
 ./evals/.venv/bin/lc-eval status --config /absolute/private/lc-eval-usa.json
 ./evals/.venv/bin/lc-eval cleanup --config /absolute/private/lc-eval-usa.json
-./evals/.venv/bin/lc-eval report --config /absolute/private/lc-eval-usa.json --campaign initial-proof
+./evals/.venv/bin/lc-eval report --config /absolute/private/lc-eval-usa.json --campaign evaluation-001
 ```
 
 Cleanup reconciles exact ledger-owned resources. Do not delete unrelated organizations or broadly prune Docker. An active controller owns the run-directory lock; allow it to finish or stop it before recovery. Do not erase a ledger to bypass the cleanup gate.
@@ -196,7 +188,7 @@ Repeat with `codex` or `ai_sessions`. Context probes use no LimaCharlie organiza
 
 The registered expansion scenarios are `case-maintain-records`, `native-sensor-onboarding`, `cloudsec-findings-triage`, `config-reconcile-preserve`, and `access-key-rotation`. Consult the results page for live calibration status before treating a run as a benchmark.
 
-Cases requires `lc.readiness_seconds >= 360` (default 600). Provisioning waits at least 315 seconds after tenant readiness to expire the backend subscribed-tenant cache, then verifies all seeded cases and detection links are list-visible. This setup time is outside the agent execution limit. Cases maintenance uses an existing case for partial/distractor seeds (`seed % 3` equals 1 or 2). The clean variant remains explicitly disabled pending separate calibration. The unified campaign includes the merged CLI detection-encoding fix, while the original proof used the affected CLI; see [CLI findings](CLI_FINDINGS.md). Trusted fixture seeding uses the generic extension request with the deployed encoding. Agent operations remain native case commands. Fixture readiness must account for the Cases subscribed-tenant cache before candidate listing; positive references must discover through the same native listing.
+Cases requires `lc.readiness_seconds >= 360` (default 600). Provisioning waits at least 315 seconds after tenant readiness to expire the backend subscribed-tenant cache, then verifies all seeded cases and detection links are list-visible. This setup time is outside the agent execution limit. Cases maintenance uses an existing case for partial/distractor seeds (`seed % 3` equals 1 or 2). The clean variant remains explicitly disabled pending separate calibration. The current campaign includes the merged CLI detection-encoding fix; see [CLI findings](CLI_FINDINGS.md). Trusted fixture seeding uses the generic extension request with the deployed encoding. Agent operations remain native case commands. Fixture readiness must account for the Cases subscribed-tenant cache before candidate listing; positive references must discover through the same native listing.
 
 Native onboarding downloads the real Linux sensor, records its binary hash, and deploys it in an evaluator-owned container through `/work/endpoint-deployment.json`. It never installs the sensor on the operator's host. Its private sensor-data tmpfs permits loading the sensor’s signed modules; the root filesystem remains read-only, with no host mounts or added capabilities. A normal Docker bridge supplies native sensor connectivity; the candidate's own model/CLI egress boundary remains unchanged.
 

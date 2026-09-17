@@ -1,6 +1,6 @@
 # Adding evals
 
-Use this guide to add a new LimaCharlie workflow to the existing evaluator. Do not restart the controller design or treat the historical build plan as unfinished work. See [Architecture](ARCHITECTURE.md) for boundaries and [Running evals](RUNNING.md) for operator commands.
+Use this guide to add a new LimaCharlie workflow to the existing evaluator. See [Architecture](ARCHITECTURE.md) for boundaries and [Running evals](RUNNING.md) for operator commands.
 
 ## Start with a task contract
 

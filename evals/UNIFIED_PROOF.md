@@ -1,6 +1,6 @@
 # Unified live campaign proof
 
-Campaign `unified-2026-09-17` reruns eight evals across Claude Code, Codex and the native AI Sessions harness, once in `bare` and once in `lc_ai`: **48 scored agent attempts**. This replaces the mixed historical matrix in the [results README](README.md). Historical evidence remains linked separately.
+Campaign `unified-2026-09-17` reruns eight evals across Claude Code, Codex and the native AI Sessions harness, once in `bare` and once in `lc_ai`: **48 scored agent attempts**. The [results README](README.md) presents the complete campaign matrix.
 
 **45/48 completed normally and passed.** Task grade and harness execution status are independent. See the README for all cells, execution limits and the onboarding failure. This is one observation per cell, not a statistical estimate of reliability.
 

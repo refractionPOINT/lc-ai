@@ -1,6 +1,6 @@
 # Implemented architecture
 
-This describes the current Python implementation. Use [Running evals](RUNNING.md) for operations and [Adding evals](ADDING_EVALS.md) for changes. The broader original proposal is retained in [history](history/ARCHITECTURE.md).
+This describes the current Python implementation. Use [Running evals](RUNNING.md) for operations and [Adding evals](ADDING_EVALS.md) for changes.
 
 ## One trial
 
@@ -58,4 +58,4 @@ Report task grade, execution status, evidence completeness, agent-start evidence
 
 The implementation is modular but not fully registry-driven. Scenario selection, permissions, fixture/reference/verifier dispatch, suite loading and milestone acceptance contain initial-scenario wiring. Some YAML fields describe intent rather than enforce policy; resolved configuration and runtime code enforce limits. New scenarios must update these points explicitly.
 
-Claude Code, Codex and the local `ai_sessions` native runner have completed live eval loops. AI Sessions passed Hive and routing, and produced a scored export failure at its SDK turn limit; see the [proof record](AI_SESSIONS_PROOF.md). It does not claim coverage of the hosted AI Sessions workspace service. Optional API request-budget modules exist but are not connected to the live subscription controller. Native EDR enrollment and Cloud Security fixtures have not been proved by the initial three scenarios.
+Claude Code, Codex and the local `ai_sessions` native runner are evaluated across eight scenarios in both bare and pinned LC-skills contexts. See the [results](README.md) for the current matrix and its limitations. The local AI Sessions adapter does not establish hosted Workspace coverage. Optional API request-budget modules exist but are not connected to the live subscription controller.

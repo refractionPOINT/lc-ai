@@ -2,35 +2,15 @@
 
 ## Hosted adapter installation-key guidance
 
-Candidate source: `python-limacharlie` commit `fe67856c4cdd1265b0b90a452247b1fb395f7d08`.
-
 `installation-key create --get` and its help describe `json_key` as suitable for adapters. For a hosted webhook adapter, `client_options.identity.installation_key` instead requires the installation record UUID from `iid`. Both `key` and `json_key` yielded `adapter: lc installation key not authorized` in live calibration.
 
-The contract is visible in `go-uspclient/client.go` and `protocol` (the value is sent unchanged as `iid`) and `legion_usp_proxy/service/auth.go` (it indexes the organization installation-key records by that value). The evaluator fixture selects `iid`; no candidate source changes were made. A future CLI optimization can clarify this distinction and be evaluated separately.
+The contract is visible in `go-uspclient/client.go` and `protocol` (the value is sent unchanged as `iid`) and `legion_usp_proxy/service/auth.go` (it indexes the organization installation-key records by that value). The evaluator fixture selects `iid`. CLI guidance can clarify this distinction; evaluate that change in a separately pinned campaign.
 
 ## Cases detection creation encoding
 
 **Fixed:** [python-limacharlie #381](https://github.com/refractionPOINT/python-limacharlie/pull/381), merged as `289b4e9e3a66cf96e7746b2d81e42745e0d917c9`. The unified campaign pins this revision. The existing Cases eval still uses the calibrated maintenance variant; the clean creation variant requires separate calibration before enabling it.
 
-Historical finding:
-
-Candidate source: `python-limacharlie` commit `fe67856c4cdd1265b0b90a452247b1fb395f7d08`.
-Pinned CLI digest: `sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5`.
-
-`case create --detection <json>` parses the argument into a Python dictionary,
-and `Cases.create_case` passes that dictionary to the extension request helper.
-The deployed ext-cases request schema rejects the resulting value because it
-expects the `detection` parameter itself to be a JSON string. The observed
-response was HTTP 400 `EXTENSION_REQUEST_ERROR`: `INVALID_PARAMETER invalid
-value for detection: not json, a map[string]interface {}`.
-
-Trusted fixture setup uses `extension request --name ext-cases --action
-create_case` with a JSON request whose `detection` member is explicitly encoded
-as a JSON string. Candidate operations remain on the native `case` commands.
-Partial and distractor variants seed the target case before execution and are
-supported. The clean variant is declared unsupported until the pinned native
-`case create` path can encode the deployed schema. This is a functional
-compatibility blocker; no performance conclusion should be drawn from it.
+The pinned CLI encodes the detection parameter as a JSON string, as required by the deployed Cases extension. The eval covers discovery and maintenance of existing cases. Clean case creation remains disabled until its fixture and positive/negative references are independently calibrated.
 
 ## Cases list visibility after subscription
 

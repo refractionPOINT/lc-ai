@@ -18,7 +18,7 @@ Claude Code's bare profile uses `--safe-mode` and `--disable-slash-commands` and
 
 ## Corpus and delivery
 
-The LC corpus comes from a full Git commit pin under `context.lc_ai`, never the operator's installed plugin directories or uncommitted working tree. The initial expansion pin contains 43 skills across `lc-essentials`, `lc-advanced-skills`, `lc-fundamentals` and `lc-compliance`.
+The LC corpus comes from a full Git commit pin under `context.lc_ai`, never the operator's installed plugin directories or uncommitted working tree. The current campaign pin contains 43 skills across `lc-essentials`, `lc-advanced-skills`, `lc-fundamentals` and `lc-compliance`.
 
 Standalone skill names are prefixed with their plugin name because the corpus includes distinct skills with the same original name. Supporting scripts inside each skill remain available. Required shared constants and compliance documents are mounted read-only; plugin-root references are transformed to resolve inside the container. The manifest records original and transformed hashes, supporting-file hashes and the transformation inventory. Standalone skill delivery does not execute plugin hooks or add plugin agents/commands.
 
