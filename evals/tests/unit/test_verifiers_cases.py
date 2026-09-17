@@ -91,3 +91,14 @@ def test_cases_missing_observation_is_inconclusive():
     fixture = {"variant": "clean", "detection": DETECTION, "desired": DESIRED}
     results = verify_cases({}, fixture, {}, {})
     assert all(row["status"] == "unknown" for row in results)
+
+
+def test_case_number_must_be_identified_not_embedded_in_detection_id():
+    fixture = _fixture()
+    fixture['target_matches'][0]['case_number'] = 1
+    statuses = {r['id']: r['status'] for r in verify_cases(
+        {}, fixture, {'completion': 'Detection det-1; no case number was returned.'}, {})}
+    assert statuses['cases.deliverable.identifies_target'] == 'fail'
+    for completion in ['Case **#1**; detection det-1', '{"case_number": 1, "detection_id": "det-1"}']:
+        statuses = {r['id']: r['status'] for r in verify_cases({}, fixture, {'completion': completion}, {})}
+        assert statuses['cases.deliverable.identifies_target'] == 'pass'

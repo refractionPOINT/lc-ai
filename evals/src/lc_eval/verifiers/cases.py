@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from copy import deepcopy
@@ -190,7 +192,13 @@ def verify_cases(
     completion = frozen_artifacts.get("completion", frozen_artifacts.get("final_response")) if isinstance(frozen_artifacts, Mapping) else None
     number = valid_matches[0].get("case_number") if unique else None
     text = completion if isinstance(completion, str) else ""
-    found = isinstance(number, int) and isinstance(detect_id, str) and str(number) in text and detect_id in text
+    # A small case number must not match a digit inside the detection UUID.
+    readable = text.translate(str.maketrans('', '', '*`'))
+    case_label = re.search(
+        rf'(?i)\bcase(?:[ _-]*(?:number|id))?[\s:#"\'=|\[\]]*{number}\b',
+        readable,
+    ) if isinstance(number, int) else None
+    found = bool(case_label) and isinstance(detect_id, str) and detect_id in text
     deliverable_status = "unknown" if completion is None else "pass" if found else "fail"
     results.append(assertion(
         "cases.deliverable.identifies_target", deliverable_status,
