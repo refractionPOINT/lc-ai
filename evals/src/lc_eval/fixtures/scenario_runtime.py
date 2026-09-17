@@ -1,0 +1,525 @@
+"""Glue between independent fixture primitives and controller evidence contracts."""
+
+from __future__ import annotations
+import asyncio
+from dataclasses import asdict
+import json
+import secrets
+import time
+import uuid
+from typing import Any, Callable
+
+from ..config import atomic_json
+from .local_cli import ControlError
+from .organization import unwrap
+from .hive import snapshot
+from .webhook import WebhookSpec, HostedWebhookFixture
+from .search_dataset import (
+    DEFAULT_GROWTH_EVENTS,
+    PaginationFixtureUnsupportedError,
+    PaginationNotObservedError,
+    RegionalSearchClient,
+    SearchError,
+    adaptive_event_targets,
+    generate_search_dataset,
+    grow_search_dataset,
+)
+
+
+def installation_key(cli, oid, trial):
+    raw = unwrap(cli.invoke(["installation-key", "create", "--description", "eval-" + trial, "--get"], oid))
+    # Hosted USP adapters send this value unchanged as the ``iid`` in their
+    # connection header.  The proxy authorizes that UUID against its org-key
+    # map.  The same CLI response also contains encoded ``key`` and
+    # ``json_key`` sensor installers; neither encoding belongs in the hosted
+    # adapter identity field.
+    value = raw.get("iid") if isinstance(raw, dict) else None
+    try:
+        uuid.UUID(value)
+    except (AttributeError, TypeError, ValueError) as error:
+        raise ControlError("installation key response missing valid adapter iid") from error
+    return value
+
+
+async def wait_for_webhook_search_ready(
+    hook: HostedWebhookFixture,
+    search: RegionalSearchClient,
+    trial: str,
+    *,
+    start_time: int,
+    timeout_seconds: float,
+    retry_interval_seconds: float = 3.0,
+    observer: Callable[[dict[str, Any]], None] | None = None,
+) -> dict[str, Any]:
+    """Require a hosted webhook probe to become independently searchable."""
+    if timeout_seconds <= 0 or retry_interval_seconds < 0:
+        raise ValueError("webhook readiness timing bounds are invalid")
+    if not trial or "'" in trial:
+        raise ValueError("trial is invalid for the readiness query")
+
+    loop = asyncio.get_running_loop()
+    started = loop.time()
+    deadline = started + timeout_seconds
+    sent_ids: set[str] = set()
+    attempts: list[dict[str, Any]] = []
+    query = f"* | LC_EVAL_READY | event/eval_trial_id == '{trial}'"
+
+    def snapshot(state: str, ready_probe_id: str | None = None) -> dict[str, Any]:
+        return {
+            "state": state,
+            "attempt_count": len(attempts),
+            "elapsed_seconds": max(0.0, loop.time() - started),
+            "ready_probe_id": ready_probe_id,
+            "attempts": list(attempts),
+        }
+
+    while loop.time() < deadline:
+        probe_id = str(uuid.uuid4())
+        attempt: dict[str, Any] = {
+            "attempt": len(attempts) + 1,
+            "probe_id": probe_id,
+            "hook_accepted": False,
+        }
+        try:
+            receipts = await hook.send_events(
+                [
+                    {
+                        "event_type": "LC_EVAL_READY",
+                        "eval_trial_id": trial,
+                        "eval_event_id": probe_id,
+                    }
+                ]
+            )
+        except ControlError as error:
+            attempt["hook_error"] = type(error).__name__
+        else:
+            attempt["hook_accepted"] = True
+            attempt["hook_statuses"] = [receipt.status_code for receipt in receipts]
+            sent_ids.add(probe_id)
+
+            remaining = deadline - loop.time()
+            if remaining > 0:
+                try:
+                    result = await asyncio.wait_for(
+                        search.execute(
+                            query,
+                            start_time,
+                            int(time.time()) + 60,
+                            stream="event",
+                        ),
+                        timeout=remaining,
+                    )
+                except SearchError as error:
+                    if error.status_code not in {500, 502, 503, 504}:
+                        raise
+                    attempt["search_status_code"] = error.status_code
+                    attempt["search_query_id"] = error.query_id
+                    attempt["search_transient"] = True
+                except TimeoutError:
+                    attempt["search_timeout"] = True
+                else:
+                    observed = {
+                        event.get("eval_event_id")
+                        for event in result.events
+                        if isinstance(event.get("eval_event_id"), str)
+                    }
+                    attempt["search_query_id"] = result.query_id
+                    attempt["search_event_count"] = len(result.events)
+                    attempt["search_pages"] = len(result.pages)
+                    ready_ids = sent_ids & observed
+                    if ready_ids:
+                        ready_probe_id = sorted(ready_ids)[0]
+                        attempt["ready_probe_id"] = ready_probe_id
+                        attempts.append(attempt)
+                        value = snapshot("ready", ready_probe_id)
+                        if observer is not None:
+                            observer(value)
+                        return value
+
+        attempts.append(attempt)
+        if observer is not None:
+            observer(snapshot("waiting"))
+        remaining = deadline - loop.time()
+        if remaining > 0:
+            await asyncio.sleep(min(retry_interval_seconds, remaining))
+
+    value = snapshot("timeout")
+    if observer is not None:
+        observer(value)
+    raise ControlError(
+        "hosted webhook did not produce a searchable readiness probe before deadline"
+    )
+
+
+def _search_result_summary(result) -> dict[str, Any]:
+    return {
+        "query_id": result.query_id,
+        "pages": [asdict(page) for page in result.pages],
+        "event_count": len(result.events),
+        "paginated": result.traversed_continuation,
+        "transient_failures": list(result.transient_failures),
+    }
+
+
+async def _prepare_export_dataset(
+    config,
+    hook: HostedWebhookFixture,
+    search: RegionalSearchClient,
+    trial: str,
+    root,
+    *,
+    start_time: int,
+    initial_dataset=None,
+):
+    """Ingest and grow an export fixture until nonempty pagination is proven."""
+    event_ceiling = config.limits.max_events
+    byte_ceiling = config.limits.max_fixture_bytes
+    dataset = initial_dataset
+    if dataset is None:
+        dataset = generate_search_dataset(
+            trial,
+            max_events=event_ceiling,
+            max_bytes=byte_ceiling,
+        )
+    if len(dataset.events) > event_ceiling:
+        raise ValueError("dataset event counts are outside fixture bounds")
+    if dataset.total_json_bytes > byte_ceiling:
+        raise ValueError("dataset exceeds the fixture byte ceiling")
+    targets = adaptive_event_targets(
+        len(dataset.events),
+        ceiling=event_ceiling,
+        growth_events=DEFAULT_GROWTH_EVENTS,
+    )
+    pending_events = dataset.events
+    receipt_rows: list[dict[str, Any]] = []
+    growth_stages: list[dict[str, Any]] = []
+    accepted_events = 0
+    accepted_batches = 0
+    accepted_bytes = 0
+
+    for stage_number, target_event_count in enumerate(targets, start=1):
+        if len(dataset.events) != target_event_count:
+            raise AssertionError("adaptive fixture growth did not reach its target")
+
+        # The complete expected ledger is durable before any event in this stage
+        # can be accepted by the remote hook.
+        atomic_json(
+            root / "injected-events.json",
+            {
+                "events": dataset.events,
+                "event_count": len(dataset.events),
+                "production_count": len(dataset.production),
+                "nonproduction_count": len(dataset.nonproduction),
+                "total_json_bytes": dataset.total_json_bytes,
+                "fixture_event_ceiling": event_ceiling,
+                "fixture_byte_ceiling": byte_ceiling,
+            },
+        )
+
+        prior_events = accepted_events
+        prior_batches = accepted_batches
+        prior_bytes = accepted_bytes
+
+        def observe_injection(value: dict[str, Any]) -> None:
+            atomic_json(
+                root / "injection-progress.json",
+                {
+                    "growth_stage": stage_number,
+                    "target_events": len(dataset.events),
+                    "fixture_event_ceiling": event_ceiling,
+                    "fixture_byte_ceiling": byte_ceiling,
+                    "accepted_batches": prior_batches + value["accepted_batches"],
+                    "accepted_events": prior_events + value["accepted_events"],
+                    "uncompressed_bytes": (
+                        prior_bytes + value["uncompressed_bytes"]
+                    ),
+                },
+            )
+
+        stage_receipts = await hook.send_events(
+            pending_events,
+            observer=observe_injection,
+        )
+        for receipt in stage_receipts:
+            row = asdict(receipt)
+            row["growth_stage"] = stage_number
+            row["stage_batch_number"] = row["batch_number"]
+            row["batch_number"] = len(receipt_rows) + 1
+            receipt_rows.append(row)
+            accepted_events += receipt.event_count
+            accepted_batches += 1
+            accepted_bytes += receipt.uncompressed_bytes
+        atomic_json(root / "injection-receipts.json", receipt_rows)
+
+        stage: dict[str, Any] = {
+            "growth_stage": stage_number,
+            "target_events": len(dataset.events),
+            "injected_events": len(pending_events),
+            "production_count": len(dataset.production),
+            "nonproduction_count": len(dataset.nonproduction),
+        }
+        end_time = int(time.time()) + 60
+        try:
+            ready = await dataset.wait_until_ready(
+                search,
+                start_time=start_time,
+                end_time=end_time,
+                timeout_seconds=config.limits.verification_seconds,
+                observer=lambda value: atomic_json(
+                    root / "readiness.json",
+                    {
+                        **value,
+                        "growth_stage": stage_number,
+                        "target_events": len(dataset.events),
+                        "fixture_event_ceiling": event_ceiling,
+                        "fixture_byte_ceiling": byte_ceiling,
+                    },
+                ),
+            )
+        except PaginationNotObservedError as error:
+            stage["state"] = "complete_single_page"
+            stage["readiness"] = _search_result_summary(error.result)
+            growth_stages.append(stage)
+            at_event_ceiling = len(dataset.events) == event_ceiling
+            if at_event_ceiling:
+                atomic_json(
+                    root / "fixture-growth.json",
+                    {
+                        "state": "unsupported",
+                        "limiting_ceiling": "events",
+                        "final_event_count": len(dataset.events),
+                        "final_json_bytes": dataset.total_json_bytes,
+                        "fixture_event_ceiling": event_ceiling,
+                        "fixture_byte_ceiling": byte_ceiling,
+                        "stages": growth_stages,
+                    },
+                )
+                raise PaginationFixtureUnsupportedError(
+                    len(dataset.events), error.result, limiting_ceiling="events"
+                ) from error
+
+            next_target = targets[stage_number]
+            try:
+                dataset, pending_events = grow_search_dataset(
+                    dataset,
+                    next_target,
+                    max_events=event_ceiling,
+                    max_bytes=byte_ceiling,
+                )
+            except ValueError as growth_error:
+                atomic_json(
+                    root / "fixture-growth.json",
+                    {
+                        "state": "unsupported",
+                        "limiting_ceiling": "bytes",
+                        "final_event_count": len(dataset.events),
+                        "final_json_bytes": dataset.total_json_bytes,
+                        "fixture_event_ceiling": event_ceiling,
+                        "fixture_byte_ceiling": byte_ceiling,
+                        "stages": growth_stages,
+                    },
+                )
+                raise PaginationFixtureUnsupportedError(
+                    len(dataset.events), error.result, limiting_ceiling="bytes"
+                ) from growth_error
+            atomic_json(
+                root / "fixture-growth.json",
+                {
+                    "state": "growing",
+                    "final_event_count": len(dataset.events),
+                    "final_json_bytes": dataset.total_json_bytes,
+                    "fixture_event_ceiling": event_ceiling,
+                    "fixture_byte_ceiling": byte_ceiling,
+                    "stages": growth_stages,
+                },
+            )
+            continue
+
+        stage["state"] = "ready"
+        stage["readiness"] = _search_result_summary(ready)
+        growth_stages.append(stage)
+        atomic_json(
+            root / "fixture-growth.json",
+            {
+                "state": "ready",
+                "final_event_count": len(dataset.events),
+                "final_json_bytes": dataset.total_json_bytes,
+                "fixture_event_ceiling": event_ceiling,
+                "fixture_byte_ceiling": byte_ceiling,
+                "stages": growth_stages,
+            },
+        )
+        return dataset, ready, end_time
+
+    raise AssertionError("adaptive export target schedule did not reach a terminal state")
+
+
+async def provision(config, cli, oid, trial, name, seed, root):
+    if name == "webhook-production-routing":
+        from .routing import provision as routing_provision
+
+        return await routing_provision(config, cli, oid, trial, seed, root)
+    initial_dataset = generate_search_dataset(
+        trial,
+        max_events=config.limits.max_events,
+        max_bytes=config.limits.max_fixture_bytes,
+    )
+    key = installation_key(cli, oid, trial)
+    hook = HostedWebhookFixture(
+        cli,
+        WebhookSpec(
+            oid, "export-" + trial[-10:], key, secrets.token_hex(24), "eval-export", secrets.token_hex(12)
+        ),
+    )
+    await hook.provision()
+    start = int(time.time()) - 120
+    warmup_search = RegionalSearchClient(
+        cli,
+        oid,
+        timeout_seconds=min(60, config.limits.verification_seconds),
+    )
+    warmup = await wait_for_webhook_search_ready(
+        hook,
+        warmup_search,
+        trial,
+        start_time=start,
+        timeout_seconds=config.limits.verification_seconds,
+        observer=lambda value: atomic_json(root / "webhook-warmup.json", value),
+    )
+    search = RegionalSearchClient(cli, oid, timeout_seconds=config.limits.verification_seconds)
+    dataset, ready, end = await _prepare_export_dataset(
+        config,
+        hook,
+        search,
+        trial,
+        root,
+        start_time=start,
+        initial_dataset=initial_dataset,
+    )
+    expected = {
+        event_id: {k: row[k] for k in ("eval_event_id", "environment", "message")}
+        for event_id, row in dataset.production.items()
+    }
+    baseline = {
+        "cloud_sensor": snapshot(cli, oid, "cloud_sensor"),
+        "dr-general": snapshot(cli, oid, "dr-general"),
+        "outputs": cli.api(oid, "GET", f"outputs/{oid}"),
+    }
+    return {
+        "expected_rows": expected,
+        "platform_state_before": baseline,
+        "search_readiness": {
+            "pages": [asdict(p) for p in ready.pages],
+            "event_count": len(ready.events),
+            "fixture_event_count": len(dataset.events),
+            "production_count": len(dataset.production),
+            "nonproduction_count": len(dataset.nonproduction),
+            "fixture_event_ceiling": config.limits.max_events,
+            "fixture_byte_ceiling": config.limits.max_fixture_bytes,
+            "paginated": ready.traversed_continuation,
+            "transient_failures": list(ready.transient_failures),
+        },
+        "webhook_warmup": {
+            "attempt_count": warmup["attempt_count"],
+            "elapsed_seconds": warmup["elapsed_seconds"],
+            "ready": warmup["state"] == "ready",
+        },
+        "public": {"organization_id": oid, "window_start": start, "window_end": end, "trial_selector": trial},
+        "_hook": hook,
+    }
+
+
+async def collect(config, cli, oid, name, fixture):
+    if name == "webhook-production-routing":
+        from .routing import collect as routing_collect
+
+        return await routing_collect(config, cli, oid, fixture)
+    return {
+        "platform_state_after": {
+            "cloud_sensor": snapshot(cli, oid, "cloud_sensor"),
+            "dr-general": snapshot(cli, oid, "dr-general"),
+            "outputs": cli.api(oid, "GET", f"outputs/{oid}"),
+        }
+    }
+
+
+async def reference(name, fixture, env, *, bad=False):
+    if name == "webhook-production-routing":
+        from .routing import reference as routing_reference
+
+        return await routing_reference(fixture, env, bad=bad)
+    # Reference independently exercises the candidate CLI's complete result stream,
+    # then projects only the requested event fields; it does not copy hidden truth.
+    from ..execution.docker import run
+
+    public = fixture["public"]
+    query = f"* | LC_EVAL_EXPORT | event/eval_trial_id == '{public['trial_selector']}' and event/environment == 'production'"
+    raw = await asyncio.to_thread(
+        run,
+        [
+            "docker",
+            "exec",
+            env.agent,
+            "limacharlie",
+            "--output",
+            "json",
+            "search",
+            "run",
+            "--query",
+            query,
+            "--start",
+            str(public["window_start"]),
+            "--end",
+            str(public["window_end"]),
+            "--stream",
+            "event",
+        ],
+        timeout=600,
+    )
+    from .local_cli import decode_json
+
+    data = decode_json(raw)
+    from .search_dataset import normalize_event_row
+
+    def event_rows(value):
+        if isinstance(value, list):
+            for item in value:
+                yield from event_rows(item)
+            return
+        if not isinstance(value, dict):
+            raise ControlError("search JSON output contains a non-object item")
+        if "type" in value:
+            if value.get("type") != "events":
+                return
+            rows = value.get("rows") or []
+            if not isinstance(rows, list):
+                raise ControlError("search event result rows are not a list")
+            for row in rows:
+                yield normalize_event_row(row, value.get("fields"))
+            return
+        for key in ("results", "events"):
+            if key in value:
+                rows = value[key]
+                if not isinstance(rows, list):
+                    raise ControlError(f"search JSON {key} value is not a list")
+                for row in rows:
+                    yield from event_rows(row)
+                return
+        yield normalize_event_row(value)
+
+    normalized = {}
+    for row in event_rows(data):
+        event = row.get("event", row)
+        if not isinstance(event, dict):
+            raise ControlError("search event payload is not an object")
+        event_id = event.get("eval_event_id")
+        if not isinstance(event_id, str):
+            raise ControlError("search event omitted eval_event_id")
+        normalized[event["eval_event_id"]] = {
+            k: event[k] for k in ("eval_event_id", "environment", "message")
+        }
+    (env.work / "export.jsonl").write_text("".join(json.dumps(row) + "\n" for row in normalized.values()))
+    if bad:
+        lines = (env.work / "export.jsonl").read_text().splitlines(keepends=True)
+        (env.work / "export.jsonl").write_text("".join(lines[:1]))
+    return f"Exported {len(normalized)} events"

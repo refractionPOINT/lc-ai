@@ -1,0 +1,35 @@
+schema_version: 1
+id: webhook-production-routing
+revision: 1
+capability_tags:
+  - ingestion
+  - outputs-integrations
+  - dr-automation
+  - behavioral-probe
+  - preservation
+prompt: prompt.md
+public_files:
+  - public/config-skeleton.yaml
+  - public/sample-events.jsonl
+fixture:
+  kind: hosted_webhook_routing
+  parameters:
+    event_type: LC_EVAL_ROUTE
+    negative_observation_seconds: 180
+    verification_ceiling_seconds: 600
+allowed_scope:
+  resource_kinds: [cloud_adapter, dr_rule, output]
+  mutation: named_trial_resources_only
+required_adapter_capabilities: [shell, files, controlled_cli]
+budgets:
+  timeout_seconds: 900
+  convergence_seconds: 600
+  probe_seconds: 600
+assertions:
+  - routing.probes_ingested
+  - routing.receiver_health
+  - routing.observation_window
+  - routing.matching_delivered
+  - routing.negatives_excluded
+  - routing.baseline_output_unchanged
+required_deliverable_paths: []

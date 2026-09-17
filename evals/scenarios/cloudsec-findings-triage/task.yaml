@@ -1,0 +1,31 @@
+schema_version: 1
+id: cloudsec-findings-triage
+revision: 1
+capability_tags: [cloud-security, findings, artifact-export, triage, preservation]
+prompt: prompt.md
+public_files: []
+fixture:
+  kind: cloudsec_sarif_findings
+  parameters:
+    matching_findings: 7
+    distractor_findings: 3
+allowed_scope:
+  resource_kinds: [cloudsec_finding]
+  mutation: assign_and_accept_named_findings_only
+required_adapter_capabilities: [shell, files, controlled_cli]
+budgets:
+  timeout_seconds: 600
+  convergence_seconds: 180
+  probe_seconds: 60
+assertions:
+  - cloudsec.export.safe_file
+  - cloudsec.export.valid_csv
+  - cloudsec.export.membership
+  - cloudsec.export.values
+  - cloudsec.targets.owner
+  - cloudsec.targets.status
+  - cloudsec.targets.resolution
+  - cloudsec.nontargets.preserved
+  - cloudsec.policy.preserved
+  - cloudsec.readiness
+required_deliverable_paths: [/work/cloudsec-findings.csv]

@@ -1,0 +1,52 @@
+schema_version: 1
+id: initial-loop
+revision: 1
+profile: controlled-cli-v1
+description: Initial three-scenario, two-harness calibration and Hive A/A plumbing check.
+concurrency: 1
+billing_mode: subscription_limits
+trials:
+  - id: hive-claude-1
+    scenario: hive-preserve-update
+    adapter: claude_code
+    seed: 41001
+    repetition: 1
+  - id: hive-codex-1
+    scenario: hive-preserve-update
+    adapter: codex
+    seed: 41001
+    repetition: 1
+  - id: export-codex-1
+    scenario: search-complete-export
+    adapter: codex
+    seed: 42001
+    repetition: 1
+  - id: export-claude-1
+    scenario: search-complete-export
+    adapter: claude_code
+    seed: 42001
+    repetition: 1
+  - id: routing-claude-1
+    scenario: webhook-production-routing
+    adapter: claude_code
+    seed: 43001
+    repetition: 1
+  - id: routing-codex-1
+    scenario: webhook-production-routing
+    adapter: codex
+    seed: 43001
+    repetition: 1
+  - id: hive-claude-aa-2
+    scenario: hive-preserve-update
+    adapter: claude_code
+    seed: 41001
+    repetition: 2
+    pair_with: hive-claude-1
+    experiment: aa
+  - id: hive-codex-aa-2
+    scenario: hive-preserve-update
+    adapter: codex
+    seed: 41001
+    repetition: 2
+    pair_with: hive-codex-1
+    experiment: aa

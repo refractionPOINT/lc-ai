@@ -1,0 +1,35 @@
+schema_version: 1
+id: case-maintain-records
+revision: 1
+capability_tags:
+  - cases
+  - investigation
+  - preservation
+  - idempotency
+prompt: prompt.md
+public_files: []
+fixture:
+  kind: case_lifecycle
+  parameters:
+    variants: [clean, partial, distractor]
+    variant_selection: seed_modulo_3
+    unsupported_variants: [clean]
+    unsupported_reason: pinned_case_create_detection_encoding
+allowed_scope:
+  resource_kinds: [case]
+  mutation: target_case_only
+required_adapter_capabilities: [shell, controlled_cli]
+budgets:
+  timeout_seconds: 600
+  convergence_seconds: 120
+  probe_seconds: 60
+assertions:
+  - cases.target.unique
+  - cases.target.fields_exact
+  - cases.target.detection_once
+  - cases.target.entity_once
+  - cases.target.note_once
+  - cases.target.preexisting_preserved
+  - cases.distractor.unchanged
+  - cases.deliverable.identifies_target
+required_deliverable_paths: []

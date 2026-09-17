@@ -1,0 +1,14 @@
+adapter:
+  name: "{{ adapter_name }}"
+  event_type_path: event_type
+rule:
+  name: "{{ rule_name }}"
+  event_type: LC_EVAL_ROUTE
+  trial_selector: "{{ trial_selector }}"
+  environment: production
+  report_category: "{{ report_category }}"
+output:
+  name: "{{ output_name }}"
+  stream: detect
+  category: "{{ report_category }}"
+  destination: "{{ destination_url }}"
