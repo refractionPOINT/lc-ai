@@ -68,10 +68,14 @@ def _default_system_keys_ready(value: Any) -> bool:
         record = by_description.get(description)
         if not isinstance(record, Mapping):
             return False
-        tags = record.get("tags")
-        if not isinstance(tags, list) or "lc:system" not in tags or not any(
-            isinstance(tag, str) and tag.startswith("ext:") for tag in tags
-        ):
+        raw_tags = record.get("tags")
+        if isinstance(raw_tags, str):
+            tags = {tag.strip() for tag in raw_tags.split(",") if tag.strip()}
+        elif isinstance(raw_tags, list) and all(isinstance(tag, str) for tag in raw_tags):
+            tags = {tag.strip() for tag in raw_tags if tag.strip()}
+        else:
+            return False
+        if "lc:system" not in tags or not any(tag.startswith("ext:") for tag in tags):
             return False
     return True
 

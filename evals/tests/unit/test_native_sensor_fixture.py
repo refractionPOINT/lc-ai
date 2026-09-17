@@ -106,7 +106,7 @@ def test_sensor_image_build_key_covers_base_binary_and_dockerfile():
 
 def test_default_key_readiness_requires_all_known_system_records_and_tags():
     records = {
-        f"iid-{index}": {"desc": description, "tags": ["lc:system", f"ext:default-{index}"]}
+        f"iid-{index}": {"desc": description, "tags": f"lc:system,ext:default-{index}"}
         for index, description in enumerate(sorted(DEFAULT_SYSTEM_KEY_DESCRIPTIONS))
     }
     assert _default_system_keys_ready(records)
@@ -114,11 +114,21 @@ def test_default_key_readiness_requires_all_known_system_records_and_tags():
     incomplete.pop(next(iter(incomplete)))
     assert not _default_system_keys_ready(incomplete)
     wrong_tag = {key: dict(value) for key, value in records.items()}
-    wrong_tag[next(iter(wrong_tag))]["tags"] = ["lc:system"]
+    wrong_tag[next(iter(wrong_tag))]["tags"] = "lc:system"
     assert not _default_system_keys_ready(wrong_tag)
     decoy = {key: value for key, value in records.items() if value["desc"] != "ext ext-feedback webhook adapter"}
     decoy["forged"] = {"desc": "prefix ext ext-feedback webhook adapter suffix", "tags": ["lc:system", "ext:feedback"]}
     assert not _default_system_keys_ready(decoy)
+
+
+def test_default_key_readiness_accepts_real_saved_string_and_structured_list_tags():
+    descriptions = sorted(DEFAULT_SYSTEM_KEY_DESCRIPTIONS)
+    records = {
+        "feedback": {"desc": descriptions[0], "tags": "lc:system,ext:ext-feedback"},
+        "reliable": {"desc": descriptions[1], "tags": " lc:system , ext:reliable-tasking "},
+        "yara": {"desc": descriptions[2], "tags": ["lc:system", "ext:ext-yara"]},
+    }
+    assert _default_system_keys_ready(records)
 
 
 def test_derived_image_uses_verified_local_base_and_secret_free_context(monkeypatch, tmp_path):
