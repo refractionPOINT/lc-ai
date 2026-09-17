@@ -250,3 +250,15 @@ def test_case_reference_does_not_fall_back_to_trusted_number(monkeypatch):
         assert "exactly one case" in str(error)
     else:
         raise AssertionError("reference bypassed native discovery with trusted case number")
+
+
+def test_case_readiness_budget_is_not_silently_extended(tmp_path):
+    cli = _CLI()
+    config = SimpleNamespace(lc=SimpleNamespace(readiness_seconds=30))
+    try:
+        cases.provision(config, cli, None, "trial", "oid", 1, tmp_path)
+    except ValueError as error:
+        assert "readiness_seconds >= 360" in str(error)
+    else:
+        raise AssertionError("too-small configured readiness budget was extended")
+    assert cli.invocations == []

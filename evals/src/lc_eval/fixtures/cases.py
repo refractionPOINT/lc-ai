@@ -219,6 +219,8 @@ def provision(config: Any, cli: Any, journal: Any, trial_id: str, oid: str, seed
             "clean case creation is unsupported by the pinned native CLI: "
             "case create cannot encode a detection for ext-cases"
         )
+    if config.lc.readiness_seconds < 360:
+        raise ValueError("Cases fixture requires lc.readiness_seconds >= 360 for tenant-cache readiness")
     cli.invoke(["extension", "subscribe", "--name", EXTENSION], oid)
     _wait_ready(cli, oid, min(180, config.limits.verification_seconds))
     tenant_ready_at = time.monotonic()
@@ -282,7 +284,7 @@ def provision(config: Any, cli: Any, journal: Any, trial_id: str, oid: str, seed
         })
     _wait_list_ready(
         cli, oid, expected_detections, tenant_ready_at,
-        max(float(config.lc.readiness_seconds), 360.0),
+        float(config.lc.readiness_seconds),
     )
     baseline_target = snapshot_case(cli, oid, target_number) if target_number is not None else None
     baseline_distractors = {
