@@ -10,6 +10,10 @@ The contract is visible in `go-uspclient/client.go` and `protocol` (the value is
 
 ## Cases detection creation encoding
 
+**Fixed:** [python-limacharlie #381](https://github.com/refractionPOINT/python-limacharlie/pull/381), merged as `289b4e9e3a66cf96e7746b2d81e42745e0d917c9`. The unified campaign pins this revision. The existing Cases eval still uses the calibrated maintenance variant; the clean creation variant requires separate calibration before enabling it.
+
+Historical finding:
+
 Candidate source: `python-limacharlie` commit `fe67856c4cdd1265b0b90a452247b1fb395f7d08`.
 Pinned CLI digest: `sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5`.
 

@@ -1,0 +1,352 @@
+{
+  "schema_version": 1,
+  "campaign": "unified-2026-09-17-context",
+  "pins": {
+    "cli_commit": "289b4e9e3a66cf96e7746b2d81e42745e0d917c9",
+    "documentation_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+    "lc_ai_commit": "d811347d71d9e73152328aaceb65b42d445a446b",
+    "ai_sessions_commit": "bbe82892282e3989005e70ca9c4415f77866c563",
+    "candidate_image_id": "sha256:f860e0c1fdba6ae68d6fc07a810127040e34ff76906f67e5caed606d4e4448d3",
+    "worker_image_id": "sha256:8a126585777beeb62b147b63ee99096a8aedf0045e6454dd716e060c0725b341",
+    "ai_sessions_image_id": "sha256:2ae14b56a819d2004086de11df930606a0fea4a4698763df1b715778772d9052"
+  },
+  "harnesses": {
+    "claude_code": {
+      "version": "2.1.273 (Claude Code)",
+      "model": "claude-sonnet-5",
+      "effort": "medium",
+      "auth_mode": "subscription",
+      "timeout_seconds": 600,
+      "max_turns": 30
+    },
+    "codex": {
+      "version": "codex-cli 0.154.0",
+      "model": "gpt-6-astra",
+      "effort": "medium",
+      "auth_mode": "subscription",
+      "timeout_seconds": 600,
+      "max_turns": 30
+    },
+    "ai_sessions": {
+      "version": "session-runner@bbe82892282e3989005e70ca9c4415f77866c563",
+      "model": "claude-sonnet-5",
+      "effort": "native_default",
+      "auth_mode": "subscription",
+      "timeout_seconds": 600,
+      "max_turns": 30
+    }
+  },
+  "trials": [
+    {
+      "trial_id": "unified-2026-09-17-context-context-34055f68cf",
+      "adapter": "ai_sessions",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "agent_attempted": true,
+      "agent_exit_code": 0,
+      "manifest": {
+        "context_mode": "bare"
+      },
+      "usage": {
+        "input_tokens": 1,
+        "total_input_tokens": null,
+        "output_tokens": 78,
+        "cache_read_tokens": null,
+        "cached_input_tokens": null,
+        "cache_write_tokens": null,
+        "cache_write_input_tokens": null,
+        "cost_micro_usd": null,
+        "cost_usd": null,
+        "billing_mode": "subscription_limits"
+      },
+      "timings": {
+        "active_seconds": 2.937395863700658
+      },
+      "assertions": [],
+      "cleanup_error_count": 0,
+      "probe_evidence": {
+        "passed": true,
+        "phrase_observed": false,
+        "skill_referenced": true,
+        "native_skill_call_observed": false,
+        "startup_inventory_observed": false,
+        "native_discovery_observed": false,
+        "explicit_skill_file_read_observed": false,
+        "skill_use_observed": false,
+        "completion_observed": true,
+        "event_count": 22
+      },
+      "context_mode": "bare",
+      "context": {
+        "mode": "bare",
+        "delivery": "isolated_empty_user_context",
+        "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "provider_builtin_skills": "possible"
+      }
+    },
+    {
+      "trial_id": "unified-2026-09-17-context-context-387e452956",
+      "adapter": "claude_code",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "agent_attempted": true,
+      "agent_exit_code": 0,
+      "manifest": {
+        "context_mode": "lc_ai"
+      },
+      "usage": {
+        "input_tokens": 4,
+        "total_input_tokens": 47521,
+        "output_tokens": 742,
+        "cache_read_tokens": 21193,
+        "cached_input_tokens": 21193,
+        "cache_write_tokens": 26324,
+        "cache_write_input_tokens": 26324,
+        "cost_micro_usd": null,
+        "cost_usd": null,
+        "billing_mode": "subscription_limits"
+      },
+      "timings": {
+        "active_seconds": 7.207913633901626
+      },
+      "assertions": [],
+      "cleanup_error_count": 0,
+      "probe_evidence": {
+        "passed": true,
+        "phrase_observed": true,
+        "skill_referenced": true,
+        "native_skill_call_observed": true,
+        "startup_inventory_observed": true,
+        "native_discovery_observed": true,
+        "explicit_skill_file_read_observed": false,
+        "skill_use_observed": true,
+        "completion_observed": true,
+        "event_count": 10
+      },
+      "context_mode": "lc_ai",
+      "context": {
+        "mode": "lc_ai",
+        "delivery": "native_user_skills",
+        "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "provider_builtin_skills": "possible",
+        "lc_ai": {
+          "source_commit": "d811347d71d9e73152328aaceb65b42d445a446b",
+          "source_archive_sha256": "95b97a58839494a600ebcada14124bf6aba976dba38d34b0c194e53e4c49833c",
+          "source_skill_corpus_sha256": "eb6c65a0b00dc3683338342b9f569a205cb0f5e034bcf466c60fe2334c67b768",
+          "skill_count": 43,
+          "corpus_sha256": "660cc1ebb1fe040630e9add66fc9414d35b23e99fbed45b1b1874cba68058587",
+          "support_sha256": "44acd527064b01a5e6f2cb3b8089efc4ea5e9af3f38b049c5af5b5fcc44043ff"
+        }
+      }
+    },
+    {
+      "trial_id": "unified-2026-09-17-context-context-456aa8e55d",
+      "adapter": "codex",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "agent_attempted": true,
+      "agent_exit_code": 0,
+      "manifest": {
+        "context_mode": "bare"
+      },
+      "usage": {
+        "input_tokens": 3194,
+        "total_input_tokens": 14714,
+        "output_tokens": 112,
+        "cache_read_tokens": 11520,
+        "cached_input_tokens": 11520,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cost_micro_usd": null,
+        "cost_usd": null,
+        "billing_mode": "subscription_limits"
+      },
+      "timings": {
+        "active_seconds": 9.419491775799543
+      },
+      "assertions": [],
+      "cleanup_error_count": 0,
+      "probe_evidence": {
+        "passed": true,
+        "phrase_observed": false,
+        "skill_referenced": true,
+        "native_skill_call_observed": false,
+        "startup_inventory_observed": false,
+        "native_discovery_observed": false,
+        "explicit_skill_file_read_observed": false,
+        "skill_use_observed": false,
+        "completion_observed": true,
+        "event_count": 4
+      },
+      "context_mode": "bare",
+      "context": {
+        "mode": "bare",
+        "delivery": "isolated_empty_user_context",
+        "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "provider_builtin_skills": "possible"
+      }
+    },
+    {
+      "trial_id": "unified-2026-09-17-context-context-884f78e948",
+      "adapter": "claude_code",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "agent_attempted": true,
+      "agent_exit_code": 0,
+      "manifest": {
+        "context_mode": "bare"
+      },
+      "usage": {
+        "input_tokens": 2,
+        "total_input_tokens": 11044,
+        "output_tokens": 122,
+        "cache_read_tokens": 0,
+        "cached_input_tokens": 0,
+        "cache_write_tokens": 11042,
+        "cache_write_input_tokens": 11042,
+        "cost_micro_usd": null,
+        "cost_usd": null,
+        "billing_mode": "subscription_limits"
+      },
+      "timings": {
+        "active_seconds": 2.9054176690988243
+      },
+      "assertions": [],
+      "cleanup_error_count": 0,
+      "probe_evidence": {
+        "passed": true,
+        "phrase_observed": false,
+        "skill_referenced": true,
+        "native_skill_call_observed": false,
+        "startup_inventory_observed": false,
+        "native_discovery_observed": false,
+        "explicit_skill_file_read_observed": false,
+        "skill_use_observed": false,
+        "completion_observed": true,
+        "event_count": 4
+      },
+      "context_mode": "bare",
+      "context": {
+        "mode": "bare",
+        "delivery": "isolated_empty_user_context",
+        "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "provider_builtin_skills": "possible"
+      }
+    },
+    {
+      "trial_id": "unified-2026-09-17-context-context-a725735bf5",
+      "adapter": "codex",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "agent_attempted": true,
+      "agent_exit_code": 0,
+      "manifest": {
+        "context_mode": "lc_ai"
+      },
+      "usage": {
+        "input_tokens": 18768,
+        "total_input_tokens": 41808,
+        "output_tokens": 466,
+        "cache_read_tokens": 23040,
+        "cached_input_tokens": 23040,
+        "cache_write_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "cost_micro_usd": null,
+        "cost_usd": null,
+        "billing_mode": "subscription_limits"
+      },
+      "timings": {
+        "active_seconds": 22.372428776230663
+      },
+      "assertions": [],
+      "cleanup_error_count": 0,
+      "probe_evidence": {
+        "passed": true,
+        "phrase_observed": true,
+        "skill_referenced": true,
+        "native_skill_call_observed": false,
+        "startup_inventory_observed": false,
+        "native_discovery_observed": false,
+        "explicit_skill_file_read_observed": true,
+        "skill_use_observed": true,
+        "completion_observed": true,
+        "event_count": 7
+      },
+      "context_mode": "lc_ai",
+      "context": {
+        "mode": "lc_ai",
+        "delivery": "native_user_skills",
+        "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "provider_builtin_skills": "possible",
+        "lc_ai": {
+          "source_commit": "d811347d71d9e73152328aaceb65b42d445a446b",
+          "source_archive_sha256": "95b97a58839494a600ebcada14124bf6aba976dba38d34b0c194e53e4c49833c",
+          "source_skill_corpus_sha256": "eb6c65a0b00dc3683338342b9f569a205cb0f5e034bcf466c60fe2334c67b768",
+          "skill_count": 43,
+          "corpus_sha256": "660cc1ebb1fe040630e9add66fc9414d35b23e99fbed45b1b1874cba68058587",
+          "support_sha256": "44acd527064b01a5e6f2cb3b8089efc4ea5e9af3f38b049c5af5b5fcc44043ff"
+        }
+      }
+    },
+    {
+      "trial_id": "unified-2026-09-17-context-context-eb8c67abd5",
+      "adapter": "ai_sessions",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "agent_attempted": true,
+      "agent_exit_code": 0,
+      "manifest": {
+        "context_mode": "lc_ai"
+      },
+      "usage": {
+        "input_tokens": 5,
+        "total_input_tokens": null,
+        "output_tokens": 2052,
+        "cache_read_tokens": null,
+        "cached_input_tokens": null,
+        "cache_write_tokens": null,
+        "cache_write_input_tokens": null,
+        "cost_micro_usd": null,
+        "cost_usd": null,
+        "billing_mode": "subscription_limits"
+      },
+      "timings": {
+        "active_seconds": 20.043902228120714
+      },
+      "assertions": [],
+      "cleanup_error_count": 0,
+      "probe_evidence": {
+        "passed": true,
+        "phrase_observed": true,
+        "skill_referenced": true,
+        "native_skill_call_observed": false,
+        "startup_inventory_observed": false,
+        "native_discovery_observed": false,
+        "explicit_skill_file_read_observed": true,
+        "skill_use_observed": true,
+        "completion_observed": true,
+        "event_count": 46
+      },
+      "context_mode": "lc_ai",
+      "context": {
+        "mode": "lc_ai",
+        "delivery": "ai_sessions_plugin_autoinit",
+        "docs_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+        "provider_builtin_skills": "possible",
+        "lc_ai": {
+          "source_commit": "d811347d71d9e73152328aaceb65b42d445a446b",
+          "source_archive_sha256": "95b97a58839494a600ebcada14124bf6aba976dba38d34b0c194e53e4c49833c",
+          "source_skill_corpus_sha256": "eb6c65a0b00dc3683338342b9f569a205cb0f5e034bcf466c60fe2334c67b768",
+          "skill_count": 43
+        }
+      }
+    }
+  ],
+  "invalid_attempts": []
+}

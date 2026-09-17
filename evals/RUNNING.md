@@ -196,10 +196,46 @@ Repeat with `codex` or `ai_sessions`. Context probes use no LimaCharlie organiza
 
 The registered expansion scenarios are `case-maintain-records`, `native-sensor-onboarding`, `cloudsec-findings-triage`, `config-reconcile-preserve`, and `access-key-rotation`. Consult the results page for live calibration status before treating a run as a benchmark.
 
-Cases requires `lc.readiness_seconds >= 360` (default 600). Provisioning waits at least 315 seconds after tenant readiness to expire the backend subscribed-tenant cache, then verifies all seeded cases and detection links are list-visible. This setup time is outside the agent execution limit. Cases maintenance uses an existing case for partial/distractor seeds (`seed % 3` equals 1 or 2). The clean variant is explicitly unsupported while the pinned native `case create` disagrees with the deployed backend about detection encoding; see [CLI findings](CLI_FINDINGS.md). Trusted fixture seeding uses the generic extension request with the deployed encoding. Agent operations remain native case commands. Fixture readiness must account for the Cases subscribed-tenant cache before candidate listing; positive references must discover through the same native listing.
+Cases requires `lc.readiness_seconds >= 360` (default 600). Provisioning waits at least 315 seconds after tenant readiness to expire the backend subscribed-tenant cache, then verifies all seeded cases and detection links are list-visible. This setup time is outside the agent execution limit. Cases maintenance uses an existing case for partial/distractor seeds (`seed % 3` equals 1 or 2). The clean variant remains explicitly disabled pending separate calibration. The unified campaign includes the merged CLI detection-encoding fix, while the original proof used the affected CLI; see [CLI findings](CLI_FINDINGS.md). Trusted fixture seeding uses the generic extension request with the deployed encoding. Agent operations remain native case commands. Fixture readiness must account for the Cases subscribed-tenant cache before candidate listing; positive references must discover through the same native listing.
 
 Native onboarding downloads the real Linux sensor, records its binary hash, and deploys it in an evaluator-owned container through `/work/endpoint-deployment.json`. It never installs the sensor on the operator's host. Its private sensor-data tmpfs permits loading the sensor’s signed modules; the root filesystem remains read-only, with no host mounts or added capabilities. A normal Docker bridge supplies native sensor connectivity; the candidate's own model/CLI egress boundary remains unchanged.
 
 Cloud Security uses pushed SARIF to seed real findings. It grades owner and disposition; acceptance-reason persistence is not returned by the backend and is outside the task requirements. Key rotation verifies replacement credentials, read-only authority, and denial of fresh authentication with the deleted key; it does not claim that previously issued JWTs are revoked. Configuration reconciliation covers named lookup and D&R records with already-correct/stale variants and unrelated records.
 
 Before a real-agent campaign, run the scenario once with `--reference` and once with `--bad-reference`, using a calibrated seed. A correct reference must pass; the bad reference must complete, fail its intended task assertions, and clean up. The initial `validate-suite`/`acceptance` commands still describe the original three-scenario milestone and do not certify the expansion automatically.
+
+## Reproduce the unified eight-eval matrix
+
+The unified campaign uses eight scenarios × three harnesses × two contexts (48
+agent trials), plus six context probes and 16 reference checks. Use a new campaign
+name, rebuild both images from deliberate source pins, and make USA/Canada config
+copies that share the same private run directory. Export uses Canada and a
+64,000,000-byte `limits.max_command_output` cap; the other scenarios use USA and
+16,000,000 bytes. Keep the other configuration inputs fixed. The [campaign record](UNIFIED_PROOF.md) lists the published pins.
+
+Run scenarios sequentially; never parallelize live trials. Use these seeds:
+
+| Scenario | Region | Seed |
+|---|---|---:|
+| `hive-preserve-update` | USA | 41001 |
+| `search-complete-export` | Canada | 42001 |
+| `webhook-production-routing` | USA | 43001 |
+| `config-reconcile-preserve` | USA | 51002 |
+| `case-maintain-records` | USA | 51002 |
+| `cloudsec-findings-triage` | USA | 51002 |
+| `access-key-rotation` | USA | 51002 |
+| `native-sensor-onboarding` | USA | 51002 |
+
+For each scenario, run `--reference` and `--bad-reference` first. Verify that the
+positive reference passes and the negative reference fails its intended assertions,
+with completed execution and clean teardown. Then run each of `claude_code`, `codex`
+and `ai_sessions` once with `--context bare` and once with `--context lc_ai`, using
+the same campaign name, seed and source pins. Before the first platform trial, run
+`context-probe` for all six harness/context combinations.
+
+Keep an attempt ledger. A completed task failure is a result, not a reason to
+silently retry. Stop and investigate infrastructure failures; disclose any invalid
+attempt and its replacement. Stop immediately on unresolved cleanup. Finish with
+`cleanup` (which audits exact owned organizations), generate the private campaign
+report and publish only reviewed, sanitized evidence. The original `acceptance`
+command checks the earlier milestone and does not certify this full matrix.

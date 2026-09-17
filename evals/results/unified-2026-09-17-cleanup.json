@@ -1,0 +1,381 @@
+{
+  "campaign": "unified-2026-09-17",
+  "audited_at_unix": 1789687769,
+  "trial_count": 74,
+  "organization_count": 68,
+  "remaining_resources": 0,
+  "error_count": 0,
+  "journal_pending_resources": 0,
+  "trials": [
+    {
+      "trial_id": "unified-2026-09-17-context-context-884f78e948",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-context-context-387e452956",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-context-context-456aa8e55d",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-context-context-a725735bf5",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-context-context-34055f68cf",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-context-context-eb8c67abd5",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-6ecc78a0da",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-1ceec6e32c",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-7d1c5244d2",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-609c07981a",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-862e084d11",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-9d0eb930c6",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-329a493113",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-7e8bade615",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-6499aafa46",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-5a0602f109",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-923617ec0a",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-7dc3364b4f",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-b6a826bf4d",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-83f1fecada",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-d1ce3bbe9a",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-d0b4603479",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-a2693066b1",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-7dabc0f7ea",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-d76685297a",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-70804a25c4",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-6b7a0e9a6d",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-036dae638c",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-dc5c102116",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-981ced2d4b",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-fd271fa6f5",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-f356160999",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-d6400a418b",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-ac84c7778a",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-65fe4e78f5",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-493c73c9a7",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-4ce93b524b",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-905781f18d",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-4a43b01e89",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-c2172c4b71",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-d8fc6eb912",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-0268e326ea",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-0b29e59f3b",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-d0c768f895",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-698b7c305f",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-3dc85f9ae7",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-806d3130be",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-fed56891a7",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-5deaaa243e",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-dbd75cb386",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-862889008b",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-9db84b5f9a",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-ae01777693",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-7b394f1678",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-570fefa284",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-c0673b936b",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-8641b7231a",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-798e52bef2",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-11fc4b62d6",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-ed56684c56",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-c5a4e50357",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-4e2260d955",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-5a7a0a2781",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-ca013b0927",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-7aabc79fc7",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-a6258ef4e7",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-38383886ec",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-calibration-90fb878ea5",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-485c145dc4",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-ded371379c",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-9b951ef775",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-1089d78b74",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-664d60807c",
+      "remaining_resources": 0,
+      "error_count": 0
+    },
+    {
+      "trial_id": "unified-2026-09-17-426b7c34a2",
+      "remaining_resources": 0,
+      "error_count": 0
+    }
+  ]
+}
