@@ -6,6 +6,12 @@
 
 This repository contains AI integrations for LimaCharlie, including Claude Code plugins, agents, and skills for security operations.
 
+## AI CLI eval results
+
+We publish live evaluations of how AI harnesses operate the LimaCharlie CLI, including successful runs, failures, configuration changes and untested coverage. The current scenarios cover lookup updates, complete search exports and production webhook routing using Claude Code, Codex and the local AI Sessions runner.
+
+**[View the results matrix, measurements and evidence →](evals/README.md)**
+
 ## Claude Code Plugin Marketplace
 
 The `plugins/` directory contains Claude Code plugins that can be installed to enhance Claude Code with LimaCharlie capabilities.
@@ -169,6 +175,7 @@ See the [CLI reference](https://docs.limacharlie.io/9-ai-sessions/cli/) for the 
 │           ├── commands/        # Slash commands
 │           ├── scripts/         # Helper scripts
 │           └── skills/          # Skill definitions
+├── evals/                       # CLI AI evals, public results and run guides
 ├── docker/                      # Docker container files
 │   ├── Dockerfile               # Container definition
 │   ├── docker-compose.yml       # Docker Compose configuration
