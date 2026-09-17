@@ -163,6 +163,13 @@ def _scenario_id(trial: Mapping[str, Any]) -> str:
     return "unknown"
 
 
+def _context_identity(trial: Mapping[str, Any]) -> Any:
+    for source in (trial, trial.get("configuration"), trial.get("manifest")):
+        if isinstance(source, Mapping) and "context" in source:
+            return source["context"]
+    return None
+
+
 def build_report(
     trials: Sequence[Mapping[str, Any]],
     *,
@@ -197,6 +204,40 @@ def build_report(
             "successes": passed,
             "success_rate": passed / len(values),
         }
+    context_grouped: dict[str, tuple[Any, list[Mapping[str, Any]]]] = {}
+    for trial in scored:
+        identity = _context_identity(trial)
+        key = json.dumps(identity, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+        context_grouped.setdefault(key, (identity, []))[1].append(trial)
+    by_context = []
+    for key in sorted(context_grouped):
+        identity, values = context_grouped[key]
+        passed = sum(_success(value) for value in values)
+        by_context.append({
+            "context": identity,
+            "attempts": len(values),
+            "successes": passed,
+            "success_rate": passed / len(values),
+        })
+    matrix_grouped: dict[tuple[str, str, str], tuple[Any, list[Mapping[str, Any]]]] = {}
+    for trial in scored:
+        identity = _context_identity(trial)
+        context_key = json.dumps(identity, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+        harness = str(trial.get("adapter", trial.get("harness", "unknown")))
+        scenario_id = _scenario_id(trial)
+        matrix_grouped.setdefault((harness, context_key, scenario_id), (identity, []))[1].append(trial)
+    by_harness_context_scenario = []
+    for harness, context_key, scenario_id in sorted(matrix_grouped):
+        identity, values = matrix_grouped[(harness, context_key, scenario_id)]
+        passed = sum(_success(value) for value in values)
+        by_harness_context_scenario.append({
+            "harness": harness,
+            "context": identity,
+            "scenario_id": scenario_id,
+            "attempts": len(values),
+            "successes": passed,
+            "success_rate": passed / len(values),
+        })
     metrics = {
         name: metric_summary(scored, name)
         for name in (
@@ -233,6 +274,8 @@ def build_report(
             "successes": successes,
             "success_rate": successes / len(scored) if scored else None,
             "by_scenario": by_scenario,
+            "by_context": by_context,
+            "by_harness_context_scenario": by_harness_context_scenario,
             "metrics": metrics,
         },
         "trials": copied,

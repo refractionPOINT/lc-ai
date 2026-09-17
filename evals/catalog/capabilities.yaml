@@ -3,16 +3,16 @@ revision: 1
 families:
   - id: identity-tenant-lifecycle
     cli_surfaces: [org, auth, api-key]
-    coverage: planned
-    scenarios: []
+    coverage: implemented-calibration-pending
+    scenarios: [access-key-rotation]
   - id: administration-fleet-operations
     cli_surfaces: [user, group, api-key, org, usage, audit]
-    coverage: planned
-    scenarios: []
+    coverage: implemented-calibration-pending
+    scenarios: [access-key-rotation]
   - id: endpoint-onboarding-management
     cli_surfaces: [installation-key, sensor, task]
-    coverage: planned
-    scenarios: []
+    coverage: implemented-calibration-pending
+    scenarios: [native-sensor-onboarding]
   - id: ingestion
     cli_surfaces: [cloud-adapter, installation-key]
     coverage: initial
@@ -24,7 +24,7 @@ families:
   - id: dr-automation
     cli_surfaces: [dr]
     coverage: initial
-    scenarios: [webhook-production-routing]
+    scenarios: [webhook-production-routing, config-reconcile-preserve]
   - id: data-retrieval
     cli_surfaces: [search]
     coverage: initial
@@ -32,15 +32,15 @@ families:
   - id: configuration-iac
     cli_surfaces: [hive, config]
     coverage: initial
-    scenarios: [hive-preserve-update]
+    scenarios: [hive-preserve-update, config-reconcile-preserve]
   - id: endpoint-supporting-services
     cli_surfaces: [artifact, payload, yara, integrity, logging, exfil]
     coverage: planned
     scenarios: []
   - id: cloud-security
     cli_surfaces: [cloudsec, caasm]
-    coverage: planned
-    scenarios: []
+    coverage: implemented-calibration-pending
+    scenarios: [cloudsec-findings-triage]
   - id: vulnerability-management
     cli_surfaces: [vulnerability]
     coverage: planned
@@ -51,8 +51,8 @@ families:
     scenarios: []
   - id: cases-operational-records
     cli_surfaces: [case]
-    coverage: planned
-    scenarios: []
+    coverage: implemented-calibration-pending
+    scenarios: [case-maintain-records]
   - id: ai-services-apps
     cli_surfaces: [ai, app]
     coverage: planned

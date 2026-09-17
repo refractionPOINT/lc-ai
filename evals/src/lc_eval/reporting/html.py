@@ -48,12 +48,17 @@ def render_html(report: Mapping[str, Any], *, title: str = "LimaCharlie CLI eval
     for trial in trials:
         if not isinstance(trial, Mapping):
             continue
+        manifest = trial.get("manifest")
+        context = trial.get("context")
+        if context is None and isinstance(manifest, Mapping):
+            context = manifest.get("context")
         trial_sections.append(
             "<section>"
             f"<h2>Trial {_text(trial.get('trial_id'))}</h2>"
             f"<p>Scenario: {_text(trial.get('scenario_id', trial.get('scenario')))}; "
             f"grade: <strong>{_text(trial.get('grade', trial.get('task_grade')))}</strong>; "
             f"cleanup: {_text(trial.get('cleanup_state', trial.get('cleanup')))}</p>"
+            f"<p>Context: {_text(context)}</p>"
             "<table><thead><tr><th>Assertion</th><th>Status</th><th>Expected</th>"
             "<th>Observed</th><th>Evidence</th><th>Explanation</th></tr></thead><tbody>"
             f"{_assertions(trial)}</tbody></table>"

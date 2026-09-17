@@ -66,6 +66,15 @@ class AgentConfig(StrictModel):
     auth_file: Path | None = None
     timeout_seconds: int = Field(default=600, ge=1, le=3600)
     max_turns: int = Field(default=30, ge=1, le=100)
+    # ``legacy`` preserves schema-v1 configurations. New comparisons must use
+    # one of the two explicit labels.
+    context_mode: Literal["legacy", "bare", "lc_ai"] = "legacy"
+
+
+class ContextConfig(StrictModel):
+    """Pinned inputs shared by the explicit harness context profiles."""
+
+    lc_ai: SourcePin | None = None
 
 
 class Limits(StrictModel):
@@ -104,6 +113,7 @@ class RunConfig(StrictModel):
     lc: LCConfig
     receiver: ReceiverConfig = Field(default_factory=ReceiverConfig)
     agents: list[AgentConfig]
+    context: ContextConfig = Field(default_factory=ContextConfig)
     ai_sessions: AISessionsImage | None = None
     limits: Limits = Field(default_factory=Limits)
     suite: str = "initial-loop"

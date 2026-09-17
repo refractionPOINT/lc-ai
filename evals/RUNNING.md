@@ -38,7 +38,7 @@ Requirements: Python 3.11+, Docker, an authenticated `limacharlie` executable, a
 
 Configuration defaults to `~/.local/share/lc-eval/config.json`. Review its source commits, model selections, timeout/turn limits, and authentication **paths**. Runtime data, copied credentials, raw transcripts, and receipts are private and stay outside the checkout. Source artifacts are built from the recorded commits; Docker image digests and native harness binary hashes are recorded.
 
-The configuration is schema version 1 and rejects unknown fields. Its top-level fields are `run_data_dir`, `sources`, `lc`, `receiver`, `agents`, optional `ai_sessions` image/source identity, `limits`, `suite`, `seed`, and `profile`. `lc.location` is a literal organization-creation location for every trial selected by one command. `agents` pins the adapter, executable/version, model, effort, auth mode/file, 600-second execution timeout, and Claude turn limit. `limits` contains the single-trial concurrency, organization/event/byte ceilings, CLI command bounds, verification windows, lease duration, and billing mode. `init-local --subscription` writes JSON, which is also valid YAML; edit only non-secret values and paths.
+The configuration is schema version 1 and rejects unknown fields. Its top-level fields are `run_data_dir`, `sources`, `lc`, `receiver`, `agents`, optional `context` skill-source pin and `ai_sessions` image/source identity, `limits`, `suite`, `seed`, and `profile`. `lc.location` is a literal organization-creation location for every trial selected by one command. `agents` pins the adapter, executable/version, model, effort, auth mode/file, 600-second execution timeout, and Claude turn limit. `limits` contains the single-trial concurrency, organization/event/byte ceilings, CLI command bounds, verification windows, lease duration, and billing mode. `init-local --subscription` writes JSON, which is also valid YAML; edit only non-secret values and paths.
 
 The initial authorized billing mode is **subscription_limits**: one trial at a time, 600 seconds per agent including harness startup, Claude 30 turns, a single Codex `exec` turn bounded to 80 completed tool calls, and 80 CLI invocations. Token counts come from native harness streams; uncached, cached, cache-write, total input, and output counts remain distinct when the provider reports them. Dollar cost is unknown. The optional request-budget gateway is separate and is not wired into the subscription controller.
 
@@ -174,3 +174,32 @@ Keep source/model/docs/permissions/region/limits fixed for a repeat experiment. 
 For a CLI experiment, pin and build the new CLI revision in a deliberate configuration copy, retain the baseline configuration and results, and keep other controlled inputs fixed. Use paired-success metrics only when compatibility passes. Adaptive export sizes can differ, so do not read raw cross-harness timings as a controlled comparison. The small initial sample establishes the workflow, not statistical significance.
 
 The current `run` implementation reads `suites/initial-loop.yaml` directly when `--scenario` is omitted. The configuration's `suite` field does not yet select an arbitrary suite. `validate-suite` and `acceptance` are also wired to the initial milestone; see [adding evals](ADDING_EVALS.md) before expanding them.
+
+## Compare bare and lc-ai skills contexts
+
+Use explicit `--context bare` or `--context lc_ai` for new comparisons. `legacy` preserves old launch behavior and must not be relabeled as either experimental profile. Bare runs retain pinned CLI help, public documentation and provider built-ins, while excluding personal settings, personal skills and the LC skill corpus. Skills-enabled runs add the committed corpus from four LC plugins, including required shared constants and compliance references. Standalone copies rewrite plugin-relative paths to their isolated support mount and record both original and transformed hashes.
+
+Set `context.lc_ai` in the private configuration to a source pin with `path` (absolute lc-ai checkout path), `commit` (full Git object ID), and `dirty` (checkout metadata). Only the named commit is archived. For AI Sessions, this commit must equal the image's `ai_sessions.lc_ai.commit`; rebuild its image when changing the source or evaluator launcher.
+
+Standalone harnesses receive native user skills with plugin-prefixed names. AI Sessions uses its native plugin loading, including plugin initialization context. Reports disclose these delivery differences; equal corpus contents do not imply identical harness prompts.
+
+```sh
+./evals/.venv/bin/lc-eval context-probe --config /absolute/private/lc-eval-usa.json --campaign context-check --adapter claude_code --context bare
+./evals/.venv/bin/lc-eval context-probe --config /absolute/private/lc-eval-usa.json --campaign context-check --adapter claude_code --context lc_ai
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign context-comparison --scenario config-reconcile-preserve --adapter claude_code --context bare --seed 51002
+./evals/.venv/bin/lc-eval run --config /absolute/private/lc-eval-usa.json --campaign context-comparison --scenario config-reconcile-preserve --adapter claude_code --context lc_ai --seed 51002
+```
+
+Repeat with `codex` or `ai_sessions`. Context probes use no LimaCharlie organization or platform authority and enforce a 90-second/eight-turn limit. They record native transcript evidence alongside filesystem checks. Run them before spending a full trial on a new profile. Reports separate context identities; differing contexts are intentionally excluded from ordinary A/A efficiency comparisons.
+
+## Expansion workflows
+
+The registered expansion scenarios are `case-maintain-records`, `native-sensor-onboarding`, `cloudsec-findings-triage`, `config-reconcile-preserve`, and `access-key-rotation`. Consult the results page for live calibration status before treating a run as a benchmark.
+
+Cases maintenance uses an existing case for partial/distractor seeds (`seed % 3` equals 1 or 2). The clean variant is explicitly unsupported while the pinned native `case create` disagrees with the deployed backend about detection encoding; see [CLI findings](CLI_FINDINGS.md). Trusted fixture seeding uses the generic extension request with the deployed encoding. Agent operations remain native case commands.
+
+Native onboarding downloads the real Linux sensor, records its binary hash, and deploys it in an evaluator-owned container through `/work/endpoint-deployment.json`. It never installs the sensor on the operator's host. Its private sensor-data tmpfs permits loading the sensor’s signed modules; the root filesystem remains read-only, with no host mounts or added capabilities. A normal Docker bridge supplies native sensor connectivity; the candidate's own model/CLI egress boundary remains unchanged.
+
+Cloud Security uses pushed SARIF to seed real findings. Key rotation verifies replacement credentials, read-only authority, and denial of fresh authentication with the deleted key; it does not claim that previously issued JWTs are revoked. Configuration reconciliation covers named lookup and D&R records with already-correct/stale variants and unrelated records.
+
+Before a real-agent campaign, run the scenario once with `--reference` and once with `--bad-reference`, using a calibrated seed. A correct reference must pass; the bad reference must complete, fail its intended task assertions, and clean up. The initial `validate-suite`/`acceptance` commands still describe the original three-scenario milestone and do not certify the expansion automatically.

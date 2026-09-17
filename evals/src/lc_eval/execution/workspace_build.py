@@ -17,6 +17,7 @@ from pathlib import Path
 from ..config import PROJECT, atomic_json, sha256
 from .docker import _build_key, build_image, extract_archive, image_id, run
 from .workspace_policy import apply_policy_overlay
+from ..context_profiles import fingerprint_plugin_skills
 
 SDK_PINS = {
     "claude-agent-sdk": "0.1.63",
@@ -155,6 +156,7 @@ def build_workspace_image(config, source_path: Path, source_commit: str, lc_ai_c
     contexts = {name: root / name.replace("_", "-") for name in archives}
     for name, archive in archives.items():
         _extract(archive, contexts[name])
+    skill_corpus = fingerprint_plugin_skills(contexts["lc_ai"])
     policy_overlay = apply_policy_overlay(contexts["ai_sessions"] / "scripts/bridge/claude_native.py")
     binary = root / "session-runner"
     binary_digest = _runner_binary(contexts["ai_sessions"], binary, source_commit)
@@ -196,6 +198,7 @@ def build_workspace_image(config, source_path: Path, source_commit: str, lc_ai_c
         "go_binary_sha256": binary_digest,
         "build_key": build_key,
         "policy_overlay": policy_overlay,
+        "skill_corpus": skill_corpus,
     }
     atomic_json(root / "manifest.json", result)
     return result

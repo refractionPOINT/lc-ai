@@ -28,6 +28,7 @@ class CommandSpec:
     flag_options: frozenset[str] = frozenset()
     path_options: frozenset[str] = frozenset()
     fixed_values: tuple[tuple[str, frozenset[str]], ...] = ()
+    max_positionals: int = 0
 
     def allowed_values(self, option: str) -> frozenset[str] | None:
         return dict(self.fixed_values).get(option)
@@ -37,7 +38,7 @@ class CommandSpec:
 class ValidatedCommand:
     argv: tuple[str, ...]
     file_arguments: tuple[tuple[int, PurePosixPath], ...]
-    command: tuple[str, str]
+    command: tuple[str, ...]
 
 
 _GLOBAL_VALUE_OPTIONS = frozenset({"--oid", "--output", "--filter", "--fields", "--sort-by"})
@@ -69,6 +70,24 @@ generation. For search syntax and examples, open `search run --ai-help` and
 retain sensor-selector and event-type positions; --start/--end replace only the
 raw time prefix. Recheck leaf help after parser errors before retrying.
 """
+
+
+def scenario_cli_notice(commands) -> str:
+    operations = "; ".join(" ".join(command) for command in sorted(commands))
+    return (
+        "This evaluation uses the controlled LimaCharlie CLI transport. Only these operations "
+        f"are available for this scenario: {operations}.\n"
+        "Authentication and organization scope are supplied; skip auth/whoami preflights. "
+        "Generic API/auth, debug, credential profiles and environment selection are unavailable. "
+        "Root, permitted group and leaf --help/--ai-help remain available. Read leaf help for "
+        "native syntax and recheck it after parser errors.\n"
+        "Use stdin or --input-file below /work where supported. Input files are snapshotted "
+        "without following symlinks. Global --output selects a format (such as json), not a "
+        "destination file. Use shell redirection in the candidate container for file output. "
+        "If production skills prescribe unavailable preflights or commands, complete the "
+        "supplied objective using the permitted commands instead."
+    )
+
 
 _STAGE_SCRIPT = """\
 import os
@@ -191,8 +210,9 @@ _DIAGNOSTIC_OPTIONS = frozenset(
 class CommandPolicy:
     """Exact command/flag policy for the three initial scenarios."""
 
-    def __init__(self, *, allowed_oids: tuple[str, ...] = ()) -> None:
+    def __init__(self, *, allowed_oids: tuple[str, ...] = (), extra_commands=None) -> None:
         self.allowed_oids = frozenset(allowed_oids)
+        self.commands = dict(_COMMANDS if extra_commands is None else extra_commands)
 
     @staticmethod
     def describe() -> str:
@@ -211,27 +231,35 @@ class CommandPolicy:
         if not remaining:
             raise PolicyError("a permitted CLI command is required")
 
-        cursor = 0
-        _, group = remaining[cursor]
-        cursor += 1
-        if cursor == len(remaining) - 1 and remaining[cursor][1] in _HELP_OPTIONS:
-            if any(command[0] == group for command in _COMMANDS):
-                return ValidatedCommand(tuple(argv), (), (group, "help"))
-        if cursor >= len(remaining) or remaining[cursor][1].startswith("-"):
-            raise PolicyError("a permitted CLI subcommand is required")
-        _, subcommand = remaining[cursor]
-        cursor += 1
-        spec = _COMMANDS.get((group, subcommand))
-        if spec is None:
+        tokens = tuple(value for _, value in remaining)
+        if tokens[-1] in _HELP_OPTIONS and any(
+            command[:len(tokens)-1] == tokens[:-1] for command in self.commands
+        ):
+            return ValidatedCommand(tuple(argv), (), tokens[:-1] if tokens[:-1] in self.commands else (*tokens[:-1], "help"))
+        matches = [command for command in self.commands if tokens[:len(command)] == command]
+        if not matches:
             raise PolicyError("command is outside controlled-cli-v1")
-
+        command = max(matches, key=len)
+        cursor = len(command)
+        spec = self.commands[command]
+        positional_count = 0
         file_arguments: list[tuple[int, PurePosixPath]] = []
         while cursor < len(remaining):
             argument_index, argument = remaining[cursor]
             if argument in _HELP_OPTIONS and cursor == len(remaining) - 1:
                 cursor += 1
                 continue
+            if not argument.startswith("-"):
+                positional_count += 1
+                if positional_count > spec.max_positionals:
+                    raise PolicyError("unexpected positional argument")
+                cursor += 1
+                continue
             option, inline_value = _split_option(argument)
+            if command == ("api-key", "create") and option == "--permissions":
+                permissions = inline_value if inline_value is not None else (remaining[cursor+1][1] if cursor+1 < len(remaining) else "")
+                if not set(permissions.split(",")) <= {"org.get", "sensor.list", "lookup.get"}:
+                    raise PolicyError("new integration key exceeds read-only scope")
             if option in spec.flag_options:
                 if inline_value is not None:
                     raise PolicyError(f"flag {option} does not take a value")
@@ -256,7 +284,7 @@ class CommandPolicy:
             if option in spec.path_options:
                 file_arguments.append((value_index, _workspace_path(value)))
 
-        return ValidatedCommand(tuple(argv), tuple(file_arguments), (group, subcommand))
+        return ValidatedCommand(tuple(argv), tuple(file_arguments), command)
 
     def _partition_global_options(self, argv: list[str]) -> list[tuple[int, str]]:
         """Mirror LazyGroup's global-option hoisting while retaining indexes."""
@@ -349,6 +377,7 @@ class Broker:
         max_invocations: int = 80,
         redactions: tuple[str | bytes, ...] = (),
         allowed_oids: tuple[str, ...] = (),
+        extra_commands=None,
     ) -> None:
         self.worker = worker
         self.socket_dir = socket_dir
@@ -360,7 +389,7 @@ class Broker:
         self.redactions = tuple(
             secret.encode() if isinstance(secret, str) else secret for secret in redactions if secret
         )
-        self.policy = CommandPolicy(allowed_oids=allowed_oids)
+        self.policy = CommandPolicy(allowed_oids=allowed_oids, extra_commands=extra_commands)
         self.active = True
         self.count = 0
         self.processes: set[asyncio.subprocess.Process] = set()

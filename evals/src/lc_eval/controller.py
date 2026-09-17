@@ -17,6 +17,7 @@ import yaml
 
 from .config import PROJECT, atomic_json, sha256
 from .journal import Journal
+from . import registry
 from .models import grade_assertions, safe_id
 from .fixtures.local_cli import LocalCLI
 from .fixtures.organization import Organizations, exact_owned_org
@@ -76,7 +77,7 @@ def prompt_for(path, public):
     )
 
 
-def freeze(work: Path, path: Path, completion: str | None, max_bytes: int):
+def freeze(work: Path, path: Path, completion: str | None, max_bytes: int, paths=()):
     result = {"completion": completion}
     source = work / "export.jsonl"
     if source.exists() or source.is_symlink():
@@ -95,6 +96,26 @@ def freeze(work: Path, path: Path, completion: str | None, max_bytes: int):
                 sha256=hashlib.sha256(raw).hexdigest(),
             )
         result["export"] = item
+    result["files"] = {}
+    for filename in paths:
+        requested = Path(filename)
+        if requested.parent != Path("/work"):
+            raise ValueError("deliverables must be direct children of /work")
+        if requested.name == "export.jsonl" and "export" in result:
+            result["files"][filename] = result["export"]
+            continue
+        source = work / requested.name
+        if not source.exists() and not source.is_symlink():
+            continue
+        item = {"path": filename, "within_workspace": True}
+        if source.is_symlink() or not source.is_file():
+            item["kind"] = "unsafe"
+        elif source.stat().st_size > max_bytes:
+            item["kind"] = "oversized"
+        else:
+            raw = source.read_bytes()
+            item.update(kind="file", content=raw.decode("utf-8", errors="replace"), sha256=hashlib.sha256(raw).hexdigest())
+        result["files"][filename] = item
     atomic_json(path, result)
     return result
 
@@ -307,7 +328,13 @@ class Controller:
         reference = reference or bad_reference
         reference_adapter = "reference_bad" if bad_reference else "reference"
         path, spec, digest = scenario(name)
-        agent = next(a for a in self.config.agents if a.adapter == adapter_name)
+        matches = [a for a in self.config.agents if a.adapter == adapter_name]
+        if len(matches) != 1:
+            raise ValueError("select exactly one harness/context combination")
+        agent = matches[0]
+        expanded = registry.fixture_module(name) if name in registry.EXPANSION else None
+        if expanded:
+            keys.PERMISSIONS[name] = expanded.PERMISSIONS
         if self.config.limits.budget_mode != "subscription_limits":
             raise ValueError(
                 "live controller currently supports explicitly selected subscription_limits only"
@@ -344,6 +371,7 @@ class Controller:
             "cli_digest": self.config.sources.worker_image_id,
             "permission_profile": keys.PERMISSIONS[name],
             "execution_profile": self.config.profile,
+            "context_mode": getattr(agent, "context_mode", "legacy"),
             "limits": {
                 **self.config.limits.model_dump(),
                 "timeout_seconds": agent.timeout_seconds,
@@ -382,23 +410,31 @@ class Controller:
             org = self.orgs.create(trial_id, self.config.lc.location)
             oid = org["oid"]
             atomic_json(root / "org.json", org)
-            if name == "hive-preserve-update":
+            if expanded:
+                fixture = await registry.invoke(expanded.provision, self.config, self.cli, self.journal, trial_id, oid, seed, root)
+            elif name == "hive-preserve-update":
                 fixture = hive.provision(self.cli, oid, seed)
             else:
                 from .fixtures.scenario_runtime import provision
 
                 fixture = await provision(self.config, self.cli, oid, trial_id, name, seed, root)
+            manifest["fixture_provenance"] = fixture.get("provenance", {})
             public = fixture["public"]
             atomic_json(root / "fixture.json", {k: v for k, v in fixture.items() if not k.startswith("_")})
             key = keys.create(self.cli, self.journal, trial_id, oid, name)
             env = DockerEnvironment(self.config, trial_id, root, self.journal)
             env.start(oid, key, agent_config=agent)
+            manifest["context"] = getattr(env, "context_identity", None)
+            manifest["context_audit"] = getattr(env, "context_audit", None)
+            atomic_json(root / "manifest.json", manifest)
             for rel in spec["public_files"]:
                 shutil.copyfile(path / rel, env.work / Path(rel).name)
             for filename, content in fixture.get("public_files", {}).items():
                 safe_id(filename)
                 (env.work / filename).write_text(content)
-            prompt = prompt_for(path, public) + "\n\n" + CONTROLLED_CLI_V1_NOTICE
+            from .execution.broker import scenario_cli_notice
+            notice = scenario_cli_notice(expanded.COMMANDS) if expanded else CONTROLLED_CLI_V1_NOTICE
+            prompt = prompt_for(path, public) + "\n\n" + notice + "\n" + fixture.get("cli_notice", "")
             atomic_json(root / "public-spec.json", {"prompt": prompt, "public": public})
             broker = Broker(
                 env.worker,
@@ -409,6 +445,7 @@ class Controller:
                 redactions=(key,),
                 allowed_oids=(oid,),
                 workspace=env.work,
+                extra_commands=expanded.COMMANDS if expanded else None,
             )
             await broker.start()
             if reference and not bad_reference and name == "hive-preserve-update":
@@ -432,11 +469,14 @@ class Controller:
             await broker.close()
             result["usage"].update(command_metrics(root / "commands.jsonl"))
             broker = None
-            frozen = freeze(env.work, root / "frozen.json", completion, self.config.limits.max_fixture_bytes)
+            frozen = freeze(env.work, root / "frozen.json", completion, self.config.limits.max_fixture_bytes, spec.get("required_deliverable_paths", ()))
             self.journal.transition(trial_id, "settling")
             self.journal.transition(trial_id, "verifying")
             verify_started = time.monotonic()
-            if name == "hive-preserve-update":
+            if expanded:
+                evidence = await registry.invoke(expanded.collect, self.config, self.cli, oid, fixture, root)
+                assertions = registry.verifier(name)(manifest, fixture, frozen, evidence)
+            elif name == "hive-preserve-update":
                 evidence = {"observed_records": hive.snapshot(self.cli, oid)}
                 assertions = verify_hive(manifest, fixture, frozen, evidence)
             else:
@@ -528,6 +568,7 @@ class Controller:
     async def run_agent(self, agent, env, prompt, result, root):
         result.setdefault("agent_attempted", False)
         common = dict(
+            context_mode=getattr(agent, "context_mode", "legacy"),
             trial_id=env.trial_id,
             model=agent.model,
             workdir=Path("/"),
@@ -602,6 +643,8 @@ class Controller:
     async def reference(self, name, fixture, env, *, bad=False):
         from .execution.docker import run
 
+        if name in registry.EXPANSION:
+            return await registry.invoke(registry.fixture_module(name).reference, fixture, env, bad=bad)
         if name == "hive-preserve-update":
             target = fixture["target_name"]
             if bad:
@@ -643,6 +686,7 @@ class Controller:
                         for t in trials
                         if t["adapter"] == current["adapter"]
                         and t["scenario_id"] == current["scenario_id"]
+                        and t["manifest"].get("context_mode", "legacy") == current["manifest"].get("context_mode", "legacy")
                         and t["manifest"].get("repetition") == 1
                     ),
                     None,

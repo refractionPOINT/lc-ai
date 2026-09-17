@@ -1,0 +1,16 @@
+schema_version: 1
+id: config-reconcile-preserve
+revision: 1
+capability_tags: [configuration-iac, preservation, dr-automation]
+prompt: prompt.md
+public_files: []
+fixture:
+  kind: configuration_reconciliation
+  parameters: {variant: seed_modulo_three}
+allowed_scope:
+  resource_kinds: [lookup, dr-general]
+  mutation: named_records_only
+required_adapter_capabilities: [shell, files, controlled_cli]
+budgets: {timeout_seconds: 600}
+assertions: [config.desired_exact, config.unrelated_preserved, config.record_sets_exact]
+required_deliverable_paths: []

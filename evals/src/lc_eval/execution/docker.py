@@ -11,6 +11,7 @@ from pathlib import Path
 
 from ..config import PROJECT, atomic_json, sha256
 from ..models import AgentConfig, RunConfig
+from ..context_profiles import context_identity, prepare_context_corpus
 
 
 def run(argv, **kwargs):
@@ -217,6 +218,9 @@ class DockerEnvironment:
         self.work.mkdir(parents=True, exist_ok=True)
         self.socket_dir.mkdir(exist_ok=True)
         self.handles = []
+        self.context_corpus = None
+        self.context_identity = None
+        self.context_audit = None
 
     def owned(self, kind, name, create):
         intent = self.journal.intent(self.trial_id, kind, name, {"name": name})
@@ -243,6 +247,13 @@ class DockerEnvironment:
     def start(self, oid: str, key: str, agent_config: AgentConfig | str | None = None):
         cfg = self.config
         selected_agent = self._selected_agent(agent_config)
+        if (selected_agent.adapter == "ai_sessions" and selected_agent.context_mode == "lc_ai"
+                and cfg.ai_sessions
+                and (not cfg.context.lc_ai
+                     or cfg.context.lc_ai.commit != cfg.ai_sessions.lc_ai.commit)):
+            raise RuntimeError("ai_sessions lc_ai context pin does not match its pinned image corpus")
+        self.context_corpus = prepare_context_corpus(cfg)
+        self.context_identity = context_identity(cfg, selected_agent, self.context_corpus)
         for image, expected in ((cfg.sources.worker_image, cfg.sources.worker_image_id),
                                 (cfg.sources.candidate_image, cfg.sources.candidate_image_id)):
             if not expected or image_id(image) != expected:
@@ -257,7 +268,8 @@ class DockerEnvironment:
                 raise ValueError("ai_sessions requires a Claude subscription credential file")
             candidate_image = cfg.ai_sessions.image_id
             self.work.chmod(0o770)
-            for name in ("lc-ai", "documentation"):
+            names = ("documentation",) if selected_agent.context_mode == "bare" else ("lc-ai", "documentation")
+            for name in names:
                 destination = self.work / name
                 if destination.exists() or destination.is_symlink():
                     raise RuntimeError(f"fresh runner workspace already contains {name}")
@@ -346,6 +358,24 @@ class DockerEnvironment:
             auth_initializers.append("cp /run/lc-eval-onboarding /auth/.claude.json")
         else:
             raise ValueError(f"Docker environment does not support adapter {selected_agent.adapter!r}")
+        if selected_agent.context_mode == "lc_ai" and selected_agent.adapter != "ai_sessions":
+            assert self.context_corpus is not None
+            auth_mounts += [
+                "--mount",
+                f"type=bind,src={self.context_corpus['skill_root']},dst=/run/lc-eval-skills,readonly",
+                "--mount",
+                f"type=bind,src={self.context_corpus['support_root']},dst={self.context_corpus['support_mount_root']},readonly",
+            ]
+            auth_initializers.append("cp -R /run/lc-eval-skills /auth/skills")
+        if selected_agent.adapter == "ai_sessions" and selected_agent.context_mode == "bare":
+            # The shared image supports both profiles. Mask every baked LC
+            # plugin/catalog path in this container's mount namespace.
+            for hidden in (
+                "/opt/lc-essentials", "/opt/lc-advanced-skills", "/opt/lc-fundamentals",
+                "/opt/lc-compliance", "/opt/lc-ai-terminal-cards", "/opt/lc-agent-workspace",
+                "/opt/lc-eval/lc-ai",
+            ):
+                auth_mounts += ["--tmpfs", f"{hidden}:rw,noexec,nosuid,nodev,size=4k,mode=000"]
         # The source credentials are individual read-only mounts.  Each trial gets
         # a private writable tmpfs so the native CLIs can create locks, databases,
         # logs, and refreshed session state without changing the host credential.
@@ -359,6 +389,35 @@ class DockerEnvironment:
             *selected_env,
             "-e", "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1", "-e", "CLAUDE_CODE_DISABLE_AUTO_MEMORY=1",
             candidate_image, "sh", "-c", initialize_auth]))
+        audit = {"native_home": "/auth", "docs_read_only": True, "checks": []}
+        if selected_agent.context_mode == "lc_ai" and selected_agent.adapter != "ai_sessions":
+            assert self.context_corpus is not None
+            canary = self.context_corpus["canary"]
+            observed = run([
+                "docker", "exec", self.agent, "sha256sum",
+                f"/auth/skills/{canary['skill']}/SKILL.md",
+            ]).split()[0]
+            if observed != canary["skill_md_sha256"]:
+                raise RuntimeError("native skill canary does not match the pinned corpus")
+            audit["checks"].append({"native_skill_canary": canary, "status": "matched"})
+        elif selected_agent.context_mode == "lc_ai" and selected_agent.adapter == "ai_sessions":
+            assert self.context_corpus is not None
+            canary = self.context_corpus["canary"]
+            observed = run([
+                "docker", "exec", self.agent, "sha256sum",
+                f"/opt/{canary['plugin']}/skills/{canary['source_skill']}/SKILL.md",
+            ]).split()[0]
+            if observed != canary["source_skill_md_sha256"]:
+                raise RuntimeError("ai_sessions image skill canary does not match the configured pin")
+            audit["checks"].append({"native_plugin_canary": canary, "status": "matched"})
+        elif selected_agent.context_mode == "bare":
+            run(["docker", "exec", self.agent, "test", "!", "-e", "/auth/skills"])
+            audit["checks"].append({"path": "/auth/skills", "status": "absent"})
+            if selected_agent.adapter == "ai_sessions":
+                for hidden in ("/opt/lc-essentials", "/opt/lc-eval/lc-ai", "/opt/lc-agent-workspace"):
+                    run(["docker", "exec", self.agent, "test", "!", "-r", hidden])
+                audit["checks"].append({"image_lc_paths": "unreadable", "status": "matched"})
+        self.context_audit = audit
 
     def stop_candidate(self):
         for name in (self.agent, self.worker):

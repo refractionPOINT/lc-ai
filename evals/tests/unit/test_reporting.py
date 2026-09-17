@@ -158,6 +158,91 @@ def test_comparison_requires_compatibility_and_both_success_for_efficiency():
     assert repeat["compatibility"]["compatible"] is True
 
 
+def test_context_identity_is_controlled_with_legacy_both_missing_compatibility():
+    legacy = compare_pair(_trial("legacy-left"), _trial("legacy-right"))
+    assert legacy["compatibility"]["compatible"] is True
+
+    bare = {"mode": "bare", "docs_commit": "docs", "lc_ai": None}
+    lc_ai = {"mode": "lc_ai", "docs_commit": "docs", "lc_ai": {"corpus_sha256": "abc"}}
+    mismatch = compare_pair(
+        _trial("bare", manifest={"context": bare}),
+        _trial("skills", manifest={"context": lc_ai}),
+    )
+    assert mismatch["compatibility"]["compatible"] is False
+    assert "mismatched controlled field: context" in mismatch["compatibility"]["reasons"]
+
+    one_missing = compare_pair(
+        _trial("legacy"), _trial("explicit", manifest={"context": bare})
+    )
+    assert one_missing["compatibility"]["compatible"] is False
+    assert "missing controlled field: context" in one_missing["compatibility"]["reasons"]
+
+
+def test_fixture_provenance_is_optional_controlled_identity():
+    legacy = compare_pair(_trial("legacy-left"), _trial("legacy-right"))
+    assert legacy["compatibility"]["compatible"] is True
+
+    provenance = {"binary_sha256": "a" * 64, "derived_image_sha256": "b" * 64}
+    same = compare_pair(
+        _trial("same-left", manifest={"fixture_provenance": provenance}),
+        _trial("same-right", fixture_provenance=provenance),
+    )
+    assert same["compatibility"]["compatible"] is True
+
+    one_missing = compare_pair(
+        _trial("legacy"), _trial("native", manifest={"fixture_provenance": provenance})
+    )
+    assert one_missing["compatibility"]["compatible"] is False
+    assert "missing controlled field: fixture_provenance" in one_missing["compatibility"]["reasons"]
+
+    changed = compare_pair(
+        _trial("old", fixture_provenance=provenance),
+        _trial("new", fixture_provenance={**provenance, "binary_sha256": "c" * 64}),
+    )
+    assert changed["compatibility"]["compatible"] is False
+    assert "mismatched controlled field: fixture_provenance" in changed["compatibility"]["reasons"]
+
+
+def test_report_groups_and_renders_exact_context_identity():
+    bare = {"mode": "bare", "docs_commit": "docs", "lc_ai": None}
+    skilled = {"mode": "lc_ai", "docs_commit": "docs", "lc_ai": {"corpus_sha256": "abc"}}
+    report = build_report([
+        _trial("bare", manifest={"context": bare}),
+        _trial("skills", manifest={"context": skilled}),
+    ])
+    groups = report["summary"]["by_context"]
+    assert {group["context"]["mode"] for group in groups} == {"bare", "lc_ai"}
+    output = render_html(report)
+    assert "Context:" in output
+    assert "corpus_sha256" in output
+
+
+def test_report_context_matrix_does_not_pool_harnesses_or_scenarios():
+    bare = {"mode": "bare", "delivery": "isolated_empty_user_context"}
+    skilled = {"mode": "lc_ai", "delivery": "native_user_skills", "lc_ai": {"corpus_sha256": "abc"}}
+    report = build_report([
+        _trial("codex-bare", adapter="codex", scenario_id="scenario-a", manifest={"context": bare}),
+        _trial("codex-skills", adapter="codex", scenario_id="scenario-a", manifest={"context": skilled}),
+        _trial("claude-bare", adapter="claude_code", scenario_id="scenario-a", manifest={"context": bare}),
+        _trial("codex-other", adapter="codex", scenario_id="scenario-b", manifest={"context": bare}, grade="fail"),
+    ])
+    matrix = report["summary"]["by_harness_context_scenario"]
+    assert len(matrix) == 4
+    assert {
+        (row["harness"], row["context"]["mode"], row["scenario_id"])
+        for row in matrix
+    } == {
+        ("codex", "bare", "scenario-a"),
+        ("codex", "lc_ai", "scenario-a"),
+        ("claude_code", "bare", "scenario-a"),
+        ("codex", "bare", "scenario-b"),
+    }
+    failed = next(row for row in matrix if row["scenario_id"] == "scenario-b")
+    assert failed["attempts"] == 1
+    assert failed["successes"] == 0
+    assert failed["success_rate"] == 0
+
+
 @pytest.mark.parametrize(
     "changes",
     [
@@ -208,7 +293,9 @@ def test_catalog_registers_every_design_family():
     eval_root = Path(__file__).parents[2]
     catalog = yaml.safe_load((eval_root / "catalog" / "capabilities.yaml").read_text())
     assert len(catalog["families"]) == 14
-    assert {item["coverage"] for item in catalog["families"]} == {"initial", "planned"}
+    assert {item["coverage"] for item in catalog["families"]} <= {"initial", "planned", "implemented-calibration-pending", "calibrated"}
+    from lc_eval.registry import SCENARIOS
+    assert {scenario for item in catalog["families"] for scenario in item["scenarios"]} == set(SCENARIOS)
 
 
 def test_calibration_and_fault_drills_do_not_dilute_model_success_rate():

@@ -54,6 +54,9 @@ INFORMATIONAL_FIELDS: dict[str, tuple[str, ...]] = {
     "cli_digest": ("cli_digest", "configuration.cli_digest", "manifest.cli_digest"),
 }
 
+CONTEXT_PATHS = ("context", "configuration.context", "manifest.context")
+FIXTURE_PROVENANCE_PATHS = ("fixture_provenance", "manifest.fixture_provenance")
+
 
 def compatibility(left: Mapping[str, Any], right: Mapping[str, Any]) -> dict[str, Any]:
     mismatches = []
@@ -68,6 +71,21 @@ def compatibility(left: Mapping[str, Any], right: Mapping[str, Any]) -> dict[str
             mismatches.append(field)
     for field, paths in INFORMATIONAL_FIELDS.items():
         values[field] = {"left": _dig(left, *paths), "right": _dig(right, *paths)}
+    lhs_context, rhs_context = _dig(left, *CONTEXT_PATHS), _dig(right, *CONTEXT_PATHS)
+    values["context"] = {"left": lhs_context, "right": rhs_context}
+    # Schema-v1 results predate explicit context identity. Two such results
+    # remain comparable as legacy data; one missing side is never comparable.
+    if (lhs_context is None) != (rhs_context is None):
+        missing.append("context")
+    elif lhs_context is not None and lhs_context != rhs_context:
+        mismatches.append("context")
+    lhs_provenance = _dig(left, *FIXTURE_PROVENANCE_PATHS)
+    rhs_provenance = _dig(right, *FIXTURE_PROVENANCE_PATHS)
+    values["fixture_provenance"] = {"left": lhs_provenance, "right": rhs_provenance}
+    if (lhs_provenance is None) != (rhs_provenance is None):
+        missing.append("fixture_provenance")
+    elif lhs_provenance is not None and lhs_provenance != rhs_provenance:
+        mismatches.append("fixture_provenance")
     reasons = [f"mismatched controlled field: {field}" for field in mismatches]
     reasons.extend(f"missing controlled field: {field}" for field in missing)
     return {"compatible": not reasons, "reasons": reasons, "fields": values}
@@ -127,7 +145,17 @@ def _pair_key(trial: Mapping[str, Any]) -> tuple[Any, ...]:
     return tuple(
         _dig(trial, *COMPATIBILITY_FIELDS[field])
         for field in ("scenario_id", "scenario_revision", "scenario_hash", "variant_seed", "harness", "model")
+    ) + (
+        _identity_key(_dig(trial, *CONTEXT_PATHS)),
+        _identity_key(_dig(trial, *FIXTURE_PROVENANCE_PATHS)),
     )
+
+
+def _identity_key(value: Any) -> str | None:
+    if value is None:
+        return None
+    import json
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 
 
 def _all_attempt_metrics(trials: Sequence[Mapping[str, Any]]) -> dict[str, Any]:

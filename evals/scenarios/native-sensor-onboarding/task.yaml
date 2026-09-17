@@ -1,0 +1,24 @@
+schema_version: 1
+id: native-sensor-onboarding
+revision: 1
+capability_tags: [sensor-deployment, installation-keys, tagging, tasking]
+prompt: prompt.md
+public_files: []
+fixture:
+  kind: isolated_native_linux_sensor
+  parameters: {sensor_count: 1, distractor_installation_keys: 1}
+allowed_scope:
+  resource_kinds: [installation_key, sensor_tag, sensor_task]
+  mutation: create_one_key_tag_one_fixture_sensor_task_read_only
+required_adapter_capabilities: [shell, files, controlled_cli]
+budgets: {timeout_seconds: 600, convergence_seconds: 180, probe_seconds: 60}
+assertions:
+  - native_sensor.enrollment.request
+  - native_sensor.deployment.safe
+  - native_sensor.registered
+  - native_sensor.tagged
+  - native_sensor.task.real_response
+  - native_sensor.task.marker_observed
+  - native_sensor.keys.preserved
+  - native_sensor.distractors.preserved
+required_deliverable_paths: [/work/process-observation.json]

@@ -67,15 +67,19 @@ Use the existing verifier, fixture, broker and controller fault tests in [tests/
 
 ## Wire the current integration points
 
-A new directory alone will not run. Review every applicable point below; current fallthrough branches assume one of the original three scenarios.
+Register new scenarios in `registry.EXPANSION`, mapping the scenario ID to its fixture/verifier module name. The controller dispatches registered expansion modules before its original scenario branches. Each fixture exports `PERMISSIONS`, `COMMANDS`, `provision(config, cli, journal, trial_id, oid, seed, root)`, `collect(config, cli, oid, fixture, root)`, and async `reference(fixture, env, bad=False)`. Provision and collect may be synchronous or asynchronous. The matching verifier exports `verify(manifest, fixture, frozen, evidence)`.
+
+Declare candidate artifacts in `required_deliverable_paths` as direct `/work/FILENAME` paths. The controller freezes these after stopping the candidate; verifiers read `frozen["files"]`. An optional `_runtime` fixture object must expose async `stop()` for cleanup.
+
+Review the applicable integration points below:
 
 | Integration point | Required change |
 |---|---|
-| [cli.py](src/lc_eval/cli.py), `run --scenario` | Add the scenario to the explicit Click choices. |
-| [controller.py](src/lc_eval/controller.py), `trial` and `reference` | Add explicit provisioning, collection, verifier and reference dispatch. Do not let a new scenario fall through to export setup or routing grading. Review fixture digest selection. |
+| [cli.py](src/lc_eval/cli.py), `run --scenario` | Choices come from `registry.SCENARIOS`; register the module in `registry.EXPANSION`. |
+| [controller.py](src/lc_eval/controller.py), `trial` and `reference` | Registered modules use shared dispatch. Review fixture digest selection and any new lifecycle requirements. |
 | [fixtures/scenario_runtime.py](src/lc_eval/fixtures/scenario_runtime.py) | Extend its dispatch if the new scenario uses this coordinator; otherwise call a dedicated fixture module explicitly. |
-| [fixtures/keys.py](src/lc_eval/fixtures/keys.py), `PERMISSIONS` | Add least-privilege candidate permissions for the new scenario. |
-| [execution/broker.py](src/lc_eval/execution/broker.py) | If necessary, extend `_COMMANDS`, option validation, input-file handling and the public `CONTROLLED_CLI_V1_NOTICE`. Verify native syntax parity and prohibited bypasses. |
+| [fixtures/keys.py](src/lc_eval/fixtures/keys.py), `PERMISSIONS` | Export least-privilege `PERMISSIONS` from the registered fixture module. |
+| [execution/broker.py](src/lc_eval/execution/broker.py) | Export scenario-specific `COMMANDS` and `cli_notice`; extend shared validation only when necessary. Nested commands and bounded positional arguments are supported. Verify native syntax parity and prohibited bypasses. |
 | [execution/parity.py](src/lc_eval/execution/parity.py) and broker tests | Exercise any new transport behavior against the pinned native CLI. Rejections caused by the evaluator must not masquerade as CLI/model defects. |
 | [acceptance.py](src/lc_eval/acceptance.py) | Extend `SCENARIOS` and `BAD_ASSERTIONS` if reference validation should require the new scenario. |
 | [reporting/results.py](src/lc_eval/reporting/results.py) | Deliberately update the expected acceptance scenario/harness matrix when expanding the milestone. Generic result reporting and initial-loop acceptance are different concerns. |

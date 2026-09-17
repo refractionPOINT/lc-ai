@@ -9,6 +9,7 @@ import yaml
 
 from .config import PROJECT, load, save, init_local, doctor, source_pin
 from .controller import Controller
+from .registry import SCENARIOS
 from .execution.docker import build_images
 from .acceptance import validate_references, write_acceptance
 
@@ -79,21 +80,25 @@ def build_ai_sessions(config, source):
 @click.option("--campaign", required=True)
 @click.option(
     "--scenario",
-    type=click.Choice(["hive-preserve-update", "search-complete-export", "webhook-production-routing"]),
+    type=click.Choice(SCENARIOS),
 )
 @click.option("--adapter", type=click.Choice(["claude_code", "codex", "ai_sessions"]), default="claude_code")
+@click.option("--context", "context_mode", type=click.Choice(["bare", "lc_ai", "legacy"]), default=None)
 @click.option("--seed", type=int, default=42)
 @click.option("--repetition", type=click.IntRange(min=1), default=None)
 @click.option("--reference", is_flag=True)
 @click.option("--bad-reference", is_flag=True, help="Run the named negative-calibration reference.")
-def run(config, campaign, scenario, adapter, seed, repetition, reference, bad_reference):
+def run(config, campaign, scenario, adapter, context_mode, seed, repetition, reference, bad_reference):
     if scenario is None and repetition is not None:
         raise click.UsageError("--repetition requires --scenario")
     if scenario is None and adapter == "ai_sessions":
         raise click.UsageError("ai_sessions currently requires --scenario; the default suite specifies Claude Code and Codex")
     reference = reference or bad_reference
     exit_code = 0
-    controller = Controller(load(config))
+    cfg = load(config)
+    if context_mode is not None:
+        cfg.agents = [a.model_copy(update={"context_mode": context_mode}) for a in cfg.agents]
+    controller = Controller(cfg)
     with controller.journal.exclusive():
         if controller.journal.resources():
             click.echo("Unresolved resources exist; run cleanup first.", err=True)
@@ -160,6 +165,29 @@ def smoke_command(config, campaign, adapter):
     for result in results:
         click.echo(json.dumps({k: result.get(k) for k in ("adapter", "execution_status", "grade", "error")}))
     if any(result.get("grade") != "pass" for result in results):
+        raise click.exceptions.Exit(1)
+
+
+@main.command("context-probe")
+@click.option("--config", type=click.Path(path_type=Path), default=DEFAULT_CONFIG)
+@click.option("--campaign", required=True)
+@click.option("--adapter", type=click.Choice(["claude_code", "codex", "ai_sessions"]), required=True)
+@click.option("--context", "context_mode", type=click.Choice(["bare", "lc_ai"]), required=True)
+def context_probe_command(config, campaign, adapter, context_mode):
+    """Probe native skill discovery without creating a LimaCharlie organization."""
+    from .context_probe import probe
+
+    result = asyncio.run(probe(load(config), campaign, adapter, context_mode))
+    click.echo(json.dumps({
+        key: result.get(key)
+        for key in ("trial_id", "adapter", "context_mode", "execution_status", "grade", "cleanup_status", "error")
+        if result.get(key) is not None
+    }))
+    if result.get("cleanup_status") != "clean":
+        raise click.exceptions.Exit(4)
+    if result.get("execution_status") != "completed":
+        raise click.exceptions.Exit(3)
+    if result.get("grade") != "pass":
         raise click.exceptions.Exit(1)
 
 

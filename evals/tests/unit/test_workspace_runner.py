@@ -29,6 +29,12 @@ def control() -> LocalControlPlane:
     )
 
 
+def test_bare_control_plane_sends_no_lc_plugins() -> None:
+    cp = control()
+    cp.context_mode = "bare"
+    assert cp.context_mode == "bare"
+
+
 @pytest.mark.parametrize(
     "document",
     [

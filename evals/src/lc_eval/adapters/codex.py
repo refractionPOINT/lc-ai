@@ -35,11 +35,14 @@ def build_codex_argv(
     command_prefix: Sequence[str] = (),
     config_overrides: Sequence[str] = (),
     externally_isolated: bool = True,
+    context_mode: str = "legacy",
 ) -> tuple[str, ...]:
     if not model:
         raise ValueError("model is required")
     if not externally_isolated:
         raise ValueError("the controlled Codex profile requires external isolation")
+    if context_mode not in {"legacy", "bare", "lc_ai"}:
+        raise ValueError("invalid context_mode")
     for override in config_overrides:
         _validate_config_override(override)
     args = [
@@ -65,6 +68,7 @@ class CodexConfig(AdapterConfig):
     config_overrides: tuple[str, ...] = ()
     externally_isolated: bool = True
     max_tool_calls: int = 80
+    context_mode: str = "legacy"
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -74,6 +78,8 @@ class CodexConfig(AdapterConfig):
             raise ValueError("max_tool_calls must be positive")
         for override in self.config_overrides:
             _validate_config_override(override)
+        if self.context_mode not in {"legacy", "bare", "lc_ai"}:
+            raise ValueError("invalid context_mode")
 
 
 class CodexAdapter(NativeSubprocessAdapter):
@@ -106,6 +112,7 @@ class CodexAdapter(NativeSubprocessAdapter):
             command_prefix=self.config.command_prefix,
             config_overrides=self.codex_config.config_overrides,
             externally_isolated=self.codex_config.externally_isolated,
+            context_mode=self.codex_config.context_mode,
         )
 
     def normalize_native_event(self, event: Mapping[str, Any]) -> list[tuple[str, Mapping[str, Any]]]:

@@ -12,6 +12,7 @@ from .base import AdapterCapabilities, AdapterConfig, NativeSubprocessAdapter, U
 class AISessionsConfig(AdapterConfig):
     max_turns: int = 30
     timeout_seconds: float = 600.0
+    context_mode: str = "legacy"
 
     def __post_init__(self):
         super().__post_init__()
@@ -19,6 +20,8 @@ class AISessionsConfig(AdapterConfig):
             raise ValueError("max_turns must be positive")
         if self.timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be positive")
+        if self.context_mode not in {"legacy", "bare", "lc_ai"}:
+            raise ValueError("invalid context_mode")
 
 
 class AISessionsAdapter(NativeSubprocessAdapter):
@@ -41,11 +44,14 @@ class AISessionsAdapter(NativeSubprocessAdapter):
         )
 
     def build_argv(self):
-        return command_argv(self.config.command_prefix, self.config.executable, (
+        args = (
             "/opt/lc-eval/workspace_runner.py", "--trial-id", self.config.trial_id,
             "--model", self.config.model, "--max-turns", str(self.runner_config.max_turns),
             "--timeout", str(self.runner_config.timeout_seconds),
-        ))
+        )
+        if self.runner_config.context_mode != "legacy":
+            args += ("--context-mode", self.runner_config.context_mode)
+        return command_argv(self.config.command_prefix, self.config.executable, args)
 
     def normalize_native_event(self, event: Mapping[str, Any]):
         context = {key: event[key] for key in ("parent_tool_use_id", "subagent_type") if key in event}

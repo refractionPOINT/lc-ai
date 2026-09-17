@@ -1,0 +1,12 @@
+schema_version: 1
+id: access-key-rotation
+revision: 1
+capability_tags: [identity-tenant-lifecycle, administration-fleet-operations]
+prompt: prompt.md
+public_files: []
+fixture: {kind: scoped_key_rotation}
+allowed_scope: {resource_kinds: [api-key], mutation: named_integration_only}
+required_adapter_capabilities: [shell, files, controlled_cli]
+budgets: {timeout_seconds: 600}
+assertions: [access.permissions_exact, access.secret_matches_key, access.scope_enforced, access.old_revoked, access.unrelated_preserved]
+required_deliverable_paths: [/work/integration-key.json]

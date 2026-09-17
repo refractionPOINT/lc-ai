@@ -77,6 +77,7 @@ class LocalControlPlane:
         model: str,
         max_turns: int,
         prompt: str,
+        context_mode: str = "legacy",
     ) -> None:
         self.trial_id = trial_id
         self.session_token = session_token
@@ -85,6 +86,9 @@ class LocalControlPlane:
         self.model = model
         self.max_turns = max_turns
         self.prompt = prompt
+        if context_mode not in {"legacy", "bare", "lc_ai"}:
+            raise ProtocolError("invalid ai_sessions context mode")
+        self.context_mode = context_mode
         self.archive_token = secrets.token_urlsafe(32)
         self.base_url = ""
         self.saw_result = False
@@ -127,7 +131,7 @@ class LocalControlPlane:
                 "initial_prompt": self.prompt,
                 "model": self.model,
                 "one_shot": True,
-                "plugins": PLUGINS,
+                "plugins": [] if self.context_mode == "bare" else PLUGINS,
                 "profile_memories": [],
                 "resume_mode": False,
             }
@@ -249,6 +253,7 @@ async def run(args: argparse.Namespace, prompt: str) -> int:
         model=args.model,
         max_turns=args.max_turns,
         prompt=prompt,
+        context_mode=args.context_mode,
     )
     server = web.AppRunner(control.app(), handle_signals=False)
     await server.setup()
@@ -322,6 +327,7 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--trial-id", required=True)
     result.add_argument("--timeout", type=float, default=600.0)
     result.add_argument("--shutdown-grace", type=float, default=15.0)
+    result.add_argument("--context-mode", choices=("legacy", "bare", "lc_ai"), default="legacy")
     return result
 
 

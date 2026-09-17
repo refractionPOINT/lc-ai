@@ -28,6 +28,7 @@ def build_claude_code_argv(
     allowed_tools: Sequence[str] = ("Bash", "Read", "Write", "Edit"),
     command_prefix: Sequence[str] = (),
     effort: str | None = None,
+    context_mode: str = "legacy",
 ) -> tuple[str, ...]:
     if auth_mode not in {"subscription", "api_key"}:
         raise ValueError("auth_mode must be 'subscription' or 'api_key'")
@@ -35,14 +36,16 @@ def build_claude_code_argv(
         raise ValueError("max_turns must be positive")
     if not model or not allowed_tools:
         raise ValueError("model and at least one allowed tool are required")
+    if context_mode not in {"legacy", "bare", "lc_ai"}:
+        raise ValueError("invalid context_mode")
+    if context_mode == "bare" and "Skill" in allowed_tools:
+        raise ValueError("bare Claude context cannot enable the Skill tool")
     args = [
         "-p",
         "--output-format",
         "stream-json",
         "--verbose",
-        "--safe-mode",
         "--no-session-persistence",
-        "--disable-slash-commands",
         "--strict-mcp-config",
         "--mcp-config",
         '{"mcpServers":{}}',
@@ -58,6 +61,11 @@ def build_claude_code_argv(
         "--max-turns",
         str(max_turns),
     ]
+    # Claude's safe mode disables skills. The lc_ai profile instead relies on
+    # the fresh home, empty MCP config, explicit tool allowlist, and container
+    # boundary while allowing the pinned native skill mechanism to initialize.
+    if context_mode != "lc_ai":
+        args[4:4] = ["--safe-mode", "--disable-slash-commands"]
     if auth_mode == "api_key":
         args.insert(4, "--bare")
     if max_budget_usd is not None:
@@ -79,6 +87,7 @@ class ClaudeCodeConfig(AdapterConfig):
     max_turns: int = 20
     allowed_tools: tuple[str, ...] = ("Bash", "Read", "Write", "Edit")
     effort: str | None = None
+    context_mode: str = "legacy"
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -88,6 +97,8 @@ class ClaudeCodeConfig(AdapterConfig):
             raise ValueError("max_turns must be positive")
         if self.max_budget_usd is not None and self.auth_mode != "api_key":
             raise ValueError("max_budget_usd is only supported for api_key auth")
+        if self.context_mode not in {"legacy", "bare", "lc_ai"}:
+            raise ValueError("invalid context_mode")
 
 
 class ClaudeCodeAdapter(NativeSubprocessAdapter):
@@ -110,15 +121,19 @@ class ClaudeCodeAdapter(NativeSubprocessAdapter):
         )
 
     def build_argv(self) -> tuple[str, ...]:
+        tools = self.claude_config.allowed_tools
+        if self.claude_config.context_mode == "lc_ai" and "Skill" not in tools:
+            tools = (*tools, "Skill")
         return build_claude_code_argv(
             self.config.executable,
             model=self.config.model,
             auth_mode=self.claude_config.auth_mode,
             max_budget_usd=self.claude_config.max_budget_usd,
             max_turns=self.claude_config.max_turns,
-            allowed_tools=self.claude_config.allowed_tools,
+            allowed_tools=tools,
             command_prefix=self.config.command_prefix,
             effort=self.claude_config.effort,
+            context_mode=self.claude_config.context_mode,
         )
 
     def normalize_native_event(self, event: Mapping[str, Any]) -> list[tuple[str, Mapping[str, Any]]]:
@@ -179,7 +194,11 @@ class ClaudeCodeAdapter(NativeSubprocessAdapter):
                 )
             )
         elif event_type == "system":
-            normalized.append(("lifecycle", {"type": event_type, "subtype": event.get("subtype")}))
+            payload = {"type": event_type, "subtype": event.get("subtype")}
+            for key in ("tools", "skills", "slash_commands"):
+                if isinstance(event.get(key), list):
+                    payload[key] = event[key]
+            normalized.append(("lifecycle", payload))
         else:
             normalized.append(("native", {"type": event_type}))
         return normalized

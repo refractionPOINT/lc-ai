@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "campaign": "expansion-context-final",
+  "result": "pass",
+  "probe_profile": {
+    "kind": "native-context-probe",
+    "timeout_seconds": 90,
+    "max_turns": 8,
+    "billing_mode": "subscription_limits",
+    "concurrency": 1,
+    "organization_created": false,
+    "provider_builtin_skills": "possible"
+  },
+  "pins": {
+    "execution_profile": "controlled-cli-v1",
+    "lc_ai_commit": "8ab473d023dc6a07dc285149d14cef8e36519a58",
+    "documentation_commit": "3eeeb95207730af2e93f600ca93cdad82ef47f73",
+    "cli_commit": "fe67856c4cdd1265b0b90a452247b1fb395f7d08",
+    "candidate_image_id": "sha256:f860e0c1fdba6ae68d6fc07a810127040e34ff76906f67e5caed606d4e4448d3",
+    "worker_image_id": "sha256:3fa1f2a0fcbe22a6e77ea326bee2bb55d52462bda4643be9b052571342340bc5",
+    "ai_sessions_commit": "bbe82892282e3989005e70ca9c4415f77866c563",
+    "ai_sessions_image_id": "sha256:feca83783942b6f2e87205e2e127aafb6c37efbe60e161f626c3e96d647d3052",
+    "ai_sessions_binary_sha256": "96608f655fe5c3f1e8cc23b6eb24a3b863e4b86d307172fafbaaeb5bbc0b97a9",
+    "source_skill_corpus_sha256": "eb6c65a0b00dc3683338342b9f569a205cb0f5e034bcf466c60fe2334c67b768",
+    "standalone_transformed_corpus_sha256": "660cc1ebb1fe040630e9add66fc9414d35b23e99fbed45b1b1874cba68058587",
+    "standalone_support_sha256": "44acd527064b01a5e6f2cb3b8089efc4ea5e9af3f38b049c5af5b5fcc44043ff",
+    "skill_count": 43
+  },
+  "harnesses": {
+    "claude_code": {
+      "version": "2.1.273 (Claude Code)",
+      "model": "claude-sonnet-5",
+      "effort": "medium",
+      "auth_mode": "subscription"
+    },
+    "codex": {
+      "version": "codex-cli 0.154.0",
+      "model": "gpt-6-astra",
+      "effort": "medium",
+      "auth_mode": "subscription"
+    },
+    "ai_sessions": {
+      "version": "session-runner@bbe82892282e3989005e70ca9c4415f77866c563",
+      "model": "claude-sonnet-5",
+      "effort": "native_default",
+      "auth_mode": "subscription",
+      "delivery": "ai_sessions_plugin_autoinit"
+    }
+  },
+  "probe_canary": {
+    "standalone_skill": "lc-fundamentals--platform-config",
+    "native_plugin_skill": "platform-config",
+    "plugin": "lc-fundamentals",
+    "source_skill_md_sha256": "fb37832e3347a683c0ac234017b4909848d9d451913b546e8ab59a9788a970b1",
+    "standalone_skill_md_sha256": "e24bb8456af14a3051de3d3e8d14a32d25dc744fb5ad68fe48aa196a248ed740"
+  },
+  "trials": [
+    {
+      "trial_id": "expansion-context-final-context-1aaea234e7",
+      "adapter": "claude_code",
+      "context_mode": "bare",
+      "delivery": "isolated_empty_user_context",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "context_audit": {"auth_skills": "absent", "docs_read_only": true},
+      "evidence": {
+        "completion_observed": true,
+        "phrase_observed": false,
+        "native_skill_call_observed": false,
+        "startup_inventory_observed": false,
+        "explicit_skill_file_read_observed": false,
+        "skill_use_observed": false,
+        "event_count": 4
+      },
+      "usage": {"input_tokens": 2, "total_input_tokens": 11044, "output_tokens": 109, "cache_read_tokens": 10411, "cache_write_tokens": 631},
+      "active_seconds": 5.07391444593668
+    },
+    {
+      "trial_id": "expansion-context-final-context-61d87eee92",
+      "adapter": "claude_code",
+      "context_mode": "lc_ai",
+      "delivery": "native_user_skills",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "context_audit": {"corpus_canary_hash": "matched", "docs_read_only": true},
+      "evidence": {
+        "completion_observed": true,
+        "phrase_observed": true,
+        "native_skill_call_observed": true,
+        "startup_inventory_observed": true,
+        "startup_inventory_total": 59,
+        "pinned_corpus_skills_in_startup_inventory": 43,
+        "native_discovery_observed": true,
+        "explicit_skill_file_read_observed": false,
+        "skill_use_observed": true,
+        "event_count": 8
+      },
+      "usage": {"input_tokens": 4, "total_input_tokens": 47482, "output_tokens": 572, "cache_read_tokens": 47478, "cache_write_tokens": 0},
+      "active_seconds": 9.283253144938499
+    },
+    {
+      "trial_id": "expansion-context-final-context-cf90abd5bb",
+      "adapter": "codex",
+      "context_mode": "bare",
+      "delivery": "isolated_empty_user_context",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "context_audit": {"auth_skills": "absent", "docs_read_only": true},
+      "evidence": {
+        "completion_observed": true,
+        "phrase_observed": false,
+        "native_skill_call_observed": false,
+        "startup_inventory_observed": false,
+        "explicit_skill_file_read_observed": false,
+        "skill_use_observed": false,
+        "event_count": 4
+      },
+      "usage": {"input_tokens": 3194, "total_input_tokens": 14714, "output_tokens": 96, "cache_read_tokens": 11520, "cache_write_tokens": 0},
+      "active_seconds": 8.625387666746974
+    },
+    {
+      "trial_id": "expansion-context-final-context-19ccc25451",
+      "adapter": "codex",
+      "context_mode": "lc_ai",
+      "delivery": "native_user_skills",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "context_audit": {"corpus_canary_hash": "matched", "docs_read_only": true},
+      "evidence": {
+        "completion_observed": true,
+        "phrase_observed": true,
+        "native_skill_call_observed": false,
+        "startup_inventory_observed": false,
+        "native_discovery_observed": false,
+        "explicit_skill_file_read_observed": true,
+        "skill_use_observed": true,
+        "event_count": 7
+      },
+      "usage": {"input_tokens": 11228, "total_input_tokens": 41820, "output_tokens": 418, "cache_read_tokens": 30592, "cache_write_tokens": 0},
+      "active_seconds": 18.738014229107648
+    },
+    {
+      "trial_id": "expansion-context-final-context-5a99116e1c",
+      "adapter": "ai_sessions",
+      "context_mode": "bare",
+      "delivery": "isolated_empty_user_context",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "context_audit": {"auth_skills": "absent", "image_lc_paths": "unreadable", "docs_read_only": true},
+      "evidence": {
+        "completion_observed": true,
+        "phrase_observed": false,
+        "native_skill_call_observed": false,
+        "startup_inventory_observed": false,
+        "explicit_skill_file_read_observed": false,
+        "skill_use_observed": false,
+        "event_count": 22
+      },
+      "usage": {"input_tokens": 1, "total_input_tokens": null, "output_tokens": 79, "cache_read_tokens": null, "cache_write_tokens": null},
+      "active_seconds": 5.0041348417289555
+    },
+    {
+      "trial_id": "expansion-context-final-context-690de195ef",
+      "adapter": "ai_sessions",
+      "context_mode": "lc_ai",
+      "delivery": "ai_sessions_plugin_autoinit",
+      "execution_status": "completed",
+      "grade": "pass",
+      "cleanup_status": "clean",
+      "context_audit": {"native_plugin_canary_hash": "matched", "docs_read_only": true},
+      "evidence": {
+        "completion_observed": true,
+        "phrase_observed": true,
+        "native_skill_call_observed": true,
+        "startup_inventory_observed": false,
+        "native_discovery_observed": true,
+        "explicit_skill_file_read_observed": false,
+        "skill_use_observed": true,
+        "event_count": 38
+      },
+      "usage": {"input_tokens": 2, "total_input_tokens": null, "output_tokens": 1639, "cache_read_tokens": null, "cache_write_tokens": null},
+      "active_seconds": 18.591645292006433
+    }
+  ]
+}

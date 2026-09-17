@@ -379,3 +379,36 @@ async def test_broker_redacts_stdout_and_stderr_before_delivery(tmp_path, monkey
         assert secret.decode() not in (tmp_path / "events.jsonl").read_text()
     finally:
         await runner.cleanup()
+
+
+def test_expansion_commands_remain_scenario_scoped_and_nested():
+    from lc_eval.fixtures.cloudsec import COMMANDS
+    policy = CommandPolicy(extra_commands=COMMANDS)
+    validated = policy.validate(['cloudsec', 'finding', 'get', 'example-id'], '/work')
+    assert validated.command == ('cloudsec', 'finding', 'get')
+    assert policy.validate(['cloudsec', 'finding', '--help'], '/work').command == ('cloudsec', 'finding', 'help')
+    with pytest.raises(PolicyError):
+        policy.validate(['cloudsec', 'finding', 'get', 'one', 'two'], '/work')
+    with pytest.raises(PolicyError):
+        CommandPolicy().validate(['cloudsec', 'finding', 'get', 'one'], '/work')
+
+
+def test_rotation_cannot_mint_administrative_key():
+    from lc_eval.fixtures.access import COMMANDS
+    policy = CommandPolicy(extra_commands=COMMANDS)
+    for option in (['--permissions', 'org.get,apikey.ctrl'], ['--permissions=apikey.ctrl']):
+        with pytest.raises(PolicyError):
+            policy.validate(['api-key', 'create', '--name', 'integration', *option], '/work')
+    assert policy.validate(['api-key', 'create', '--name', 'integration', '--permissions', 'org.get,sensor.list'], '/work').command == ('api-key', 'create')
+
+
+def test_native_task_stream_permission_does_not_expose_output_mutation():
+    from lc_eval.fixtures.native_sensor import COMMANDS, PERMISSIONS
+    from lc_eval.execution.broker import scenario_cli_notice
+    assert "output.set" in PERMISSIONS  # Temporary Spout is internal to task request.
+    policy = CommandPolicy(extra_commands=COMMANDS)
+    with pytest.raises(PolicyError):
+        policy.validate(["output", "create", "--name", "extra"], "/work")
+    notice = scenario_cli_notice(COMMANDS)
+    assert "task request" in notice
+    assert "output create" not in notice
