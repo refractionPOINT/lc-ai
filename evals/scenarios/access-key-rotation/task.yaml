@@ -8,5 +8,5 @@ fixture: {kind: scoped_key_rotation}
 allowed_scope: {resource_kinds: [api-key], mutation: named_integration_only}
 required_adapter_capabilities: [shell, files, controlled_cli]
 budgets: {timeout_seconds: 600}
-assertions: [access.permissions_exact, access.secret_matches_key, access.scope_enforced, access.old_revoked, access.unrelated_preserved]
+assertions: [access.permissions_exact, access.secret_matches_key, access.scope_enforced, access.old_revoked, access.unrelated_preserved, access.final_response_secret_safe]
 required_deliverable_paths: [/work/integration-key.json]

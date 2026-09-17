@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from copy import deepcopy
 from typing import Any
@@ -38,6 +39,8 @@ def _stable_distractor(snapshot: Any) -> Any:
     if not isinstance(snapshot, Mapping):
         return None
     value = deepcopy(dict(snapshot))
+    if "case" not in value:
+        return {key: _stable_distractor(item) for key, item in value.items()}
     case = value.get("case")
     if isinstance(case, dict):
         for key in ("last_updated_at", "last_updated_by"):
@@ -130,29 +133,44 @@ def verify_cases(
 
     baseline = facts.get("baseline_target")
     if baseline is None and facts.get("variant") == "clean" and snap is not None:
-        preserved_status, preserved_observed = "pass", {"seeded_target_state": "none"}
+        expected_dets = Counter([detect_id]) if isinstance(detect_id, str) else Counter()
+        expected_entities = Counter([wanted_entity_key]) if wanted_entity_key is not None else Counter()
+        expected_notes = Counter([wanted_note_key]) if wanted_note_key is not None else Counter()
+        observed_dets = Counter(row.get("detect_id") for row in (detections or []))
+        observed_entities = Counter(_entity_key(row) for row in (entities or []))
+        observed_notes = Counter(
+            _note_key(row) for row in (events or []) if row.get("event_type") == "case_note_added"
+        )
+        exact = (observed_dets == expected_dets and observed_entities == expected_entities
+                 and observed_notes == expected_notes)
+        preserved_status = "pass" if exact else "fail"
+        preserved_observed = {"record_multisets_exact": exact}
     elif not isinstance(baseline, Mapping) or snap is None:
         preserved_status, preserved_observed = "unknown", None
     else:
-        baseline_dets = {row.get("detect_id") for row in (_rows(baseline, "detections") or [])}
-        observed_dets = {row.get("detect_id") for row in (detections or [])}
-        baseline_entities = {_entity_key(row) for row in (_rows(baseline, "entities") or [])}
-        observed_entities = {_entity_key(row) for row in (entities or [])}
-        baseline_notes = {_note_key(row) for row in (_rows(baseline, "events") or []) if row.get("event_type") == "case_note_added"}
-        observed_notes = {_note_key(row) for row in (events or []) if row.get("event_type") == "case_note_added"}
-        missing = {
-            "detections": sorted(str(item) for item in baseline_dets - observed_dets),
-            "entities": sorted(map(str, baseline_entities - observed_entities)),
-            "notes": sorted(map(str, baseline_notes - observed_notes)),
-        }
-        preserved_status = "pass" if not any(missing.values()) else "fail"
-        preserved_observed = {"missing": missing}
+        expected_dets = Counter(row.get("detect_id") for row in (_rows(baseline, "detections") or []))
+        observed_dets = Counter(row.get("detect_id") for row in (detections or []))
+        expected_entities = Counter(_entity_key(row) for row in (_rows(baseline, "entities") or []))
+        expected_entities[wanted_entity_key] += 1
+        observed_entities = Counter(_entity_key(row) for row in (entities or []))
+        expected_notes = Counter(
+            _note_key(row) for row in (_rows(baseline, "events") or [])
+            if row.get("event_type") == "case_note_added"
+        )
+        expected_notes[wanted_note_key] += 1
+        observed_notes = Counter(
+            _note_key(row) for row in (events or []) if row.get("event_type") == "case_note_added"
+        )
+        exact = (observed_dets == expected_dets and observed_entities == expected_entities
+                 and observed_notes == expected_notes)
+        preserved_status = "pass" if exact else "fail"
+        preserved_observed = {"record_multisets_exact": exact}
     results.append(assertion(
         "cases.target.preexisting_preserved", preserved_status,
-        expected={"missing": {"detections": [], "entities": [], "notes": []}}, observed=preserved_observed,
-        evidence=refs, explanation="All pre-existing target records remain present." if preserved_status == "pass" else
+        expected={"record_multisets_exact": True}, observed=preserved_observed,
+        evidence=refs, explanation="The target contains exactly the seeded records and requested additions." if preserved_status == "pass" else
         "Pre-existing target state could not be observed." if preserved_status == "unknown" else
-        "One or more pre-existing target records were removed or changed.",
+        "Target records were removed, changed, or duplicated.",
     ))
 
     baseline_other = facts.get("baseline_distractors")

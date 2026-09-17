@@ -62,6 +62,31 @@ def test_cases_partial_preserves_seeded_records():
     assert {row["id"]: row["status"] for row in results}["cases.target.preexisting_preserved"] == "pass"
 
 
+def test_cases_rejects_duplicate_preexisting_record():
+    baseline = _snapshot()
+    seeded_note = {"event_type": "case_note_added", "metadata": {
+        "content": "keep", "note_type": "handoff", "is_public": False}}
+    baseline["events"] = [seeded_note]
+    observed = _snapshot()
+    observed["events"].extend([deepcopy(seeded_note), deepcopy(seeded_note)])
+    fixture = _fixture(observed)
+    fixture.update({"variant": "partial", "baseline_target": baseline})
+    statuses = {row["id"]: row["status"] for row in verify_cases(
+        {}, fixture, {"completion": "case 7 det-1"}, {})}
+    assert statuses["cases.target.preexisting_preserved"] == "fail"
+
+
+def test_cases_ignores_only_nested_distractor_read_metadata():
+    fixture = _fixture()
+    fixture["baseline_distractors"]["8"]["case"].update(
+        last_updated_at="before", last_updated_by="fixture")
+    fixture["observed_distractors"]["8"]["case"].update(
+        last_updated_at="after", last_updated_by="server")
+    statuses = {row["id"]: row["status"] for row in verify_cases(
+        {}, fixture, {"completion": "case 7 det-1"}, {})}
+    assert statuses["cases.distractor.unchanged"] == "pass"
+
+
 def test_cases_missing_observation_is_inconclusive():
     fixture = {"variant": "clean", "detection": DETECTION, "desired": DESIRED}
     results = verify_cases({}, fixture, {}, {})
