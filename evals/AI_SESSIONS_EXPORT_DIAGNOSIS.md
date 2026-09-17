@@ -74,5 +74,5 @@ Source anchors inspected at the proof's pinned revisions:
 - Implemented explicit restricted-profile instructions through the native system-prompt suffix and shared CLI notice, directing agents to detailed installed command help. Production plugins remain pinned and loaded.
 - Implemented a fingerprinted eval-only SDK overlay restricting built-in tools and denying both delegation names, with an actual startup inventory check. The source repository is unchanged.
 - Preserved nested tool-result content, errors, and parent/child identity in normalized events.
-- Added native smoke checks for delegation availability and leaf-help access. Offline regression checks and a fresh export trial are in progress.
+- Added native smoke checks for delegation availability and leaf-help access. All 230 offline tests passed. A real native smoke passed after correcting its startup-call allowance; a fresh export trial passed all seven assertions and cleaned its organization. See the [retest record](AI_SESSIONS_EXPORT_RETEST.md).
 - Upstream CLI/doc changes and better parser errors remain separate follow-ups; this experiment changes the local profile and harness, not the pinned CLI or platform grammar.

@@ -11,7 +11,7 @@ The initial live loop is implemented and verified: Claude Code and Codex passed 
 | Understand the implemented lifecycle and trust boundaries | [Architecture](ARCHITECTURE.md) |
 | Choose the next capability to cover | [Coverage and expansion](DESIGN.md), [capability catalog](catalog/capabilities.yaml) |
 | Inspect the initial proof | [Acceptance record](ACCEPTANCE.md), [sanitized results](results/initial-proof-v2.json) |
-| Inspect the AI Sessions runner test | [Harness proof](AI_SESSIONS_PROOF.md), [sanitized results](results/ai-sessions-proof.json) |
+| Inspect the AI Sessions runner test | [Original harness proof](AI_SESSIONS_PROOF.md), [export remediation retest](AI_SESSIONS_EXPORT_RETEST.md) |
 | Investigate CLI issues found during evaluation | [CLI findings](CLI_FINDINGS.md) |
 
 The live profile uses existing subscriptions with time/turn/tool limits and token accounting; dollar cost is unknown. Runtime credentials, raw transcripts and fixture evidence stay outside the checkout. Each trial creates and cleans up its own organization.
