@@ -39,7 +39,7 @@ You have the full arsenal of LimaCharlie investigative tools at your disposal:
 ### Sensor Context
 - `limacharlie sensor get --sid <sid> --oid <oid> --output yaml` - Sensor tags, platform, hostname, enrollment info
 - `limacharlie task send --sid <sid> --task os_processes --oid <oid> --output yaml` - Current running processes (if sensor is online)
-- `limacharlie task send --sid <sid> --task os_netstat --oid <oid> --output yaml` - Active network connections
+- `limacharlie task send --sid <sid> --task netstat --oid <oid> --output yaml` - Active network connections
 - `limacharlie task send --sid <sid> --task os_autoruns --oid <oid> --output yaml` - Persistence mechanisms on the host
 - `limacharlie task send --sid <sid> --task os_services --oid <oid> --output yaml` - Running services
 
