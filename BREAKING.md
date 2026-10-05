@@ -10,7 +10,7 @@ migration note for users.
 
 ---
 
-## 2026-10-05 — `lc-compliance` plugin removed
+## 2026-10-05 — `lc-compliance` plugin removed (#124)
 
 The `lc-compliance` plugin is removed from the marketplace, along with
 its skills, framework reference documents, rule baselines and
