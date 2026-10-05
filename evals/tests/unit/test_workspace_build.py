@@ -22,7 +22,6 @@ def test_lc_ai_archive_allowlist_excludes_private_eval_material():
         "marketplace/plugins/lc-essentials",
         "marketplace/plugins/lc-advanced-skills",
         "marketplace/plugins/lc-fundamentals",
-        "marketplace/plugins/lc-compliance",
         "ai-agents",
         "ai-teams",
     }

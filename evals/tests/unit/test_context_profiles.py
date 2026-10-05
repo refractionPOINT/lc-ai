@@ -23,16 +23,13 @@ def _config(tmp_path: Path, mode: str, adapter: str = "codex") -> RunConfig:
         )
     fundamentals = repo / "marketplace/plugins/lc-fundamentals"
     (fundamentals / "CONSTANTS.md").write_text("PINNED-CONSTANTS\n")
-    compliance = repo / "marketplace/plugins/lc-compliance/compliance/cis"
-    compliance.mkdir(parents=True)
-    (compliance / "reference.md").write_text("PINNED-COMPLIANCE\n")
     adapter_skill = repo / "marketplace/plugins/lc-fundamentals/skills/adapters"
     adapter_skill.mkdir()
     (adapter_skill / "SKILL.md").write_text(
         "---\nname: adapters\ndescription: adapter docs\n---\n"
         "Read ${CLAUDE_PLUGIN_ROOT}/CONSTANTS.md for the pinned table.\n"
     )
-    for plugin in ("lc-advanced-skills", "lc-fundamentals", "lc-compliance"):
+    for plugin in ("lc-advanced-skills", "lc-fundamentals"):
         empty = repo / f"marketplace/plugins/{plugin}/skills"
         empty.mkdir(parents=True, exist_ok=True)
         (empty / ".keep").write_text("")
@@ -73,7 +70,6 @@ def test_pinned_context_archive_contains_actual_skill_content(tmp_path):
     assert "/opt/lc-eval-skill-support/lc-fundamentals/CONSTANTS.md" in adapters
     assert "CLAUDE_PLUGIN_ROOT" not in adapters
     assert (Path(manifest["support_root"]) / "lc-fundamentals/CONSTANTS.md").read_text() == "PINNED-CONSTANTS\n"
-    assert (Path(manifest["support_root"]) / "lc-compliance/compliance/cis/reference.md").is_file()
     assert manifest["support_sha256"]
     assert manifest["source_skill_corpus_sha256"] != manifest["corpus_sha256"]
     assert "name: lc-essentials--sensor-tasking" in (
