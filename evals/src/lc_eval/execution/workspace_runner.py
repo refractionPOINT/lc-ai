@@ -24,7 +24,6 @@ PLUGINS = [
     "lc-essentials",
     "lc-advanced-skills",
     "lc-fundamentals",
-    "lc-compliance",
 ]
 ALLOWED_TOOLS = ["Bash", "Read", "Write", "Edit", "Glob", "Grep", "Skill"]
 DENIED_TOOLS = ["Agent", "Task", "CronCreate", "CronDelete", "CronList"]

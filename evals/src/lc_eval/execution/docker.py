@@ -372,7 +372,7 @@ class DockerEnvironment:
             # plugin/catalog path in this container's mount namespace.
             for hidden in (
                 "/opt/lc-essentials", "/opt/lc-advanced-skills", "/opt/lc-fundamentals",
-                "/opt/lc-compliance", "/opt/lc-ai-terminal-cards", "/opt/lc-agent-workspace",
+                "/opt/lc-ai-terminal-cards", "/opt/lc-agent-workspace",
                 "/opt/lc-eval/lc-ai",
             ):
                 auth_mounts += ["--tmpfs", f"{hidden}:rw,noexec,nosuid,nodev,size=4k,mode=000"]

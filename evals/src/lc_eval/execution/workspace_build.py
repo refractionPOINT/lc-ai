@@ -30,7 +30,6 @@ LC_AI_PATHS = (
     "marketplace/plugins/lc-essentials",
     "marketplace/plugins/lc-advanced-skills",
     "marketplace/plugins/lc-fundamentals",
-    "marketplace/plugins/lc-compliance",
     "ai-agents",
     "ai-teams",
 )
@@ -117,7 +116,6 @@ COPY ai-sessions/runtime-plugins/lc-agent-workspace /opt/lc-agent-workspace
 COPY lc-ai/marketplace/plugins/lc-essentials /opt/lc-essentials
 COPY lc-ai/marketplace/plugins/lc-advanced-skills /opt/lc-advanced-skills
 COPY lc-ai/marketplace/plugins/lc-fundamentals /opt/lc-fundamentals
-COPY lc-ai/marketplace/plugins/lc-compliance /opt/lc-compliance
 COPY lc-ai/ai-agents /opt/lc-eval/lc-ai/ai-agents
 COPY lc-ai/ai-teams /opt/lc-eval/lc-ai/ai-teams
 COPY documentation /opt/lc-eval/documentation

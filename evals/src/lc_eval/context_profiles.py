@@ -18,11 +18,9 @@ PLUGIN_PATHS = (
     "marketplace/plugins/lc-essentials/skills",
     "marketplace/plugins/lc-advanced-skills/skills",
     "marketplace/plugins/lc-fundamentals/skills",
-    "marketplace/plugins/lc-compliance/skills",
 )
 SUPPORT_ALLOWLIST = {
     "lc-fundamentals": ("CONSTANTS.md",),
-    "lc-compliance": ("compliance",),
 }
 SUPPORT_MOUNT_ROOT = "/opt/lc-eval-skill-support"
 
