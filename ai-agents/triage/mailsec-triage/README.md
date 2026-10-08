@@ -68,9 +68,11 @@ surface that coverage gap rather than inventing an original.
 ## Current state
 
 The server substrate an agent needs is shipped and live-verified: report resolve/reopen,
-provider actions, and the verdict write-back — `revise_verdict`, which stamps `mode: ai`
-with a structured rationale and emits an `EMAIL_VERDICT` event. (An earlier version of this
-note said the `mode: ai` write-back did not exist yet; it does.)
+provider actions, and the verdict write-back — `revise_verdict`, which records a structured
+rationale and emits an `EMAIL_VERDICT` event. The caller sends no `mode`: the decision mode and
+the recorded identity come from the credential the agent runs under (a user login is recorded
+as `analyst`, any API key as `api`; older revisions may read `ai`). Every authorized caller has
+the same effect.
 
 The remaining gap is in the AGENT'S RUNTIME, not the server: an AI Sessions agent drives
 this substrate through the `limacharlie mailsec ...` CLI, and that command group must be
