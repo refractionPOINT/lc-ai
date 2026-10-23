@@ -2,6 +2,8 @@
 
 ## Hosted adapter installation-key guidance
 
+**Fix:** [python-limacharlie #447](https://github.com/refractionPOINT/python-limacharlie/pull/447) corrects the help text to name `iid` for adapters. The AUTOINIT guides now say the same. Campaigns pinned to an earlier CLI revision still see the old help.
+
 `installation-key create --get` and its help describe `json_key` as suitable for adapters. For a hosted webhook adapter, `client_options.identity.installation_key` instead requires the installation record UUID from `iid`. Both `key` and `json_key` yielded `adapter: lc installation key not authorized` in live calibration.
 
 The contract is visible in `go-uspclient/client.go` and `protocol` (the value is sent unchanged as `iid`) and `legion_usp_proxy/service/auth.go` (it indexes the organization installation-key records by that value). The evaluator fixture selects `iid`. CLI guidance can clarify this distinction; evaluate that change in a separately pinned campaign.

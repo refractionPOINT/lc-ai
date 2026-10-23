@@ -43,6 +43,23 @@ To create-and-enable in one shot, do **one** of the following — listed in orde
 
 When debugging "the record exists but nothing happens", check `usr_mtd.enabled` first — `limacharlie hive get --hive-name <hive_name> --key <key> --oid <oid> --output yaml`.
 
+## Installation Keys
+
+An installation key lets new sensors and adapters join an org. Read keys with `limacharlie installation-key list|get --oid <oid> --output yaml`. Each record has:
+
+- `iid`: the key's UUID. **Adapters (USP, cloud and external adapters) put this UUID in `client_options.identity.installation_key`**, not `key` or `json_key`. Sensors report it as their `iid`, so `limacharlie sensor list --selector 'iid == "<iid>"' --oid <oid> --output yaml` shows what a key enrolled.
+- `key`: base64 blob for native EDR installers only (`lc_sensor -i <key>`).
+- `json_key`: base64 JSON for browser sensors only.
+- `tags`: comma-separated string applied to sensors when they enroll.
+- `created`: Unix **seconds** (10 digits), not milliseconds. It records when the key was last written (editing a key resets it). It is **not an expiry**: keys never expire. A key works until it is deleted or its `quota_remaining` reaches 0.
+- `quota_total` / `quota_remaining`: present only when the key has an enrollment quota.
+
+Gotchas:
+- `installation-key create` returns only `oid` and `iid`. Pass `--get` (or run `get`) to obtain `key`/`json_key`. Never hand an installer an empty key.
+- `list` returns a map keyed by `iid`, not an array.
+- Deleting a key stops new enrollments. EDR sensors already enrolled keep working, but **adapters using that `iid` are refused when they next connect**, because they authenticate with it on every connection.
+- Reuse an existing key whose `desc`/`tags` fit before creating a new one.
+
 ## Raw REST API Calls (`limacharlie api`)
 
 **`limacharlie api` is an escape hatch** for endpoints that have no dedicated CLI command. Do NOT use it for operations that already have a CLI noun/verb.
@@ -261,6 +278,7 @@ Always run bash to get timestamps FIRST, verify `start_time < end_time` and that
 
 - Detection/event data: **milliseconds** (13 digits)
 - API parameters: **seconds** (10 digits)
+- Config/metadata timestamps in API responses vary by resource (e.g. installation key `created` is **seconds**): check the digit count before converting
 - **ALWAYS** divide by 1000 when using detection timestamps for API queries
 
 ### 11. Never Fabricate Data
