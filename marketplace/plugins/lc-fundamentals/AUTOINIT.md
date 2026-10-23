@@ -49,7 +49,7 @@ When debugging "the record exists but nothing happens", check `usr_mtd.enabled` 
 
 An installation key lets new sensors and adapters join an org. Read keys with `limacharlie installation-key list|get --oid <oid> --output yaml`. Each record has:
 
-- `iid`: the key's UUID. **Adapters (USP, cloud and external adapters) put this UUID in `client_options.identity.installation_key`**, not `key` or `json_key`. Sensors report it as their `iid`, so `limacharlie sensor list --filter "[?iid=='<iid>']"` shows what a key enrolled.
+- `iid`: the key's UUID. **Adapters (USP, cloud and external adapters) put this UUID in `client_options.identity.installation_key`**, not `key` or `json_key`. Sensors report it as their `iid`, so `limacharlie sensor list --selector 'iid == "<iid>"' --oid <oid> --output yaml` shows what a key enrolled.
 - `key`: base64 blob for native EDR installers only (`lc_sensor -i <key>`).
 - `json_key`: base64 JSON for browser sensors only.
 - `tags`: comma-separated string applied to sensors when they enroll.
