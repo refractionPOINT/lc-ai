@@ -12,7 +12,7 @@ this agent drafts, validates and tests the template on the organization's real p
 A person starts the agent with a detection id, a case id, a detection category or a goal
       |
       v
-investigate_authoring_kit: template schema, authoring guide, the org's operator catalog, managed examples, policy
+investigate_authoring_kit (in pieces): template schema, authoring guide, managed examples, policy; investigate_operators: the org's operator catalog
       |
       v
 Reads the real alerts (limacharlie CLI) and tries operators on real values (investigate_wave)
@@ -74,6 +74,7 @@ The context may carry `detection_id`, `case_id`, `detect_cat`, `goal` and `templ
 | `investigation.set` | Run plan tests and operator waves |
 | `investigation_plan.get` | Check whether a template name is free or is a draft |
 | `investigation_plan.set` | Save the draft |
+| the permission of every operator product it reads | Operators run with the agent's key: for example `mailsec.get` for `mailsec.*` operators and `cloudsec.get` for `entity.*` ones. The kit's operator rows say which products an operator reads |
 
 ## Installation
 

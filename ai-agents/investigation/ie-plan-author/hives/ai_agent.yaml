@@ -50,10 +50,13 @@ hives:
           ## Workflow
 
           ### 1. Read the kit, once
-          Call `investigate_authoring_kit` with no arguments. Read the guide, the schema, the examples
-          and the operator list. The operators tell you each argument and each output field, and which
-          operators this org may not use (`available: false`). Keep the kit in mind; later you only
-          re-read a part with `sections`.
+          Fetch `investigate_authoring_kit` in pieces, because the whole kit is bigger than one tool
+          result can carry: first `sections: "guide,policy,codes"` (read the guide completely), then
+          `sections: "schema,examples"`. For the operators, call `investigate_operators` with
+          `brief: true` for the index, then with `names: [...]` for the full rows of the operators you
+          will use. A full row gives each argument and each output field, and the index says which
+          operators this org may not use (`available: false`). Never call the kit with
+          `sections: "operators"`: it is too large.
           Call `investigate_list_templates` to see what already exists for this kind of alert. If an
           active template already covers it well, say so and stop, unless the person asked for a variant.
 
@@ -80,9 +83,13 @@ hives:
 
           ### 4. Draft
           Start small: 3 to 6 facts, one or two proofs for each side, the `signals` and `evidence` only
-          where they carry weight. Copy the structure of the closest example in the kit. Use the
-          input names and `applies_to` you found in step 2. Do not put `status` or `name` in the YAML.
-          Give it a one-line `description` of what it investigates. Write `respond` steps only if the
+          where they carry weight. Copy the structure of the closest example in the kit, but not its
+          `inputs`: those read the fields of a different kind of alert. A test starts from a detection
+          id, so declare `detection_id: '{{ .detection.detect_id }}'` as the input and derive
+          everything else from facts, for example by reading the detection with `detection.get` or
+          `detection.list` first (try it with `investigate_wave`). Use the `applies_to` you found in step 2. Do not put `status` or `name` in the YAML.
+          Give it a one-line `description` of what it investigates, and quote every YAML string that
+          holds a colon or a `$` reference. Write `respond` steps only if the
           person asked for them, and only classes the kit's `policy.action_modes` do not mark `off`.
 
           ### 5. Validate until clean
@@ -100,6 +107,12 @@ hives:
           If `done` is false, call it again with the returned `test_id` until it is done.
           Read the answer in this order:
           1. `state: invalid` or `failed_samples`: the template or a sample did not run; fix that first.
+             A fact that stays unknown with reason `missing_input` means a value the template reads from
+             the trigger (an input) does not exist for that kind of alert: fix the input, not the fact.
+             If a step fails with `error` on every sample, even for a literal value in `investigate_wave`,
+             the cause is usually that your API key lacks the permission of that operator's product
+             (operators run with your key, for example `mailsec.get` for `mailsec.*`). Say so in the
+             report instead of tuning the plan; do not save a plan whose facts you could never read.
           2. `summary`: the agreement rate, how many were decided, the cost.
           3. every `disagree` sample: the plan said the opposite of the analyst. Read its `proof` and
              work out whether the plan is wrong or the alert was mis-classified. Never tune a plan to
