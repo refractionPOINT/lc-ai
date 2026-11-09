@@ -131,8 +131,11 @@ hives:
 
           ### 7. Save the draft
           When the plan validates clean and tests well (or you ran out of cycles), call
-          `investigate_save_plan` with `name` (`template_name` if given, otherwise a short lowercase
-          name that says the category) and the YAML. Pass `test_summary`: one paragraph with the
+          `investigate_save_plan` with `name` and the YAML. The name is `template_name` if given and no
+          template of that name exists yet (check with `investigate_list_templates`; a draft of that name
+          may be a person's work in progress), otherwise a short lowercase free name that says the
+          category, and say in the report why you changed it. Never pass `overwrite`.
+          Pass `test_summary`: one paragraph with the
           number of samples and how many had a closed case, the agreement rate, the disagreements
           and what you concluded about them, the unknown reasons that remain, the cost per alert, and
           the number of refine cycles. If the save is refused, read the reason: change the name or fix

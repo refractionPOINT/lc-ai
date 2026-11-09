@@ -58,8 +58,9 @@ What actually stops the agent from doing harm, strongest first:
    this agent. Until your platform has this gate, nothing server-side stops this agent's key from writing
    `status: active`: check before relying on it.
 2. **The save tool is draft-only.** `investigate_save_plan` always writes `status: draft`, refuses a template that
-   validates with errors, never overwrites an active template and never touches a platform-managed one. This binds the
-   tool, not the key (see below).
+   validates with errors, never overwrites an active template, never touches a platform-managed one and replaces
+   an existing draft only when `overwrite: true` is passed (the agent is told never to pass it). This binds the tool,
+   not the key (see below).
 3. **The key's permissions.** The agent also holds this API key as its `limacharlie` CLI credential and runs with
    `permission_mode: bypassPermissions`, so anything the key may do, the agent can do without going through the tool.
    Give it the minimal set below and nothing else.
