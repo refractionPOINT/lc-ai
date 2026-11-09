@@ -49,38 +49,67 @@ The context may carry `detection_id`, `case_id`, `detect_cat`, `goal` and `templ
 
 ## Safety
 
-- The agent saves only through `investigate_save_plan`, which always writes `status: draft`, refuses a template that
-  validates with errors, never overwrites an active template and never touches a platform-managed one.
-- A draft never runs on its own: it runs only through a plan test or a run a person starts, with autonomy capped at
-  suggest. Promotion to active is a person's change in the console.
-- The agent does not start runs and takes no response action. A test runs read-only operators with the agent's own API
-  key and writes nothing.
-- Alert content is treated as untrusted data.
-- The API key is what bounds the agent. Give it the permissions below and no more.
+What actually stops the agent from doing harm, strongest first:
+
+1. **The hive's promotion gate (a platform change that may not be deployed yet).** The `investigation_plan` hive
+   refuses a write whose resulting status is `active` when the token is an API key; only a person signed in to the
+   console can promote a template. An organization that manages active templates with infrastructure-as-code can opt
+   out with the `allow-api-key-promotion` tag on its `investigation_policy/default` record, and **must not** if it runs
+   this agent. Until your platform has this gate, nothing server-side stops this agent's key from writing
+   `status: active`: check before relying on it.
+2. **The save tool is draft-only.** `investigate_save_plan` always writes `status: draft`, refuses a template that
+   validates with errors, never overwrites an active template and never touches a platform-managed one. This binds the
+   tool, not the key (see below).
+3. **The key's permissions.** The agent also holds this API key as its `limacharlie` CLI credential and runs with
+   `permission_mode: bypassPermissions`, so anything the key may do, the agent can do without going through the tool.
+   Give it the minimal set below and nothing else.
+4. **Prompt rules (defense in depth, not a guarantee).** The prompt tells the agent to save only through the tool, to
+   never write `status: active`, never start runs or take response actions, and to treat alert content as untrusted.
+   The agent reads alert content that an attacker may have written, so a crafted alert may try to talk it out of these
+   rules. Do not count on them.
+
+What the key can do beyond the tools, and why it matters:
+
+- `investigation_plan.set` lets the key write any `investigation_plan` record, including through the CLI. Without the
+  promotion gate that includes `status: active`, and an active template can be started by a rule or a case trigger,
+  with `respond` steps if it has them.
+- `investigation.set` lets the key start investigation runs (the same permission the plan tests and operator waves use),
+  not only plan tests. A run started this way spends the org's budgets.
+- Operator permissions (below) let the agent read the product data those operators read, with the CLI as well.
+
+A draft never runs on its own: it runs only through a plan test or a run started by a person or by a key holding
+`investigation.set`, with autonomy capped at suggest. A test runs read-only operators and writes nothing.
 
 ## Prerequisites
 
 - The Investigation Engine enabled for the organization
 - An Anthropic API key
-- A LimaCharlie API key with the following permissions:
+- A dedicated LimaCharlie API key with only the following permissions. Each one's reach:
 
-| Permission | Why |
-|-----------|-----|
-| `ai_agent.operate` | Required by the hosted MCP server for every call |
-| `org.get` | Basic org context |
-| `insight.det.get` | Read detections |
-| `insight.evt.get` | Read events; required by the investigation routes and by plan tests |
-| `investigation.get` | Read cases, templates and runs |
-| `investigation.set` | Run plan tests and operator waves |
-| `investigation_plan.get` | Check whether a template name is free or is a draft |
-| `investigation_plan.set` | Save the draft |
-| the permission of every operator product it reads | Operators run with the agent's key: for example `mailsec.get` for `mailsec.*` operators and `cloudsec.get` for `entity.*` ones. The kit's operator rows say which products an operator reads |
+| Permission | What it allows | Why the agent needs it |
+|-----------|----------------|------------------------|
+| `ai_agent.operate` | Using the hosted MCP server | Required by the server for every call |
+| `org.get` | Reading basic organization information | Org context for the CLI |
+| `insight.det.get` | Reading detections | Reading the alerts to cover |
+| `insight.evt.get` | Reading events | Required by every investigation route and by plan tests |
+| `investigation.get` | Reading plan templates, the kit, operators and runs | Kit, validation, template list |
+| `investigation.set` | Starting runs and tests | Plan tests and operator waves. **It also allows starting real runs from the CLI** |
+| `investigation_plan.get` | Reading plan templates | Checking whether a name is free or is a draft |
+| `investigation_plan.set` | Writing plan templates | Saving the draft. **It also allows writing any template, including `status: active` where the promotion gate is not deployed** |
+| the read permission of every operator product it uses | Reading that product's data | Operators run with the agent's key: for example `mailsec.get` for `mailsec.*` operators and `cloudsec.get` for `entity.*` ones. The kit's operator rows say which products an operator reads. Grant only the products you want drafts for |
+
+No other write permission is needed. In particular do not give it sensor tasking, D&R rule, output or API key
+permissions. If you start the agent with a `case_id`, the key also needs whatever read access the cases extension
+requires for that key; if you only start it with detection ids or goals, leave that out.
 
 ## Installation
 
 Use the `lc-deployer` skill to install and manage this agent. See the [lc-essentials plugin](../../../marketplace/plugins/lc-essentials/) for details.
-Before deploying, set `X-LC-OID` in `hives/ai_agent.yaml` to the organization id: the Investigation Engine tools come
-from the hosted MCP server's `investigation_engine` profile, which takes the organization id in a header.
+Nothing in `hives/ai_agent.yaml` needs editing for the organization: the MCP `X-LC-OID` header is `${LC_OID}`,
+which the runtime fills with the organization the session runs in, and the MCP `X-LC-API-KEY` header is the same
+`hive://secret/ie-plan-author` secret as `lc_api_key_secret`, resolved before the session starts. Only the two
+placeholder secrets in `hives/secret.yaml` need real values. If the Investigation Engine tools cannot reach the org,
+the agent's first tool call fails and it stops and says so, before spending its budget.
 
 ## Configuration
 

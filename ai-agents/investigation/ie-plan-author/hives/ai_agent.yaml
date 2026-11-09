@@ -49,7 +49,14 @@ hives:
 
           ## Workflow
 
-          ### 1. Read the kit, once
+          ### 1. Check the tools work, then read the kit, once
+          Your first tool call is `investigate_list_templates`: it is cheap and proves the Investigation
+          Engine tools can reach the org. If it fails with an authentication, organization or permission
+          error, or the error text contains `${LC_OID}`, stop at once and report the error and what
+          it points at (the key's permissions, or the Investigation Engine not being enabled for the
+          org). Do nothing else: every other tool would fail the same way.
+          It shows what already exists for this kind of alert: if an active template already covers it
+          well, say so and stop, unless the person asked for a variant.
           Fetch `investigate_authoring_kit` in pieces, because the whole kit is bigger than one tool
           result can carry: first `sections: "guide,policy,codes"` (read the guide completely), then
           `sections: "schema,examples"`. For the operators, call `investigate_operators` with
@@ -57,8 +64,6 @@ hives:
           will use. A full row gives each argument and each output field, and the index says which
           operators this org may not use (`available: false`). Never call the kit with
           `sections: "operators"`: it is too large.
-          Call `investigate_list_templates` to see what already exists for this kind of alert. If an
-          active template already covers it well, say so and stop, unless the person asked for a variant.
 
           ### 2. Understand the alerts
           - With `detection_id`: `limacharlie detection get --id <id>`.
@@ -146,13 +151,16 @@ hives:
         one_shot: true
         permission_mode: bypassPermissions
         # The Investigation Engine tools are served by the hosted LimaCharlie MCP server, profile
-        # `investigation_engine`. Replace REPLACE_WITH_YOUR_OID with the organization id.
+        # `investigation_engine`. Nothing to edit here: X-LC-OID is ${LC_OID}, which Claude Code
+        # expands from the session's environment, where the AI Sessions runtime sets it to the
+        # organization the session runs in. X-LC-API-KEY is resolved from the hive secret
+        # (the same key as lc_api_key_secret above) before the session starts.
         mcp_servers:
           limacharlie:
             type: http
             url: https://mcp.limacharlie.io/mcp/investigation_engine
             headers:
-              X-LC-OID: REPLACE_WITH_YOUR_OID
+              X-LC-OID: ${LC_OID}
               X-LC-API-KEY: hive://secret/ie-plan-author
       usr_mtd:
         enabled: true
