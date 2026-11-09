@@ -1,0 +1,3 @@
+version: 3
+include:
+  - hives/ai_agent.yaml
