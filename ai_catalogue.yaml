@@ -529,6 +529,15 @@ agents:
         - case_detection_added
       debounce: true
 
+  ie-plan-author:
+    display_name: "Investigation Plan Author"
+    description: "Drafts Investigation Engine plan templates from a detection or a goal, tests them on past alerts and saves a draft for a person to promote"
+    category: investigation
+    model: opus
+    max_budget_usd: 4.00
+    trigger:
+      type: external
+
   malware-analysis:
     display_name: "Malware Analysis"
     description: "Deep binary forensics via LCRE and Ghidra"
