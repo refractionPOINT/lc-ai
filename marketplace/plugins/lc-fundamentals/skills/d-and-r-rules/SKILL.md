@@ -376,11 +376,11 @@ Suppression is the mechanism for frequency control. It is supported on **every r
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
-| `max_count` | integer | Maximum action executions per period per key. Use `1` for first-seen. |
+| `max_count` | integer | Maximum action executions per period per key. Use `1` for first-seen. One of `max_count` or `min_count` is required. |
 | `min_count` | integer | Minimum activations before the action fires. Must be used with `max_count`. |
-| `period` | string | Time window. Formats: `s`, `m`, `h`. Range: 1s to 720h (30 days). |
+| `period` | string | **Required.** Time window as a duration string: `30m`, `1h`, `168h`. Units `s`, `m`, `h` (no `d`). Range: 1s to 720h (30 days). Never a number: `period: 3600` is rejected, unlike `ttl` on `add tag`, which is seconds. |
 | `is_global` | boolean | `true` = org-wide counter. `false` (default) = per-sensor counter. |
-| `keys` | list | Template strings forming the uniqueness key. Supports `{{ .event.* }}`, `{{ .routing.* }}`, and `{{ .mtd.* }}`. |
+| `keys` | list | **Required**, non-empty. Template strings forming the uniqueness key. Supports `{{ .event.* }}`, `{{ .routing.* }}`, and `{{ .mtd.* }}`. |
 | `count_path` | string | Path to an integer in the event to use as the increment instead of 1. |
 
 ### Three Suppression Modes
