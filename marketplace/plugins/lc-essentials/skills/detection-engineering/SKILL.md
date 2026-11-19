@@ -171,6 +171,33 @@ limacharlie dr validate --detect ./detection-work/detect.yaml --respond ./detect
 
 Syntax validation checks structure, not coverage. Continue with representative positive and negative tests before presenting the rule for deployment.
 
+Validate what you deploy. Whenever the detect or respond content changes after
+validation (components combined into `rule.yaml`, a block added, a field edited,
+a block copied from another rule), validate the changed components again before
+`limacharlie dr set`. A `dr set` error means the file was never validated.
+
+### 3.4 Suppression
+
+Noisy rules and expensive actions (`task`, `artifact_get`, `yara_scan`, `start ai agent`,
+`extension request`) need suppression. Ask the generator for it in the description
+instead of adding it by hand, for example "suppress to one report per FILE_PATH per
+sensor per hour". If you must write or fix a block, it is rejected unless:
+
+```yaml
+suppression:
+  max_count: 1          # max_count or min_count is required
+  period: 1h            # required: a duration STRING, 1s to 720h
+  is_global: false      # optional, false = per sensor
+  keys:                 # required: non-empty list, templates allowed
+    - 'my-rule-name'
+    - '{{ .event.FILE_PATH }}'
+```
+
+- `period` is a duration string with units `s`, `m`, `h` (also `ns`, `us`, `ms`). There is no `d`: 7 days is `168h`, 30 days (the maximum) is `720h`.
+- `period` is never a number. `ttl` on `add tag` is an integer number of seconds (`ttl: 86400`); `period` is not (`period: 3600` is rejected; write `period: 1h`).
+- Existing rules in the org are not a reliable template: one can hold a block that no longer validates. Validate anything you copy.
+- Do not delete suppression to get past an error. It protects the org from alert storms and repeated tasking; fix the block or regenerate the response. If you drop it from a temporary test rule, put it back in the rule you propose for deployment and say so.
+
 ---
 
 ## Phase 4: Test & Iterate
@@ -391,6 +418,9 @@ This produces a response using `extension request` to `ext-feedback` with action
 | Problem | Solution |
 |---------|----------|
 | Validation fails | Refine your natural language prompt, don't edit YAML |
+| `suppression: invalid or missing period` | Add `period` as a duration string, e.g. `period: 1h` |
+| `suppression: msgpack: invalid code=... decoding string/bytes length` or `period 3600 has type ..., not string` | `period` is a number; write it as a duration string (`3600` → `1h`) |
+| `suppression: period: time: unknown unit "d"` | No `d` unit; use hours (`7d` → `168h`, max `720h`) |
 | Too many matches | Add exclusions for legitimate software |
 | No matches | Verify event type exists on platform, check field paths |
 | Query errors | Use `lookup-lc-doc` for LCQL/D&R syntax |
@@ -404,6 +434,7 @@ Before deployment, verify:
 - [ ] Unit tests pass (negative cases)
 - [ ] Historical replay results or unavailable-data limitations documented
 - [ ] False positive rate acceptable
+- [ ] Suppression present where the rule is noisy or its actions are expensive, and the final rule file validated
 - [ ] Deployment authorization covers this rule and its response actions
 
 After deployment, verify the enabled state by readback and hand off the artifacts.
