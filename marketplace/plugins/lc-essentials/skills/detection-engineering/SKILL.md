@@ -340,7 +340,10 @@ Each agent returns a **summarized report** (not all hits):
 3. Aggregate results into a cross-org report showing:
 - Per-org match rates
 - Orgs with highest/lowest matches
-- Overall false positive assessment
+- Orgs whose replay was partial or inconclusive, listed separately and left out of the
+  match-rate comparison
+- Overall false positive assessment: never call the overall result clean while any org's
+  replay was partial
 
 ### 4.4 Analyze & Iterate
 
@@ -403,11 +406,31 @@ Examples:
 
 ### 5.2 Create the Rule
 
+Stage 1 deploys the canary version: the validated detection with an added `is tagged`
+condition on the canary tag, and only the `report` action.
+
 ```bash
-# Write final rule to file
+# Stage 1: canary scope, report only
+cat > ./detection-work/rule-stage1.yaml << 'EOF'
+detect:
+  <validated_detection, with an "is tagged: <canary-tag>" condition added>
+respond:
+  <the report action only>
+EOF
+
+limacharlie dr validate --detect <stage-1 detect file> --respond <stage-1 respond file> --oid <oid>
+limacharlie dr set --key apt-x-process-encoded-powershell --input-file ./detection-work/rule-stage1.yaml --enabled --oid <oid>
+```
+
+After the volume check passes, replace the record with the full rule: the target scope
+(not the canary tag) and every validated response action. Validate it first, then set it
+under the same key and check the volume again.
+
+```bash
+# Later stage: full target scope and all response actions
 cat > ./detection-work/rule.yaml << 'EOF'
 detect:
-  <validated_detection>
+  <validated_detection, scoped to the target sensors>
 respond:
   <validated_response>
 EOF

@@ -63,11 +63,14 @@ end=$(date +%s)
 
 ### Step 3: Deploy Temp Rule and Run Replay
 
-Named-rule replay needs a saved rule. Save it **disabled** under a unique temporary name, so it never runs live, replay it with the selector, then delete it:
+Named-rule replay needs a saved rule. Save it **disabled** under a unique temporary name, so it never runs live, replay it with the selector, then delete it. Several instances of this agent run at once in the same working directory, so the file name and the rule key both carry the same unique suffix:
 
 ```bash
+# One suffix per run, used for both the file and the rule key
+unique="$(echo <org-uuid> | cut -c1-8)-$(date +%s%N)"
+
 # Write rule to a temp file
-cat > ./replay-test-rule.yaml << 'EOF'
+cat > "./replay-test-rule-$unique.yaml" << 'EOF'
 detect:
   <detection_rule>
 respond:
@@ -75,13 +78,14 @@ respond:
 EOF
 
 # Save the temp rule DISABLED (never omit --disabled)
-limacharlie dr set --key temp-replay-test-<unique> --input-file ./replay-test-rule.yaml --disabled --oid <org-uuid>
+limacharlie dr set --key "temp-replay-test-$unique" --input-file "./replay-test-rule-$unique.yaml" --disabled --oid <org-uuid>
 
 # Replay, scoped to the target sensors
-limacharlie dr replay --name temp-replay-test-<unique> --start $start --end $end --selector '<selector>' --oid <org-uuid> --output yaml
+limacharlie dr replay --name "temp-replay-test-$unique" --start $start --end $end --selector '<selector>' --oid <org-uuid> --output yaml
 
 # Clean up
-limacharlie dr delete --key temp-replay-test-<unique> --confirm --oid <org-uuid>
+limacharlie dr delete --key "temp-replay-test-$unique" --confirm --oid <org-uuid>
+rm -f "./replay-test-rule-$unique.yaml"
 ```
 
 Delete the temp rule even when the replay fails.
@@ -218,7 +222,7 @@ Then extract:
 ```markdown
 ### legacy-org
 
-**Scope**: plat == linux
+**Scope**: "linux-servers" in tags
 **Completeness**: PARTIAL (stats.results_partial true, stats.stop_reason request_deadline, 31 skipped events)
 
 **Match Statistics** (partial):

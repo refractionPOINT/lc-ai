@@ -217,6 +217,8 @@ limacharlie fp delete --key <fp-rule-name> --confirm --oid <oid>
 | `is platform` | Platform check |
 | `is tagged` | Tag check |
 | `is windows` | Windows platform shorthand |
+| `is linux`, `is mac` | Linux / macOS platform shorthands |
+| `is chrome` | Chrome browser sensor, on any OS (checks the `chromium` architecture, not the platform) |
 | `lookup` | Look up a value against a lookup table or API resource |
 | `is public address` | Check if IP is public |
 | `string distance` | Levenshtein distance |
