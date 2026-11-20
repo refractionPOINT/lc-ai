@@ -68,6 +68,11 @@ Use the conversation and available context first; ask only for missing informati
 - **Organization ID (OID)**: UUID of the target organization (use `limacharlie org list` if needed)
 - **Detection Target**: What behavior/threat to detect (be specific)
 - **Platform(s)**: Windows, Linux, macOS, or all
+- **Target sensors (scope)**: which sensors the rule must fire on, as a tag, a sensor
+  selector or SIDs (for example `"prod" in tags`, or the one host being protected).
+  A platform is not a scope: `is linux` also matches developer laptops, CI runners, AI-agent
+  hosts and the Linux container of a Chromebook. Write the scope into the rule (`is tagged`,
+  or a selector-equivalent check) and use the same scope for every replay.
 - **Priority**: Critical (9-10), High (7-8), Medium (4-6), Low (1-3)
 
 ---
@@ -125,6 +130,14 @@ Verify sensors have relevant data:
 ```bash
 limacharlie event retention --sid <sensor-id> --start <epoch> --end <epoch> --oid <oid> --output yaml
 ```
+
+### 2.4 Baseline the Target Sensors
+
+Before writing logic, look at what normally runs on the target sensors themselves, not only
+the org at large. Run the exploration queries above scoped to those sensors (their SIDs or
+selector) over a few days. Developer, build and AI-agent hosts run `docker exec`, `bash -c`,
+binaries from `/tmp` and network tools all day; a rule that ignores this baseline fires on
+every one of them. Note what is normal there and plan exclusions before the first replay.
 
 **Tip**: Use `lookup-lc-doc` skill to understand event types and field paths.
 
@@ -272,14 +285,26 @@ start=$(date -d '1 hour ago' +%s)
 end=$(date +%s)
 
 # Estimate volume first
-limacharlie dr replay --name temp-test-rule --start $start --end $end --dry-run --oid <oid> --output yaml
+limacharlie dr replay --name temp-test-rule --start $start --end $end --selector '"prod" in tags' --dry-run --oid <oid> --output yaml
 
-# Run actual replay (optionally with selector or specific sensor)
-limacharlie dr replay --name temp-test-rule --start $start --end $end --selector 'plat == "windows"' --oid <oid> --output yaml
+# Run the replay scoped to the target sensors (required: the same scope the rule has)
+limacharlie dr replay --name temp-test-rule --start $start --end $end --selector '"prod" in tags' --oid <oid> --output yaml
 
 # Clean up temporary rule after testing
 limacharlie dr delete --key temp-test-rule --confirm --oid <oid>
 ```
+
+Always pass `--selector` or `--sid`, matching the scope written into the rule. Replaying
+the whole org tests a different rule from the one you will deploy, and a large org-wide
+replay can stop at the server's deadline before it covers the window.
+
+**Check that the replay was complete before reading its results.** A replay that stops
+early still returns the matches found so far. Treat the result as partial when any of
+these is present: `stats.results_partial: true`, a `stats.stop_reason` other than empty or
+`none` (for example `request_deadline`), a non-empty `stats.skipped_events`, or an `error`.
+Recent CLI versions also print a `replay results are PARTIAL` warning to stderr. A partial
+replay with 0 matches is **inconclusive**, not clean: re-run with a narrower scope or a
+shorter window until it completes.
 
 ### 4.3 Historical Replay - Multi-Org (Parallel)
 
@@ -298,7 +323,7 @@ Task(subagent_type="lc-essentials:dr-replay-tester", prompt="
   Detection: <yaml>
   Response: <yaml>
   Time window: last 1 hour
-  Sensor selector: plat == 'windows'
+  Sensor selector (required, same scope as the rule): "prod" in tags
 ")
 
 Task(subagent_type="lc-essentials:dr-replay-tester", prompt="
@@ -315,7 +340,10 @@ Each agent returns a **summarized report** (not all hits):
 3. Aggregate results into a cross-org report showing:
 - Per-org match rates
 - Orgs with highest/lowest matches
-- Overall false positive assessment
+- Orgs whose replay was partial or inconclusive, listed separately and left out of the
+  match-rate comparison
+- Overall false positive assessment: never call the overall result clean while any org's
+  replay was partial
 
 ### 4.4 Analyze & Iterate
 
@@ -335,8 +363,8 @@ Use `lookup-lc-doc` skill for D&R operator syntax help.
 - Historical replay, where data is available, supports the intended coverage
 - False positives are assessed in the target organizations
 
-Report exactly what was tested. No historical matches or missing telemetry do not
-prove success; record those limitations. Match alert names, confidence, and actions
+Report exactly what was tested. No historical matches, a partial replay, or missing
+telemetry do not prove success; record those limitations. Match alert names, confidence, and actions
 to the evidence: a generic keyword match must not claim confirmed exploitation.
 
 ---
@@ -348,9 +376,28 @@ explicit deployment authorization when it covers this proposal; otherwise obtain
 approval before enabling. Selecting an organization alone does not authorize a
 materially reduced rule.
 
+Roll out in stages; never go straight from testing to the whole scope with every action:
+
+1. Enable the rule on a small part of the target scope, with only the `report` action: tag
+   one target sensor (`limacharlie tag add --sid <sid> --tag <canary-tag>`) and scope the
+   rule to that tag for this stage (an `is tagged` condition; validate the changed rule).
+2. After 15 to 30 minutes, check the detection volume:
+   `limacharlie detection list --cat <detection-name> --start <ts> --end <ts> --limit 200 --oid <oid> --output yaml`.
+   Hundreds of detections from one sensor mean the baseline was missed: disable the rule
+   and go back to Phase 4.
+3. Widen the scope to the full target, still with `report` only, and check the volume again.
+   Only then add the other response actions (tags, tasks, isolation).
+4. Check the volume again after each widening and report it in the handoff.
+
 ### 5.1 Naming Convention
 
 Use format: `[threat]-[detection-type]-[indicator]`
+
+The `report` name must be **static**. It becomes the detection's `cat`, which FP rules,
+chained rules (`target: detection`), outputs and `detection list --cat` match on. Put
+per-event details (hostname, file path, user) in `metadata` or `detect_data`, never in the
+name: `name: "Reverse shell on {{ .routing.hostname }}"` makes a different `cat` per host,
+so an FP rule or a downstream rule written for one name misses the others.
 
 Examples:
 - `apt-x-process-encoded-powershell`
@@ -359,16 +406,38 @@ Examples:
 
 ### 5.2 Create the Rule
 
-```bash
-# Write final rule to file
-cat > ./detection-work/rule.yaml << 'EOF'
-detect:
-  <validated_detection>
-respond:
-  <validated_response>
-EOF
+Deploy in three updates of the same record, validating each before `dr set` and checking
+the alert volume after each. Keep the components in separate files so the files you
+validate are the files you deploy.
 
-limacharlie dr set --key apt-x-process-encoded-powershell --input-file ./detection-work/rule.yaml --enabled --oid <oid>
+```bash
+# Stage 1: canary scope, report only
+cat > ./detection-work/detect-stage1.yaml << 'EOF'
+<validated_detection, with an "is tagged" condition on the canary tag added>
+EOF
+cat > ./detection-work/respond-report.yaml << 'EOF'
+<the report action only>
+EOF
+limacharlie dr validate --detect ./detection-work/detect-stage1.yaml --respond ./detection-work/respond-report.yaml --oid <oid>
+limacharlie dr set --key apt-x-process-encoded-powershell --detect ./detection-work/detect-stage1.yaml --respond ./detection-work/respond-report.yaml --enabled --oid <oid>
+```
+
+```bash
+# Stage 2 (after the canary volume check): full target scope, still report only
+cat > ./detection-work/detect.yaml << 'EOF'
+<validated_detection, scoped to the target sensors>
+EOF
+limacharlie dr validate --detect ./detection-work/detect.yaml --respond ./detection-work/respond-report.yaml --oid <oid>
+limacharlie dr set --key apt-x-process-encoded-powershell --detect ./detection-work/detect.yaml --respond ./detection-work/respond-report.yaml --enabled --oid <oid>
+```
+
+```bash
+# Stage 3 (after the full-scope volume check): add the other validated response actions
+cat > ./detection-work/respond.yaml << 'EOF'
+<validated_response>
+EOF
+limacharlie dr validate --detect ./detection-work/detect.yaml --respond ./detection-work/respond.yaml --oid <oid>
+limacharlie dr set --key apt-x-process-encoded-powershell --detect ./detection-work/detect.yaml --respond ./detection-work/respond.yaml --enabled --oid <oid>
 ```
 
 Read the record back with `limacharlie dr get --key apt-x-process-encoded-powershell --oid <oid>`
@@ -432,9 +501,13 @@ Before deployment, verify:
 - [ ] Event schema researched
 - [ ] Unit tests pass (positive cases)
 - [ ] Unit tests pass (negative cases)
+- [ ] The rule has a scope (`is tagged`, a sensor check, or a selector) before any replay
+- [ ] Replays used `--selector`/`--sid` matching that scope and were complete (no `results_partial`, `stop_reason`, skipped events or error)
 - [ ] Historical replay results or unavailable-data limitations documented
 - [ ] False positive rate acceptable
 - [ ] Suppression present where the rule is noisy or its actions are expensive, and the final rule file validated
 - [ ] Deployment authorization covers this rule and its response actions
+- [ ] The report name is static; per-event details are in metadata
+- [ ] Rolled out in stages, and alert volume checked after each stage
 
 After deployment, verify the enabled state by readback and hand off the artifacts.

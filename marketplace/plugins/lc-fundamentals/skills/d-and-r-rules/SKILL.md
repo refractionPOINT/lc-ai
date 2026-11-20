@@ -91,27 +91,30 @@ Create both positive tests (MUST match) and negative tests (MUST NOT match).
 
 ## Historical Replay
 
-Test rules against real historical data. The rule must be deployed first (use a temporary name):
+Test rules against real historical data. Save the rule first under a temporary name, **disabled** so it never runs live:
 
 ```bash
-# Deploy as temporary rule
-limacharlie dr set --key temp-test-rule --input-file /tmp/rule.yaml --oid <oid>
+# Save as a disabled temporary rule
+limacharlie dr set --key temp-test-rule --input-file /tmp/rule.yaml --disabled --oid <oid>
 
 # Calculate time range
 start=$(date -d '1 hour ago' +%s) && end=$(date +%s)
 
 # Estimate volume first (dry run)
-limacharlie dr replay --name temp-test-rule --start $start --end $end --dry-run --oid <oid> --output yaml
+limacharlie dr replay --name temp-test-rule --start $start --end $end --selector '"prod" in tags' --dry-run --oid <oid> --output yaml
 
-# Run replay
-limacharlie dr replay --name temp-test-rule --start $start --end $end --oid <oid> --output yaml
-
-# With selector
-limacharlie dr replay --name temp-test-rule --start $start --end $end --selector 'plat == "windows"' --oid <oid> --output yaml
+# Run replay, scoped to the sensors the rule targets (always pass --selector or --sid)
+limacharlie dr replay --name temp-test-rule --start $start --end $end --selector '"prod" in tags' --oid <oid> --output yaml
 
 # Clean up temporary rule
 limacharlie dr delete --key temp-test-rule --confirm --oid <oid>
 ```
+
+Use the same scope as the rule: an org-wide replay tests a different rule, and a large one
+can stop at the server's deadline. Before reading results, check the replay was complete:
+`stats.results_partial: true`, a `stats.stop_reason` other than empty or `none`, a non-empty
+`stats.skipped_events` or an `error` mean the results cover only part of the window. A
+partial replay with 0 matches is inconclusive; narrow the scope or the window and re-run.
 
 ## Deployment
 
@@ -126,6 +129,12 @@ respond:
 EOF
 limacharlie dr set --key <rule-name> --input-file /tmp/rule.yaml --oid <oid>
 ```
+
+Enable a new rule in stages rather than on its whole scope at once: first on one canary
+sensor (an `is tagged` condition on a canary tag) with only the `report` action, then the
+full target scope still with `report` only, then the other response actions. Check the
+volume with `limacharlie detection list --cat <detection-name> --start <ts> --end <ts> --oid <oid>`
+after each stage. The detection-engineering skill (Phase 5) has the full procedure.
 
 ### List Rules
 
@@ -159,21 +168,22 @@ When listing or auditing rules, check all three for the full picture.
 
 ## False Positive (FP) Rules
 
-FP rules suppress known benign detections without modifying the original detection rule. **FP rules operate on the detection output, not the raw event** — the paths reference detection fields, not event fields.
+FP rules suppress known benign detections without modifying the original detection rule. **FP rules operate on the detection output, not the raw event** — the paths reference detection fields, not event fields. The FP rule's logic is the record itself: `op` sits at the top level, with no `detect:` or `detection:` wrapper.
+
+Matching on `cat` only works when the detection name is static. A `report` name with a template (`name: "Bad thing on {{ .routing.hostname }}"`) produces a different `cat` per host, so keep names static and put per-event details in `metadata`.
 
 ### Create FP Rule
 
 ```bash
 cat > /tmp/fp-rule.yaml << 'EOF'
-detection:
-  op: and
-  rules:
-    - op: is
-      path: cat
-      value: suspicious_process
-    - op: is
-      path: routing/hostname
-      value: SCCM-SERVER
+op: and
+rules:
+  - op: is
+    path: cat
+    value: suspicious_process
+  - op: is
+    path: routing/hostname
+    value: SCCM-SERVER
 EOF
 limacharlie fp set --key <fp-rule-name> --input-file /tmp/fp-rule.yaml --oid <oid>
 ```
@@ -213,9 +223,44 @@ limacharlie fp delete --key <fp-rule-name> --confirm --oid <oid>
 | `is platform` | Platform check |
 | `is tagged` | Tag check |
 | `is windows` | Windows platform shorthand |
+| `is linux`, `is mac` | Linux / macOS platform shorthands |
+| `is chrome` | Chrome browser sensor, on any OS (checks the `chromium` architecture, not the platform) |
 | `lookup` | Look up a value against a lookup table or API resource |
 | `is public address` | Check if IP is public |
 | `string distance` | Levenshtein distance |
+
+## Scoping Rules to a Sensor Population
+
+A platform check is not a scope. `is linux` matches every Linux sensor: servers, developer
+laptops, CI runners, AI-agent hosts and the Linux container of a Chromebook (a regular Linux
+sensor, often named `penguin`). The Chrome browser sensor itself reports the platform of the
+OS it runs on (`chrome` on ChromeOS, `linux` on a Linux desktop), with the `chromium`
+architecture: use `is chrome` to include or exclude browser sensors.
+
+Restrict a rule to the sensors it is meant for with `is tagged`, and replay it with the
+matching selector:
+
+```yaml
+detect:
+  event: NEW_PROCESS
+  op: and
+  rules:
+    - op: is tagged
+      tag: prod-k8s
+    - op: is linux
+    - op: starts with
+      path: event/FILE_PATH
+      value: /tmp/
+respond:
+  - action: report
+    name: prod-k8s-exec-from-tmp
+```
+
+```bash
+limacharlie dr replay --name <rule> --start $start --end $end --selector '"prod-k8s" in tags' --oid <oid> --output yaml
+```
+
+Exclude a population with `not: true`, for example `{op: is tagged, tag: dev-workstation, not: true}`.
 
 ---
 
