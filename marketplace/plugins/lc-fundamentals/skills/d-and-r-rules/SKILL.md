@@ -101,7 +101,7 @@ limacharlie dr set --key temp-test-rule --input-file /tmp/rule.yaml --disabled -
 start=$(date -d '1 hour ago' +%s) && end=$(date +%s)
 
 # Estimate volume first (dry run)
-limacharlie dr replay --name temp-test-rule --start $start --end $end --dry-run --oid <oid> --output yaml
+limacharlie dr replay --name temp-test-rule --start $start --end $end --selector '"prod" in tags' --dry-run --oid <oid> --output yaml
 
 # Run replay, scoped to the sensors the rule targets (always pass --selector or --sid)
 limacharlie dr replay --name temp-test-rule --start $start --end $end --selector '"prod" in tags' --oid <oid> --output yaml
@@ -129,6 +129,12 @@ respond:
 EOF
 limacharlie dr set --key <rule-name> --input-file /tmp/rule.yaml --oid <oid>
 ```
+
+Enable a new rule in stages rather than on its whole scope at once: first on one canary
+sensor (an `is tagged` condition on a canary tag) with only the `report` action, then the
+full target scope still with `report` only, then the other response actions. Check the
+volume with `limacharlie detection list --cat <detection-name> --start <ts> --end <ts> --oid <oid>`
+after each stage. The detection-engineering skill (Phase 5) has the full procedure.
 
 ### List Rules
 

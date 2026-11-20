@@ -285,7 +285,7 @@ start=$(date -d '1 hour ago' +%s)
 end=$(date +%s)
 
 # Estimate volume first
-limacharlie dr replay --name temp-test-rule --start $start --end $end --dry-run --oid <oid> --output yaml
+limacharlie dr replay --name temp-test-rule --start $start --end $end --selector '"prod" in tags' --dry-run --oid <oid> --output yaml
 
 # Run the replay scoped to the target sensors (required: the same scope the rule has)
 limacharlie dr replay --name temp-test-rule --start $start --end $end --selector '"prod" in tags' --oid <oid> --output yaml
@@ -385,8 +385,8 @@ Roll out in stages; never go straight from testing to the whole scope with every
    `limacharlie detection list --cat <detection-name> --start <ts> --end <ts> --limit 200 --oid <oid> --output yaml`.
    Hundreds of detections from one sensor mean the baseline was missed: disable the rule
    and go back to Phase 4.
-3. Widen the scope to the full target, then add the other response actions (tags, tasks,
-   isolation) once the volume is acceptable.
+3. Widen the scope to the full target, still with `report` only, and check the volume again.
+   Only then add the other response actions (tags, tasks, isolation).
 4. Check the volume again after each widening and report it in the handoff.
 
 ### 5.1 Naming Convention
@@ -406,36 +406,38 @@ Examples:
 
 ### 5.2 Create the Rule
 
-Stage 1 deploys the canary version: the validated detection with an added `is tagged`
-condition on the canary tag, and only the `report` action.
+Deploy in three updates of the same record, validating each before `dr set` and checking
+the alert volume after each. Keep the components in separate files so the files you
+validate are the files you deploy.
 
 ```bash
 # Stage 1: canary scope, report only
-cat > ./detection-work/rule-stage1.yaml << 'EOF'
-detect:
-  <validated_detection, with an "is tagged: <canary-tag>" condition added>
-respond:
-  <the report action only>
+cat > ./detection-work/detect-stage1.yaml << 'EOF'
+<validated_detection, with an "is tagged" condition on the canary tag added>
 EOF
-
-limacharlie dr validate --detect <stage-1 detect file> --respond <stage-1 respond file> --oid <oid>
-limacharlie dr set --key apt-x-process-encoded-powershell --input-file ./detection-work/rule-stage1.yaml --enabled --oid <oid>
+cat > ./detection-work/respond-report.yaml << 'EOF'
+<the report action only>
+EOF
+limacharlie dr validate --detect ./detection-work/detect-stage1.yaml --respond ./detection-work/respond-report.yaml --oid <oid>
+limacharlie dr set --key apt-x-process-encoded-powershell --detect ./detection-work/detect-stage1.yaml --respond ./detection-work/respond-report.yaml --enabled --oid <oid>
 ```
 
-After the volume check passes, replace the record with the full rule: the target scope
-(not the canary tag) and every validated response action. Validate it first, then set it
-under the same key and check the volume again.
+```bash
+# Stage 2 (after the canary volume check): full target scope, still report only
+cat > ./detection-work/detect.yaml << 'EOF'
+<validated_detection, scoped to the target sensors>
+EOF
+limacharlie dr validate --detect ./detection-work/detect.yaml --respond ./detection-work/respond-report.yaml --oid <oid>
+limacharlie dr set --key apt-x-process-encoded-powershell --detect ./detection-work/detect.yaml --respond ./detection-work/respond-report.yaml --enabled --oid <oid>
+```
 
 ```bash
-# Later stage: full target scope and all response actions
-cat > ./detection-work/rule.yaml << 'EOF'
-detect:
-  <validated_detection, scoped to the target sensors>
-respond:
-  <validated_response>
+# Stage 3 (after the full-scope volume check): add the other validated response actions
+cat > ./detection-work/respond.yaml << 'EOF'
+<validated_response>
 EOF
-
-limacharlie dr set --key apt-x-process-encoded-powershell --input-file ./detection-work/rule.yaml --enabled --oid <oid>
+limacharlie dr validate --detect ./detection-work/detect.yaml --respond ./detection-work/respond.yaml --oid <oid>
+limacharlie dr set --key apt-x-process-encoded-powershell --detect ./detection-work/detect.yaml --respond ./detection-work/respond.yaml --enabled --oid <oid>
 ```
 
 Read the record back with `limacharlie dr get --key apt-x-process-encoded-powershell --oid <oid>`

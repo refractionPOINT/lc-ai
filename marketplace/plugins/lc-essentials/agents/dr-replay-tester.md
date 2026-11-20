@@ -152,6 +152,9 @@ Then extract:
 ```markdown
 ### production-fleet
 
+**Scope**: "prod" in tags
+**Completeness**: complete
+
 **Match Statistics**:
 - Events processed: 45,230
 - Events matched: 127
@@ -196,6 +199,9 @@ Then extract:
 
 ```markdown
 ### dev-org
+
+**Scope**: "dev" in tags
+**Completeness**: complete
 
 **Match Statistics**:
 - Events processed: 8,200
