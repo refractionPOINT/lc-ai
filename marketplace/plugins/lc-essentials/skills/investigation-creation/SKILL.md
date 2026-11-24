@@ -710,10 +710,11 @@ Build the case evidence as you go. Don't wait until the end. Each API call adds 
 For each event you investigated, add a telemetry reference to the case:
 
 ```bash
+# --event takes the full event JSON object; the backend extracts the atom, sensor ID,
+# event type and timestamp from its routing section.
+event_json=$(limacharlie event get --sid "<sensor-id>" --atom "<event-atom>" --oid <oid> --output json)
 limacharlie case telemetry add --case <case_number> \
-    --atom "<event-atom>" --sid "<sensor-id>" \
-    --event-type "NEW_PROCESS" \
-    --ts "<event-timestamp>" \
+    --event "$event_json" \
     --verdict malicious \
     --note "Brief description of what this event shows and why it matters to the investigation" \
     --oid <oid> --output yaml
@@ -728,10 +729,9 @@ limacharlie case telemetry add --case <case_number> \
 
 **Example benign telemetry:**
 ```bash
+event_json=$(limacharlie event get --sid "sensor-id" --atom "abc123..." --oid <oid> --output json)
 limacharlie case telemetry add --case <case_number> \
-    --atom "abc123..." --sid "sensor-id" \
-    --event-type "NEW_PROCESS" \
-    --ts "2025-01-20T19:39:10Z" \
+    --event "$event_json" \
     --verdict benign \
     --note "svchost.exe spawned by services.exe (PID 684). Initially suspicious due to unusual parent. Cleared: Parent is services.exe, legitimate Windows service startup." \
     --oid <oid> --output yaml
@@ -980,7 +980,7 @@ limacharlie case list --status new --status in_progress --severity critical --se
 limacharlie case list --assignee analyst@example.com --oid <oid> --output yaml
 
 # Filter by sensor ID
-limacharlie case list --sensor-id <sid> --oid <oid> --output yaml
+limacharlie case list --sid <sid> --oid <oid> --output yaml
 ```
 
 ### Dashboard (case counts)
@@ -1041,6 +1041,6 @@ limacharlie case bulk-update --numbers <num1>,<num2>,<num3> \
 
 **Entity types**: `ip`, `domain`, `hash`, `url`, `user`, `email`, `file`, `process`, `registry`, `other`
 
-**Note types**: `general`, `analysis`, `remediation`, `recommendation`, `escalation`, `handoff`, `to_stakeholder`, `from_stakeholder`
+**Note types**: `general`, `analysis`, `remediation`, `escalation`, `handoff`, `to_stakeholder`, `from_stakeholder` (no `recommendation` type in the CLI: use `general` with a `# Recommendation` heading)
 
 **Tag management**: `limacharlie case tag set/add/remove --case-number <number> --tag <tag> --oid <oid>`

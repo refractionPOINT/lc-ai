@@ -49,6 +49,8 @@ Session terminates (one_shot)
 | `sensor.list` | List and search sensors |
 | `sensor.get` | Get sensor details and timeline |
 | `sensor.task` | Live response (process listing, isolation, file ops) |
+| `output.set` | `task request` reads the sensor's reply through a temporary stream, which it creates as an output |
+| `output.del` | Remove that temporary stream output when the request ends |
 | `dr.list` | Read D&R rules for context |
 | `insight.det.get` | List and read detections |
 | `insight.evt.get` | Read events and sensor timeline |

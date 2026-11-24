@@ -298,6 +298,17 @@ cd your-project
 3. Reference the agent in relevant skills
 4. Test locally and submit a pull request
 
+#### Checking `limacharlie` commands
+
+Every `limacharlie ...` command in a prompt, skill, doc or script is checked in CI against the real command tree of one pinned CLI release (`scripts/requirements-cli-check.txt`). To check locally:
+
+```bash
+python -m venv .venv-cli && .venv-cli/bin/pip install -r scripts/requirements-cli-check.txt
+.venv-cli/bin/python scripts/check_cli_commands.py
+```
+
+It rejects unknown commands and options, missing required options and invalid enum values. Put `cli-check: ignore` on the line (or the line above) for text that is deliberately not a real command. The pinned version and how to bump it are documented in the requirements file.
+
 ### Pull Request Guidelines
 
 1. **Focus**: Keep PRs focused on a single topic or issue

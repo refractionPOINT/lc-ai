@@ -62,7 +62,12 @@ Use this skill when the user needs to:
 For simple data collection, use `run --shell-command` directly - no payload upload needed:
 
 ```bash
-limacharlie task reliable-send --task 'run --shell-command hostname' --selector 'plat == macos' --context shell-scan-001 --ttl 3600 --oid <oid> --output yaml
+# reliable-send is per-sensor; list the sensors matching the selector, then loop
+limacharlie sensor list --selector 'plat == macos' --oid <oid> --filter '[].sid' --output yaml
+
+for sid in <sid-list>; do
+  limacharlie task reliable-send --sid $sid --command 'run --shell-command hostname' --investigation-id shell-scan-001 --ttl 3600 --oid <oid> --output yaml
+done
 ```
 
 **Pros:**
@@ -209,12 +214,12 @@ Skill(lc-essentials:sensor-tasking)
 Provide to sensor-tasking:
 - Task command: run --shell-command 'hostname'
 - Selector: plat == macos (or your target selector)
-- Context: hostname-scan-001 (for response collection)
+- Investigation ID: hostname-scan-001 (for response collection)
 - TTL: 3600 (or desired expiration)
 ```
 
 The sensor-tasking skill will:
-1. Create a D&R rule to capture RECEIPT events with your context
+1. Create a D&R rule to capture RECEIPT events with your investigation ID
 2. Deploy the reliable task to matching sensors
 3. Collect responses via LCQL query
 4. Return aggregated results
@@ -262,7 +267,7 @@ Use `file_content` with base64-encoded script:
 
 ```bash
 # Upload the payload script
-limacharlie payload upload my-payload.sh --file /tmp/my-payload.sh --oid [org-id] --output yaml
+limacharlie payload upload --name my-payload.sh --file /tmp/my-payload.sh --oid [org-id] --output yaml
 ```
 
 ### Step 3: Deploy and Collect Results (Delegate to sensor-tasking)
@@ -280,7 +285,7 @@ Skill(lc-essentials:sensor-tasking)
 Provide to sensor-tasking:
 - Task command: run --payload-name my-payload.sh --arguments 'scan-001'
 - Selector: plat == linux (or your target selector)
-- Context: scan-001 (for response collection)
+- Investigation ID: scan-001 (for response collection)
 - TTL: 604800 (1 week, or desired expiration)
 ```
 
@@ -310,10 +315,10 @@ See the **sensor-tasking** skill documentation for advanced D&R rule patterns.
 ## Monitoring Task Progress
 
 ```bash
-limacharlie task reliable-list --oid [org-id] --output yaml
+limacharlie task reliable-list --sid <sid> --oid [org-id] --output yaml
 ```
 
-Shows:
+Run it for each targeted sensor (`reliable-list` is per-sensor). Shows:
 - Which sensors have acknowledged/executed
 - Which sensors are still pending (offline)
 - Task expiration time
@@ -334,7 +339,7 @@ Shows:
 If you uploaded a payload, delete it after the operation:
 
 ```bash
-limacharlie payload delete my-payload.sh --oid [org-id]
+limacharlie payload delete --name my-payload.sh --confirm --oid [org-id]
 ```
 
 ### D&R Rule and Task Cleanup (sensor-tasking)

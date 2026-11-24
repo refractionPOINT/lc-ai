@@ -29,7 +29,7 @@ Hive provides a single CRUD API for all configuration records. Each record has a
 | `limacharlie external-adapter` | `external_adapter` |
 | `limacharlie playbook` | `playbook` |
 | `limacharlie sop` | `sop` |
-| `limacharlie ai-agent` | `ai_agent` |
+| (no shortcut: use `limacharlie hive list --hive-name ai_agent`) | `ai_agent` |
 | `limacharlie ai-skill` | `ai_skill` |
 | `limacharlie ai-memory` | `ai_memory` (partial-merge writes per `--memory-name`) |
 | `limacharlie extension config-*` | `extension_config` |
@@ -69,12 +69,9 @@ limacharlie output list --oid <oid> --output yaml
 
 # Create output (write config to file first)
 cat > /tmp/output.yaml << 'EOF'
-name: my-syslog
-module: syslog
-for: detect
 dest_host: siem.example.com:514
 EOF
-limacharlie output create --input-file /tmp/output.yaml --oid <oid> --output yaml
+limacharlie output create --name my-syslog --module syslog --type detect --input-file /tmp/output.yaml --oid <oid> --output yaml
 
 # Delete output
 limacharlie output delete --name <name> --confirm --oid <oid>
@@ -300,8 +297,8 @@ limacharlie org errors --oid <oid> --output yaml
 # Get billing details
 limacharlie billing details --oid <oid> --output yaml
 
-# Get invoice URL
-limacharlie billing invoice-url --oid <oid> --output yaml
+# Get an invoice for a month (includes the invoice URL)
+limacharlie billing invoice --year <year> --month <month> --oid <oid> --output yaml
 ```
 
 ## Artifacts
@@ -362,7 +359,7 @@ SOPs guide how tasks are performed. Before running operations, check if relevant
 limacharlie sync push --config-file <path> --oid <oid>
 
 # Pull cloud config to local
-limacharlie sync pull --oid <oid>
+limacharlie sync pull --config-file <path> --oid <oid>
 ```
 
 **Avoid `--force`** on push unless certain — it deletes cloud resources not present in the local config file.

@@ -27,7 +27,7 @@ echo "Exporting D&R rules..."
 limacharlie dr list --oid "$OID" --output yaml > "$EXPORT_DIR/dr-rules.yaml"
 
 echo "Exporting FP rules..."
-limacharlie dr fp list --oid "$OID" --output yaml > "$EXPORT_DIR/fp-rules.yaml" 2>/dev/null || echo "{}" > "$EXPORT_DIR/fp-rules.yaml"
+limacharlie fp list --oid "$OID" --output yaml > "$EXPORT_DIR/fp-rules.yaml" 2>/dev/null || echo "{}" > "$EXPORT_DIR/fp-rules.yaml"
 
 echo "Exporting AI agents..."
 limacharlie hive list --hive-name ai_agent --oid "$OID" --output yaml > "$EXPORT_DIR/ai-agents.yaml"

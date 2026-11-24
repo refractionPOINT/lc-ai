@@ -160,7 +160,7 @@ Writes need `cloudsec.set`. Resolution kinds: `mitigated`, `accepted`, `false_po
 
 ```bash
 limacharlie cloudsec finding resolve <finding-id> --kind false_positive --reason "..." --oid <oid> --output yaml
-limacharlie cloudsec finding resolve <finding-id> --kind accepted --reason "..." --expires-at 2027-01-01T00:00:00Z --oid <oid> --output yaml
+limacharlie cloudsec finding resolve <finding-id> --kind accepted --reason "..." --expires-at "$(date -d 2027-01-01 +%s)" --oid <oid> --output yaml
 limacharlie cloudsec finding bulk-resolve --finding-id <id1> --finding-id <id2> --kind mitigated --reason "..." --oid <oid> --output yaml
 limacharlie cloudsec finding set-owner <finding-id> --owner analyst@example.com --oid <oid> --output yaml
 limacharlie cloudsec finding set-ticket <finding-id> --ticket JIRA-123 --oid <oid> --output yaml

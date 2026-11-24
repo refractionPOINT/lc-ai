@@ -23,10 +23,10 @@ limacharlie sensor list --oid $LC_OID \
 limacharlie sensor get --sid <SID> --oid $LC_OID --output yaml
 
 # Isolate a sensor (network containment)
-limacharlie sensor isolate --sid <SID> --oid $LC_OID
+limacharlie endpoint-policy isolate --sid <SID> --oid $LC_OID
 
 # De-isolate a sensor
-limacharlie sensor rejoin --sid <SID> --oid $LC_OID
+limacharlie endpoint-policy rejoin --sid <SID> --oid $LC_OID
 
 # Add a tag
 limacharlie tag add --sid <SID> --tag <tag> --oid $LC_OID
@@ -49,16 +49,16 @@ limacharlie dr list --oid $LC_OID --output yaml
 limacharlie dr get --key "<rule-name>" --oid $LC_OID --output yaml
 
 # Enable a disabled rule (after review)
-limacharlie dr set --name "<rule-name>" --enabled true --oid $LC_OID
+limacharlie dr enable --key "<rule-name>" --oid $LC_OID
 
 # Disable a rule
-limacharlie dr set --name "<rule-name>" --enabled false --oid $LC_OID
+limacharlie dr disable --key "<rule-name>" --oid $LC_OID
 
 # Validate before deploying
 limacharlie dr validate --detect detect.yaml --respond respond.yaml --oid $LC_OID
 
 # List FP rules
-limacharlie dr fp list --oid $LC_OID --output yaml
+limacharlie fp list --oid $LC_OID --output yaml
 ```
 
 > [!CAUTION]
@@ -78,7 +78,7 @@ limacharlie hive list --hive-name ai_agent --oid $LC_OID --output yaml
 limacharlie hive get --hive-name ai_agent --key <agent-key> --oid $LC_OID --output yaml
 
 # View AI sessions
-limacharlie ai sessions list --oid $LC_OID --output yaml
+limacharlie ai session list --oid $LC_OID --output yaml
 
 # Rotate Anthropic API key (zero-downtime)
 limacharlie secret set --key anthropic-key --value "<NEW-KEY>" --oid $LC_OID
@@ -107,16 +107,16 @@ See [AI Sessions](https://docs.limacharlie.io/9-ai-sessions/) and [D&R Sessions]
 limacharlie case list --oid $LC_OID --output yaml
 
 # Get case details
-limacharlie case get --id <case_number> --oid $LC_OID --output yaml
+limacharlie case get --case-number <case_number> --oid $LC_OID --output yaml
 
 # Add a note to a case
-limacharlie case add-note --id <case_number> --content "Note text" --type analysis --oid $LC_OID
+limacharlie case add-note --case-number <case_number> --content "Note text" --type analysis --oid $LC_OID
 
 # Update case status
-limacharlie case update --id <case_number> --status acknowledged --oid $LC_OID
+limacharlie case update --case-number <case_number> --status in_progress --oid $LC_OID
 
 # Export case with data
-limacharlie case export --id <case_number> --with-data ./case-export --oid $LC_OID
+limacharlie case export --case-number <case_number> --with-data ./case-export --oid $LC_OID
 ```
 
 See [ext-cases](https://docs.limacharlie.io/5-integrations/extensions/limacharlie/cases/).
@@ -157,4 +157,4 @@ See [LCQL Documentation](https://docs.limacharlie.io/4-data-queries/).
 | No detections on a sensor | Is the sensor online? | Check sensor status |
 | Sensor offline | Is the VM running? | Check cloud console |
 | Rule not matching | Is the rule enabled? | Check `enabled` field |
-| FP rule too broad | Review FP rule pattern | Delete with `limacharlie dr fp delete` |
+| FP rule too broad | Review FP rule pattern | Delete with `limacharlie fp delete --key <name> --confirm` |

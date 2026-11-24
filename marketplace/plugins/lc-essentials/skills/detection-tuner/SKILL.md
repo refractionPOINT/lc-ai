@@ -454,7 +454,7 @@ The rule is now filtering detections.
 **Recommended next steps:**
 1. Monitor detection volume over the next 24-48 hours
 2. Verify expected reduction in noisy alerts
-3. If issues arise, use `limacharlie fp delete <name> --oid <oid>` to remove the rule
+3. If issues arise, use `limacharlie fp delete --key <name> --confirm --oid <oid>` to remove the rule
 ```
 
 ---
@@ -516,7 +516,7 @@ detection:
 8. Validates syntax with `limacharlie dr validate`
 9. Tests FP rule with `limacharlie dr test` using transformed detections
 10. Presents rule with test results for approval
-11. On approval, deploys with `limacharlie fp set --key <name> --input-file`
+11. On approval, deploys with `limacharlie fp set --key <name> --input-file <rule-file>`
 12. Confirms success and recommends monitoring
 
 ---

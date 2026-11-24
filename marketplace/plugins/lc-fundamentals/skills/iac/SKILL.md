@@ -144,7 +144,7 @@ limacharlie sync push --config-file ./orgs/<oid>/index.yaml --oid <oid> \
 ### Pull (Cloud to Local)
 
 ```bash
-limacharlie sync pull --oid <oid>
+limacharlie sync pull --config-file <path> --oid <oid>
 ```
 
 ## Importing Rules from LC

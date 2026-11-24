@@ -442,7 +442,7 @@ For time range Nov 1-30, 2025:
 - Continue with partial data
 
 ### 5. Invoice URLs
-**CLI**: `limacharlie billing invoice-url`
+**CLI**: `limacharlie billing invoice --year <year> --month <month>`
 - **Endpoint**: GET /orgs/{oid}/invoice
 - **OID Required**: YES
 - **Returns**: Direct URL to organization's invoice

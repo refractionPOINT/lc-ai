@@ -1,6 +1,6 @@
 schema_version: 1
 id: native-sensor-onboarding
-revision: 1
+revision: 2
 capability_tags: [sensor-deployment, installation-keys, tagging, tasking]
 prompt: prompt.md
 public_files: []

@@ -1,2 +1,4 @@
 .action.md
 actions.md
+.venv-cli/
+__pycache__/

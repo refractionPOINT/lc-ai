@@ -78,7 +78,7 @@ Example requests:
 | Method | Use When | How It Works |
 |--------|----------|--------------|
 | Inline Response | Direct tasking small numbers | Response returned directly from API |
-| LCQL Query | Need to collect reliable task responses | Query for `routing/investigation_id` containing your `context` |
+| LCQL Query | Need to collect reliable task responses | Query for `routing/investigation_id` containing your `--investigation-id` value |
 | D&R Rule | Need automated action on responses | Create rule matching `investigation_id`, with response actions |
 
 ## Decision Tree
@@ -431,9 +431,9 @@ Selectors use bexpr syntax:
 - `sid=='abc-123-def-456'` - Specific sensor
 - `*` - All sensors
 
-### Context for Response Collection
+### Investigation ID for Response Collection
 
-The `context` parameter in reliable tasking:
+The `--investigation-id` option in reliable tasking:
 - Appears in `routing/investigation_id` of response events
 - Use unique identifiers (include date/time)
 - Can be used in LCQL queries or D&R rules for matching

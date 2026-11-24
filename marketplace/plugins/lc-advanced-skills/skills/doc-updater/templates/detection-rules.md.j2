@@ -147,10 +147,10 @@ limacharlie dr list --oid {{ org.oid }} --output yaml
 limacharlie dr get --key "<rule-name>" --oid {{ org.oid }} --output yaml
 
 # Enable a disabled rule (after review)
-limacharlie dr set --name "<rule-name>" --enabled true --oid {{ org.oid }}
+limacharlie dr enable --key "<rule-name>" --oid {{ org.oid }}
 
 # List FP rules
-limacharlie dr fp list --oid {{ org.oid }} --output yaml
+limacharlie fp list --oid {{ org.oid }} --output yaml
 
 # Validate a new rule before deploying
 limacharlie dr validate --detect detect.yaml --respond respond.yaml --oid {{ org.oid }}
