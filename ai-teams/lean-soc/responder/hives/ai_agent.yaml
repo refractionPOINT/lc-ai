@@ -79,6 +79,7 @@ hives:
 
              **Block IOCs in lookup tables:**
              ```bash
+             set -o pipefail
              limacharlie lookup get --key soc-blocked-hashes --oid <oid> --output json \
                | jq --arg k "<sha256>" --arg v "Blocked by SOC - case <case_number>" \
                     '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
@@ -92,6 +93,10 @@ hives:
                     '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
                | limacharlie lookup set --key soc-blocked-domains --oid <oid> --output yaml
              ```
+             Each pipeline must exit 0. If `lookup get` or `lookup set` fails (for example the lookup
+             does not exist or you lack `lookup.get`), do NOT record the IOC as blocked: note the
+             failure in the remediation note instead. After writing, confirm the key is present, e.g.
+             `limacharlie lookup get --key soc-blocked-ips --oid <oid> --output json | jq -e --arg k "<ip>" '.data.lookup_data[$k]'`.
 
           5. **Document all actions** - Add a `remediation` note:
              ```

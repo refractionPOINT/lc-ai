@@ -144,34 +144,34 @@ hives:
           limacharlie task send --sid <sid> --task "rejoin_network" --oid <oid> --output yaml
 
           # List running processes
-          limacharlie task send --sid <sid> --task "os_processes" --oid <oid> --output yaml
+          limacharlie task request --sid <sid> --command "os_processes" --timeout 30 --oid <oid> --output yaml
 
           # Kill a process
           limacharlie task send --sid <sid> --task "os_kill_process <pid>" --oid <oid> --output yaml
 
           # List network connections
-          limacharlie task send --sid <sid> --task "netstat" --oid <oid> --output yaml
+          limacharlie task request --sid <sid> --command "netstat" --timeout 30 --oid <oid> --output yaml
 
           # Get file info
-          limacharlie task send --sid <sid> --task "file_info <filepath>" --oid <oid> --output yaml
+          limacharlie task request --sid <sid> --command "file_info <filepath>" --timeout 30 --oid <oid> --output yaml
 
           # List directory
-          limacharlie task send --sid <sid> --task "dir_list <dirpath>" --oid <oid> --output yaml
+          limacharlie task request --sid <sid> --command "dir_list <dirpath>" --timeout 30 --oid <oid> --output yaml
 
           # Get file hash
-          limacharlie task send --sid <sid> --task "file_hash <filepath>" --oid <oid> --output yaml
+          limacharlie task request --sid <sid> --command "file_hash <filepath>" --timeout 30 --oid <oid> --output yaml
 
-          # Get DNS cache
-          limacharlie task send --sid <sid> --task "dns_resolve <domain>" --oid <oid> --output yaml
+          # Resolve a domain from the endpoint
+          limacharlie task request --sid <sid> --command "dns_resolve <domain>" --timeout 30 --oid <oid> --output yaml
 
           # Get autoruns
-          limacharlie task send --sid <sid> --task "os_autoruns" --oid <oid> --output yaml
+          limacharlie task request --sid <sid> --command "os_autoruns" --timeout 30 --oid <oid> --output yaml
 
           # Get OS version info
-          limacharlie task send --sid <sid> --task "os_version" --oid <oid> --output yaml
+          limacharlie task request --sid <sid> --command "os_version" --timeout 30 --oid <oid> --output yaml
           ```
 
-          Use `limacharlie task send --ai-help` to discover additional task commands.
+          Use `limacharlie task request --ai-help` (or `task send --ai-help`) to discover additional task commands.
 
           ### D&R Rules
 

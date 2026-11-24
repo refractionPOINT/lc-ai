@@ -138,39 +138,39 @@ hives:
           ### Step 4: Populate IOC Lookups
 
           For each new IOC identified by the analyzer, add it to the appropriate lookup table.
-          Use consistent lookup naming:
+          Use consistent lookup naming: `intel-ioc-hashes` (SHA256), `intel-ioc-domains`,
+          `intel-ioc-ips`, `intel-ioc-urls`.
 
-          **Hash IOCs (SHA256):**
+          Add all new IOCs of one type in a single read-modify-write (one `lookup get`, one
+          `lookup set`), not one call per IOC. The value stored with each IOC is
+          `<malware_family> - <source> - <date>`:
+
           ```bash
-          limacharlie lookup get --key intel-ioc-hashes --oid <oid> --output json \
-            | jq --arg k "<sha256>" --arg v "<malware_family> - <source> - <date>" \
-                 '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
-            | limacharlie lookup set --key intel-ioc-hashes --oid <oid> --output yaml
+          set -o pipefail
+          # $1 = lookup key, $2 = JSON array of {"k": "<ioc>", "v": "<malware_family> - <source> - <date>"}
+          add_iocs() {
+            limacharlie lookup get --key "$1" --oid <oid> --output json \
+              | jq --argjson new "$2" \
+                   '{data: (.data | reduce $new[] as $e (.; .lookup_data[$e.k] = {mtd: $e.v})), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
+              | limacharlie lookup set --key "$1" --oid <oid> --output yaml
+          }
+          add_iocs intel-ioc-hashes  '[{"k":"<sha256>","v":"<malware_family> - <source> - <date>"}]'
+          add_iocs intel-ioc-domains '[{"k":"<domain>","v":"<malware_family> - <source> - <date>"}]'
+          add_iocs intel-ioc-ips     '[{"k":"<ip>","v":"<malware_family> - <source> - <date>"}]'
+          add_iocs intel-ioc-urls    '[{"k":"<url>","v":"<malware_family> - <source> - <date>"}]'
           ```
 
-          **Domain IOCs:**
-          ```bash
-          limacharlie lookup get --key intel-ioc-domains --oid <oid> --output json \
-            | jq --arg k "<domain>" --arg v "<malware_family> - <source> - <date>" \
-                 '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
-            | limacharlie lookup set --key intel-ioc-domains --oid <oid> --output yaml
-          ```
-
-          **IP IOCs:**
-          ```bash
-          limacharlie lookup get --key intel-ioc-ips --oid <oid> --output json \
-            | jq --arg k "<ip>" --arg v "<malware_family> - <source> - <date>" \
-                 '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
-            | limacharlie lookup set --key intel-ioc-ips --oid <oid> --output yaml
-          ```
-
-          **URL IOCs:**
-          ```bash
-          limacharlie lookup get --key intel-ioc-urls --oid <oid> --output json \
-            | jq --arg k "<url>" --arg v "<malware_family> - <source> - <date>" \
-                 '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
-            | limacharlie lookup set --key intel-ioc-urls --oid <oid> --output yaml
-          ```
+          Only call it for the types that have new IOCs. Failure handling:
+          - If `lookup get` says the lookup does not exist (first run on a new org), create it
+            with the same entries, enabled:
+            ```bash
+            jq -n --argjson new '[{"k":"<ioc>","v":"<malware_family> - <source> - <date>"}]' \
+              '{data: {lookup_data: ($new | map({(.k): {mtd: .v}}) | add)}, usr_mtd: {enabled: true}}' \
+              | limacharlie lookup set --key <lookup> --oid <oid> --output yaml
+            ```
+          - If `lookup set` fails because the etag changed (another writer updated the lookup),
+            re-run the same `add_iocs` call once.
+          - Any other failure: do not count those IOCs as added; report the error.
 
           Track how many IOCs were added to each lookup.
 
