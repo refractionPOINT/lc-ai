@@ -344,11 +344,11 @@ Task(
 #### 4.2 Asset Profile Data Collected
 
 Each agent collects:
-- `limacharlie task send --task os_version` - OS name, version, build, architecture
-- `limacharlie task send --task os_packages` - Installed software inventory
-- `limacharlie task send --task os_services` - Running services
-- `limacharlie task send --task os_autoruns` - Persistence mechanisms
-- `limacharlie task send --task netstat` - Active connections
+- `limacharlie task request --sid <sid> --command os_version` - OS name, version, build, architecture
+- `limacharlie task request --sid <sid> --command os_packages` - Installed software inventory
+- `limacharlie task request --sid <sid> --command os_services` - Running services
+- `limacharlie task request --sid <sid> --command os_autoruns` - Persistence mechanisms
+- `limacharlie task request --sid <sid> --command netstat` - Active connections
 
 ### Phase 5: Compliance Check (NEW)
 

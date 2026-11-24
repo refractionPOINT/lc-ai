@@ -1,0 +1,29 @@
+name: cli-commands
+
+# Fails when a prompt, skill, doc or script in this repo calls a `limacharlie`
+# command, option or enum value that the pinned CLI release does not accept.
+# The pinned version lives in scripts/requirements-cli-check.txt (bump it there).
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  cli-commands:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the pinned limacharlie CLI
+        run: pip install -r scripts/requirements-cli-check.txt
+
+      - name: Test the checker
+        run: python -m unittest discover -s scripts
+
+      - name: Check every limacharlie command in the repo
+        run: python scripts/check_cli_commands.py

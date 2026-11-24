@@ -1,0 +1,11 @@
+# The limacharlie CLI release that every `limacharlie ...` command in this repo
+# is checked against (scripts/check_cli_commands.py, run by the `cli-commands`
+# workflow). This is the only place the version is pinned.
+#
+# To bump it after a new python-limacharlie release:
+#   1. Change the version below (latest: https://pypi.org/project/limacharlie/).
+#   2. Run: python -m venv .venv-cli && .venv-cli/bin/pip install -r scripts/requirements-cli-check.txt
+#      then: .venv-cli/bin/python scripts/check_cli_commands.py
+#   3. Fix every command it reports (the CLI changed under the prompts/skills),
+#      then commit the version bump and the fixes together.
+limacharlie==5.13.0

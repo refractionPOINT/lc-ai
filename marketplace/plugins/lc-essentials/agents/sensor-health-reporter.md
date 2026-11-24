@@ -62,9 +62,9 @@ Use the `limacharlie` CLI to get sensor information:
 limacharlie sensor list --online --oid <org-uuid> --output yaml
 ```
 
-2. For each online sensor, check data availability:
+2. For each online sensor, check data availability over the last 24 hours (`--start`/`--end` are Unix seconds, e.g. from `date +%s` and `date -d '24 hours ago' +%s`):
 ```bash
-limacharlie event retention --sid <sensor-id> --oid <org-uuid> --output yaml
+limacharlie event retention --sid <sensor-id> --start <start-epoch> --end <end-epoch> --oid <org-uuid> --output yaml
 ```
 
 3. Filter sensors with empty `timestamps` arrays
@@ -165,11 +165,11 @@ Since you run in parallel with other instances:
 **Checking 5 sensors in parallel**:
 ```bash
 # Make 5 parallel calls in one message
-limacharlie event retention --sid sensor1 --oid X --output yaml
-limacharlie event retention --sid sensor2 --oid X --output yaml
-limacharlie event retention --sid sensor3 --oid X --output yaml
-limacharlie event retention --sid sensor4 --oid X --output yaml
-limacharlie event retention --sid sensor5 --oid X --output yaml
+limacharlie event retention --sid sensor1 --start <start-epoch> --end <end-epoch> --oid X --output yaml
+limacharlie event retention --sid sensor2 --start <start-epoch> --end <end-epoch> --oid X --output yaml
+limacharlie event retention --sid sensor3 --start <start-epoch> --end <end-epoch> --oid X --output yaml
+limacharlie event retention --sid sensor4 --start <start-epoch> --end <end-epoch> --oid X --output yaml
+limacharlie event retention --sid sensor5 --start <start-epoch> --end <end-epoch> --oid X --output yaml
 ```
 
 ## Error Handling

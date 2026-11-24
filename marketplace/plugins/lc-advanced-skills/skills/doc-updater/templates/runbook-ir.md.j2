@@ -42,14 +42,14 @@ No automated SOC pipeline is configured. All incident response is manual.
 limacharlie case list --oid {{ org.oid }} --output yaml
 
 # Review a specific case
-limacharlie case get --id <case_number> --oid {{ org.oid }} --output yaml
+limacharlie case get --case-number <case_number> --oid {{ org.oid }} --output yaml
 ```
 
 ### 2. Handle Stuck Cases
 
 ```bash
 # Manually tag to re-trigger the next agent
-limacharlie case update --id <case_number> --add-tag needs-l2-review \
+limacharlie case tag add --case-number <case_number> --tag needs-l2-review \
   --oid {{ org.oid }}
 ```
 
@@ -57,10 +57,10 @@ limacharlie case update --id <case_number> --add-tag needs-l2-review \
 
 ```bash
 # De-isolate a sensor
-limacharlie sensor rejoin --sid <SID> --oid {{ org.oid }}
+limacharlie endpoint-policy rejoin --sid <SID> --oid {{ org.oid }}
 
 # Document the override
-limacharlie case add-note --id <case_number> --type analysis \
+limacharlie case add-note --case-number <case_number> --type analysis \
   --content "Manual override: de-isolated sensor. Reason: false positive." \
   --oid {{ org.oid }}
 ```
@@ -72,7 +72,7 @@ limacharlie case add-note --id <case_number> --type analysis \
 {% for m in team.mentions %}
 ```bash
 # Request {{ m.agent }}
-limacharlie case add-note --id <case_number> --type analysis \
+limacharlie case add-note --case-number <case_number> --type analysis \
   --content "@{{ m.mention }} <your instructions here>" \
   --oid {{ org.oid }}
 ```
@@ -99,7 +99,7 @@ limacharlie detection list --start $START --end $END --oid {{ org.oid }} --outpu
 ### Step 2: Isolate if Necessary
 
 ```bash
-limacharlie sensor isolate --sid <SID> --oid {{ org.oid }}
+limacharlie endpoint-policy isolate --sid <SID> --oid {{ org.oid }}
 ```
 
 ### Step 3: Collect Forensic Data
@@ -125,7 +125,7 @@ limacharlie ai generate-query \
 ### Step 5: Document on Case
 
 ```bash
-limacharlie case add-note --id <case_number> --type remediation \
+limacharlie case add-note --case-number <case_number> --type remediation \
   --content "Manual response: <describe actions taken>" --oid {{ org.oid }}
 ```
 
@@ -138,11 +138,11 @@ limacharlie case add-note --id <case_number> --type remediation \
 
 ```bash
 {% for agent in agents.scheduled %}
-limacharlie dr set --name "{{ agent.trigger_rule }}" --enabled false --oid {{ org.oid }}
+limacharlie dr disable --key "{{ agent.trigger_rule }}" --oid {{ org.oid }}
 {% endfor %}
 ```
 
-To re-enable, set `--enabled true` on each rule.
+To re-enable, run `limacharlie dr enable --key "<rule-name>"` for each rule.
 
 ---
 

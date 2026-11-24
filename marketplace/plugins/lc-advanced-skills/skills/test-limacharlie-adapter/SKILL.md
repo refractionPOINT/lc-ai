@@ -108,7 +108,7 @@ Look for a key with description 'Test Adapter' and extract its `iid`.
 **If not exists**: Create one:
 
 ```bash
-limacharlie installation-key create --oid <SELECTED_ORG_ID> --output yaml
+limacharlie installation-key create --description "adapter test key" --oid <SELECTED_ORG_ID> --output yaml
 ```
 
 Save the returned `iid` for later phases.
@@ -311,7 +311,7 @@ Look for key with description 'Test Adapter' and extract its iid.
 
 4. Create installation key if needed:
 ```bash
-limacharlie installation-key create --oid abc123-def456-... --output yaml
+limacharlie installation-key create --description "adapter test key" --oid abc123-def456-... --output yaml
 ```
 
 Returns: `{"iid": "729b2770-9ae6-4e14-beea-5e42b854adf5", ...}`

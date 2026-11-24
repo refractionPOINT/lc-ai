@@ -281,7 +281,7 @@ AskUserQuestion(
 Create installation keys for each logical segment:
 
 ```bash
-limacharlie installation-key create --oid <org-id> --output yaml
+limacharlie installation-key create --description "<segment description>" --tags "<tag1>,<tag2>" --oid <org-id> --output yaml
 ```
 
 Create separate keys for:

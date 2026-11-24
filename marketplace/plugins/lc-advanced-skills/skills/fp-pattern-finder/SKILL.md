@@ -642,7 +642,7 @@ limacharlie fp set --key [rule-name] --input-file /tmp/fp-rule.yaml --oid [organ
 **Recommended Next Steps**:
 1. Monitor detection volume over the next 24-48 hours
 2. Verify expected reduction in noisy alerts
-3. If issues arise, use `limacharlie fp delete <name> --oid <oid>` to remove specific rules
+3. If issues arise, use `limacharlie fp delete --key <name> --confirm --oid <oid>` to remove specific rules
 4. Re-run this analysis in a week to find new patterns
 ```
 

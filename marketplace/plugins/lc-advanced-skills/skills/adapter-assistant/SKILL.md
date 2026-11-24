@@ -480,7 +480,7 @@ For a quick LOCAL listing of supported types and a given type's config fields, u
 
 3. **External Setup Instructions**:
    - Create API token in Okta Admin Console
-   - Store token in LimaCharlie secrets: `limacharlie secret set okta-api-key --oid <oid>`
+   - Store token in LimaCharlie secrets: `limacharlie secret set --key okta-api-key --oid <oid>` (pass the value on stdin or with `--input-file`)
 
 4. **Deploy**: Use `set_cloud_sensor`
 

@@ -245,5 +245,5 @@ If an agent fails:
 
 - `limacharlie org list` - Get organizations
 - `limacharlie sensor list --online --oid <oid>` - Get online sensor list (used by agent)
-- `limacharlie event retention --sid <sid> --oid <oid>` - Check data timeline (used by agent)
+- `limacharlie event retention --sid <sid> --start <epoch> --end <epoch> --oid <oid>` - Check data timeline (used by agent)
 - `limacharlie sensor list --oid <oid>` - Get all sensors (used by agent for offline checks)

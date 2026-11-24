@@ -262,7 +262,7 @@ Since you run in parallel with other instances:
 
 1. Parse prompt → extract org ID, detection, time window, selector
 2. Calculate start/end timestamps with bash `date`
-3. Save the temp rule with `limacharlie dr set --disabled`, replay with `limacharlie dr replay --selector`, then delete it with `--confirm`
+3. Save the temp rule with `limacharlie dr set --key <temp-rule> --input-file <rule-file> --disabled`, replay with `limacharlie dr replay --name <temp-rule> --start <start> --end <end> --selector '<selector>'`, then delete it with `limacharlie dr delete --key <temp-rule> --confirm`
 4. Check completeness first (partial → inconclusive), then calculate stats, extract samples, find patterns
 5. Return concise summary for this org only
 

@@ -161,8 +161,10 @@ limacharlie search saved-create --name <name> --query "<lcql_query>" --stream ev
 ### Run Saved Query
 
 ```bash
-limacharlie search saved-run --name <name> --start <ts> --end <ts> --oid <oid> --output yaml
+limacharlie search saved-run --name <name> --oid <oid> --output yaml
 ```
+
+The saved query must carry its own `start` and `end`; `saved-run` has no time options. For a saved query without times, run its query with `limacharlie search run --query "<lcql_query>" --start <ts> --end <ts>`.
 
 ### Delete Saved Query
 

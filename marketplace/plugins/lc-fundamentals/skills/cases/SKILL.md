@@ -42,7 +42,7 @@ limacharlie case list --severity critical --severity high --oid <oid> --output y
 limacharlie case list --assignee analyst@example.com --oid <oid> --output yaml
 
 # Filter by sensor
-limacharlie case list --sensor-id <sid> --oid <oid> --output yaml
+limacharlie case list --sid <sid> --oid <oid> --output yaml
 
 # Search
 limacharlie case list --search <term> --oid <oid> --output yaml
@@ -96,7 +96,7 @@ limacharlie case add-note --case-number <number> --type analysis \
 
 Note content supports Markdown formatting.
 
-**Valid note types:** `general`, `analysis`, `remediation`, `recommendation`, `escalation`, `handoff`, `to_stakeholder`, `from_stakeholder`
+**Valid note types:** `general`, `analysis`, `remediation`, `escalation`, `handoff`, `to_stakeholder`, `from_stakeholder` (the CLI has no `recommendation` type: use `general` with a `# Recommendation` heading)
 
 Notes support an `is_public` flag — when true, the note may be shared externally.
 
@@ -121,10 +121,11 @@ limacharlie case entity search --type ip --value "203.0.113.50" --oid <oid> --ou
 ### Add Telemetry References
 
 ```bash
+# --event takes the full event JSON object; the backend extracts the atom, sensor ID,
+# event type and timestamp from its routing section.
+event_json=$(limacharlie event get --sid "<sensor-id>" --atom "<event-atom>" --oid <oid> --output json)
 limacharlie case telemetry add --case <number> \
-  --atom "<event-atom>" --sid "<sensor-id>" \
-  --event-type "NEW_PROCESS" \
-  --ts "<event-timestamp>" \
+  --event "$event_json" \
   --verdict malicious \
   --note "Malicious process execution" \
   --oid <oid> --output yaml
@@ -206,4 +207,4 @@ limacharlie case report --from 2025-01-01T00:00:00Z --to 2025-02-01T00:00:00Z --
 | **Severity** | `critical`, `high`, `medium`, `low`, `info` |
 | **Verdict** | `malicious`, `suspicious`, `benign`, `unknown`, `informational` |
 | **Entity Types** | `ip`, `domain`, `hash`, `url`, `user`, `email`, `file`, `process`, `registry`, `other` |
-| **Note Types** | `general`, `analysis`, `remediation`, `recommendation`, `escalation`, `handoff`, `to_stakeholder`, `from_stakeholder` |
+| **Note Types** | `general`, `analysis`, `remediation`, `escalation`, `handoff`, `to_stakeholder`, `from_stakeholder` |

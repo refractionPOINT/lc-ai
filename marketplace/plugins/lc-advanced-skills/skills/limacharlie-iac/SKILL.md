@@ -765,7 +765,7 @@ Use consistent naming: `[category]-[description]`
 - Reference secrets in configs, don't embed values
 
 ### 5. Testing Changes
-- Use `limacharlie sync push --dry-run` before deploying
+- Use `limacharlie sync push --config-file <file> --dry-run` before deploying
 - Test on one org before rolling out globally
 - Use `detection-engineering` skill to test rules
 

@@ -7,7 +7,7 @@ Create or reuse an installation key whose description is
 wait for its status receipt, and use the returned sensor ID. Add the sensor tag
 `{{ required_tag }}` and confirm the sensor is online with the LimaCharlie CLI.
 
-Then use `limacharlie task request --command os_processes` against that sensor.
+Then use `limacharlie task request --sid <sensor ID> --command os_processes` against that sensor.
 Write the complete JSON command output to `/work/process-observation.json`. The
 response must include the harmless marker process named
 `{{ marker_process_name }}`. Do not use a PID supplied by the evaluator and do

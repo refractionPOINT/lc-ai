@@ -172,12 +172,9 @@ limacharlie output list --oid <oid> --output yaml
 
 # Create output
 cat > /tmp/output.yaml << 'EOF'
-name: my-syslog
-module: syslog
-for: detect
 dest_host: siem.example.com:514
 EOF
-limacharlie output create --input-file /tmp/output.yaml --oid <oid> --output yaml
+limacharlie output create --name my-syslog --module syslog --type detect --input-file /tmp/output.yaml --oid <oid> --output yaml
 
 # Delete output
 limacharlie output delete --name <name> --confirm --oid <oid>
