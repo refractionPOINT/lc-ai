@@ -143,8 +143,8 @@ echo '{"data": {"secret": "<YOUR-ANTHROPIC-API-KEY>"}, "usr_mtd": {"enabled": tr
 4. Upload the intel-fetching playbook as a payload:
 
 ```bash
-limacharlie payload create --name mdr-fetch-intel \
-  --path intel-scout/fetch_intel.py --oid <central-oid>
+limacharlie payload upload --name mdr-fetch-intel \
+  --file intel-scout/fetch_intel.py --oid <central-oid>
 ```
 
 ### Required Permissions

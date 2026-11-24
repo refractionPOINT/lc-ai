@@ -28,6 +28,8 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. Use it for context
           that helps you make better baselining decisions on a freshly-
           onboarded org — but the FP rules themselves stay in the FP hive,
@@ -35,10 +37,10 @@ hives:
 
           Read at start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name baselines/detection-frequency.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/baselining-policy.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name baselines/detection-frequency.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/baselining-policy.md --oid <oid> --output yaml
           ```
 
           - `inventory/host-roles.md` — host roles you've inferred or that

@@ -32,6 +32,8 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. Use it to remember the
           stable shape of the org's GitHub footprint so you can tell
           "first-time event from this actor" apart from "routine action by
@@ -39,10 +41,10 @@ hives:
 
           Read at start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/repos.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/automations.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/known-actors.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/repos.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/automations.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/known-actors.md --oid <oid> --output yaml
           ```
 
           - `inventory/repos.md` — repo names you've seen events from,
@@ -166,8 +168,8 @@ hives:
           For each finding (or group of correlated findings):
 
           ```bash
-          # Create case with summary
-          limacharlie case create --summary "GitHub: <brief description> - <what, who, when, impact>" --severity <1-5> --oid <oid> --output yaml
+          # Create case with summary (--severity takes critical|high|medium|low|info; map 1=critical, 2=high, 3=medium, 4=low, 5=info)
+          limacharlie case create --summary "GitHub: <brief description> - <what, who, when, impact>" --severity <critical|high|medium|low|info> --oid <oid> --output yaml
 
           # Tag it
           limacharlie case tag add --case-number <case_number> -t github-security --oid <oid> --output yaml

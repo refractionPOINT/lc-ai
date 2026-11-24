@@ -159,7 +159,7 @@ See [`../../MEMORY.md`](../../MEMORY.md) for the design contract.
 
 Tag any sensor with `bas-exclude` to permanently opt it out of BAS testing:
 ```bash
-limacharlie sensor tag add --sid <sid> -t bas-exclude --oid <oid>
+limacharlie tag add --sid <sid> --tag bas-exclude --oid <oid>
 ```
 
 ### Custom SOPs
@@ -186,7 +186,7 @@ Deploy via the `lc-deployer` skill:
 
 Or manually with `limacharlie sync push`:
 ```bash
-limacharlie sync push --oid <oid> --input bas-team.yaml
+limacharlie sync push --oid <oid> --all --config-file bas-team.yaml
 ```
 
 **Important**: Ensure `ext-atomic-red-team` and `ext-reliable-tasking` are subscribed before deploying.

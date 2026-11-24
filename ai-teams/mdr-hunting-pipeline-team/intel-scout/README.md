@@ -28,8 +28,8 @@ flowchart TD
 The `mdr-fetch-intel` payload is a Python script (`fetch_intel.py`) that fetches all intel sources without LLM token limits. It outputs structured JSON with per-source results, IOC counts, and error handling. Upload it during setup:
 
 ```bash
-limacharlie payload create --name mdr-fetch-intel \
-  --path intel-scout/fetch_intel.py --oid <central-oid>
+limacharlie payload upload --name mdr-fetch-intel \
+  --file intel-scout/fetch_intel.py --oid <central-oid>
 ```
 
 The agent falls back to direct `curl` calls if the payload is unavailable.

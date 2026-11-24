@@ -19,7 +19,7 @@ flowchart TD
 
 | Action | Command | When |
 |--------|---------|------|
-| Sensor Isolation | `limacharlie sensor isolate` | Critical severity, confirmed malicious |
+| Sensor Isolation | `limacharlie endpoint-policy isolate` | Critical severity, confirmed malicious |
 | Block Hash | Add to `soc-blocked-hashes` lookup | Any confirmed malicious hash |
 | Block IP | Add to `soc-blocked-ips` lookup | Any confirmed malicious IP |
 | Block Domain | Add to `soc-blocked-domains` lookup | Any confirmed malicious domain |

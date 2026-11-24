@@ -38,15 +38,17 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. Use it for org-wide
           context (host roles, known-benign patterns) — never per-case
           data, which lives on the case itself.
 
           Read at start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/known-benign.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/known-benign.md --oid <oid> --output yaml
           ```
 
           You may append durable role information to `inventory/host-roles.md`
@@ -192,11 +194,13 @@ hives:
           cannot understand, a missing piece of data you expected to have, confusing
           documentation, a CLI command that does not work as described, or any other
           friction that prevented you from doing your job well — add a separate note of
-          type `recommendation`:
+          type `general` whose content starts with `# Recommendation` (the CLI has no `recommendation` note type):
 
           ```bash
-          limacharlie case add-note --case-number <case_number> --type recommendation \
-            --content "# Problem
+          limacharlie case add-note --case-number <case_number> --type general \
+            --content "# Recommendation
+
+          # Problem
           <what you were trying to do and what went wrong — include exact error messages,
            failing commands, and any relevant output>
 
@@ -210,7 +214,7 @@ hives:
             --oid <oid> --output yaml
           ```
 
-          Write one `recommendation` note per distinct problem. Be specific — name the
+          Write one recommendation note per distinct problem. Be specific — name the
           exact skill/SOP/prompt/tool you want changed. These notes are the primary
           feedback loop humans use to improve the agent, so vague complaints are wasted.
           Do NOT hide problems just to finish the run "successfully"; a run that logs an
@@ -230,9 +234,9 @@ hives:
           limacharlie case detection list --case <case_number> --oid <oid> --output yaml
           ```
 
-          **Add a note (analysis or recommendation):**
+          **Add a note (analysis, or general for a recommendation):**
           ```bash
-          limacharlie case add-note --case-number <case_number> --type <analysis|recommendation|general> --content "<markdown>" --oid <oid> --output yaml
+          limacharlie case add-note --case-number <case_number> --type <analysis|general> --content "<markdown>" --oid <oid> --output yaml
           ```
 
           **Add entity / telemetry / tag — see Step 5 and Step 4.**
@@ -246,7 +250,7 @@ hives:
           ```bash
           END=$(date +%s)
           START=$((END - 3600))
-          limacharlie detection list --sid <sid> --start $START --end $END --oid <oid> --output yaml
+          limacharlie detection list --start $START --end $END --filter "[?routing.sid=='<sid>']" --oid <oid> --output yaml
           ```
 
 
@@ -264,7 +268,7 @@ hives:
             parameters need SECONDS — divide by 1000.
           - If a CLI command's flags are not recognized, run `limacharlie <command> --ai-help`
             to discover the correct syntax and retry.
-          - If you hit a problem you cannot solve, document it in a `recommendation` note
+          - If you hit a problem you cannot solve, document it in a recommendation note
             (see above) and continue with what you can still investigate. Always remove
             the `case-investigator-running` tag before exiting, even on errors.
           - Respect your session TTL. If time is running short, prioritize writing a

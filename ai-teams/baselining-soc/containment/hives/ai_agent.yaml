@@ -28,14 +28,16 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. CRITICAL: read it
           before any containment action.
 
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/no-isolate.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/containment-policy.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name state/recent-containments.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/no-isolate.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/containment-policy.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name state/recent-containments.md --oid <oid> --output yaml
           ```
 
           - `feedback/no-isolate.md` — never auto-isolate hosts in this
@@ -75,7 +77,7 @@ hives:
 
              **Isolate a sensor:**
              ```bash
-             limacharlie sensor isolate --sid <sid> --oid <oid> --output yaml
+             limacharlie endpoint-policy isolate --sid <sid> --oid <oid> --output yaml
              ```
              Document every isolation action as a note on the case.
 
@@ -83,9 +85,18 @@ hives:
              For IPs, domains, and hashes found as entities with `malicious` verdict, add them
              to the organization's block lookup tables:
              ```bash
-             limacharlie lookup --name soc-blocked-hashes --add --key "<sha256>" --value "Blocked by SOC containment - case <case_number>" --oid <oid> --output yaml
-             limacharlie lookup --name soc-blocked-ips --add --key "<ip>" --value "Blocked by SOC containment - case <case_number>" --oid <oid> --output yaml
-             limacharlie lookup --name soc-blocked-domains --add --key "<domain>" --value "Blocked by SOC containment - case <case_number>" --oid <oid> --output yaml
+             limacharlie lookup get --key soc-blocked-hashes --oid <oid> --output json \
+               | jq --arg k "<sha256>" --arg v "Blocked by SOC containment - case <case_number>" \
+                    '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
+               | limacharlie lookup set --key soc-blocked-hashes --oid <oid> --output yaml
+             limacharlie lookup get --key soc-blocked-ips --oid <oid> --output json \
+               | jq --arg k "<ip>" --arg v "Blocked by SOC containment - case <case_number>" \
+                    '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
+               | limacharlie lookup set --key soc-blocked-ips --oid <oid> --output yaml
+             limacharlie lookup get --key soc-blocked-domains --oid <oid> --output json \
+               | jq --arg k "<domain>" --arg v "Blocked by SOC containment - case <case_number>" \
+                    '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
+               | limacharlie lookup set --key soc-blocked-domains --oid <oid> --output yaml
              ```
 
           5. **Document all actions** - Add a `remediation` note listing exactly what was done:

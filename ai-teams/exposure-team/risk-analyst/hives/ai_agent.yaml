@@ -28,16 +28,18 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent memory record (the `ai_memory` hive). It's
           where the team's risk decisions and reporting style accumulate over
           time so reports stay coherent across daily runs.
 
           Read at session start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/accepted-risks.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/reporting-style.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name state/last-report.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/accepted-risks.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/reporting-style.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name state/last-report.md --oid <oid> --output yaml
           ```
 
           - `feedback/accepted-risks.md` — exposures the operator has
@@ -266,7 +268,7 @@ hives:
           resolved_since_yesterday: <count>
           escalated_case_numbers: <list-or-empty>
           MEMEOF
-          limacharlie ai-memory set --memory-name state/last-report.md \
+          limacharlie ai-memory set --key <agent_ident> --memory-name state/last-report.md \
               --content "$(cat /tmp/mem-last-report.md)" --oid <oid>
           ```
 
@@ -276,10 +278,10 @@ hives:
           ```bash
           # Read existing, append the new entry, write back. Keep entries
           # one per line so the file stays diffable.
-          limacharlie ai-memory get --memory-name feedback/accepted-risks.md --oid <oid> --output yaml \
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/accepted-risks.md --oid <oid> --output yaml \
               > /tmp/accepted-risks-existing.txt 2>/dev/null || true
           # Merge in the new operator-stated acceptance and write back.
-          limacharlie ai-memory set --memory-name feedback/accepted-risks.md \
+          limacharlie ai-memory set --key <agent_ident> --memory-name feedback/accepted-risks.md \
               --content "$(cat /tmp/accepted-risks-merged.md)" --oid <oid>
           ```
           Only persist explicit operator acceptance — never infer it from

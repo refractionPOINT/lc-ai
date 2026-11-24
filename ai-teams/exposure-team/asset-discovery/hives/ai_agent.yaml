@@ -28,23 +28,25 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent memory record (the `ai_memory` hive). Use it
           to remember the asset inventory across daily runs so reports are
           stable and you don't redo discovery from a blank slate every day.
 
           Read your memory at the very start of each run:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
           ```
 
           If memories exist, fetch the ones you need:
           ```bash
-          limacharlie ai-memory get --memory-name inventory/subdomains.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/ips.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/dangling.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/cert-expiry.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/dns-security.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name state/last-run.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/subdomains.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/ips.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/dangling.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/cert-expiry.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/dns-security.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name state/last-run.md --oid <oid> --output yaml
           ```
 
           You will use these as a STARTING POINT, not a replacement for
@@ -226,7 +228,7 @@ hives:
           ### Step 5: Create Case with Asset Inventory
 
           ```bash
-          limacharlie case create --severity 0 --summary "Asset Discovery: <domain/scope> - <N> assets found" --oid <oid> --output yaml
+          limacharlie case create --severity info --summary "Asset Discovery: <domain/scope> - <N> assets found" --oid <oid> --output yaml
           ```
 
           Get the case_number:
@@ -293,13 +295,13 @@ hives:
           | www.example.com | 1.2.3.4 | - | resolves |
           | old.example.com | - | old.herokuapp.com | dangling |
           MEMEOF
-          limacharlie ai-memory set --memory-name inventory/subdomains.md \
+          limacharlie ai-memory set --key <agent_ident> --memory-name inventory/subdomains.md \
               --content "$(cat /tmp/mem-subdomains.md)" --oid <oid>
 
           # Same approach for ips, dangling, cert-expiry, dns-security.
           # Drop a memory key if today's discovery shows the topic no longer
           # applies (e.g. the dangling DNS was fixed):
-          limacharlie ai-memory delete --memory-name inventory/dangling.md --oid <oid>
+          limacharlie ai-memory delete --key <agent_ident> --memory-name inventory/dangling.md --confirm --oid <oid>
 
           # Pointer memory: when did we last run, what did we cover.
           NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -311,7 +313,7 @@ hives:
           dangling_total: <count>
           cert_expiry_warnings: <count>
           MEMEOF
-          limacharlie ai-memory set --memory-name state/last-run.md \
+          limacharlie ai-memory set --key <agent_ident> --memory-name state/last-run.md \
               --content "$(cat /tmp/mem-last-run.md)" --oid <oid>
           ```
 

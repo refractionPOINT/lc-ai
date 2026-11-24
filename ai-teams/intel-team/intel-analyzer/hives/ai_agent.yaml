@@ -29,6 +29,8 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. Use it to remember the
           org's platform/adapter profile so you don't re-derive it every run
           (sensor list rarely changes day-over-day) and to track which
@@ -36,9 +38,9 @@ hives:
 
           Read at start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/platform-profile.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name cache/themes-covered.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/platform-profile.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name cache/themes-covered.md --oid <oid> --output yaml
           ```
 
           - `inventory/platform-profile.md` — current EDR platforms and

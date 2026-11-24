@@ -31,6 +31,8 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. Use it for:
 
           - `state/last-profile.md` — when you last refreshed, how many
@@ -48,9 +50,9 @@ hives:
 
           Read at session start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name state/last-profile.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/skipped-tenants.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name state/last-profile.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/skipped-tenants.md --oid <oid> --output yaml
           ```
 
           ## Workflow
@@ -59,8 +61,10 @@ hives:
 
           Read the current inventory org note:
           ```bash
-          limacharlie org note get --name mdr-tenant-inventory --oid <oid> --output yaml
+          limacharlie note get --key mdr-tenant-inventory --oid <oid> --output yaml
           ```
+
+          The inventory YAML is the note's `data.text` field.
 
           If the note exists, check the `last_updated` field. Calculate the age:
           ```bash
@@ -117,23 +121,27 @@ hives:
 
           ```bash
           NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          limacharlie org note set --name mdr-tenant-inventory --oid <oid> --content "last_updated: \"$NOW\"
-          tenants:
-            <oid-1>:
-              name: \"<org name 1>\"
-              edr_platforms:
-                - windows
-                - linux
-              adapters:
-                - <adapter type 1>
-                - <adapter type 2>
-            <oid-2>:
-              name: \"<org name 2>\"
-              edr_platforms:
-                - macos
-              adapters: []
-            ...
-          " --output yaml
+          cat > /tmp/mdr-tenant-inventory.yaml <<NOTEEOF
+          data:
+            text: |
+              last_updated: "$NOW"
+              tenants:
+                <oid-1>:
+                  name: "<org name 1>"
+                  edr_platforms:
+                    - windows
+                    - linux
+                  adapters:
+                    - <adapter type 1>
+                    - <adapter type 2>
+                <oid-2>:
+                  name: "<org name 2>"
+                  edr_platforms:
+                    - macos
+                  adapters: []
+                ...
+          NOTEEOF
+          limacharlie note set --key mdr-tenant-inventory --input-file /tmp/mdr-tenant-inventory.yaml --oid <oid> --output yaml
           ```
 
           **Format rules:**
@@ -159,7 +167,7 @@ hives:
           tenants_errored: <list-or-empty>
           tenants_skipped: <list-or-empty per skipped-tenants memory>
           MEMEOF
-          limacharlie ai-memory set --memory-name state/last-profile.md \
+          limacharlie ai-memory set --key <agent_ident> --memory-name state/last-profile.md \
               --content "$(cat /tmp/mem-last-profile.md)" --oid <oid>
           ```
 

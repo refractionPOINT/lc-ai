@@ -168,7 +168,7 @@ Deploy via the `lc-deployer` skill:
 
 Or manually with `limacharlie sync push`:
 ```bash
-limacharlie sync push --oid <oid> --input intel-team.yaml
+limacharlie sync push --oid <oid> --all --config-file intel-team.yaml
 ```
 
 ## Files

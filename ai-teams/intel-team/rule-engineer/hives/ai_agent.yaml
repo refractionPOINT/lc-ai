@@ -30,15 +30,17 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. Use it to track which
           TTPs you've already covered with rules so you don't keep
           generating duplicates that humans then disable as noise.
 
           Read at start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/coverage-map.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/rule-quality.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/coverage-map.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/rule-quality.md --oid <oid> --output yaml
           ```
 
           - `inventory/coverage-map.md` — what TTPs / ATT&CK techniques you
@@ -140,22 +142,34 @@ hives:
 
           **Hash IOCs (SHA256):**
           ```bash
-          limacharlie lookup --name intel-ioc-hashes --add --key "<sha256>" --value "<malware_family> - <source> - <date>" --oid <oid> --output yaml
+          limacharlie lookup get --key intel-ioc-hashes --oid <oid> --output json \
+            | jq --arg k "<sha256>" --arg v "<malware_family> - <source> - <date>" \
+                 '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
+            | limacharlie lookup set --key intel-ioc-hashes --oid <oid> --output yaml
           ```
 
           **Domain IOCs:**
           ```bash
-          limacharlie lookup --name intel-ioc-domains --add --key "<domain>" --value "<malware_family> - <source> - <date>" --oid <oid> --output yaml
+          limacharlie lookup get --key intel-ioc-domains --oid <oid> --output json \
+            | jq --arg k "<domain>" --arg v "<malware_family> - <source> - <date>" \
+                 '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
+            | limacharlie lookup set --key intel-ioc-domains --oid <oid> --output yaml
           ```
 
           **IP IOCs:**
           ```bash
-          limacharlie lookup --name intel-ioc-ips --add --key "<ip>" --value "<malware_family> - <source> - <date>" --oid <oid> --output yaml
+          limacharlie lookup get --key intel-ioc-ips --oid <oid> --output json \
+            | jq --arg k "<ip>" --arg v "<malware_family> - <source> - <date>" \
+                 '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
+            | limacharlie lookup set --key intel-ioc-ips --oid <oid> --output yaml
           ```
 
           **URL IOCs:**
           ```bash
-          limacharlie lookup --name intel-ioc-urls --add --key "<url>" --value "<malware_family> - <source> - <date>" --oid <oid> --output yaml
+          limacharlie lookup get --key intel-ioc-urls --oid <oid> --output json \
+            | jq --arg k "<url>" --arg v "<malware_family> - <source> - <date>" \
+                 '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
+            | limacharlie lookup set --key intel-ioc-urls --oid <oid> --output yaml
           ```
 
           Track how many IOCs were added to each lookup.

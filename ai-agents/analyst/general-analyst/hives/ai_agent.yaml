@@ -28,6 +28,8 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. You're triggered by
           @mention so you're often asked open-ended questions; memory lets
           you remember the org's environment without rediscovering it
@@ -35,9 +37,9 @@ hives:
 
           Read at start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/operator-prefs.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/operator-prefs.md --oid <oid> --output yaml
           ```
 
           - `inventory/host-roles.md` — shared host-role context.
@@ -100,7 +102,7 @@ hives:
           limacharlie sensor get --sid <sid> --oid <oid> --output yaml
 
           # Get sensor timeline (events around a point in time)
-          limacharlie sensor timeline --sid <sid> --start <epoch_seconds> --end <epoch_seconds> --oid <oid> --output yaml
+          limacharlie event timeline --sid <sid> --start <epoch_seconds> --end <epoch_seconds> --oid <oid> --output yaml
 
           # List sensors by tag
           limacharlie sensor list --tag <tag> --oid <oid> --output yaml
@@ -115,7 +117,7 @@ hives:
           limacharlie detection list --start $START --end $END --oid <oid> --output yaml
 
           # List detections for a specific sensor
-          limacharlie detection list --sid <sid> --start $START --end $END --oid <oid> --output yaml
+          limacharlie detection list --start $START --end $END --filter "[?routing.sid=='<sid>']" --oid <oid> --output yaml
           ```
 
           ### Search (LCQL)
@@ -136,40 +138,40 @@ hives:
 
           ```bash
           # Isolate a sensor from the network
-          limacharlie sensor task --sid <sid> --task "segregate_network" --oid <oid> --output yaml
+          limacharlie task send --sid <sid> --task "segregate_network" --oid <oid> --output yaml
 
           # Rejoin sensor to network
-          limacharlie sensor task --sid <sid> --task "rejoin_network" --oid <oid> --output yaml
+          limacharlie task send --sid <sid> --task "rejoin_network" --oid <oid> --output yaml
 
           # List running processes
-          limacharlie sensor task --sid <sid> --task "os_processes" --oid <oid> --output yaml
+          limacharlie task send --sid <sid> --task "os_processes" --oid <oid> --output yaml
 
           # Kill a process
-          limacharlie sensor task --sid <sid> --task "os_kill_process -p <pid>" --oid <oid> --output yaml
+          limacharlie task send --sid <sid> --task "os_kill_process <pid>" --oid <oid> --output yaml
 
           # List network connections
-          limacharlie sensor task --sid <sid> --task "os_net_connections" --oid <oid> --output yaml
+          limacharlie task send --sid <sid> --task "netstat" --oid <oid> --output yaml
 
           # Get file info
-          limacharlie sensor task --sid <sid> --task "file_info -f <filepath>" --oid <oid> --output yaml
+          limacharlie task send --sid <sid> --task "file_info <filepath>" --oid <oid> --output yaml
 
           # List directory
-          limacharlie sensor task --sid <sid> --task "dir_list -d <dirpath>" --oid <oid> --output yaml
+          limacharlie task send --sid <sid> --task "dir_list <dirpath>" --oid <oid> --output yaml
 
           # Get file hash
-          limacharlie sensor task --sid <sid> --task "file_hash -f <filepath>" --oid <oid> --output yaml
+          limacharlie task send --sid <sid> --task "file_hash <filepath>" --oid <oid> --output yaml
 
           # Get DNS cache
-          limacharlie sensor task --sid <sid> --task "os_dns_resolve" --oid <oid> --output yaml
+          limacharlie task send --sid <sid> --task "dns_resolve <domain>" --oid <oid> --output yaml
 
           # Get autoruns
-          limacharlie sensor task --sid <sid> --task "os_autoruns" --oid <oid> --output yaml
+          limacharlie task send --sid <sid> --task "os_autoruns" --oid <oid> --output yaml
 
           # Get OS version info
-          limacharlie sensor task --sid <sid> --task "os_version" --oid <oid> --output yaml
+          limacharlie task send --sid <sid> --task "os_version" --oid <oid> --output yaml
           ```
 
-          Use `limacharlie sensor task --ai-help` to discover additional task commands.
+          Use `limacharlie task send --ai-help` to discover additional task commands.
 
           ### D&R Rules
 
@@ -178,7 +180,7 @@ hives:
           limacharlie dr list --oid <oid> --output yaml
 
           # Get a specific rule
-          limacharlie dr get --name <rule-name> --oid <oid> --output yaml
+          limacharlie dr get --key <rule-name> --oid <oid> --output yaml
           ```
 
           ## Important Rules

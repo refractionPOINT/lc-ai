@@ -66,7 +66,7 @@ Costs assume typical session lengths. Actual costs depend on investigation compl
 
 ## Persistent Memory
 
-Each agent has its own `ai_memory` record (auto-keyed by API-key name).
+Each agent has its own `ai_memory` record (keyed by the agent's API-key name, passed with `--key`).
 Memory carries slow-changing facts that survive across sessions — host
 roles, internal infrastructure, hash verdicts, do-not-isolate hosts,
 KPI baselines, accumulated TTPs. Per-case state stays on the case;

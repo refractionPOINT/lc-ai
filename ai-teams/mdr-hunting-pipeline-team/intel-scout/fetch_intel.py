@@ -17,8 +17,8 @@ Usage:
 
 Output is a JSON document with per-source results, IOC counts, and errors.
 Upload this script as a payload to the central org:
-    limacharlie payload create --name mdr-fetch-intel \\
-        --path fetch_intel.py --oid <central-oid>
+    limacharlie payload upload --name mdr-fetch-intel \\
+        --file fetch_intel.py --oid <central-oid>
 """
 
 import argparse

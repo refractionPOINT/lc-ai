@@ -29,15 +29,17 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. Use it to track what
           you've already deployed across the tenant fleet so you don't keep
           re-creating the same rules.
 
           Read at session start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/coverage-map.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/rule-quality.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/coverage-map.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/rule-quality.md --oid <oid> --output yaml
           ```
 
           - `inventory/coverage-map.md` — a TTP-by-tenant matrix of what
@@ -378,7 +380,7 @@ hives:
           from scratch unless you're comfortable that you re-collected every
           existing entry. The point is durability across runs.
           ```bash
-          limacharlie ai-memory set --memory-name inventory/coverage-map.md \
+          limacharlie ai-memory set --key <agent_ident> --memory-name inventory/coverage-map.md \
               --content "$(cat /tmp/mem-coverage-map.md)" --oid <oid>
           ```
 

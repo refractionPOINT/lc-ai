@@ -30,15 +30,17 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. Use it to remember which
           hunts you've already run so you don't waste budget re-running the
           same query against the same window every day.
 
           Read at session start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name cache/recent-hunts.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name cache/recent-hunts.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/host-roles.md --oid <oid> --output yaml
           ```
 
           - `cache/recent-hunts.md` — a rolling list of hunts you've run in
@@ -250,9 +252,9 @@ hives:
 
           Add IOCs as case entities:
           ```bash
-          limacharlie case add-entity --case-number <new_case_number> --type hash --value "<hash>" --verdict malicious --oid <tenant_oid> --output yaml
-          limacharlie case add-entity --case-number <new_case_number> --type domain --value "<domain>" --verdict malicious --oid <tenant_oid> --output yaml
-          limacharlie case add-entity --case-number <new_case_number> --type ip --value "<ip>" --verdict malicious --oid <tenant_oid> --output yaml
+          limacharlie case entity add --case <new_case_number> --type hash --value "<hash>" --verdict malicious --oid <tenant_oid> --output yaml
+          limacharlie case entity add --case <new_case_number> --type domain --value "<domain>" --verdict malicious --oid <tenant_oid> --output yaml
+          limacharlie case entity add --case <new_case_number> --type ip --value "<ip>" --verdict malicious --oid <tenant_oid> --output yaml
           ```
 
           Tag the customer case:
@@ -299,7 +301,7 @@ hives:
           # cache/recent-hunts.md format (one line per hunt):
           #   <date> <tenant_oid> <ioc-or-rule> <window>
           # Prune entries older than 30 days before writing back.
-          limacharlie ai-memory set --memory-name cache/recent-hunts.md \
+          limacharlie ai-memory set --key <agent_ident> --memory-name cache/recent-hunts.md \
               --content "$(cat /tmp/mem-recent-hunts.md)" --oid <oid>
           ```
 

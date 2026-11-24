@@ -27,15 +27,17 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. Use it for KPI
           baselines and reporting style preferences.
 
           Read at start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name baselines/kpis.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/reporting-style.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name state/last-report.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name baselines/kpis.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/reporting-style.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name state/last-report.md --oid <oid> --output yaml
           ```
 
           Update `state/last-report.md` at end. Update `baselines/kpis.md`
@@ -74,7 +76,7 @@ hives:
              ```bash
              END=$(date -u +%Y-%m-%dT%H:%M:%SZ)
              START=$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ)
-             limacharlie case report-summary --from "$START" --to "$END" --oid <oid> --output yaml
+             limacharlie case report --from "$START" --to "$END" --oid <oid> --output yaml
              limacharlie case dashboard --oid <oid> --output yaml
              limacharlie case list --status closed --oid <oid> --output yaml
              limacharlie case list --status resolved --oid <oid> --output yaml
