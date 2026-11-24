@@ -52,6 +52,28 @@ class CheckerTest(unittest.TestCase):
             fenced("limacharlie case create --severity <critical|high|low> --summary x"), [])
         self.assertEqual(fenced("limacharlie case get --case-number $((N + 1))"), [])
 
+    def test_unknown_top_level_command(self):
+        self.assertTrue(any("no such command" in m for m in fenced("limacharlie sensr list --oid x")))
+        self.assertTrue(any("no such command" in m for m in fenced("echo | limacharlie sensr list")))
+        self.assertTrue(any("no such command" in m
+                            for m in findings("x.py", 'run(["limacharlie", "sensr", "list"])\n')))
+        self.assertTrue(any("no such command" in m for m in findings("x.sh", "limacharlie sensr list\n")))
+        # Prose and the Python SDK are not CLI calls.
+        self.assertEqual(findings("x.md", "Then run limacharlie sensr to see sensors.\n"), [])
+        self.assertEqual(findings("x.py", "from limacharlie import Hive\n"), [])
+        self.assertEqual(findings("x.py", 'msg = "Do not run limacharlie and wait"\n'), [])
+
+    def test_option_equals_placeholder(self):
+        self.assertEqual(fenced("limacharlie task send --sid=$SID --task=netstat"), [])
+        self.assertEqual(fenced("limacharlie --oid=<oid> task send --sid=<sid> --task x"), [])
+        self.assertTrue(any("no such option --bogus" in m
+                            for m in fenced("limacharlie --oid=$OID case get --case-number 1 --bogus=$X")))
+
+    def test_prose_checks_only_the_command_path(self):
+        self.assertEqual(findings("x.md", "Then run limacharlie sensor list to see sensors.\n"), [])
+        self.assertTrue(any("no such command" in m
+                            for m in findings("x.md", "Then run limacharlie sensor lst to see sensors.\n")))
+
     def test_positional_argument_rules(self):
         self.assertTrue(any("unexpected argument" in m
                             for m in fenced("limacharlie secret set okta-key --key a")))

@@ -54,7 +54,9 @@ IGNORE_MARK = "cli-check: ignore"
 CMD_RE = re.compile(r"(?<![\w/.@:=-])limacharlie(?=[ \t]+\S)")
 SHELL_OPS = {"|", "||", "&", "&&", ";", ";;", "(", ")", "((", "))", ">", ">>", "<", "<<", "2>", "2>&1", "&>", "#", "->", "=>", "→", "│", "┃", "—"}
 ELISION = {"...", "…"}
-PROSE_BREAKS = {"->", "=>", "→", "│", "┃", "—"}
+# What may directly precede `limacharlie` when it starts a command (not prose).
+COMMAND_LEADERS = ("|", "&&", "||", ";", "(", "`", "$", "&", "{", '"', "'", ">", "-", "*", ":", "\\")
+PROSE_BREAKS ={"->", "=>", "→", "│", "┃", "—"}
 PLACEHOLDER_RE = re.compile(r"@@PH@@|[<>$`{}]|\.\.\.|\*|^\[|\]$|^\(|\)$|^\?|^\\$")
 HELP_FLAGS = {"--help", "-h", "--ai-help"}
 
@@ -197,13 +199,16 @@ def commands_in(line: str, strict: bool):  # noqa: D103
     backtick spans); in plain prose only the command path is checked.
     """
     for m in CMD_RE.finditer(line):
+        prefix = line[:m.start()].rstrip()
+        if re.search(r"\b(from|import)$", prefix):
+            continue  # `from limacharlie import Hive`: the Python SDK, not the CLI
+        at_pos = prefix == "" or prefix.endswith(COMMAND_LEADERS) or bool(re.search(r"\b(sudo|then|do|else|exec)$", prefix))
         toks = tokenize(line[m.end():])
         cut = []
         for t in toks:
             if t in SHELL_OPS or t.startswith(("2>", ">", "&>")):
                 if t in PROSE_BREAKS:
                     cut.append("…")  # a sketch like `a → b`: the command is not complete
-                break
                 break
             end = t.endswith("`")
             t = t.rstrip("`")
@@ -213,14 +218,14 @@ def commands_in(line: str, strict: bool):  # noqa: D103
                 cut.append(t)
             if end:
                 break
-        yield cut, strict
+        yield cut, strict, at_pos
 
 
 # --------------------------------------------------------------------------
 # Checking
 # --------------------------------------------------------------------------
 
-def check_invocation(tree: Tree, toks: list[str], strict: bool, in_fence: bool) -> list[str]:
+def check_invocation(tree: Tree, toks: list[str], strict: bool, in_fence: bool, at_pos: bool = True) -> list[str]:
     """Return a list of problems with one invocation (tokens after `limacharlie`)."""
     problems: list[str] = []
     root_opts = tree.options(tree.root)
@@ -239,7 +244,7 @@ def check_invocation(tree: Tree, toks: list[str], strict: bool, in_fence: bool) 
         if t == "--":
             i += 1
             break
-        if t.startswith("-") and not is_placeholder(t):
+        if t.startswith("-") and not is_placeholder(t.split("=", 1)[0]):
             name = t.split("=", 1)[0]
             opts = {**root_opts, **tree.options(node)}
             if name in opts:
@@ -258,7 +263,9 @@ def check_invocation(tree: Tree, toks: list[str], strict: bool, in_fence: bool) 
         if sub is None:
             if not path and not in_fence:
                 return problems  # prose such as `limacharlie CLI`
-            if path or t in root_command_names(tree):
+            # An unknown word right after `limacharlie` is only reported where
+            # the text is meant to be run (fence, script, argv list).
+            if path or (at_pos and re.fullmatch(r"[a-z][a-z0-9-]*", t)):
                 problems.append(f"`limacharlie {' '.join(path + [t])}`: no such command"
                                 f" (available: {', '.join(sorted(list_subcommands(tree, node)))})")
             return problems
@@ -293,7 +300,8 @@ def check_invocation(tree: Tree, toks: list[str], strict: bool, in_fence: bool) 
             after_dd = True
             j += 1
             continue
-        if t.startswith("-") and len(t) > 1 and not re.fullmatch(r"-\d+(\.\d+)?", t) and not is_placeholder(t):
+        if t.startswith("-") and len(t) > 1 and not re.fullmatch(r"-\d+(\.\d+)?", t) \
+                and not is_placeholder(t.split("=", 1)[0]):
             name, eq, val = t.partition("=")
             o = opts.get(name)
             if o is None:
@@ -393,13 +401,13 @@ def check_file(tree: Tree, path: Path) -> list[Finding]:
             for s in spans:
                 candidates.append((s, True))
             outside = re.sub(r"`[^`\n]+`", " ", line)
-            candidates.append((outside, True))
+            candidates.append((outside, False))  # prose: command path only
         for chunk, strict in candidates:
             sketch = any(a in chunk for a in PROSE_BREAKS)  # `a → b → c`: bare names, not calls
-            for toks, strict_cmd in commands_in(chunk, strict):
+            for toks, strict_cmd, at_pos in commands_in(chunk, strict):
                 if sketch and "…" not in toks:
                     toks = toks + ["…"]
-                for msg in check_invocation(tree, toks, strict_cmd, strict_all):
+                for msg in check_invocation(tree, toks, strict_cmd, strict_all, at_pos):
                     key = (lineno, msg)
                     if key in seen:
                         continue
