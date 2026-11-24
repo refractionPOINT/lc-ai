@@ -214,12 +214,12 @@ Skill(lc-essentials:sensor-tasking)
 Provide to sensor-tasking:
 - Task command: run --shell-command 'hostname'
 - Selector: plat == macos (or your target selector)
-- Context: hostname-scan-001 (for response collection)
+- Investigation ID: hostname-scan-001 (for response collection)
 - TTL: 3600 (or desired expiration)
 ```
 
 The sensor-tasking skill will:
-1. Create a D&R rule to capture RECEIPT events with your context
+1. Create a D&R rule to capture RECEIPT events with your investigation ID
 2. Deploy the reliable task to matching sensors
 3. Collect responses via LCQL query
 4. Return aggregated results
@@ -285,7 +285,7 @@ Skill(lc-essentials:sensor-tasking)
 Provide to sensor-tasking:
 - Task command: run --payload-name my-payload.sh --arguments 'scan-001'
 - Selector: plat == linux (or your target selector)
-- Context: scan-001 (for response collection)
+- Investigation ID: scan-001 (for response collection)
 - TTL: 604800 (1 week, or desired expiration)
 ```
 
