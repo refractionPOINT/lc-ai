@@ -202,7 +202,10 @@ def commands_in(line: str, strict: bool):  # noqa: D103
         prefix = line[:m.start()].rstrip()
         if re.search(r"\b(from|import)$", prefix):
             continue  # `from limacharlie import Hive`: the Python SDK, not the CLI
-        at_pos = prefix == "" or prefix.endswith(COMMAND_LEADERS) or bool(re.search(r"\b(sudo|then|do|else|exec)$", prefix))
+        if prefix.endswith(('"', "'")) and prefix != "":
+            at_pos = "quoted"  # `echo "limacharlie not installed"`: a command only if it has options
+        else:
+            at_pos = prefix == "" or prefix.endswith(COMMAND_LEADERS) or bool(re.search(r"\b(sudo|then|do|else|exec)$", prefix))
         toks = tokenize(line[m.end():])
         cut = []
         for t in toks:
@@ -225,7 +228,7 @@ def commands_in(line: str, strict: bool):  # noqa: D103
 # Checking
 # --------------------------------------------------------------------------
 
-def check_invocation(tree: Tree, toks: list[str], strict: bool, in_fence: bool, at_pos: bool = True) -> list[str]:
+def check_invocation(tree: Tree, toks: list[str], strict: bool, in_fence: bool, at_pos: bool | str = True) -> list[str]:
     """Return a list of problems with one invocation (tokens after `limacharlie`)."""
     problems: list[str] = []
     root_opts = tree.options(tree.root)
@@ -261,11 +264,12 @@ def check_invocation(tree: Tree, toks: list[str], strict: bool, in_fence: bool, 
         t = t.rstrip(":,")
         sub = tree.sub(node, t)
         if sub is None:
-            if not path and not in_fence:
+            if not path and not (in_fence or (strict and at_pos)):
                 return problems  # prose such as `limacharlie CLI`
             # An unknown word right after `limacharlie` is only reported where
-            # the text is meant to be run (fence, script, argv list).
-            if path or (at_pos and re.fullmatch(r"[a-z][a-z0-9-]*", t)):
+            # the text is meant to be run (fence, script, backtick span, argv list).
+            looks_like_call = at_pos is True or (at_pos == "quoted" and any(x.startswith("-") for x in toks[i + 1:]))
+            if path or (looks_like_call and re.fullmatch(r"[a-z][a-z0-9-]*", t)):
                 problems.append(f"`limacharlie {' '.join(path + [t])}`: no such command"
                                 f" (available: {', '.join(sorted(list_subcommands(tree, node)))})")
             return problems

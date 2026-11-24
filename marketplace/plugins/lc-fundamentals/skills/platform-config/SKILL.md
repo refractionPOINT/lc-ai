@@ -29,7 +29,7 @@ Hive provides a single CRUD API for all configuration records. Each record has a
 | `limacharlie external-adapter` | `external_adapter` |
 | `limacharlie playbook` | `playbook` |
 | `limacharlie sop` | `sop` |
-| `limacharlie ai-agent` | `ai_agent` |
+| (no shortcut: use `limacharlie hive ... --hive-name ai_agent`) | `ai_agent` |
 | `limacharlie ai-skill` | `ai_skill` |
 | `limacharlie ai-memory` | `ai_memory` (partial-merge writes per `--memory-name`) |
 | `limacharlie extension config-*` | `extension_config` |

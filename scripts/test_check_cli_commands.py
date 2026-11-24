@@ -63,6 +63,17 @@ class CheckerTest(unittest.TestCase):
         self.assertEqual(findings("x.py", "from limacharlie import Hive\n"), [])
         self.assertEqual(findings("x.py", 'msg = "Do not run limacharlie and wait"\n'), [])
 
+    def test_unknown_top_level_in_inline_spans_and_messages(self):
+        self.assertTrue(any("no such command" in m
+                            for m in findings("x.md", "Run `limacharlie sensr list --oid x` now.\n")))
+        self.assertTrue(any("no such command" in m
+                            for m in findings("x.yaml", "prompt: Run `limacharlie sensr list` now.\n")))
+        self.assertEqual(findings("x.md", "See `limacharlie CLI` docs.\n"), [])
+        # Error messages that start with the tool name are not commands.
+        self.assertEqual(findings("x.sh", 'echo "limacharlie not installed"\n'), [])
+        self.assertEqual(findings("x.py", 'raise RuntimeError("limacharlie is required")\n'), [])
+        self.assertTrue(any("no such command" in m for m in findings("x.sh", 'bash -c "limacharlie sensr list --oid x"\n')))
+
     def test_option_equals_placeholder(self):
         self.assertEqual(fenced("limacharlie task send --sid=$SID --task=netstat"), [])
         self.assertEqual(fenced("limacharlie --oid=<oid> task send --sid=<sid> --task x"), [])
