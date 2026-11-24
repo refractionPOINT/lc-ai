@@ -29,6 +29,8 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent memory record (the `ai_memory` hive). Use it
           to remember stable scan results and operator-accepted exposures so
           your reports stay consistent day-over-day and you don't keep
@@ -36,10 +38,10 @@ hives:
 
           Read at session start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name baselines/known-ports.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/accepted-exposures.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name state/last-scan.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name baselines/known-ports.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/accepted-exposures.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name state/last-scan.md --oid <oid> --output yaml
           ```
 
           - `baselines/known-ports.md` — what ports/CPEs have been observed
@@ -358,7 +360,7 @@ hives:
           |----|-------|------|-------|
           | 1.2.3.4 | 22, 80, 443 | apache:2.4.51 | stable since <date> |
           MEMEOF
-          limacharlie ai-memory set --memory-name baselines/known-ports.md \
+          limacharlie ai-memory set --key <agent_ident> --memory-name baselines/known-ports.md \
               --content "$(cat /tmp/mem-known-ports.md)" --oid <oid>
 
           NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
@@ -369,7 +371,7 @@ hives:
           internetdb_hits: <count>
           urlscan_searches_used: <count of the 100/day budget>
           MEMEOF
-          limacharlie ai-memory set --memory-name state/last-scan.md \
+          limacharlie ai-memory set --key <agent_ident> --memory-name state/last-scan.md \
               --content "$(cat /tmp/mem-last-scan.md)" --oid <oid>
           ```
 

@@ -42,6 +42,7 @@ Create an API key named `responder` with:
 | `ai_memory.get` | Read persistent memory at session start |
 | `ai_memory.set` | Update persistent memory with verified facts |
 | `ai_memory.del` | Drop memories that no longer apply |
+| `lookup.get` | Read the block lookup before adding an IOC |
 | `lookup.set` | Add IOCs to block lookups |
 
 ## Configuration

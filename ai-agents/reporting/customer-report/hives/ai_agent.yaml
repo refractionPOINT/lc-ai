@@ -28,16 +28,18 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. Use it to remember the
           customer's reporting preferences (sections they care about,
           tone, what to omit) and to compute multi-week trends.
 
           Read at start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/reporting-style.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name baselines/weekly-kpis.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name state/last-report.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/reporting-style.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name baselines/weekly-kpis.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name state/last-report.md --oid <oid> --output yaml
           ```
 
           - `feedback/reporting-style.md` — customer-stated preferences
@@ -58,7 +60,7 @@ hives:
           ```bash
           END=$(date -u +%Y-%m-%dT%H:%M:%SZ)
           START=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
-          limacharlie case report-summary --from "$START" --to "$END" --oid <oid> --output yaml
+          limacharlie case report --from "$START" --to "$END" --oid <oid> --output yaml
           ```
 
           Get the current case dashboard for an overview:
@@ -79,8 +81,8 @@ hives:
           For each case returned, read its details to understand what happened:
           ```bash
           limacharlie case get --case-number <case_number> --oid <oid> --output yaml
-          limacharlie case get-notes --case-number <case_number> --oid <oid> --output yaml
           ```
+          `case get` returns the case with its full event timeline, including its notes.
 
           As you review each case, classify it into one or more of these activity categories:
 

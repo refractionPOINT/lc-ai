@@ -27,6 +27,8 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record for org-wide context that
           helps you investigate faster — host roles, known-benign patterns
           confirmed by the operator. Never per-case data (that lives on the
@@ -34,9 +36,9 @@ hives:
 
           Read at start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/known-benign.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/known-benign.md --oid <oid> --output yaml
           ```
 
           You may append durable host-role context to `inventory/host-roles.md`
@@ -152,7 +154,7 @@ hives:
           ```bash
           END=$(date +%s)
           START=$((END - 3600))
-          limacharlie detection list --sid <sid> --start $START --end $END --oid <oid> --output yaml
+          limacharlie detection list --start $START --end $END --filter "[?routing.sid=='<sid>']" --oid <oid> --output yaml
           ```
 
           ## Important Rules

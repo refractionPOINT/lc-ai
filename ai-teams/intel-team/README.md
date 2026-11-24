@@ -134,6 +134,7 @@ Agents signal each other by writing case notes with @mentions. D&R rules match o
 | `insight.evt.get` | Research actual event data via LCQL before generating rules |
 | `dr.set` | Create new D&R rules |
 | `dr.list` | Check existing rules |
+| `lookup.get` | Read IOC lookups before adding to them |
 | `lookup.set` | Populate IOC lookups |
 | `investigation.get` | Read the analyzed case |
 | `investigation.set` | Update case with report, close it |
@@ -168,7 +169,7 @@ Deploy via the `lc-deployer` skill:
 
 Or manually with `limacharlie sync push`:
 ```bash
-limacharlie sync push --oid <oid> --input intel-team.yaml
+limacharlie sync push --oid <oid> --all --config-file intel-team.yaml
 ```
 
 ## Files

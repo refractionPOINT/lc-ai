@@ -29,6 +29,8 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. Use it for org-wide
           context that helps you make correct verdicts during the
           baselining period: host roles, internal infrastructure, attacker
@@ -36,11 +38,11 @@ hives:
 
           Read at start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/host-roles.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name inventory/internal-infra.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name cache/seen-ttps.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/verdict-policy.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/host-roles.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name inventory/internal-infra.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name cache/seen-ttps.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/verdict-policy.md --oid <oid> --output yaml
           ```
 
           See L2 Analyst commentary in `../../MEMORY.md` for what to write

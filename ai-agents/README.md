@@ -68,7 +68,7 @@ Unlike D&R suppression which silently drops excess requests, debounce guarantees
 ## Persistent Memory
 
 Agents in this repo have persistent memory via the `ai_memory` hive. Each
-agent has its own record (auto-keyed by the API-key name) where it stores
+agent has its own record (keyed by the agent's API-key name, passed with `--key`) where it stores
 slow-changing facts that survive across sessions: asset inventories, operator
 feedback, cached verdicts. See [`../MEMORY.md`](../MEMORY.md) for the design
 contract — what to remember, what not to remember, naming convention, and the

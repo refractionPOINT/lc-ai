@@ -1,9 +1,10 @@
 # Persistent Memory for AI Agents
 
 The `ai_memory` hive gives every AI agent a persistent, file-system-style memory
-that survives across sessions. Each agent has its own record (auto-keyed by the
-caller's API-key name), and within that record, individual memories are
-addressed by a `--memory-name` like `inventory/subdomains.md`.
+that survives across sessions. Each agent has its own record (keyed by the
+caller's API-key name, which the agent passes with `--key`), and within that
+record, individual memories are addressed by a `--memory-name` like
+`inventory/subdomains.md`.
 
 This document is the design contract every agent in this repo follows. Read it
 before adding `ai-memory` references to a new agent prompt.
@@ -109,10 +110,10 @@ to internalize:
 
 | Operation | Effect |
 |-----------|--------|
-| `ai-memory set --memory-name a.md --content "x"` | Replaces `a.md` only. Other memories untouched. |
-| `ai-memory delete --memory-name a.md` | Drops `a.md` only. Equivalent to setting it to JSON null. |
-| `ai-memory list --output yaml` | Lists memory names (no content). Cheap. |
-| `ai-memory get --memory-name a.md` | Reads one memory. |
+| `ai-memory set --key <agent_ident> --memory-name a.md --content "x"` | Replaces `a.md` only. Other memories untouched. |
+| `ai-memory delete --key <agent_ident> --memory-name a.md --confirm` | Drops `a.md` only. Equivalent to setting it to JSON null. |
+| `ai-memory list --key <agent_ident> --output yaml` | Lists memory names (no content). Cheap. |
+| `ai-memory get --key <agent_ident> --memory-name a.md` | Reads one memory. |
 
 Implications:
 
@@ -172,19 +173,21 @@ include them when creating the API key.
 # List all agents that have memory in this org
 limacharlie ai-memory list-records --oid <oid> --output yaml
 
-# List your own memories (auto-keyed by your API-key name)
-limacharlie ai-memory list --oid <oid> --output yaml
+# List your own memories (--key is your API-key name / agent ident)
+limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
 
 # Read one memory
-limacharlie ai-memory get --memory-name inventory/subdomains.md \
-    --oid <oid> --output yaml
+limacharlie ai-memory get --key <agent_ident> \
+    --memory-name inventory/subdomains.md --oid <oid> --output yaml
 
 # Write one memory (replaces only this name)
-limacharlie ai-memory set --memory-name inventory/subdomains.md \
+limacharlie ai-memory set --key <agent_ident> \
+    --memory-name inventory/subdomains.md \
     --content "$(cat /tmp/subdomains.md)" --oid <oid>
 
 # Drop one memory
-limacharlie ai-memory delete --memory-name inventory/old-topic.md --oid <oid>
+limacharlie ai-memory delete --key <agent_ident> \
+    --memory-name inventory/old-topic.md --confirm --oid <oid>
 
 # Read another agent's memory (cross-agent coordination, document this in
 # the team README before relying on it)

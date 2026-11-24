@@ -49,6 +49,7 @@ Create an API key named `intel-engineer` with:
 | `insight.evt.get` | Research actual event data via LCQL before generating rules |
 | `dr.set` | Create new D&R rules (disabled) |
 | `dr.list` | Check for existing rules to avoid duplicates |
+| `lookup.get` | Read the IOC lookup before adding an IOC |
 | `lookup.set` | Add IOCs to lookup tables |
 | `investigation.get` | Read the analyzed case |
 | `investigation.set` | Update case with report, close it |

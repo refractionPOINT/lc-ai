@@ -27,14 +27,16 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. CRITICAL: read it
           before any containment action.
 
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/no-isolate.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/containment-policy.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name state/recent-containments.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/no-isolate.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/containment-policy.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name state/recent-containments.md --oid <oid> --output yaml
           ```
 
           - `feedback/no-isolate.md` — never auto-isolate; request human
@@ -72,15 +74,29 @@ hives:
 
              **Isolate a sensor:**
              ```bash
-             limacharlie sensor isolate --sid <sid> --oid <oid> --output yaml
+             limacharlie endpoint-policy isolate --sid <sid> --oid <oid> --output yaml
              ```
 
              **Block IOCs in lookup tables:**
              ```bash
-             limacharlie lookup --name soc-blocked-hashes --add --key "<sha256>" --value "Blocked by SOC - case <case_number>" --oid <oid> --output yaml
-             limacharlie lookup --name soc-blocked-ips --add --key "<ip>" --value "Blocked by SOC - case <case_number>" --oid <oid> --output yaml
-             limacharlie lookup --name soc-blocked-domains --add --key "<domain>" --value "Blocked by SOC - case <case_number>" --oid <oid> --output yaml
+             set -o pipefail
+             limacharlie lookup get --key soc-blocked-hashes --oid <oid> --output json \
+               | jq --arg k "<sha256>" --arg v "Blocked by SOC - case <case_number>" \
+                    '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
+               | limacharlie lookup set --key soc-blocked-hashes --oid <oid> --output yaml
+             limacharlie lookup get --key soc-blocked-ips --oid <oid> --output json \
+               | jq --arg k "<ip>" --arg v "Blocked by SOC - case <case_number>" \
+                    '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
+               | limacharlie lookup set --key soc-blocked-ips --oid <oid> --output yaml
+             limacharlie lookup get --key soc-blocked-domains --oid <oid> --output json \
+               | jq --arg k "<domain>" --arg v "Blocked by SOC - case <case_number>" \
+                    '{data: (.data | .lookup_data[$k] = {mtd: $v}), usr_mtd: .usr_mtd, etag: .sys_mtd.etag}' \
+               | limacharlie lookup set --key soc-blocked-domains --oid <oid> --output yaml
              ```
+             Each pipeline must exit 0. If `lookup get` or `lookup set` fails (for example the lookup
+             does not exist or you lack `lookup.get`), do NOT record the IOC as blocked: note the
+             failure in the remediation note instead. After writing, confirm the key is present, e.g.
+             `limacharlie lookup get --key soc-blocked-ips --oid <oid> --output json | jq -e --arg k "<ip>" '.data.lookup_data[$k]'`.
 
           5. **Document all actions** - Add a `remediation` note:
              ```

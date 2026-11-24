@@ -19,7 +19,7 @@ flowchart TD
 
 | Action | Command | When |
 |--------|---------|------|
-| Sensor Isolation | `limacharlie sensor isolate` | Critical severity, confirmed malicious |
+| Sensor Isolation | `limacharlie endpoint-policy isolate` | Critical severity, confirmed malicious |
 | Block Hash | Add to `soc-blocked-hashes` lookup | Any confirmed malicious hash |
 | Block IP | Add to `soc-blocked-ips` lookup | Any confirmed malicious IP |
 | Block Domain | Add to `soc-blocked-domains` lookup | Any confirmed malicious domain |
@@ -53,6 +53,7 @@ Create an API key named `containment` with these permissions:
 | `ai_memory.get` | Read persistent memory at session start |
 | `ai_memory.set` | Update persistent memory with verified facts |
 | `ai_memory.del` | Drop memories that no longer apply |
+| `lookup.get` | Read the block lookup before adding an IOC |
 | `lookup.set` | Add IOCs to block lookup tables |
 
 ## Configuration

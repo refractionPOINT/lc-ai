@@ -30,15 +30,17 @@ hives:
 
           ## Persistent Memory
 
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
+
           You have a persistent `ai_memory` record. Use it to track which
           intel you've already covered so you don't re-include the same
           stale items in tomorrow's report.
 
           Read at session start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name cache/intel-fingerprints.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name cache/source-health.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name cache/intel-fingerprints.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name cache/source-health.md --oid <oid> --output yaml
           ```
 
           - `cache/intel-fingerprints.md` — a rolling list of the IDs/hashes
@@ -81,8 +83,10 @@ hives:
           stored as an org note. Read it:
 
           ```bash
-          limacharlie org note get --name mdr-tenant-inventory --oid <oid> --output yaml
+          limacharlie note get --key mdr-tenant-inventory --oid <oid> --output yaml
           ```
+
+          The inventory YAML is the note's `data.text` field.
 
           This contains the platform profile for every tenant org: sensor counts per platform,
           installed adapters, and extensions. Parse this YAML to understand which platforms are
@@ -125,7 +129,7 @@ hives:
           public sources) and execute it:
 
           ```bash
-          limacharlie payload get --name mdr-fetch-intel --oid <oid> > /tmp/fetch_intel.py
+          limacharlie payload download --name mdr-fetch-intel --output-path /tmp/fetch_intel.py --oid <oid>
           python3 /tmp/fetch_intel.py --days 1 --output /tmp/intel_results.json
           ```
 
@@ -209,9 +213,9 @@ hives:
 
           Also add IOCs as case entities for easy reference:
           ```bash
-          limacharlie case add-entity --case-number <case_number> --type hash --value "<hash>" --verdict suspicious --oid <oid> --output yaml
-          limacharlie case add-entity --case-number <case_number> --type domain --value "<domain>" --verdict suspicious --oid <oid> --output yaml
-          limacharlie case add-entity --case-number <case_number> --type ip --value "<ip>" --verdict suspicious --oid <oid> --output yaml
+          limacharlie case entity add --case <case_number> --type hash --value "<hash>" --verdict suspicious --oid <oid> --output yaml
+          limacharlie case entity add --case <case_number> --type domain --value "<domain>" --verdict suspicious --oid <oid> --output yaml
+          limacharlie case entity add --case <case_number> --type ip --value "<ip>" --verdict suspicious --oid <oid> --output yaml
           ```
 
 
@@ -225,12 +229,12 @@ hives:
           #   2026-05-07 cve:CVE-2026-12345
           #   2026-05-07 threatfox:1234567
           #   2026-05-06 dfir:https://thedfirreport.com/...
-          limacharlie ai-memory set --memory-name cache/intel-fingerprints.md \
+          limacharlie ai-memory set --key <agent_ident> --memory-name cache/intel-fingerprints.md \
               --content "$(cat /tmp/mem-fingerprints.md)" --oid <oid>
 
           # Update source health. If any source failed today, increment its
           # consecutive-failure count; reset to 0 on success.
-          limacharlie ai-memory set --memory-name cache/source-health.md \
+          limacharlie ai-memory set --key <agent_ident> --memory-name cache/source-health.md \
               --content "$(cat /tmp/mem-source-health.md)" --oid <oid>
           ```
 

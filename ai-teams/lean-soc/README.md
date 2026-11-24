@@ -47,7 +47,7 @@ The lean model optimizes for simplicity and cost:
 
 ## Persistent Memory
 
-Each agent has its own `ai_memory` record (auto-keyed by API-key name).
+Each agent has its own `ai_memory` record (keyed by the agent's API-key name, passed with `--key`).
 Memory carries slow-changing facts that survive across sessions — host
 roles, KPI baselines, accepted-risk feedback, hash verdicts. Per-case
 state stays on the case; per-agent permissions and memory keys are

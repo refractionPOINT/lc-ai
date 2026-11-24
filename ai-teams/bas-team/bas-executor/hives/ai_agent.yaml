@@ -40,11 +40,13 @@ hives:
 
           If it is missing, create an INFO case noting the prerequisite and exit:
           ```bash
-          limacharlie case create --severity 0 --summary "BAS: ext-atomic-red-team not subscribed" --oid <oid> --output yaml
+          limacharlie case create --severity info --summary "BAS: ext-atomic-red-team not subscribed" --oid <oid> --output yaml
           ```
 
 
           ## Persistent Memory
+
+          Pass `--key <agent_ident>` on every `limacharlie ai-memory` command. `<agent_ident>` is your agent name (LimaCharlie ident) from your Agent Identity section, which is the name of the API key you run under.
 
           You have a persistent `ai_memory` record. Use it to remember the
           BAS rotation state — which techniques and hosts you've already
@@ -53,10 +55,10 @@ hives:
 
           Read at start:
           ```bash
-          limacharlie ai-memory list --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name state/rotation.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/excluded-hosts.md --oid <oid> --output yaml
-          limacharlie ai-memory get --memory-name feedback/excluded-techniques.md --oid <oid> --output yaml
+          limacharlie ai-memory list --key <agent_ident> --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name state/rotation.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/excluded-hosts.md --oid <oid> --output yaml
+          limacharlie ai-memory get --key <agent_ident> --memory-name feedback/excluded-techniques.md --oid <oid> --output yaml
           ```
 
           - `state/rotation.md` — recent runs (last 30 days): host, technique,
@@ -234,7 +236,7 @@ hives:
 
           Create a case to hold the simulation results and detection review:
           ```bash
-          limacharlie case create --severity 0 \
+          limacharlie case create --severity info \
             --summary "BAS: <scenario_theme> - $(date +%Y-%m-%d) - <hostname> (<platform>)" \
             --oid <oid> --output yaml
           ```

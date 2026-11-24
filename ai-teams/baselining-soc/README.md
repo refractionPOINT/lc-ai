@@ -75,7 +75,7 @@ The bulk triage is more expensive per-run than per-detection triage, but process
 
 ## Persistent Memory
 
-Each agent has its own `ai_memory` record (auto-keyed by API-key name).
+Each agent has its own `ai_memory` record (keyed by the agent's API-key name, passed with `--key`).
 Memory carries slow-changing facts that survive across sessions — during
 the baselining period it's especially valuable for host roles,
 detection-frequency tallies, and accumulated TTPs that should carry

@@ -53,7 +53,7 @@ with itself (the `debounce_key` serializes runs per case).
 ## Recommendations
 
 If the agent hits an error, confusing LimaCharlie behavior, or anything that prevents
-it from doing its job well, it adds a note of `type: recommendation` describing:
+it from doing its job well, it adds a `general` note starting with `# Recommendation` describing:
 
 - What went wrong (with exact errors/commands)
 - Any workaround it found (or "None — blocked")
