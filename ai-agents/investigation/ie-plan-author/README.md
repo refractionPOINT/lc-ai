@@ -12,7 +12,7 @@ this agent drafts, validates and tests the template on the organization's real p
 A person starts the agent with a detection id, a case id, a detection category or a goal
       |
       v
-investigate_authoring_kit (in pieces): template schema, authoring guide, managed examples, policy; investigate_operators: the org's operator catalog
+investigate_authoring_kit (in pieces): template schema, authoring guide, managed examples, settings; investigate_operators: the org's operator catalog
       |
       v
 Reads the real alerts (limacharlie CLI) and tries operators on real values (investigate_wave)

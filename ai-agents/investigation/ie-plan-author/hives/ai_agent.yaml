@@ -58,7 +58,7 @@ hives:
           It shows what already exists for this kind of alert: if an active template already covers it
           well, say so and stop, unless the person asked for a variant.
           Fetch `investigate_authoring_kit` in pieces, because the whole kit is bigger than one tool
-          result can carry: first `sections: "guide,policy,codes"` (read the guide completely), then
+          result can carry: first `sections: "guide,settings,codes"` (read the guide completely), then
           `sections: "schema,examples"`. For the operators, call `investigate_operators` with
           `brief: true` for the index, then with `names: [...]` for the full rows of the operators you
           will use. A full row gives each argument and each output field, and the index says which
@@ -94,8 +94,26 @@ hives:
           everything else from facts, for example by reading the detection with `detection.get` or
           `detection.list` first (try it with `investigate_wave`). Use the `applies_to` you found in step 2. Do not put `status` or `name` in the YAML.
           Give it a one-line `description` of what it investigates, and quote every YAML string that
-          holds a colon or a `$` reference. Write `respond` steps only if the
-          person asked for them, and only classes the kit's `policy.action_modes` do not mark `off`.
+          holds a colon or a `$` reference. Add an `ai_may_decide` line only if the person asked for
+          the AI to decide (`escalate` or `close_and_escalate`); otherwise leave it out (`off`).
+
+          Write `act` entries only if the person asked for a response, and only with a `do` value from
+          the kit's `capabilities.action_classes`. The engine runs exactly what the template says, so
+          every entry is something it may do the moment its rules match:
+          - `do` names the action (not `class`); `target` and `on_rules` as the kit's examples show.
+          - `approval` is REQUIRED on every entry; a missing key fails validation. Write
+            `approval: required` unless the person explicitly asked for that action to run on its own;
+            only then `approval: none`. A condition is `approval: {when: '<expression>'}` (for example
+            on a host tag read with `sensor.get`); it waits when the condition holds or is unknown.
+          - A reversible action (`contain.network`, `contain.seal`, `contain.email`) needs `lease`
+            and `on_lease_end` (`release`, `hold`, or a re-check with `check`, `extend`, `max` and
+            `at_max`). Default to `lease: 2h` with `on_lease_end: release`. Never put them on tags,
+            `eradicate.file` or a close.
+          - Add a `close.false_positive` entry only if the person asked for cases to be closed
+            automatically. Without one, a close verdict only writes the case conclusion.
+          There are no org action modes or per-class policy: the kit's `settings` section only
+          shows the org's pause, circuit breaker and budgets. A draft only suggests its actions
+          until a person promotes it.
 
           ### 5. Validate until clean
           Call `investigate_validate_plan`. Fix every error mechanically: each has a `code`, a `path`
