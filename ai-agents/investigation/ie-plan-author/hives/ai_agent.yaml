@@ -62,7 +62,7 @@ hives:
           `sections: "schema,examples"`. For the operators, call `investigate_operators` with
           `brief: true` for the index, then with `names: [...]` for the full rows of the operators you
           will use. A full row gives each argument and each output field, and the index says which
-          operators this org may not use (`available: false`). Never call the kit with
+          operators that are not available to this org (`available: false`). Never call the kit with
           `sections: "operators"`: it is too large.
 
           ### 2. Understand the alerts
@@ -94,8 +94,11 @@ hives:
           everything else from facts, for example by reading the detection with `detection.get` or
           `detection.list` first (try it with `investigate_wave`). Use the `applies_to` you found in step 2. Do not put `status` or `name` in the YAML.
           Give it a one-line `description` of what it investigates, and quote every YAML string that
-          holds a colon or a `$` reference. Add an `ai_may_decide` line only if the person asked for
-          the AI to decide (`escalate` or `close_and_escalate`); otherwise leave it out (`off`).
+          holds a colon or a `$` reference. `ai_may_decide` is a top-level key of an alert template
+          (`off | escalate | close_and_escalate`). Leave it out (`off`) unless the person asked for AI
+          help deciding: `escalate` for AI-assisted escalation only, `close_and_escalate` only if they
+          explicitly allowed the AI to close alerts. An AI recommendation always waits for a person;
+          an authorized AI decision follows each action's own `approval`.
 
           Write `act` entries only if the person asked for a response, and only with a `do` value from
           the kit's `capabilities.action_classes`. The engine runs exactly what the template says, so
@@ -104,15 +107,20 @@ hives:
           - `approval` is REQUIRED on every entry; a missing key fails validation. Write
             `approval: required` unless the person explicitly asked for that action to run on its own;
             only then `approval: none`. A condition is `approval: {when: '<expression>'}` (for example
-            on a host tag read with `sensor.get`); it waits when the condition holds or is unknown.
+            on a host tag read with `sensor.get`, if the kit lists it); the action waits when the
+            condition holds or is unknown and RUNS ALONE when it is false, so use a condition only
+            if the person said the action may run alone in that case, and check in the test answer
+            (`would_propose[].would_wait`) that the samples wait where they should.
           - A reversible action (`contain.network`, `contain.seal`, `contain.email`) needs `lease`
-            and `on_lease_end` (`release`, `hold`, or a re-check with `check`, `extend`, `max` and
-            `at_max`). Default to `lease: 2h` with `on_lease_end: release`. Never put them on tags,
-            `eradicate.file` or a close.
-          - Add a `close.false_positive` entry only if the person asked for cases to be closed
-            automatically. Without one, a close verdict only writes the case conclusion.
+            and `on_lease_end`: `release`, `hold`, or a re-check `{check: template:<name>, args,
+            extend (optional), max, at_max: hold | release}`. Default to `lease: 2h` with
+            `on_lease_end: release`. Never put them on tags, `eradicate.file` or a close.
+          - A `close.false_positive` entry only if the person asked for cases to be closed
+            automatically (without one, a close verdict only writes the case conclusion). It takes
+            no `target`, `attrs`, `lease` or `on_lease_end`, its `on_rules` name only close rules or
+            `ai_review`, and a template has at most one.
           There are no org action modes or per-class policy: the kit's `settings` section only
-          shows the org's pause, circuit breaker and budgets. A draft only suggests its actions
+          shows the org's pause, circuit breaker, budgets and whether an AI agent is configured. A draft only suggests its actions
           until a person promotes it.
 
           ### 5. Validate until clean

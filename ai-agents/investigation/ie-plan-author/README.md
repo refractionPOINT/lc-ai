@@ -73,13 +73,13 @@ What the key can do beyond the tools, and why it matters:
 
 - `investigation_plan.set` lets the key write any `investigation_plan` record, including through the CLI. Without the
   promotion gate that includes `status: active`, and an active template can be started by a rule or a case trigger,
-  with `respond` steps if it has them.
+  with `act` entries if it has them.
 - `investigation.set` lets the key start investigation runs (the same permission the plan tests and operator waves use),
   not only plan tests. A run started this way spends the org's budgets.
 - Operator permissions (below) let the agent read the product data those operators read, with the CLI as well.
 
-A draft never runs on its own: it runs only through a plan test or a run started by a person or by a key holding
-`investigation.set`, with autonomy capped at suggest. A test runs read-only operators and writes nothing.
+A draft never acts on its own: it runs only through a plan test or a run started by a person or by a key holding
+`investigation.set`, and every action it proposes is recorded as `suggested`: it cannot execute or be approved. A test runs read-only operators and writes nothing.
 
 ## Prerequisites
 
